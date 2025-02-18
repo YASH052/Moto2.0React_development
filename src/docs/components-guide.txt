@@ -1,0 +1,119 @@
+MOTO 2.0 COMPONENTS GUIDE
+========================
+
+AVAILABLE ROUTES
+---------------
+/ - Main Dashboard with welcome message
+/test - Components showcase and documentation
+/login - Login page
+/forgot-password - Password recovery page
+/reset-password - Password reset page
+
+COMPONENT LIBRARY
+----------------
+
+1. Nural Autocomplete
+   Purpose: Provides suggestions while typing
+   Usage: <NuralAutocomplete />
+   Best for: Search fields, dropdown selections
+
+2. Custom TextField
+   Purpose: Styled text input field
+   Usage: <CustomTextField />
+   Best for: Basic text input with consistent styling
+
+3. Nural Button
+   Purpose: Action button with customizable colors
+   Usage: <NuralButton variant="outlined" color="#fff" backgroundColor="color">
+           Button Text
+         </NuralButton>
+   Best for: Primary actions, form submissions
+
+4. Nural Radio Button
+   Purpose: Multiple choice selection
+   Usage: <NuralRadioButton options={[
+           { value: "0", label: "Option 1" },
+           { value: "1", label: "Option 2" }
+         ]} />
+   Best for: Single selection from multiple options
+
+5. Nural Accordion
+   Purpose: Expandable/collapsible content section
+   Usage: <NuralAccordion 
+           width="100%" 
+           title="Title" 
+           templates={templateArray} 
+         />
+   Best for: Organizing content into collapsible sections
+
+6. Nural Text Button
+   Purpose: Button with icon and text
+   Usage: <NuralTextButton
+           icon="path/to/icon.svg"
+           iconPosition="right"
+           backgroundColor="color"
+           color="textColor"
+           width="100%"
+         >
+           Button Text
+         </NuralTextButton>
+   Best for: Actions with visual indicators
+
+7. Nural File Upload
+   Purpose: File upload component
+   Usage: <NuralFileUpload
+           width="100%"
+           onChange={(file) => handleFile(file)}
+           accept=".pdf,.doc,.docx"
+         />
+   Best for: Document uploads, file submissions
+
+8. Nural Upload Status
+   Purpose: Shows upload status with actions
+   Usage: <NuralUploadStatus
+           status="success|failed"
+           title="Status Title"
+           actionText="Action Button Text"
+           onAction={() => handleAction()}
+           width="100%"
+         />
+   Best for: Showing upload progress and results
+
+9. KYC Accordion
+   Purpose: Specialized accordion for KYC document collection
+   Usage: <NuralKYCAccordion
+           width="100%"
+           title="KYC"
+           fields={kycFieldsConfig}
+         />
+   Best for: KYC document collection forms
+
+10. Nural Login TextField
+    Purpose: Specialized text field for login forms
+    Usage: <NuralLoginTextField
+            type="password"
+            placeholder="ENTER PASSWORD"
+            value={password}
+            onChange={(e) => handleChange(e)}
+          />
+    Best for: Login and authentication forms
+
+BEST PRACTICES
+-------------
+1. Always provide width prop for components that support it
+2. Use consistent styling across components
+3. Handle all component events with appropriate error handling
+4. Use appropriate file types for file uploads
+5. Implement proper validation for form fields
+6. Ensure responsive design by using appropriate Grid items
+
+STYLING GUIDELINES
+-----------------
+- Use AQUA color for primary actions
+- Use DARK_PURPLE for secondary actions
+- Maintain consistent spacing using Material-UI's spacing system
+- Use elevation for cards and important containers
+- Follow Material-UI's typography hierarchy
+
+Note: All components are built on Material-UI and follow its design principles.
+For detailed implementation examples, visit the /test route in the application. 
