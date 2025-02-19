@@ -9,6 +9,7 @@ import NotFound from '../Pages/NotFound/NotFound';
 import LoginForm from '../Pages/Auth/Login/LoginForm';
 import ForgotPasswordForm from '../Pages/Auth/ForgotPasswordForm';
 import ResetPasswordForm from '../Pages/Auth/ResetPasswordForm';
+import Reports from '../Pages/Componants/Reports';
 
 // Private Pages
 import TestCompo from '../Pages/NuralCustomComponents/TestCompo';
@@ -28,6 +29,7 @@ const AllRoutes = () => {
       {/* Private Routes */}
       {/* <Route element={<PrivateRoute />}> */}
         <Route path="/" element={<Dashboard />} />
+        <Route path="/Reports" element={<Reports />} />
       {/* </Route> */}
 
       {/* Default and Not Found Routes */}
