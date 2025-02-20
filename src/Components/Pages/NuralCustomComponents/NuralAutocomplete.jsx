@@ -59,7 +59,7 @@ const NuralAutocomplete = ({
           maxHeight: props.maxHeight,
           backgroundColor: props.backgroundColor || PRIMARY_LIGHT_GRAY,
           borderRadius: props.borderRadius || "8px",
-          fontSize: props.fontSize || "14px",
+          fontSize: props.fontSize || "12px",
           fontWeight: props.fontWeight,
           lineHeight: props.lineHeight,
           padding: "0 !important",

@@ -117,3 +117,26 @@ STYLING GUIDELINES
 
 Note: All components are built on Material-UI and follow its design principles.
 For detailed implementation examples, visit the /test route in the application. 
+
+
+
+
+
+
+
+
+
+component done => 
+<Route path="/transaction" element={<Transactions />} />
+      <Route
+        path="/primary-transaction"
+        element={<PrimaryTransactionUpload />}
+      />
+      <Route path="/isp-upload" element={<IspUpload />} />
+      <Route path="/add-isp" element={<AddIsp />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/sales-report" element={<SaleReports />} />
+      <Route path="/retailer-excelUpload" element={<RetailerExcel />} />
+      <Route path="/sales-channel-view" element={<SalesChannelView />} />
+      <Route path="/add-retailer" element={<AddRetailer />} />
+      <Route path="/add-sales-channel" element={<AddSalesChannel />} />

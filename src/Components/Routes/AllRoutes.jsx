@@ -1,19 +1,27 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import PrivateRoute from './PrivateRoute';
-import PublicRoute from './PublicRoute';
-import Dashboard from '../Pages/Dashboard/Dashboard';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import PrivateRoute from "./PrivateRoute";
+import PublicRoute from "./PublicRoute";
+import Dashboard from "../Pages/Dashboard/Dashboard";
 
 // Public Pages
-import NotFound from '../Pages/NotFound/NotFound';
-import LoginForm from '../Pages/Auth/Login/LoginForm';
-import ForgotPasswordForm from '../Pages/Auth/ForgotPasswordForm';
-import ResetPasswordForm from '../Pages/Auth/ResetPasswordForm';
-import Reports from '../Pages/Componants/Reports';
+import NotFound from "../Pages/NotFound/NotFound";
+import LoginForm from "../Pages/Auth/Login/LoginForm";
+import ForgotPasswordForm from "../Pages/Auth/ForgotPasswordForm";
+import ResetPasswordForm from "../Pages/Auth/ResetPasswordForm";
 
 // Private Pages
-import TestCompo from '../Pages/NuralCustomComponents/TestCompo';
-
+import TestCompo from "../Pages/NuralCustomComponents/TestCompo";
+import Transactions from "../Pages/Master/Transaction/Transactions";
+import PrimaryTransactionUpload from "../Pages/Master/Transaction/PrimaryTransactionUpload";
+import IspUpload from "../Pages/Master/Isp/IspUpload";
+import AddIsp from "../Pages/Master/Isp/AddIsp";
+import Reports from "../Pages/Master/Reports/Reports";
+import SaleReports from "../Pages/Master/Reports/SaleReports";
+import RetailerExcel from "../Pages/Master/SalesChannel/RetailerExcel";
+import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
+import AddRetailer from "../Pages/Master/SalesChannel/AddRetailer";
+import AddSalesChannel from "../Pages/Master/SalesChannel/AddSalesChannel";
 const AllRoutes = () => {
   return (
     <Routes>
@@ -23,14 +31,27 @@ const AllRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPasswordForm />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
-
       </Route>
 
       {/* Private Routes */}
       {/* <Route element={<PrivateRoute />}> */}
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/Reports" element={<Reports />} />
+      <Route path="/" element={<Dashboard />} />
+
       {/* </Route> */}
+
+      <Route path="/transaction" element={<Transactions />} />
+      <Route
+        path="/primary-transaction"
+        element={<PrimaryTransactionUpload />}
+      />
+      <Route path="/isp-upload" element={<IspUpload />} />
+      <Route path="/add-isp" element={<AddIsp />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/sales-report" element={<SaleReports />} />
+      <Route path="/retailer-excelUpload" element={<RetailerExcel />} />
+      <Route path="/sales-channel-view" element={<SalesChannelView />} />
+      <Route path="/add-retailer" element={<AddRetailer />} />
+      <Route path="/add-sales-channel" element={<AddSalesChannel />} />
 
       {/* Default and Not Found Routes */}
       <Route path="/" element={<Navigate to="/login" replace />} />

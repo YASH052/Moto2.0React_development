@@ -19,12 +19,18 @@ import NuralUploadStatus from "./NuralUploadStatus";
 import NuralAccordion2 from "./NuralAccordion2";
 import NuralKYCAccordion from "./NuralKYCAccordion";
 import NuralLoginTextField from "./NuralLoginTextField";
-import { AQUA, DARK_PURPLE, BLUE_COLOR } from "../../Common/colors";
+import {
+  AQUA,
+  DARK_PURPLE,
+  BLUE_COLOR,
+  MEDIUM_BLUE,
+  LIGHT_GRAY2,
+} from "../../Common/colors";
 import NuralNotificationPanel from "./NuralNotificationPanel";
 import NuralActivityPanel from "./NuralActivityPanel";
 import NuralAccordionItem from "./NuralAccordionItem";
 import NuralQuickLinks from "./NuralQuickLinks";
-
+import NuralCalendar from "./NuralCalendar";
 
 const TestCompo = () => {
   const quickLinks = ["Quick Link 1", "Quick Link 2", "Quick Link 3"];
@@ -131,6 +137,22 @@ const TestCompo = () => {
     },
   ];
 
+  const handleDateSelect = (date) => {
+    console.log("Selected date in TestCompo:", date.toISOString());
+  };
+
+  const handleMonthChange = (date) => {
+    console.log("Month changed:", date.toISOString());
+  };
+
+  const handleYearChange = (date) => {
+    console.log("Year changed:", date.toISOString());
+  };
+
+  const handleNavigate = (action, date) => {
+    console.log("Navigation:", action, date.toISOString());
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Documentation Section */}
@@ -176,6 +198,17 @@ const TestCompo = () => {
             </Typography>
             <NuralAutocomplete />
           </Grid>
+          <Grid item xs={12} md={6}>
+            <NuralUploadFormat
+              title="Upload Format"
+              backgroundColor={LIGHT_GRAY2}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <NuralAccordion2 title="Activations" width="100%" height="100%">
+              Put any content here
+            </NuralAccordion2>
+          </Grid>
 
           <Grid item xs={12} md={6}>
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -191,6 +224,7 @@ const TestCompo = () => {
             <NuralButton
               variant="outlined"
               color="#ffff"
+              text="Proceed"
               backgroundColor={AQUA}
             >
               Proceed
@@ -334,8 +368,49 @@ const TestCompo = () => {
         >
           <NuralAccordionItem title="TODAY" itemCount={4} models={modelData} />
         </NuralActivityPanel>
-       
       </Grid>
+
+      <Box
+        sx={{
+          margin: "10px",
+          maxWidth: "220px",
+          "& .MuiOutlinedInput-root": {
+            height: "25px",
+          },
+        }}
+      >
+        <NuralCalendar
+          onDateSelect={handleDateSelect}
+          onMonthChange={handleMonthChange}
+          onYearChange={handleYearChange}
+          onNavigate={handleNavigate}
+          initialDate={new Date()}
+          minDate={new Date(2000, 0, 1)}
+          maxDate={new Date(2024, 11, 31)}
+          disabledDates={[new Date(2024, 2, 15)]}
+          highlightedDates={[new Date(2024, 2, 20)]}
+          yearRange={{
+            start: 2000,
+            end: new Date().getFullYear(),
+          }}
+          containerStyle={{
+            backgroundColor: MEDIUM_BLUE,
+          }}
+          headerStyle={{
+            padding: "0 8px",
+          }}
+          dayStyle={{
+            fontWeight: 500,
+          }}
+          selectedDayStyle={{
+            backgroundColor: AQUA,
+            color: "#fff",
+          }}
+          disabledDayStyle={{
+            opacity: 0.5,
+          }}
+        />
+      </Box>
     </Container>
   );
 };

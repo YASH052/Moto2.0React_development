@@ -18,7 +18,7 @@ const StyledTextField = styled(TextField)({
     },
   },
   "& .MuiOutlinedInput-input": {
-    padding: "8px 14px",
+    padding: "8px",
     lineHeight: "normal",
     "&::placeholder": {
       lineHeight: "normal",
@@ -81,6 +81,9 @@ const NuralTextField = ({ ...props }) => {
         "& .MuiOutlinedInput-input": {
           height: "100%",
           padding: props.inputPadding || "0 14px",
+        },
+        "&.MuiOutlinedInput-root": {
+          fontSize: "10px",
         },
         ...props.sx,
       }}

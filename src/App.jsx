@@ -9,7 +9,9 @@ function App() {
     <BrowserRouter>
       <Box sx={{ display: "flex" }}>
         <Sidebar/>
-        <AllRoutes />
+        <Box sx={{width: '100%'}}>
+          <AllRoutes />
+        </Box>
       </Box>
     </BrowserRouter>
   );

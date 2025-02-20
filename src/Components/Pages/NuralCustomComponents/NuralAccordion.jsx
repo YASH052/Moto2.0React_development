@@ -12,7 +12,11 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import NuralTextButton from "./NuralTextButton";
-import { DARK_PURPLE, PRIMARY_BLUE2, PRIMARY_LIGHT_PURPLE2 } from "../../Common/colors";
+import {
+  DARK_PURPLE,
+  PRIMARY_BLUE2,
+  PRIMARY_LIGHT_PURPLE2,
+} from "../../Common/colors";
 
 const StyledAccordion = styled(Accordion)({
   backgroundColor: "rgba(235, 238, 245, 0.5)",
@@ -133,12 +137,16 @@ const NuralAccordion = ({ title, templates, ...props }) => {
         // Shadow
         boxShadow: props.boxShadow,
 
-        ...props.sx
+        ...props.sx,
       }}
       {...props}
     >
       <StyledAccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ color: props.expandIconColor || DARK_PURPLE }} />}
+        expandIcon={
+          <ExpandMoreIcon
+            sx={{ color: props.expandIconColor || DARK_PURPLE }}
+          />
+        }
         sx={props.summaryStyle}
       >
         <Typography
@@ -146,7 +154,7 @@ const NuralAccordion = ({ title, templates, ...props }) => {
             fontSize: props.titleFontSize || "14px",
             fontWeight: props.titleFontWeight || 600,
             color: props.titleColor || DARK_PURPLE,
-            ...props.titleStyle
+            ...props.titleStyle,
           }}
         >
           {title}
@@ -154,12 +162,12 @@ const NuralAccordion = ({ title, templates, ...props }) => {
       </StyledAccordionSummary>
       <AccordionDetails sx={{ padding: 0, ...props.detailsStyle }}>
         {templates.map((template, index) => (
-          <TemplateItem 
+          <TemplateItem
             key={index}
             sx={{
               padding: props.itemPadding || "12px 16px",
               borderBottom: props.itemBorder || "1px solid rgba(0, 0, 0, 0.1)",
-              ...props.itemStyle
+              ...props.itemStyle,
             }}
           >
             <Typography
@@ -167,20 +175,22 @@ const NuralAccordion = ({ title, templates, ...props }) => {
                 fontSize: props.itemFontSize || "14px",
                 fontWeight: props.itemFontWeight || 500,
                 color: props.itemColor || DARK_PURPLE,
-                ...props.itemTextStyle
+                ...props.itemTextStyle,
               }}
             >
               {template.name}
             </Typography>
             <ActionButtons sx={props.actionButtonsStyle}>
-              <IconButton 
-                onClick={() => template.onView?.()} 
-                sx={props.iconButtonStyle}
-              >
-                <VisibilityIcon />
-              </IconButton>
-              <IconButton 
-                onClick={() => template.onDownload?.()} 
+              {props.eye && (
+                <IconButton
+                  onClick={() => template.onView?.()}
+                  sx={props.iconButtonStyle}
+                >
+                  <VisibilityIcon />
+                </IconButton>
+              )}
+              <IconButton
+                onClick={() => template.onDownload?.()}
                 sx={props.iconButtonStyle}
               >
                 <FileDownloadIcon />
@@ -188,31 +198,31 @@ const NuralAccordion = ({ title, templates, ...props }) => {
             </ActionButtons>
           </TemplateItem>
         ))}
-        <ButtonContainer sx={props.buttonContainerStyle}>
+       {props.buttons && <ButtonContainer sx={props.buttonContainerStyle}>
           <NuralTextButton
-            icon={"./Icons/searchIcon.svg"}
+            icon={props.referenceIcon1}
             iconPosition="right"
-            backgroundColor={PRIMARY_LIGHT_PURPLE2}
-            color="#fff"
+            backgroundColor={props.buttonBg}
+            color={props.buttonColor}
             width="100%"
             {...props.binButtonProps}
           >
             BIN CODE
           </NuralTextButton>
           <NuralTextButton
-            icon={"./Icons/searchIcon.svg"}
+            icon={props.referenceIcon2}
             iconPosition="right"
-            backgroundColor={PRIMARY_LIGHT_PURPLE2}
-            color="#fff"
+            backgroundColor={props.buttonBg}
+            color={props.buttonColor}
             width="100%"
             {...props.referenceButtonProps}
           >
             REFERENCE CODE
           </NuralTextButton>
-        </ButtonContainer>
+        </ButtonContainer>}
       </AccordionDetails>
     </StyledAccordion>
   );
 };
 
-export default NuralAccordion; 
+export default NuralAccordion;

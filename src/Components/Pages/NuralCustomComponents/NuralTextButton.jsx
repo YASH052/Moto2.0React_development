@@ -61,9 +61,8 @@ const NuralTextButton = ({
 
         // Hover state
         "&:hover": {
-          backgroundColor:
-            props.hoverBackgroundColor || PRIMARY_LIGHT_PURPLE,
-          color: props.hoverColor || DARK_PURPLE,
+          backgroundColor: props.hoverBackgroundColor || PRIMARY_LIGHT_PURPLE,
+          color: "#ffff",
           "& img": {
             filter: "brightness(0.8)",
           },
@@ -76,7 +75,7 @@ const NuralTextButton = ({
         // Icon styling
         "& img": {
           width: props.iconSize || "24px",
-          height: props.iconSize || "24px",
+          height: props.iconSize || "15px",
           objectFit: "contain",
         },
 
@@ -85,7 +84,7 @@ const NuralTextButton = ({
       {...props}
     >
       {children}
-      <img src={icon} alt="" />
+      <img src={icon} alt="img" />
     </StyledButton>
   );
 };

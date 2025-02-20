@@ -10,7 +10,7 @@ import {
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { DARK_PURPLE, PRIMARY_BLUE } from "../../Common/colors";
+import { DARK_PURPLE, LIGHT_GRAY2, PRIMARY_BLUE, PRIMARY_BLUE2 } from "../../Common/colors";
 import NuralTextField from "./NuralTextField";
 
 const StyledAccordion = styled(Accordion)({
@@ -94,26 +94,7 @@ const HiddenInput = styled("input")({
 const NuralKYCAccordion = ({
   title = "KYC",
   color = DARK_PURPLE,
-  fields = [
-    {
-      label: "PAN NO.",
-      placeholder: "XXXXXXXXXXXXX",
-      name: "pan",
-      value: "",
-      onChange: () => {},
-      fileName: "File Name",
-      onFileSelect: () => {},
-    },
-    {
-      label: "GST NO.",
-      placeholder: "XXXXXXXXXXXXX",
-      name: "gst",
-      value: "",
-      onChange: () => {},
-      fileName: "File Name",
-      onFileSelect: () => {},
-    },
-  ],
+  fields = [],
   ...props
 }) => {
   const fileInputRefs = React.useRef([]);
@@ -166,7 +147,7 @@ const NuralKYCAccordion = ({
         borderStyle: props.borderStyle,
 
         // Colors
-        backgroundColor: props.backgroundColor || "rgba(235, 238, 245, 0.5)",
+        backgroundColor: props.backgroundColor || LIGHT_GRAY2,
         color: props.color,
 
         // Position
@@ -205,7 +186,7 @@ const NuralKYCAccordion = ({
         <Typography
           sx={{
             fontSize: props.titleFontSize || "14px",
-            fontWeight: props.titleFontWeight || 600,
+            fontWeight: props.titleFontWeight || 800,
             color: color,
             fontFamily: "Manrope, sans-serif",
             ...props.titleStyle,

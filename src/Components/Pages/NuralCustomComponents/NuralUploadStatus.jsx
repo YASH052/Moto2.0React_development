@@ -8,7 +8,6 @@ import {
   ERROR_RED2,
   SUCCESS_GREEN,
   SUCCESS_GREEN2,
-
 } from "../../Common/colors";
 
 const StatusContainer = styled(Box)(({ status }) => ({
@@ -86,7 +85,13 @@ const getStatusIcon = (status) => {
 const getActionIcon = (status) => {
   switch (status) {
     case "warning":
-      return <img src="./Icons/Union.svg" alt="Union" style={{ width: "14px", height: "14px" }} />;
+      return (
+        <img
+          src="./Icons/Union.svg"
+          alt="Union"
+          style={{ width: "14px", height: "14px" }}
+        />
+      );
     default:
       return <AddIcon />;
   }
@@ -140,10 +145,12 @@ const NuralUploadStatus = ({
         {getStatusIcon(status)}
       </IconWrapper>
 
-      <ActionButton status={status} onClick={onAction} sx={props.buttonSx}>
-        {actionText}
-        {getActionIcon(status)}
-      </ActionButton>
+      {status != "success" && (
+        <ActionButton status={status} onClick={onAction} sx={props.buttonSx}>
+          {actionText}
+          {getActionIcon(status)}
+        </ActionButton>
+      )}
     </StatusContainer>
   );
 };

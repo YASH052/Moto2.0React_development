@@ -11,7 +11,7 @@ const StyledButton = styled(Button)({
   },
 });
 
-const NuralButton = ({ children, ...props }) => {
+const NuralButton = ({ text, ...props }) => {
   return (
     <Button
       variant={props.variant || "outlined"}
@@ -20,7 +20,7 @@ const NuralButton = ({ children, ...props }) => {
         width: props.width || "268px",
         minWidth: props.minWidth,
         maxWidth: props.maxWidth,
-        height: props.height || "46px",
+        height: props.height || "42px",
         minHeight: props.minHeight,
         maxHeight: props.maxHeight,
         gap: props.gap || "16px",
@@ -53,7 +53,7 @@ const NuralButton = ({ children, ...props }) => {
         color: props.color || AQUA_DARK,
         border: props.border,
         borderRadius: props.borderRadius || "40px",
-        
+        borderColor: props.borderColor ||PRIMARY_BLUE2,
         // Text Styling
         fontFamily: props.fontFamily,
         fontSize: props.fontSize || "16px",
@@ -82,7 +82,7 @@ const NuralButton = ({ children, ...props }) => {
       }}
       {...props}
     >
-      {children}
+        {text}
     </Button>
   );
 };

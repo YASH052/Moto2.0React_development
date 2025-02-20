@@ -76,6 +76,16 @@ const NuralRadioButton = ({
           display: props.display || "flex",
           justifyContent: props.justifyContent || "flex-start",
           alignItems: props.alignItems || "start",
+          border: props.border || "1px solid black",
+          width: props.width || "100%",
+          height: props.height || "100%",
+          padding: props.padding || "0",
+          margin: props.margin || "0",
+          backgroundColor: props.backgroundColor || "transparent",
+          borderRadius: props.borderRadius || "0",
+          borderColor: props.borderColor || "transparent",
+          borderWidth: props.borderWidth || "0",
+          ...props.sx,
         }}
       >
         {options.map((option) => (
@@ -92,7 +102,7 @@ const NuralRadioButton = ({
                   maxWidth: props.maxWidth,
                   minHeight: props.minHeight,
                   maxHeight: props.maxHeight,
-
+                  
                   // Margins
                   margin: props.margin,
                   marginTop: props.marginTop,

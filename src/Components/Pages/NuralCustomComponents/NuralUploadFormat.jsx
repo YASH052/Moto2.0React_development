@@ -45,7 +45,7 @@ const StyledAccordionSummary = styled(AccordionSummary)({
   },
 });
 
-const NuralUploadFormat = ({ title = "Upload Format", ...props }) => {
+const NuralUploadFormat = ({ title, ...props }) => {
   return (
     <StyledAccordion
       sx={{
@@ -125,8 +125,8 @@ const NuralUploadFormat = ({ title = "Upload Format", ...props }) => {
         >
           <NuralRadioButton
             options={[
-              { value: "single", label: "Single" },
-              { value: "batch", label: "Batch" },
+              { value: "Interface", label: "Interface" },
+              { value: "Batch", label: "Batch" },
             ]}
             color={LIGHT_GRAY2}
             value={props.value}
