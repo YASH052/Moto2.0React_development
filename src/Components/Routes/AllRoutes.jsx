@@ -16,18 +16,21 @@ import Transactions from "../Pages/Master/Transaction/Transactions";
 import PrimaryTransactionUpload from "../Pages/Master/Transaction/PrimaryTransactionUpload";
 import IspUpload from "../Pages/Master/Isp/IspUpload";
 import AddIsp from "../Pages/Master/Isp/AddIsp";
+import AddAgancy from "../Pages/Master/ManageAgency/Addagency";
 import Reports from "../Pages/Master/Reports/Reports";
 import SaleReports from "../Pages/Master/Reports/SaleReports";
 import RetailerExcel from "../Pages/Master/SalesChannel/RetailerExcel";
 import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
 import AddRetailer from "../Pages/Master/SalesChannel/AddRetailer";
 import AddSalesChannel from "../Pages/Master/SalesChannel/AddSalesChannel";
+import LoginFormHome from "../Pages/Auth/Login/LoginFormHome";
 const AllRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/login1" element={<LoginFormHome />} />
         <Route path="/forgot-password" element={<ForgotPasswordForm />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
@@ -44,6 +47,7 @@ const AllRoutes = () => {
         path="/primary-transaction"
         element={<PrimaryTransactionUpload />}
       />
+        <Route path="/add-agancy" element={<AddAgancy />} />
       <Route path="/isp-upload" element={<IspUpload />} />
       <Route path="/add-isp" element={<AddIsp />} />
       <Route path="/reports" element={<Reports />} />
@@ -52,7 +56,6 @@ const AllRoutes = () => {
       <Route path="/sales-channel-view" element={<SalesChannelView />} />
       <Route path="/add-retailer" element={<AddRetailer />} />
       <Route path="/add-sales-channel" element={<AddSalesChannel />} />
-
       {/* Default and Not Found Routes */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/404" element={<NotFound />} />
