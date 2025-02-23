@@ -25,6 +25,8 @@ import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
 import AddRetailer from "../Pages/Master/SalesChannel/AddRetailer";
 import AddSalesChannel from "../Pages/Master/SalesChannel/AddSalesChannel";
 import LoginFormHome from "../Pages/Auth/Login/LoginFormHome";
+import Target from "../Pages/Master/Target/target";
+
 const AllRoutes = () => {
   return (
     <Routes>
@@ -48,6 +50,7 @@ const AllRoutes = () => {
         path="/primary-transaction"
         element={<PrimaryTransactionUpload />}
       />
+       <Route path="/target" element={<Target />} />
        <Route path="/price-master" element={<Pricemaster />} />
         <Route path="/add-agancy" element={<AddAgancy />} />
       <Route path="/isp-upload" element={<IspUpload />} />
