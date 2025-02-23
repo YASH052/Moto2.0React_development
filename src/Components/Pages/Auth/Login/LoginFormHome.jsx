@@ -12,13 +12,14 @@ import { useMediaQuery } from "@mui/material";
 const images = [pdcard, one, two, five, four, three];
 
 const LoginFormHome = () => {
-    const isLargeScreen = useMediaQuery("(min-width:512px)");
+  const isLargeScreen = useMediaQuery("(min-width:512px)");
   return (
     <>
       <Box
         sx={{
           marginTop: "2%",
           marginLeft: "20%",
+          fontSize: "24px",
           color: PRIMARY_BLUE,
         }}
       >
@@ -54,16 +55,17 @@ const LoginFormHome = () => {
           }}
         />
         {isLargeScreen && (
-        <Grid
-          sx={{
-            color: PRIMARY_BLUE,
-            fontSize: "36px",
-            padding: "10px",
-            textAlign: "center",
-          }}
-        >
-          Your unified platform for sales operations
-        </Grid>)}
+          <Grid
+            sx={{
+              color: PRIMARY_BLUE,
+              fontSize: "36px",
+              padding: "10px",
+              textAlign: "center",
+            }}
+          >
+            Your unified platform for sales operations
+          </Grid>
+        )}
       </Box>
       <Grid
         sx={{
@@ -71,14 +73,23 @@ const LoginFormHome = () => {
           fontSize: "36px",
           padding: "0px",
           textAlign: "center",
+          marginTop: "3%",
         }}
       >
-        <Typography 
-        fontSize={24}
-        marginTop="1%"
-        marginBottom="0%"
-        >Select Your Nural Application<hr></hr></Typography>
+        <Typography fontSize={20} color={PRIMARY_BLUE} marginTop="1%">
+          Select Your Nural Application
+        </Typography>
+        <Box
+          sx={{
+            width: "100vw",
+            height: "1px",
+            backgroundColor: PRIMARY_BLUE,
+            marginTop: "0px",
+            marginBottom: "1%",
+          }}
+        />
       </Grid>
+
       <Box
         sx={{
           width: "100%",

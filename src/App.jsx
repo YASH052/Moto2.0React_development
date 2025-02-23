@@ -6,7 +6,7 @@ import Sidebar from "./Components/Pages/Sidebar/Sidebar";
 
 function AppContent() {
   const location = useLocation();
-  const hideSidebarRoutes = ["/login", "/login1"];
+  const hideSidebarRoutes = ["/login", "/login1", "/forgot-password","/reset-password"];
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
