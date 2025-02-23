@@ -17,6 +17,7 @@ import PrimaryTransactionUpload from "../Pages/Master/Transaction/PrimaryTransac
 import IspUpload from "../Pages/Master/Isp/IspUpload";
 import AddIsp from "../Pages/Master/Isp/AddIsp";
 import AddAgancy from "../Pages/Master/ManageAgency/Addagency";
+import Pricemaster from "../Pages/Master/PriceMaster/Pricemaster";
 import Reports from "../Pages/Master/Reports/Reports";
 import SaleReports from "../Pages/Master/Reports/SaleReports";
 import RetailerExcel from "../Pages/Master/SalesChannel/RetailerExcel";
@@ -24,6 +25,9 @@ import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
 import AddRetailer from "../Pages/Master/SalesChannel/AddRetailer";
 import AddSalesChannel from "../Pages/Master/SalesChannel/AddSalesChannel";
 import LoginFormHome from "../Pages/Auth/Login/LoginFormHome";
+import Target from "../Pages/Master/Target/target";
+import Product from "../Pages/Master/Product/product";
+
 const AllRoutes = () => {
   return (
     <Routes>
@@ -47,6 +51,9 @@ const AllRoutes = () => {
         path="/primary-transaction"
         element={<PrimaryTransactionUpload />}
       />
+        <Route path="/product" element={<Product />} />
+       <Route path="/target" element={<Target />} />
+       <Route path="/price-master" element={<Pricemaster />} />
         <Route path="/add-agancy" element={<AddAgancy />} />
       <Route path="/isp-upload" element={<IspUpload />} />
       <Route path="/add-isp" element={<AddIsp />} />
