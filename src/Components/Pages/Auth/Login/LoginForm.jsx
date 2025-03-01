@@ -9,6 +9,7 @@ import {
   LIGHT_GRAY2,
   MEDIUM_BLUE,
   PRIMARY_BLUE,
+  PRIMARY_LIGHT_PURPLE2,
   WHITE,
 } from "../../../Common/colors";
 import pdcard from "../../../../assets/carousel/pdcard.png";
@@ -17,21 +18,243 @@ import two from "../../../../assets/carousel/two.png";
 import three from "../../../../assets/carousel/three.png";
 import four from "../../../../assets/carousel/Four.png";
 import five from "../../../../assets/carousel/five.png";
-
+import { toast, Toaster } from "react-hot-toast";
+import axios from "axios";
+import Loader from "../../../Common/Loader";
+const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 const LoginForm = () => {
-  const [accessKey, setAccessKey] = useState("");
+  // const [accessKey, setAccessKey] = useState("");
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [usernameError, setUsernameError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [usernameErrorMsg, setUsernameErrorMsg] = useState("");
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
+  const [isOtpLogin, setIsOtpLogin] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneError, setPhoneError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [phoneErrorMsg, setPhoneErrorMsg] = useState("");
+  const [emailErrorMsg, setEmailErrorMsg] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("91"); // Default to India
   const isLargeScreen = useMediaQuery("(min-width:512px)");
   const images = [pdcard, one, two, five, four, three];
   const navigate = useNavigate(); // ✅ Hook placed at the top level
 
-  const handlePasswordChange = () => {
-    navigate("/forgot-password");
+  const countryCodes = [
+    { code: "91", country: "IND" },
+    { code: "1", country: "USA" },
+    { code: "44", country: "UK" },
+    { code: "61", country: "AUS" },
+    // Add more country codes as needed
+  ];
+
+  const handleUsernameChange = (e) => {
+    const inputValue = e.target.value;
+
+    // Check for spaces
+    if (inputValue.includes(" ")) {
+      setUsernameError(true);
+      setUsernameErrorMsg("Spaces are not allowed");
+      return;
+    }
+
+    // Check for length
+    if (inputValue.length > 20) {
+      setUsernameError(true);
+      setUsernameErrorMsg("Maximum 20 characters allowed");
+      return;
+    }
+
+    // If no validation errors, update the value
+    const newValue = inputValue.replace(/\s/g, "");
+    setUsername(newValue);
+
+    // Clear error when valid input
+    if (usernameError) {
+      setUsernameError(false);
+      setUsernameErrorMsg("");
+    }
   };
 
-  const handleLogin = () => {
-    console.log("Login attempt with:", { accessKey, username, password });
+  const handlePasswordChange = (e) => {
+    const inputValue = e.target.value;
+    if (inputValue.includes(" ")) {
+      setPasswordError(true);
+      setPasswordErrorMsg("Spaces are not allowed");
+      return;
+    }
+    // Check for length
+    if (inputValue.length > 20) {
+      setPasswordError(true);
+      setPasswordErrorMsg("Maximum 20 characters allowed");
+      return;
+    }
+
+    // If no validation errors, update the value
+    setPassword(inputValue);
+
+    // Clear error when valid input
+    if (passwordError) {
+      setPasswordError(false);
+      setPasswordErrorMsg("");
+    }
+  };
+
+  const handleLogin = async () => {
+    // Reset error states
+    setUsernameError(false);
+    setPasswordError(false);
+    setUsernameErrorMsg("");
+    setPasswordErrorMsg("");
+
+    // Basic validation
+    if (!username) {
+      setUsernameError(true);
+      setUsernameErrorMsg("Please enter username");
+      return;
+    }
+    if (!password) {
+      setPasswordError(true);
+      setPasswordErrorMsg("Please enter password");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post(`${BASE_URL}/login`, {
+        ClientKey: "motoISP",
+        UserName: username,
+        Password: password,
+        DeviceId: "",
+        DeviceToken: "",
+      });
+
+      if (res.data.statusCode == 200) {
+        toast.success(res.data.statusMessage);
+        // navigate("/");
+      } else {
+        toast.error(res.data.statusMessage);
+        setUsernameError(true);
+        setPasswordError(true);
+      }
+    } catch (error) {
+      toast.error(error.response.data.statusMessage);
+      console.error("Login failed:", error);
+      setUsernameError(true);
+      setPasswordError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpLoginClick = () => {
+    setIsOtpLogin(true);
+    // Reset any existing errors
+    setUsernameError(false);
+    setPasswordError(false);
+    setUsernameErrorMsg("");
+    setPasswordErrorMsg("");
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+
+    // Clear previous errors
+    setPhoneError(false);
+    setPhoneErrorMsg("");
+
+    // Remove any non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, "");
+
+    if (numericValue.length > 10) {
+      setPhoneError(true);
+      setPhoneErrorMsg("Phone number cannot exceed 10 digits");
+      return;
+    }
+
+    if (value.includes(" ")) {
+      setPhoneError(true);
+      setPhoneErrorMsg("Spaces are not allowed");
+      return;
+    }
+
+    setPhoneNumber(numericValue);
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+
+    // Clear previous errors
+    setEmailError(false);
+    setEmailErrorMsg("");
+
+    if (value.includes(" ")) {
+      setEmailError(true);
+      setEmailErrorMsg("Spaces are not allowed");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (value && !emailRegex.test(value)) {
+      setEmailError(true);
+      setEmailErrorMsg("Please enter a valid email address");
+    }
+
+    setEmail(value);
+  };
+
+  const handleSendOtp = () => {
+    // Reset errors
+    setPhoneError(false);
+    setEmailError(false);
+    setPhoneErrorMsg("");
+    setEmailErrorMsg("");
+
+    // Check if both fields are empty
+    if (!phoneNumber && !email) {
+      setPhoneError(true);
+      setEmailError(true);
+      setPhoneErrorMsg("Please enter phone number or email");
+      setEmailErrorMsg("Please enter phone number or email");
+      return;
+    }
+
+    // Validate phone number if provided
+    if (phoneNumber) {
+      if (phoneNumber.length < 10) {
+        setPhoneError(true);
+        setPhoneErrorMsg("Please enter a valid 10-digit phone number");
+        return;
+      }
+    }
+
+    // Validate email if provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setEmailError(true);
+        setEmailErrorMsg("Please enter a valid email address");
+        return;
+      }
+    }
+
+    // If validation passes, proceed with OTP sending
+    try {
+      setLoading(true);
+      // TODO: Implement your OTP API call here
+      // Example:
+      // const response = await axios.post(`${BASE_URL}/send-otp`, {
+      //   phoneNumber: phoneNumber ? `+${selectedCountry}${phoneNumber}` : null,
+      //   email: email || null
+      // });
+      toast.success("OTP sent successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,94 +326,177 @@ const LoginForm = () => {
                 textAlign: "center",
                 marginBottom: "32px",
                 fontSize: "14px",
-                color: MEDIUM_BLUE,
+                color: PRIMARY_LIGHT_PURPLE2,
               }}
             >
               Nice to see you again.
               <br /> Login with your access key, username & password.
             </Typography>
-            <Box sx={{ width: "100%", maxWidth: "320px" }}>
-              <NuralLoginTextField
-                type="password"
-                placeholder="Enter Your Access Key"
-                value={accessKey}
-                onChange={(e) => setAccessKey(e.target.value)}
-              />
-              <Box sx={{ marginTop: "20px" }}>
-                <NuralLoginTextField
-                  type="text"
-                  placeholder="Enter Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </Box>
-              <Box sx={{ marginTop: "10px" }}>
-                <NuralLoginTextField
-                  type="password"
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Box>
-              <Typography
-                sx={{
-                  textAlign: "center",
-                  cursor: "pointer",
-                  color: LIGHT_GRAY2,
-                  marginTop: "10px",
-                  fontSize: "8px",
-                  paddingBottom: "10px",
-                }}
-                onClick={handlePasswordChange}
-              >
-                FORGOT PASSWORD?
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                <NuralButton
-                  text="LOGIN"
-                  onClick={handleLogin}
+            {!isOtpLogin ? (
+              <Box sx={{ width: "100%", maxWidth: "320px" }}>
+                <Box sx={{ marginTop: "20px" }}>
+                  <NuralLoginTextField
+                    type="text"
+                    placeholder="Enter Username"
+                    value={username}
+                    onChange={handleUsernameChange}
+                    error={usernameError}
+                    errorMessage={usernameErrorMsg}
+                    border={usernameError ? "1px solid #FF0000" : undefined}
+                    maxLength={20}
+                  />
+                </Box>
+                <Box sx={{ marginTop: "10px" }}>
+                  <NuralLoginTextField
+                    type="password"
+                    placeholder="Enter Password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    error={passwordError}
+                    errorMessage={passwordErrorMsg}
+                    border={passwordError ? "1px solid #FF0000" : undefined}
+                    maxLength={20}
+                  />
+                </Box>
+                <Typography
                   sx={{
-                    width: "50%",
-                    borderRadius: "40px",
-                    padding: "10px",
-                    border: "1px solid white",
+                    textAlign: "center",
+                    cursor: "pointer",
                     color: LIGHT_GRAY2,
-                    fontWeight: "bold",
-                    "&:hover": {
-                      backgroundColor: AQUA,
-                      color: GREEN_COLOR,
-                      fontWeight: "bold",
-                    },
+                    marginTop: "10px",
+                    fontSize: "8px",
+                    paddingBottom: "10px",
                   }}
-                />
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  FORGOT PASSWORD?
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  <NuralButton
+                    text="LOGIN"
+                    backgroundColor={AQUA}
+                    color={GREEN_COLOR}
+                    onClick={handleLogin}
+                    width="50%"
+                    border="none"
+                    fontSize="14px"
+                  />
 
-                <NuralButton
-                  text="LOGIN WITH OTP"
-                  variant="outlined"
-                  onClick={handleLogin}
-                  sx={{
-                    width: "50%",
-                    borderRadius: "40px",
-                    padding: "10px",
-                    border: "1px solid white",
-                    color: LIGHT_GRAY2,
-                    fontWeight: "bold",
-                    "&:hover": {
-                      backgroundColor: AQUA,
-                      color: GREEN_COLOR,
-                      fontWeight: "bold",
-                    },
-                  }}
-                />
+                  <NuralButton
+                    text="LOGIN WITH OTP"
+                    variant="outlined"
+                    onClick={handleOtpLoginClick}
+                    color={"white"}
+                    width="max-content"
+                    fontSize="14px"
+                    borderColor="white"
+                  />
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              <Box sx={{ width: "100%", maxWidth: "320px" }}>
+                <Box sx={{ marginTop: "20px" }}>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box sx={{ width: "30%" }}>
+                      <select
+                        value={selectedCountry}
+                        onChange={(e) => setSelectedCountry(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          borderRadius: "4px",
+                          backgroundColor: "transparent",
+                          color: "white",
+                          border: "1px solid white",
+                          outline: "none",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {countryCodes.map((country) => (
+                          <option
+                            key={country.code}
+                            value={country.code}
+                            style={{ color: "black" }}
+                          >
+                            {country.country} +{country.code}
+                          </option>
+                        ))}
+                      </select>
+                    </Box>
+                    <Box sx={{ width: "70%" }}>
+                      <NuralLoginTextField
+                        type="tel"
+                        placeholder="ENTER PHONE NO."
+                        value={phoneNumber}
+                        onChange={handlePhoneChange}
+                        error={phoneError}
+                        errorMessage={phoneErrorMsg}
+                        border={phoneError ? "1px solid #FF0000" : undefined}
+                        maxLength={10}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+                <Typography
+                  sx={{
+                    textAlign: "center",
+                    color: MEDIUM_BLUE,
+                    margin: "10px 0",
+                    fontSize: "12px",
+                  }}
+                >
+                  Or with your email
+                </Typography>
+                <Box sx={{ marginTop: "10px" }}>
+                  <NuralLoginTextField
+                    type="email"
+                    placeholder="ENTER EMAIL"
+                    value={email}
+                    onChange={handleEmailChange}
+                    error={emailError}
+                    errorMessage={emailErrorMsg}
+                    border={emailError ? "1px solid #FF0000" : undefined}
+                  />
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                    marginTop: "20px",
+                  }}
+                >
+                  <NuralButton
+                    text="SEND OTP"
+                    backgroundColor={AQUA}
+                    color={GREEN_COLOR}
+                    onClick={handleSendOtp}
+                    width="50%"
+                    border="none"
+                    fontSize="16px"
+                  />
+
+                  <NuralButton
+                    text="LOGIN ANOTHER WAY"
+                    variant="outlined"
+                    onClick={() => setIsOtpLogin(false)}
+                    color={"white"}
+                    width="70%"
+                    fontSize="14px"
+                    borderColor="white"
+                  />
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
@@ -318,6 +624,8 @@ const LoginForm = () => {
           </Grid>
         </Box>
       </Box>
+      <Toaster />
+      {loading && <Loader />}
     </Box>
   );
 };

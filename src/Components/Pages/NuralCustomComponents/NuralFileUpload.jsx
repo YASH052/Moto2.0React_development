@@ -9,7 +9,7 @@ import {
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { DARK_PURPLE } from "../../Common/colors";
+import { DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
 
 const StyledAccordion = styled(Accordion)({
   backgroundColor: "rgba(235, 238, 245, 0.5)",
@@ -99,6 +99,7 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
 
   return (
     <StyledAccordion
+      defaultExpanded
       sx={{
         // Size
         width: props.width,
@@ -132,7 +133,7 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
         zIndex: props.zIndex,
 
         // Colors
-        backgroundColor: props.backgroundColor || "rgba(235, 238, 245, 0.5)",
+        backgroundColor: props.backgroundColor || LIGHT_GRAY2,
         borderRadius: props.borderRadius || "8px",
 
         ...props.sx,

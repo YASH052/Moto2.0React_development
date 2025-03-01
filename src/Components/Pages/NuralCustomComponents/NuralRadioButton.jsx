@@ -49,11 +49,18 @@ const NuralRadioButton = ({
   ...props
 }) => {
   const handleChange = (event) => {
-    // If clicking the same value, unselect it
-    if (event.target.value === value) {
-      onChange && onChange({ target: { value: "" } });
-    } else {
-      onChange && onChange(event);
+    // Get the selected value directly from the event
+    const selectedValue = event.target.value;
+    console.log("NuralRadioButton selected value:", selectedValue);
+    
+    // Call onChange with just the value instead of the event
+    if (onChange) {
+      // If clicking the same value, unselect it
+      if (selectedValue === value) {
+        onChange("");
+      } else {
+        onChange(selectedValue);
+      }
     }
   };
 
@@ -66,7 +73,7 @@ const NuralRadioButton = ({
     >
       <RadioGroup
         row={props.row || true}
-        value={value}
+        value={value || ""} // Ensure value is never undefined
         onChange={handleChange}
         sx={{
           color: DARK_PURPLE,
@@ -76,7 +83,7 @@ const NuralRadioButton = ({
           display: props.display || "flex",
           justifyContent: props.justifyContent || "flex-start",
           alignItems: props.alignItems || "start",
-          border: props.border || "1px solid black",
+          border: props.border ,
           width: props.width || "100%",
           height: props.height || "100%",
           padding: props.padding || "0",
@@ -95,6 +102,7 @@ const NuralRadioButton = ({
             control={
               <StyledRadio
                 sx={{
+                 
                   // Size
                   width: props.width || "24px",
                   height: props.height || "24px",
@@ -125,14 +133,14 @@ const NuralRadioButton = ({
 
                   // States
                   "&:hover": {
-                    backgroundColor: "transparent",
-                    "& .MuiSvgIcon-root": {
-                      color: props.hoverColor || PRIMARY_LIGHT_PURPLE,
-                    },
+                 
+                    // "& .MuiSvgIcon-root": {
+                    //   color: props.hoverColor || PRIMARY_LIGHT_PURPLE,
+                    // },
                   },
-                  "&.Mui-disabled": {
-                    color: props.disabledColor || "rgba(0, 0, 0, 0.38)",
-                  },
+                  // "&.Mui-disabled": {
+                  //   color: props.disabledColor || "rgba(0, 0, 0, 0.38)",
+                  // },
                   ...props.sx,
                 }}
               />

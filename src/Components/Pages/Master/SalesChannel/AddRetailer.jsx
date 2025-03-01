@@ -22,35 +22,35 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralKYCAccordion from "../../NuralCustomComponents/NuralKYCAccordion";
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import { useNavigate } from "react-router-dom";
-const templates = [
-  {
-    name: "Reference Data 1",
-    onView: () => console.log("Reference Data 1"),
-    onDownload: () => console.log("Download Reference Data 1"),
-  },
-  {
-    name: "Reference Data 2",
-    onView: () => console.log("Reference Data 2"),
-    onDownload: () => console.log("Download Reference Data 2"),
-  },
-  {
-    name: "Reference Data 3",
-    onView: () => console.log("Reference Data 3"),
-    onDownload: () => console.log("Download Reference Data 3"),
-  },
-  {
-    name: "Reference Data 4",
-    onView: () => console.log("Reference Data 4"),
-    onDownload: () => console.log("Download Reference Data 4"),
-  },
-];
+
+//   {
+//     name: "Reference Data 1",
+//     onView: () => console.log("Reference Data 1"),
+//     onDownload: () => console.log("Download Reference Data 1"),
+//   },
+//   {
+//     name: "Reference Data 2",
+//     onView: () => console.log("Reference Data 2"),
+//     onDownload: () => console.log("Download Reference Data 2"),
+//   },
+//   {
+//     name: "Reference Data 3",
+//     onView: () => console.log("Reference Data 3"),
+//     onDownload: () => console.log("Download Reference Data 3"),
+//   },
+//   {
+//     name: "Reference Data 4",
+//     onView: () => console.log("Reference Data 4"),
+//     onDownload: () => console.log("Download Reference Data 4"),
+//   },
+// ];
 const tabs = [
+  { label: "Bulk Upload", value: "sales-bulk-upload" },
   { label: "Add Saleschannel", value: "add-sales-channel" },
   { label: "Add Retailer", value: "add-retailer" },
-  { label: "Search", value: "sales-channel-view" },
+  { label: "Search", value: "search" },
   { label: "Approve Saleschannel", value: "approveSaleschannel" },
 ];
-
 const options = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
@@ -86,22 +86,35 @@ const fields = [
 ];
 const AddRetailer = () => {
   const [activeTab, setActiveTab] = React.useState("add-retailer");
+  const [selectedFormat, setSelectedFormat] = React.useState("interface");
+
   const navigate = useNavigate();
+
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("/add-retailer");
+    } else if (value === "batch") {
+      navigate("/retailer-excelUpload");
+    }
+  };
+
   return (
     <Grid container spacing={0}>
-      <Grid 
-        item 
-        xs={12} 
+      <Grid
+        item
+        xs={12}
         sx={{
-          position: 'sticky',
+          position: "sticky",
           top: 0,
           zIndex: 1000,
-          backgroundColor: '#fff',
+          backgroundColor: "#fff",
           paddingBottom: 1,
         }}
       >
@@ -118,8 +131,8 @@ const AddRetailer = () => {
         </Grid>
       </Grid>
 
-      <Grid container spacing={0} lg={12} mt={1}>
-        <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+      <Grid container spacing={2} lg={12} mt={-1}>
+        <Grid item xs={12} md={6} lg={6} sx={{ pr: 0 }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralAccordion2
@@ -143,6 +156,7 @@ const AddRetailer = () => {
                       RETAILER TYPE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -166,10 +180,12 @@ const AddRetailer = () => {
                       SELECT MODE
                     </Typography>
                     <NuralRadioButton
+                      onChange={handleFormatChange}
                       options={[
                         { value: "interface", label: "Interface" },
                         { value: "batch", label: "Batch" },
                       ]}
+                      value={selectedFormat}
                       width="100%"
                       gap="5px"
                     />
@@ -191,6 +207,7 @@ const AddRetailer = () => {
                       RETAILER CATEGORY
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -238,6 +255,7 @@ const AddRetailer = () => {
                       PARENT SALES CHANNEL
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                     />
@@ -285,6 +303,7 @@ const AddRetailer = () => {
                       REPORTING HIERARCHY NAME
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -308,7 +327,7 @@ const AddRetailer = () => {
                       SALESMAN
                     </Typography>
                     <NuralAutocomplete
-                      marginLeft="15px"
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -331,7 +350,7 @@ const AddRetailer = () => {
                       CONTACT PERSON
                     </Typography>
                     <NuralTextField
-                      width="87%"
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -384,6 +403,7 @@ const AddRetailer = () => {
                       COUNTER POTENTIAL (VALUE)
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -405,6 +425,7 @@ const AddRetailer = () => {
                       COUNTER POTENTIAL (VOLUME)
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -435,6 +456,7 @@ const AddRetailer = () => {
                       NAME OF BANK
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -456,6 +478,7 @@ const AddRetailer = () => {
                       ACCOUNT HOLDER NAME
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -477,6 +500,7 @@ const AddRetailer = () => {
                       BANK ACCOUNT NUMBER
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -498,6 +522,7 @@ const AddRetailer = () => {
                       BRANCH LOCATION
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -519,6 +544,7 @@ const AddRetailer = () => {
                       IFSC CODE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -553,6 +579,7 @@ const AddRetailer = () => {
                       RETAILER NAME
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -574,6 +601,7 @@ const AddRetailer = () => {
                       RETAILER CODE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="AUTO-GENERATED"
                       backgroundColor={LIGHT_BLUE}
                       disabled
@@ -596,6 +624,7 @@ const AddRetailer = () => {
                       MOBILE NO.
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -617,6 +646,7 @@ const AddRetailer = () => {
                       EMAIL ID
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -638,6 +668,7 @@ const AddRetailer = () => {
                       COUNTRY
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -660,6 +691,7 @@ const AddRetailer = () => {
                       STATE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -682,12 +714,33 @@ const AddRetailer = () => {
                       CITY
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
                     />
                   </Grid>
-
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: DARK_PURPLE,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      PIN CODE
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      placeholder="XXXXXXXXXXXXX"
+                      backgroundColor={LIGHT_BLUE}
+                    />
+                  </Grid>
                   <Grid item xs={12}>
                     <Typography
                       variant="h6"
@@ -704,9 +757,9 @@ const AddRetailer = () => {
                       ADDRESS LINE 1
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
-                      width="100%"
                     />
                   </Grid>
 
@@ -726,28 +779,7 @@ const AddRetailer = () => {
                       ADDRESS LINE 2
                     </Typography>
                     <NuralTextField
-                      placeholder="XXXXXXXXXXXXX"
-                      backgroundColor={LIGHT_BLUE}
                       width="100%"
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: DARK_PURPLE,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      PIN CODE
-                    </Typography>
-                    <NuralTextField
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -777,6 +809,7 @@ const AddRetailer = () => {
                       LATITUDE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -798,6 +831,7 @@ const AddRetailer = () => {
                       LONGITUDE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />

@@ -27,123 +27,132 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
 import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
-
+import { useNavigate } from "react-router-dom";
+const options = [
+  { value: "all", label: "ALL" },
+  { value: "custom", label: "CUSTOM" },
+];
 const tabs = [
-  { label: "Add Target", value: "addtarget" },
-  { label: "Search", value: "search" },
+  { label: "Add Target", value: "target" },
+  { label: "Search", value: "view-target" },
 ];
 
+const templates = [
+  {
+    name: "Template 1",
+    onView: () => console.log("Reference Data 1"),
+    onDownload: () => console.log("Download Reference Data 1"),
+  },
+];
 const Target = () => {
-  const [activeTab, setActiveTab] = React.useState("addtarget");
+  const [activeTab, setActiveTab] = React.useState("target");
   const [selectedValue1, setSelectedValue1] = useState("");
   const [selectedValue2, setSelectedValue2] = useState("");
-
+  const navigate = useNavigate();
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   return (
     <>
-      <Grid container spacing={0}>
+      <Grid container spacing={2} sx={{ position: "relative" }}>
         {" "}
         <Grid
           item
           xs={12}
-          md={6}
-          lg={12}
-          mt={1}
-          mb={0}
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1200,
+            zIndex: 1000,
             backgroundColor: "#fff",
-            ml: 1,
-            pb: 1,
+            paddingBottom: 1,
           }}
         >
-          <BreadcrumbsHeader pageTitle="Target" />
+          <Grid item xs={12} mt={1} mb={0} ml={1}>
+            <BreadcrumbsHeader pageTitle="Target" />
+          </Grid>
+
+          <Grid item xs={12} ml={1}>
+            <TabsBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </Grid>
         </Grid>
-        <Grid
-          item
-          xs={12}
-          md={6}
-          lg={12}
-          sx={{
-            position: "sticky",
-            top: "48px",
-            zIndex: 1200,
-            backgroundColor: "#fff",
-            pb: 1,
-            ml: 1,
-          }}
-        >
-          <TabsBar
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </Grid>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sx={{ pr: 2 }}>
+        <Grid container spacing={2} p={2}>
+          <Grid item xs={12} sx={{ pr: 2, mb: 0 }}>
             <Grid container spacing={2} direction="column">
               <Grid item>
-                <NuralAccordion2 title="Create Target">
+                <NuralAccordion2
+                  title="Create Target"
+                  backgroundColor={LIGHT_GRAY2}
+                >
                   {/* First Row - 1 TextField + 2 Dropdowns */}
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET NAME</Typography>
-                       <NuralTextField
-                            placeholder="xxxxx"
-                            backgroundColor={LIGHT_BLUE}
-                            fullWidth={true}
-                            sx={{ height: "40px" }}
-                          />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET NAME
+                      </Typography>
+                      <NuralTextField
+                        width="100%"
+                        placeholder="xxxxx"
+                        backgroundColor={LIGHT_BLUE}
+                      />
                     </Grid>
                     <Grid item xs={12} md={4}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET FOR</Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET FOR
+                      </Typography>
                       <NuralAutocomplete
                         placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
+                        width="100%"
                         onChange={(event, newValue) =>
                           setSelectedValue1(newValue)
                         }
                       />
                     </Grid>
                     <Grid item xs={12} md={4}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET ON</Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET ON
+                      </Typography>
                       <NuralAutocomplete
                         placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
+                        width="100%"
                         onChange={(event, newValue) =>
                           setSelectedValue2(newValue)
                         }
@@ -154,235 +163,210 @@ const Target = () => {
                   {/* Second Row - 4 Dropdowns */}
                   <Grid container spacing={2} sx={{ mt: 2 }}>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>SCOPE</Typography>
-                 <NuralRadioButton
-  options={[
-    { value: "all", label: "ALL" },
-    { value: "custom", label: "CUSTOM" }
-  ]}
-  // value={selectedValue}
-  // onChange={(event) => setSelectedValue(event.target.value)}
-  fullWidth
-  sx={{ height: "40px" }}
-/>
-
+                      <Grid item xs={12} md={12} lg={12}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_PURPLE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                          }}
+                        >
+                          SCOPE
+                        </Typography>
+                        <NuralRadioButton
+                          label="Store Type"
+                          options={options}
+                          width="100%"
+                          fontSize="10px"
+                          onChange={(value) => console.log(value)}
+                        />
+                      </Grid>
                     </Grid>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>REGION</Typography>
-                      <NuralAutocomplete
-                        placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
-                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        REGION
+                      </Typography>
+                      <NuralAutocomplete placeholder="Select" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>STATE</Typography>
-                      <NuralAutocomplete
-                        placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
-                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        STATE
+                      </Typography>
+                      <NuralAutocomplete placeholder="Select" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>CITY</Typography>
-                      <NuralAutocomplete
-                        placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
-                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        CITY
+                      </Typography>
+                      <NuralAutocomplete placeholder="Select" width="100%" />
                     </Grid>
                   </Grid>
 
                   {/* Third Row - 2 Dropdowns + 2 TextFields */}
                   <Grid container spacing={2} sx={{ mt: 2 }}>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET TYPE</Typography>
-                      <NuralAutocomplete
-                        placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
-                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET TYPE
+                      </Typography>
+                      <NuralAutocomplete placeholder="Select" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET BASED ON</Typography>
-                      <NuralAutocomplete
-                        placeholder="Select"
-                        fullWidth
-                        sx={{ height: "40px" }}
-                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET BASED ON
+                      </Typography>
+                      <NuralAutocomplete placeholder="Select" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET FROM</Typography>
-                       <NuralTextField
-                            placeholder="xxxxx"
-                            backgroundColor={LIGHT_BLUE}
-                            fullWidth={true}
-                            sx={{ height: "40px" }}
-                          />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <Typography  variant="h6"
-                                                sx={{
-                                                  color: DARK_PURPLE,
-                                                  fontFamily: "Manrope",
-                                                  fontWeight: 400,
-                                                  fontSize: "10px",
-                                                  lineHeight: "13.66px",
-                                                  letterSpacing: "4%",
-                                                  mb: 1,
-                                                }}>TARGET TO</Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET FROM
+                      </Typography>
                       <NuralTextField
-                            placeholder="xxxxx"
-                            backgroundColor={LIGHT_BLUE}
-                            fullWidth={true}
-                            sx={{ height: "40px" }}
-                          />
+                        width="100%"
+                        placeholder="xxxxx"
+                        backgroundColor={LIGHT_BLUE}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
+                          mb: 1,
+                        }}
+                      >
+                        TARGET TO
+                      </Typography>
+                      <NuralTextField
+                        width="100%"
+                        placeholder="xxxxx"
+                        backgroundColor={LIGHT_BLUE}
+                      />
                     </Grid>
                   </Grid>
                 </NuralAccordion2>
+                <Grid container spacing={2} sx={{ marginTop: 0, pr: 2 }}>
+                  {/* Left Side - Templates Accordion */}
+                  <Grid item xs={12} md={6} lg={6}>
+                    <NuralAccordion
+                      titleColor={DARK_PURPLE}
+                      buttonColor={PRIMARY_BLUE2}
+                      buttonBg={MEDIUM_BLUE}
+                      backgroundColor={LIGHT_GRAY2}
+                      width="100%"
+                      referenceIcon1={"./Icons/downloadIcon.svg"}
+                      referenceIcon2={"./Icons/downloadIcon.svg"}
+                      title="Templates"
+                      templates={templates}
+                      buttons={true}
+                      eye={false}
+                    />
+                  </Grid>
+
+                  {/* Right Side - File Upload */}
+                  <Grid item xs={12} md={6} lg={6}>
+                    <NuralFileUpload />
+                  </Grid>
+                </Grid>
+                <Grid container spacing={1} mt={1} mb={2}>
+                  <Grid item xs={12} md={6} lg={6}>
+                    <NuralButton
+                      text="CANCEL"
+                      variant="outlined"
+                      borderColor={PRIMARY_BLUE2}
+                      onClick={() => console.log("Cancel clicked")}
+                      width="98%"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6} lg={6}>
+                    <NuralButton
+                      text="PROCEED"
+                      backgroundColor={AQUA}
+                      variant="contained"
+                      onClick={() => console.log("Proceed clicked")}
+                      width="98%"
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
         </Grid>
       </Grid>
-
-
-
-
-      <Grid container spacing={2} sx={{ marginTop: 2 }}>
-  {/* Left Side - Templates Accordion */}
-  <Grid item xs={12} md={6} lg={6}>
-    <NuralAccordion2 title="Templates" backgroundColor={LIGHT_GRAY2} />
-  </Grid>
-
-  {/* Right Side - File Upload */}
-  <Grid item xs={12} md={6} lg={6}>
-    <NuralFileUpload />
-  </Grid>
-</Grid>
-
-
-<Grid container spacing={2} sx={{ width: "100%", px: 2 }}>
-  {/* First Dropdown */}
-  <Grid item xs={12} sm={4} md={4} lg={4}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      First Dropdown
-    </Typography>
-    <NuralAutocomplete placeholder="Select" fullWidth />
-  </Grid>
-
-  {/* Second Dropdown */}
-  <Grid item xs={12} sm={4} md={4} lg={4}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      Second Dropdown
-    </Typography>
-    <NuralAutocomplete placeholder="Select" fullWidth />
-  </Grid>
-
-  {/* Third Dropdown */}
-  <Grid item xs={12} sm={4} md={4} lg={4}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      Third Dropdown
-    </Typography>
-    <NuralAutocomplete placeholder="Select" fullWidth />
-  </Grid>
-
-  {/* Fourth Dropdown */}
-  <Grid item xs={12} sm={6} md={6} lg={6}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      Fourth Dropdown
-    </Typography>
-    <NuralAutocomplete placeholder="Select" fullWidth />
-  </Grid>
-
-  {/* Fifth Dropdown */}
-  <Grid item xs={12} sm={6} md={6} lg={6}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      Fifth Dropdown
-    </Typography>
-    <NuralAutocomplete placeholder="Select" fullWidth />
-  </Grid>
-
-  {/* First TextField */}
-  <Grid item xs={12} sm={6} md={6} lg={6}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      First TextField
-    </Typography>
-    <NuralTextField placeholder="Enter Text" fullWidth />
-  </Grid>
-
-  {/* Second TextField */}
-  <Grid item xs={12} sm={6} md={6} lg={6}>
-    <Typography variant="h6" sx={{ color: DARK_PURPLE, mb: 1 }}>
-      Second TextField
-    </Typography>
-    <NuralTextField placeholder="Enter Text" fullWidth />
-  </Grid>
-</Grid>
-
     </>
   );
 };

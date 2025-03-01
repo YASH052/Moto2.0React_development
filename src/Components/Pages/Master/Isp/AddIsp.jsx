@@ -19,6 +19,7 @@ import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
+import { useNavigate } from "react-router-dom";
 const templates = [
   {
     name: "Reference Data 1",
@@ -60,8 +61,20 @@ const options2 = [
 
 const AddIsp = () => {
   const [activeTab, setActiveTab] = React.useState("addIsp");
+  const [selectedFormat, setSelectedFormat] = React.useState("interface");
+  const navigate = useNavigate();
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+  };
+
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("/add-isp");
+    } else if (value === "batch") {
+      navigate("/isp-upload");
+    }
   };
 
   return (
@@ -152,9 +165,14 @@ const AddIsp = () => {
                       SELECT MODE
                     </Typography>
                     <NuralRadioButton
-                      label="Store Type"
-                      options={options}
+                      onChange={handleFormatChange}
+                      options={[
+                        { value: "interface", label: "Interface" },
+                        { value: "batch", label: "Batch" },
+                      ]}
+                      value={selectedFormat}
                       width="100%"
+                      gap="5px"
                     />
                   </Grid>
                 </Grid>

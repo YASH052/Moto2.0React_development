@@ -1,0 +1,23 @@
+.overlayloader {
+    position: fixed;
+    top: 0;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Disable the cursor, make the icon look blurred and faded */
+.disabled {
+    pointer-events: none;  /* Prevent clicks */
+    opacity: 0.5;          /* Make it appear faded */
+    filter: blur(.5px);     /* Apply blur effect */
+  }
+  
+  .pointer {
+    cursor: pointer !important;
+  }

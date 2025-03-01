@@ -14,12 +14,21 @@ import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-const RetailerExcel = () => {
-  const [activeTab, setActiveTab] = React.useState("addSaleschannel");
+import { useNavigate } from "react-router-dom";
 
+const RetailerExcel = () => {
+  const [activeTab, setActiveTab] = React.useState("add-retailer");
+  const [selectedFormat, setSelectedFormat] = React.useState("batch");
+  const navigate = useNavigate();
+
+  const options = [
+    { value: "interface", label: "Interface" },
+    { value: "batch", label: "Batch" },
+  ];
   const tabs = [
-    { label: "Add Saleschannel", value: "addSaleschannel" },
-    { label: "Add Retailer", value: "addRetailer" },
+    { label: "Bulk Upload", value: "sales-bulk-upload" },
+    { label: "Add Saleschannel", value: "add-sales-channel" },
+    { label: "Add Retailer", value: "add-retailer" },
     { label: "Search", value: "search" },
     { label: "Approve Saleschannel", value: "approveSaleschannel" },
   ];
@@ -49,7 +58,21 @@ const RetailerExcel = () => {
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
+
   };
+
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("/add-retailer");
+    } else if (value === "batch") {
+      navigate("/retailer-excelUpload");
+    }
+  };
+
+  
 
   return (
     <Grid container spacing={0}>
@@ -66,7 +89,7 @@ const RetailerExcel = () => {
           ml: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Sales Channel" />
+        <BreadcrumbsHeader pageTitle="Sales" />
       </Grid>
 
       <Grid item xs={12} md={6} lg={12}>
@@ -77,13 +100,16 @@ const RetailerExcel = () => {
         />
       </Grid>
 
-      <Grid container spacing={0} lg={12} mt={1}>
+      <Grid container spacing={0} lg={12} mt={2}>
         <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralUploadFormat
                 title="Upload Format"
+                onChange={handleFormatChange}
                 backgroundColor={LIGHT_GRAY2}
+                options={options}
+                value={selectedFormat}
               />
             </Grid>
             <Grid item>
@@ -118,7 +144,7 @@ const RetailerExcel = () => {
                 onAction={() => console.log("Retry clicked")}
               />
             </Grid>
-            <Grid item>
+            <Grid item mt={-1}>
               <Grid container spacing={1}>
                 <Grid item xs={12} md={6} lg={6}>
                   <NuralButton

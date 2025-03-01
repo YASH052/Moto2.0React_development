@@ -24,16 +24,11 @@ import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import { useNavigate } from "react-router-dom";
 
 const tabs = [
-    { label: "Add Saleschannel", value: "add-sales-channel" },
-    { label: "Add Retailer", value: "add-retailer" },
-    { label: "Search", value: "sales-channel-view" },
-    { label: "Approve Saleschannel", value: "approveSaleschannel" },
-  ];
-  
-
-const options = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
+  { label: "Bulk Upload", value: "sales-bulk-upload" },
+  { label: "Add Saleschannel", value: "add-sales-channel" },
+  { label: "Add Retailer", value: "add-retailer" },
+  { label: "Search", value: "search" },
+  { label: "Approve Saleschannel", value: "approveSaleschannel" },
 ];
 
 const options2 = [
@@ -66,12 +61,24 @@ const fields = [
 ];
 const AddSalesChannel = () => {
   const [activeTab, setActiveTab] = React.useState("add-sales-channel");
+  const [selectedFormat, setSelectedFormat] = React.useState("interface");
+
   const navigate = useNavigate();
   const handleTabChange = (newValue) => {
+    console.log(newValue);
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("/add-sales-channel");
+    } else if (value === "batch") {
+      navigate("/sales-excel");
+    }
+  };
   return (
     <Grid container spacing={0} mb={2}>
       <Grid
@@ -96,7 +103,7 @@ const AddSalesChannel = () => {
               ml: 1,
             }}
           >
-            <BreadcrumbsHeader pageTitle="Saleschannel" />
+            <BreadcrumbsHeader pageTitle="Sales" />
           </Grid>
 
           <Grid item xs={12} md={6} lg={12}>
@@ -134,6 +141,7 @@ const AddSalesChannel = () => {
                       SALES CHANNEL TYPE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -144,7 +152,6 @@ const AddSalesChannel = () => {
                     <Typography
                       variant="h6"
                       sx={{
-                        ml: 2,
                         color: DARK_PURPLE,
                         fontFamily: "Manrope",
                         fontWeight: 400,
@@ -157,10 +164,12 @@ const AddSalesChannel = () => {
                       SELECT MODE
                     </Typography>
                     <NuralRadioButton
+                      onChange={handleFormatChange}
                       options={[
                         { value: "interface", label: "Interface" },
                         { value: "batch", label: "Batch" },
                       ]}
+                      value={selectedFormat}
                       width="100%"
                       gap="5px"
                     />
@@ -182,6 +191,7 @@ const AddSalesChannel = () => {
                       PARENT SALES CHANNEL
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -204,6 +214,7 @@ const AddSalesChannel = () => {
                       REPORTING HIERARCHY NAME
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -226,7 +237,7 @@ const AddSalesChannel = () => {
                       CONTACT PERSON
                     </Typography>
                     <NuralTextField
-                      width="87%"
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -288,6 +299,7 @@ const AddSalesChannel = () => {
                       NAME OF BANK
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -309,6 +321,7 @@ const AddSalesChannel = () => {
                       ACCOUNT HOLDER NAME
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -330,6 +343,7 @@ const AddSalesChannel = () => {
                       BANK ACCOUNT NUMBER
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -351,6 +365,7 @@ const AddSalesChannel = () => {
                       BRANCH LOCATION
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -372,6 +387,7 @@ const AddSalesChannel = () => {
                       IFSC CODE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -406,6 +422,7 @@ const AddSalesChannel = () => {
                       SALES CHANNEL NAME
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -427,6 +444,7 @@ const AddSalesChannel = () => {
                       SALES CHANNEL CODE
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="AUTO-GENERATED"
                       backgroundColor={LIGHT_BLUE}
                       disabled
@@ -449,6 +467,7 @@ const AddSalesChannel = () => {
                       MOBILE NO.
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -470,6 +489,7 @@ const AddSalesChannel = () => {
                       EMAIL ID
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />
@@ -491,6 +511,7 @@ const AddSalesChannel = () => {
                       COUNTRY
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -513,6 +534,7 @@ const AddSalesChannel = () => {
                       STATE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
@@ -535,12 +557,33 @@ const AddSalesChannel = () => {
                       CITY
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options2}
                       placeholder="SELECT"
                       backgroundColor={LIGHT_BLUE}
                     />
                   </Grid>
-
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: DARK_PURPLE,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      PIN CODE
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      placeholder="XXXXXXXXXXXXX"
+                      backgroundColor={LIGHT_BLUE}
+                    />
+                  </Grid>
                   <Grid item xs={12}>
                     <Typography
                       variant="h6"
@@ -557,9 +600,9 @@ const AddSalesChannel = () => {
                       ADDRESS LINE 1
                     </Typography>
                     <NuralTextField
+                      width="100%"
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
-                      width="100%"
                     />
                   </Grid>
 
@@ -579,28 +622,7 @@ const AddSalesChannel = () => {
                       ADDRESS LINE 2
                     </Typography>
                     <NuralTextField
-                      placeholder="XXXXXXXXXXXXX"
-                      backgroundColor={LIGHT_BLUE}
                       width="100%"
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: DARK_PURPLE,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      PIN CODE
-                    </Typography>
-                    <NuralTextField
                       placeholder="XXXXXXXXXXXXX"
                       backgroundColor={LIGHT_BLUE}
                     />

@@ -116,6 +116,7 @@ const NuralKYCAccordion = ({
 
   return (
     <StyledAccordion
+      defaultExpanded
       sx={{
         // Size
         width: props.width,

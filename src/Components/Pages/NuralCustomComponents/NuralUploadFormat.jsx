@@ -45,9 +45,17 @@ const StyledAccordionSummary = styled(AccordionSummary)({
   },
 });
 
-const NuralUploadFormat = ({ title, ...props }) => {
+const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
+  const handleRadioChange = (newValue) => {
+    console.log("Radio value changed:", newValue);
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
+
   return (
     <StyledAccordion
+      defaultExpanded
       sx={{
         // Size
         width: props.width,
@@ -124,13 +132,10 @@ const NuralUploadFormat = ({ title, ...props }) => {
           }}
         >
           <NuralRadioButton
-            options={[
-              { value: "Interface", label: "Interface" },
-              { value: "Batch", label: "Batch" },
-            ]}
+            options={props.options}
             color={LIGHT_GRAY2}
-            value={props.value}
-            onChange={props.onChange}
+            value={value}
+            onChange={handleRadioChange}
             padding="0px"
             {...props.radioProps}
           />

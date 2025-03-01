@@ -47,6 +47,7 @@ const StyledAccordionSummary = styled(AccordionSummary)({
 const NuralAccordion2 = ({ title = "Activations", children, ...props }) => {
   return (
     <StyledAccordion
+      defaultExpanded
       sx={{
         // Size
         width: props.width,

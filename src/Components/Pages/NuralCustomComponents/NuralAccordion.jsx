@@ -92,6 +92,7 @@ const ButtonContainer = styled(Box)({
 const NuralAccordion = ({ title, templates, ...props }) => {
   return (
     <StyledAccordion
+      defaultExpanded
       sx={{
         // Size
         width: props.width,

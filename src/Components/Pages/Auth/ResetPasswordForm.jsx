@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography, useMediaQuery } from '@mui/material';
-import { AQUA, DARK_PURPLE, GREEN_COLOR, LIGHT_GRAY2, MEDIUM_BLUE, PRIMARY_BLUE, PRIMARY_LIGHT_PURPLE2, WHITE } from '../../Common/colors';
-import NuralLoginTextField from '../NuralCustomComponents/NuralLoginTextField';
-import NuralButton from '../NuralCustomComponents/NuralButton';
+import React, { useState } from "react";
+import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
+import {
+  AQUA,
+  DARK_PURPLE,
+  GREEN_COLOR,
+  LIGHT_GRAY2,
+  MEDIUM_BLUE,
+  PRIMARY_BLUE,
+  PRIMARY_LIGHT_PURPLE2,
+  WHITE,
+  RED
+} from "../../Common/colors";
+import NuralLoginTextField from "../NuralCustomComponents/NuralLoginTextField";
+import NuralButton from "../NuralCustomComponents/NuralButton";
 import one from "../../../assets/carousel/one.png";
 import two from "../../../assets/carousel/two.png";
 import three from "../../../assets/carousel/three.png";
@@ -10,25 +20,91 @@ import four from "../../../assets/carousel/Four.png";
 import five from "../../../assets/carousel/five.png";
 import pdcard from "../../../assets/carousel/pdcard.png";
 import { CheckCircleOutlined as CheckCircleOutlinedIcon } from "@mui/icons-material";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 const ResetPasswordForm = () => {
   const [newPassword, setNewPassword] = useState(false);
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState({
+    password: '',
+    confirmPassword: ''
+  });
   const images = [pdcard, one, two, five, four, three];
 
-   const isLargeScreen = useMediaQuery("(min-width:512px)");
-   const [accessKey, setAccessKey] = useState("");
-   const [username, setUsername] = useState("");
-   const navigate = useNavigate();
-   
-  
-  const handleSubmit = () => {
-    // Add reset password logic here
-    console.log('New password:', { newPassword, confirmPassword });
+  const isLargeScreen = useMediaQuery("(min-width:512px)");
+  const [accessKey, setAccessKey] = useState("");
+  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+
+  const validatePassword = (pass) => {
+    if (!pass) {
+      return 'Password is required';
+    }
+    if (pass.includes(' ')) {
+      return 'Password cannot contain spaces';
+    }
+    if (pass.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (pass.length > 16) {
+      return 'Password must not exceed 16 characters';
+    }
+    return '';
   };
- const ResetHooks = () => {
-   navigate("/login");
- };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value.trim();
+    if (!value.includes(' ')) {
+      setPassword(value);
+      setErrors(prev => ({
+        ...prev,
+        password: validatePassword(value),
+        confirmPassword: value !== confirmPassword ? 'Passwords do not match' : ''
+      }));
+    }
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    const value = e.target.value.trim();
+    if (!value.includes(' ')) {
+      setConfirmPassword(value);
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: value !== password ? 'Passwords do not match' : ''
+      }));
+    }
+  };
+
+  const handleResetPassword = () => {
+    const passwordError = validatePassword(password);
+    const confirmError = !confirmPassword ? 'Please confirm password' : 
+                        password !== confirmPassword ? 'Passwords do not match' : '';
+
+    setErrors({
+      password: passwordError,
+      confirmPassword: confirmError
+    });
+
+    if (!passwordError && !confirmError) {
+      setNewPassword(true);
+      // Add your API call or password reset logic here
+    }
+  };
+
+  const ResetHooks = () => {
+    navigate("/login");
+  };
+
+  const handleCancel = () => {
+    navigate("/login");
+  };
+
+  const preventSpaces = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault();
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -117,30 +193,77 @@ const ResetPasswordForm = () => {
                 re-enter the new password to confirm.
               </Typography>
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
-                <NuralLoginTextField
-                  type="password"
-                  placeholder="Enter New Password"
-                  value={accessKey}
-                  onChange={(e) => setAccessKey(e.target.value)}
-                />
+                <Box sx={{ position: 'relative', marginBottom: '24px' }}>
+                  <NuralLoginTextField
+                    type="password"
+                    placeholder="Enter New Password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    onKeyDown={preventSpaces}
+                    error={Boolean(errors.password)}
+                    helperText={errors.password}
+                  />
+                  {errors.password && (
+                    <Typography
+                      sx={{
+                        color: RED,
+                        fontSize: '12px',
+                        position: 'absolute',
+                        bottom: '-20px',
+                        left: '0',
+                        width: '100%',
+                      }}
+                    >
+                      {errors.password}
+                    </Typography>
+                  )}
+                </Box>
 
-                <Box sx={{ marginTop: "20px" }}>
+                <Box sx={{ position: 'relative', marginBottom: '24px' }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Re Enter New Password"
-                    value={accessKey}
-                    onChange={(e) => setAccessKey(e.target.value)}
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    onKeyDown={preventSpaces}
+                    error={Boolean(errors.confirmPassword)}
+                    helperText={errors.confirmPassword}
                   />
+                  {errors.confirmPassword && (
+                    <Typography
+                      sx={{
+                        color: RED,
+                        fontSize: '12px',
+                        position: 'absolute',
+                        bottom: '-20px',
+                        left: '0',
+                        width: '100%',
+                      }}
+                    >
+                      {errors.confirmPassword}
+                    </Typography>
+                  )}
                 </Box>
+
                 <Typography
                   sx={{
+                    fontSize: "10px",
+                    color: LIGHT_GRAY2,
+                    maxWidth: "69%",
+                    margin: "auto",
+                    fontWeight: "bold",
                     textAlign: "center",
-                    cursor: "pointer",
-                    marginBottom: "16px",
-                    marginTop: "10px",
-                    fontSize: "12px",
+                    marginTop: "20px",
                   }}
-                ></Typography>
+                >
+                  Note: Your password should be between 8-16 characters<br></br>
+                  <br></br>Use a combo of uppercase letters, lowercase
+                  letters, numbers, & even some special characters (!, @, $,
+                  %, ^, &, *, +, #)
+                </Typography>
+
+                
+
                 <Box
                   sx={{
                     display: "flex",
@@ -149,21 +272,6 @@ const ResetPasswordForm = () => {
                     gap: 2,
                   }}
                 >
-                  <Typography
-                    sx={{
-                      fontSize: "10px",
-                      color: LIGHT_GRAY2,
-                      maxWidth: "69%",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                    }}
-                  >
-                    Note: Your password should be comprised of at least 10
-                    characters <br></br>
-                    <br></br>Use a combo of uppercase letters, lowercase
-                    letters, numbers, & even some special characters (!, @, $,
-                    %, ^, &, *, +, #)
-                  </Typography>
                   <Box
                     sx={{
                       display: "flex",
@@ -177,20 +285,10 @@ const ResetPasswordForm = () => {
                     <NuralButton
                       text="Reset Password"
                       // variant="outlined"
-                      onClick={() => setNewPassword(true)}
-                      sx={{
-                        width: "50%",
-                        borderRadius: "20px",
-                        padding: "10px",
-                        border: "1px solid white",
-                        color: LIGHT_GRAY2,
-                        fontWeight: "bold",
-                        "&:hover": {
-                          backgroundColor: AQUA,
-                          color: GREEN_COLOR,
-                          fontWeight: "bold",
-                        },
-                      }}
+                      backgroundColor={AQUA}
+                      width="60%"
+                      color={GREEN_COLOR}
+                      onClick={handleResetPassword}
                     />
                   </Box>
                   <Box
@@ -202,25 +300,16 @@ const ResetPasswordForm = () => {
                       justifyContent: "center",
                       width: "100%",
                     }}
-                  
                   >
                     <NuralButton
                       text="CANCEL"
-                      // variant="outlined"
-                      // onClick={handleLogin}
-                      sx={{
-                        width: "50%",
-                        borderRadius: "20px",
-                        padding: "10px",
-                        border: "1px solid white",
-                        color: LIGHT_GRAY2,
-                        fontWeight: "bold",
-                        "&:hover": {
-                          backgroundColor: AQUA,
-                          color: GREEN_COLOR,
-                          fontWeight: "bold",
-                        },
-                      }}
+                      variant="outlined"
+                      onClick={handleCancel}
+                      color={"white"}
+                      width="50%"
+                      fontSize="14px"
+                      borderColor="white"
+                      fontWeight="400"
                     />
                   </Box>
                 </Box>
@@ -413,4 +502,4 @@ const ResetPasswordForm = () => {
   );
 };
 
-export default ResetPasswordForm; 
+export default ResetPasswordForm;

@@ -1,6 +1,6 @@
 import { Autocomplete, TextField } from "@mui/material";
 import React, { useState } from "react";
-import { PRIMARY_BLUE2, PRIMARY_LIGHT_GRAY } from "../../Common/colors";
+import { LIGHT_GRAY2, PRIMARY_BLUE2, PRIMARY_LIGHT_GRAY } from "../../Common/colors";
 
 const NuralAutocomplete = ({
   options = [
@@ -57,7 +57,7 @@ const NuralAutocomplete = ({
           height: props.height || "36px",
           minHeight: props.minHeight,
           maxHeight: props.maxHeight,
-          backgroundColor: props.backgroundColor || PRIMARY_LIGHT_GRAY,
+          backgroundColor: props.backgroundColor || LIGHT_GRAY2,
           borderRadius: props.borderRadius || "8px",
           fontSize: props.fontSize || "12px",
           fontWeight: props.fontWeight,

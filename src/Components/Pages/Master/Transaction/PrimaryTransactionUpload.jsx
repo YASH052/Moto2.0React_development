@@ -14,13 +14,19 @@ import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
+import { useNavigate } from "react-router-dom";
+const options = [
+  { value: "interface", label: "Interface" },
+  { value: "batch", label: "Batch" },
+];
 const PrimaryTransactionUpload = () => {
-  const [activeTab, setActiveTab] = React.useState("primary");
-
+  const [activeTab, setActiveTab] = React.useState("primary-transaction");
+  const navigate = useNavigate();
+  const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const tabs = [
-    { label: "Primary", value: "primary" },
+    { label: "Primary", value: "primary-transaction" },
     { label: "Intermediary", value: "intermediary" },
-    { label: "Secondary", value: "secondary" },
+    { label: "Secondary", value: "secondary-sale" },
     { label: "Tertiary", value: "tertiary" },
   ];
 
@@ -49,8 +55,18 @@ const PrimaryTransactionUpload = () => {
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("#");
+    } else if (value === "batch") {
+      navigate("#");
+    }
+  };
   return (
     <Grid container spacing={0}>
       <Grid
@@ -81,7 +97,13 @@ const PrimaryTransactionUpload = () => {
         <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
-              <NuralUploadFormat title="Upload Format" backgroundColor={LIGHT_GRAY2} />
+              <NuralUploadFormat
+                title="Upload Format"
+                onChange={handleFormatChange}
+                backgroundColor={LIGHT_GRAY2}
+                options={options}
+                value={selectedFormat}
+              />
             </Grid>
             <Grid item>
               <NuralAccordion
@@ -100,7 +122,7 @@ const PrimaryTransactionUpload = () => {
             </Grid>
           </Grid>
         </Grid>
-        
+
         <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
           <Grid container spacing={2} direction="column">
             <Grid item>

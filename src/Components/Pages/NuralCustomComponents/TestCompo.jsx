@@ -31,6 +31,16 @@ import NuralActivityPanel from "./NuralActivityPanel";
 import NuralAccordionItem from "./NuralAccordionItem";
 import NuralQuickLinks from "./NuralQuickLinks";
 import NuralCalendar from "./NuralCalendar";
+import SalesTrendGraph from "./DashboardWidgets/SalesTrendGraph";
+import TargetAchievementGraph from "./DashboardWidgets/TargetAchievement";
+import SalesMetricsGrid from "./DashboardWidgets/SalesMetricsGrid";
+import CounterShare from "./DashboardWidgets/CounterShare";
+import FocusModelPerformance from "./DashboardWidgets/FocusModelPerformance";
+import RankingCard from "./DashboardWidgets/RankingCard";
+import InfoCard from "./DashboardWidgets/InfoCard";
+import AttendanceOverview from "./DashboardWidgets/AttendanceOverview";
+import NsmTrendChart from "./DashboardWidgets/NsmTrendChart";
+import SalesDonutChart from "./DashboardWidgets/SalesDonutChart";
 
 const TestCompo = () => {
   const quickLinks = ["Quick Link 1", "Quick Link 2", "Quick Link 3"];
@@ -74,6 +84,15 @@ const TestCompo = () => {
       onView: () => console.log("View Template 2"),
       onDownload: () => console.log("Download Template 2"),
     },
+  ];
+  const data = [
+    { date: "14/03", total: 3000, nsm1: 2000 },
+    { date: "15/03", total: 9000, nsm1: 8000 },
+    { date: "16/03", total: 4000, nsm1: 7000 },
+    { date: "17/03", total: 6000, nsm1: 8000 },
+    { date: "18/03", total: 8000, nsm1: 4000 },
+    { date: "19/03", total: 9000, nsm1: 7000 },
+    { date: "20/03", total: 8500, nsm1: 8000 },
   ];
 
   // KYC Fields configuration
@@ -153,10 +172,180 @@ const TestCompo = () => {
     console.log("Navigation:", action, date.toISOString());
   };
 
+  const TimeAnalysis = [
+    {
+      name: "9:15 AM",
+      score: "LATE CHECK-INS",
+    },
+    {
+      name: "6:45 PM",
+      score: "EARLY CHECK-OUTS",
+    },
+    {
+      name: "28 Mins.",
+      score: "AVG. Break",
+    },
+  ];
+
+  const rankings = [
+    { name: "NSM 1", score: 340 },
+    { name: "NSM 2", score: 280 },
+    { name: "NSM 3", score: 100 },
+  ];
+  const brandData = {
+    PRIMARY: { share: "140.15K", percentage: "17%" },
+    SECONDARY: { share: "169K", percentage: "14%" },
+    TERTIARY: { share: "151K", percentage: "18%" },
+    QUATERNARY: { share: "150K", percentage: "21%" },
+    QUINARY: { share: "90K", percentage: "8%" },
+    OTHERS: { share: "139K", percentage: "23%" },
+  };
+
+  const salesMetrics = [
+    {
+      title: "Yesterday Sales",
+      value: "₹14,200",
+      trend: 5.2,
+      comparedTo: "VS PREV. DAY",
+      backgroundColor: "#F8F7FF",
+    },
+
+    {
+      title: "MTD Sales",
+      value: "₹2,85,400",
+      trend: -12.3,
+      comparedTo: "VS PREV. MONTH",
+      backgroundColor: "#F8F7FF",
+    },
+    {
+      title: "YTD Sales",
+      value: "₹14.85Cr",
+      trend: -2.7,
+      comparedTo: "VS PREV. YEAR",
+      backgroundColor: "#FFF1F1",
+    },
+    {
+      title: "ISPs Present Yesterday",
+      value: "115/124",
+      trend: 92,
+      comparedTo: "ATTENDANCE",
+      subtitle: "93% ATTENDANCE",
+      backgroundColor: "#FFFFFF",
+    },
+    {
+      title: "ISPs Present Yesterday",
+      value: "78/124",
+      trend: 56,
+      comparedTo: "ATTENDANCE",
+      subtitle: "89% ATTENDANCE",
+      backgroundColor: "#FFFFFF",
+    },
+  ];
+
+  const complianceData2 = [
+    {
+      name: "8",
+      score: "LATE CHECK-INS",
+    },
+    {
+      name: "3",
+      score: "EARLY CHECK-OUTS",
+    },
+    {
+      name: "9:15 AM",
+      score: "AVG. CHECK-IN",
+    },
+  ];
+  const complianceData = [
+    {
+      name: "8",
+      score: "LATE CHECK-INS",
+    },
+    {
+      name: "6",
+      score: "EARLY CHECK-OUTS",
+    },
+    {
+      name: "28 Mins.",
+      score: "AVG. DURATION",
+    },
+  ];
+
+  const analysisData = [
+    {
+      name: "2.3 Days",
+      score: "AVG RESPONSE TIME",
+    },
+    {
+      name: "45%",
+      score: "AVG IDLE TIME",
+    },
+    {
+      name: "12%",
+      score: "UNPLANNED LEAVES",
+    },
+  ];
+
+  const attendanceOverviewData = {
+    present: 85,
+    total: 120,
+    absent: 15,
+    leave: 10,
+    off: 5,
+    closed: 5,
+  };
+  const databar = {
+    labels: ["NSM 1", "NSM 2", "NSM 3", "NSM 4"],
+    datasets: [
+      {
+        data: [110, 75, 150, 100],
+        backgroundColor: ["#D3D3D3", "#00BCD4", "#D3D3D3"],
+        barPercentage: 0.3,
+        categoryPercentage: 0.8,
+      },
+      {
+        data: [0, 20, 0, 0],
+        backgroundColor: "#B2EBF2",
+        barPercentage: 0.3,
+        categoryPercentage: 0.8,
+      },
+      {
+        data: [0, 20, 0, 0],
+        backgroundColor: "#B2EBF2",
+        barPercentage: 0.3,
+        categoryPercentage: 0.8,
+      },
+      {
+        data: [0, 20, 0, 0],
+        backgroundColor: "#B2EBF2",
+        barPercentage: 0.3,
+        categoryPercentage: 0.8,
+      },
+    ],
+  };
+  const donutData = {
+    labels: ["DIST 1", "DIST 2", "DIST 3", "DIST 4", "DIST 5", "OTHERS"],
+    datasets: [
+      {
+        data: [30, 25, 20, 15, 7, 3],
+        backgroundColor: [
+          "#1a237e", // Dark blue
+          "#283593",
+          "#3949ab",
+          "#3f51b5",
+          "#7986cb",
+          "#c5cae9",
+        ],
+        borderWidth: 0,
+        cutout: "75%",
+      },
+    ],
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, mb: 6 }}>
       {/* Documentation Section */}
-      <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
+      {/* <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
           Components Documentation
         </Typography>
@@ -183,10 +372,10 @@ const TestCompo = () => {
             </li>
           </ul>
         </Box>
-      </Paper>
+      </Paper> */}
 
       {/* Components Showcase Section */}
-      <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
+      {/* <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
           Components Showcase
         </Typography>
@@ -328,9 +517,9 @@ const TestCompo = () => {
             />
           </Grid>
         </Grid>
-      </Paper>
+      </Paper> */}
 
-      <NuralNotificationPanel
+      {/* <NuralNotificationPanel
         width="384px"
         height="962px"
         backgroundColor={BLUE_COLOR}
@@ -352,8 +541,8 @@ const TestCompo = () => {
         titleStyle={{
           fontWeight: 600,
         }}
-      />
-      <Grid
+      /> */}
+      {/* <Grid
         sx={{
           marginTop: "20px",
         }}
@@ -368,9 +557,9 @@ const TestCompo = () => {
         >
           <NuralAccordionItem title="TODAY" itemCount={4} models={modelData} />
         </NuralActivityPanel>
-      </Grid>
+      </Grid> */}
 
-      <Box
+      {/* <Box
         sx={{
           margin: "10px",
           maxWidth: "220px",
@@ -410,7 +599,81 @@ const TestCompo = () => {
             opacity: 0.5,
           }}
         />
-      </Box>
+      </Box> */}
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6} lg={6} xl={6}>
+          <SalesTrendGraph
+            width="400px"
+            height="220px"
+            paperBgColor={LIGHT_GRAY2}
+            gap="15px"
+            borderRadius="8px"
+            data={data}
+            title="Sales Trend"
+          />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} md={6} lg={6} xl={6}>
+          <SalesTrendGraph
+            width="400px"
+            height="220px"
+            paperBgColor={LIGHT_GRAY2}
+            gap="15px"
+            borderRadius="8px"
+            data={data}
+            title="ASP Trend"
+          />
+        </Grid>
+      </Grid>
+      <Grid container spacing={1} mt={1}>
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <SalesMetricsGrid metrics={salesMetrics} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={1} mt={1}>
+        <Grid item xs={12} md={10} lg={8} xl={8}>
+          <CounterShare data={data} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={1} mt={5}>
+        <Grid item xs={12} md={10} lg={8} xl={8}>
+          <FocusModelPerformance data={data} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={1} mt={5}>
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <RankingCard title="Ranking" data={rankings} />
+        </Grid>
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <InfoCard title="Compliance" data={complianceData} />
+        </Grid>
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <InfoCard title="Analysis" data={analysisData} />
+        </Grid>
+
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <InfoCard title="Compliance" data={complianceData2} />
+        </Grid>
+        <Grid item xs={12} md={4} lg={4} xl={4}>
+          <InfoCard title="Time Analysis" data={TimeAnalysis} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4} lg={4} xl={4} mt={2}>
+          <AttendanceOverview data={attendanceOverviewData} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4} lg={4} xl={4} mt={2}>
+          <NsmTrendChart data={databar} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4} lg={4} xl={4} mt={2}>
+          <SalesDonutChart data={donutData} brandData={brandData} />
+        </Grid>
+      </Grid>
     </Container>
   );
 };

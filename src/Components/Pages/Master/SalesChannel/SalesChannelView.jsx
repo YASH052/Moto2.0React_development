@@ -38,10 +38,11 @@ import { useNavigate } from "react-router-dom";
 const SalesChannelView = () => {
   const [activeTab, setActiveTab] = React.useState("sales-channel-view");
 
- const tabs = [
+  const tabs = [
+    { label: "Bulk Upload", value: "sales-bulk-upload" },
     { label: "Add Saleschannel", value: "add-sales-channel" },
     { label: "Add Retailer", value: "add-retailer" },
-    { label: "Search", value: "sales-channel-view" },
+    { label: "Search", value: "search" },
     { label: "Approve Saleschannel", value: "approveSaleschannel" },
   ];
   const navigate = useNavigate();
@@ -124,16 +125,32 @@ const SalesChannelView = () => {
   // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
-    if (sortConfig.key === columnName && sortConfig.direction === "asc") {
-      direction = "desc";
+    
+    // If clicking the same column
+    if (sortConfig.key === columnName) {
+      if (sortConfig.direction === "asc") {
+        direction = "desc";
+      } else {
+        // Reset sorting if already in desc order
+        setSortConfig({ key: null, direction: null });
+        setFilteredRows([...rows]); // Reset to original order
+        return;
+      }
     }
+    
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
-      if (a[columnName] < b[columnName]) {
+      if (!a[columnName]) return 1;
+      if (!b[columnName]) return -1;
+      
+      const aValue = a[columnName].toString().toLowerCase();
+      const bValue = b[columnName].toString().toLowerCase();
+      
+      if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
       }
-      if (a[columnName] > b[columnName]) {
+      if (aValue > bValue) {
         return direction === "asc" ? 1 : -1;
       }
       return 0;
@@ -201,7 +218,7 @@ const SalesChannelView = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Saleschannel" />
+          <BreadcrumbsHeader pageTitle="Sales" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -218,7 +235,7 @@ const SalesChannelView = () => {
         container
         spacing={0}
         lg={12}
-        mt={-1}
+        mt={1}
         sx={{ position: "relative", zIndex: 1 }}
       >
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
@@ -234,11 +251,11 @@ const SalesChannelView = () => {
                   spacing={2}
                   mb={2}
                   sx={{
-                    gap: { xs: 2, sm: 3, md: 8, lg: 10 },
+                    gap: { xs: 2, sm: 3, md: 0, lg: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -250,12 +267,13 @@ const SalesChannelView = () => {
                       SALES CHANNEL TYPE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       label="Sales Channel Type"
                       options={options}
                       placeholder="Select"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                    <Grid item xs={12} sm={5} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -267,12 +285,13 @@ const SalesChannelView = () => {
                       STATE
                     </Typography>
                     <NuralAutocomplete
+                     width="100%"
                       label="State"
                       options={options}
                       placeholder="Select"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                      <Grid item xs={12} sm={5} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -283,9 +302,9 @@ const SalesChannelView = () => {
                     >
                       SALES CHANNEL CODE
                     </Typography>
-                    <NuralTextField placeholder="Enter Sales Channel Code" />
+                    <NuralTextField width="100%" placeholder="Enter Sales Channel Code" />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -296,7 +315,7 @@ const SalesChannelView = () => {
                     >
                       SALES CHANNEL NAME
                     </Typography>
-                    <NuralTextField placeholder="Enter Sales Channel Name" />
+                    <NuralTextField  width="100%" placeholder="Enter Sales Channel Name" />
                   </Grid>
                 </Grid>
 
@@ -306,11 +325,11 @@ const SalesChannelView = () => {
                   spacing={2}
                   mb={2}
                   sx={{
-                    gap: { xs: 2, sm: 4, md: 8, lg: 10 },
+                    gap: { xs: 2, sm: 4, md: 0, lg: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={6} lg={6}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -322,11 +341,12 @@ const SalesChannelView = () => {
                       PARENT SALES CHANNEL
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options}
                       placeholder="With Serial"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={6} lg={6}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -337,7 +357,7 @@ const SalesChannelView = () => {
                     >
                       STATUS
                     </Typography>
-                    <NuralAutocomplete options={options} placeholder="Select" />
+                    <NuralAutocomplete width="100%" options={options} placeholder="Select" />
                   </Grid>
                 </Grid>
 
@@ -347,7 +367,7 @@ const SalesChannelView = () => {
                   spacing={2}
                   sx={{
                     flexDirection: { xs: "column", sm: "row" },
-                    gap: { xs: 2, sm: 2 },
+                    // gap: { xs: 2, sm: 2 },
                   }}
                 >
                   <Grid item xs={12} sm={5} md={3}>
@@ -372,7 +392,8 @@ const SalesChannelView = () => {
                       ALL SALES DETAILS
                     </NuralTextButton>
                   </Grid>
-                  <Grid item xs={12} sm={2} md={1}>
+
+                  <Grid item xs={12} sm={3} md={1}>
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
@@ -384,7 +405,7 @@ const SalesChannelView = () => {
                       width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={8} md={4}>
+                  <Grid item xs={12} sm={7} md={5}>
                     <NuralTextButton
                       icon={"./Icons/searchIcon.svg"}
                       iconPosition="right"
@@ -511,10 +532,10 @@ const SalesChannelView = () => {
                 .map((row, index) => (
                   <TableRow
                     key={row.id}
-                    sx={{
-                      backgroundColor:
-                        index % 2 === 0 ? "#BCD4EC" : PRIMARY_LIGHT_GRAY,
-                    }}
+                    // sx={{
+                    //   backgroundColor:
+                    //     index % 2 === 0 ? "#BCD4EC" : PRIMARY_LIGHT_GRAY,
+                    // }}
                   >
                     <TableCell
                       sx={{
@@ -639,7 +660,12 @@ const SalesChannelView = () => {
               <Typography
                 variant="body2"
                 sx={{
-                  fontSize: "10px",
+                  fontFamily: "Manrope",
+                  fontWeight: 700,
+                  fontSize: "8px",
+                  lineHeight: "10.93px",
+                  letterSpacing: "4%",
+                  textAlign: "center",
                 }}
               >
                 JUMP TO FIRST

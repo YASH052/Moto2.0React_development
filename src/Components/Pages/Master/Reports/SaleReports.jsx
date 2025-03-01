@@ -121,16 +121,32 @@ const SaleReports = () => {
   // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
-    if (sortConfig.key === columnName && sortConfig.direction === "asc") {
-      direction = "desc";
+    
+    // If clicking the same column
+    if (sortConfig.key === columnName) {
+      if (sortConfig.direction === "asc") {
+        direction = "desc";
+      } else {
+        // Reset sorting if already in desc order
+        setSortConfig({ key: null, direction: null });
+        setFilteredRows([...rows]); // Reset to original order
+        return;
+      }
     }
+    
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
-      if (a[columnName] < b[columnName]) {
+      if (!a[columnName]) return 1;
+      if (!b[columnName]) return -1;
+      
+      const aValue = a[columnName].toString().toLowerCase();
+      const bValue = b[columnName].toString().toLowerCase();
+      
+      if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
       }
-      if (a[columnName] > b[columnName]) {
+      if (aValue > bValue) {
         return direction === "asc" ? 1 : -1;
       }
       return 0;
@@ -198,7 +214,7 @@ const SaleReports = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Sales" />
+          <BreadcrumbsHeader pageTitle="Reports" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -231,11 +247,11 @@ const SaleReports = () => {
                   spacing={2}
                   mb={2}
                   sx={{
-                    gap: { xs: 2, sm: 3, md: 5 },
+                    gap: { xs: 2, sm: 3, md: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -250,9 +266,10 @@ const SaleReports = () => {
                       label="Sale Type"
                       options={options}
                       placeholder="Select"
+                      width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -264,12 +281,13 @@ const SaleReports = () => {
                       REGION
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       label="Region"
                       options={options}
                       placeholder="Select"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -281,6 +299,7 @@ const SaleReports = () => {
                       STATE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       label="State"
                       options={options}
                       placeholder="Select"
@@ -294,11 +313,11 @@ const SaleReports = () => {
                   spacing={2}
                   mb={2}
                   sx={{
-                    gap: { xs: 2, sm: 3, md: 5 },
+                    gap: { xs: 2, sm: 3, md: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -309,9 +328,9 @@ const SaleReports = () => {
                     >
                       FROM DATE
                     </Typography>
-                    <NuralCalendar placeholder="DD/MM/YY" />
+                    <NuralCalendar width="100%" placeholder="DD/MM/YY" />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -322,9 +341,9 @@ const SaleReports = () => {
                     >
                       TO DATE
                     </Typography>
-                    <NuralCalendar placeholder="DD/MM/YY" />
+                    <NuralCalendar width="100%" placeholder="DD/MM/YY" />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={2}>
+                  <Grid item xs={12} sm={5} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -336,6 +355,7 @@ const SaleReports = () => {
                       SERIAL TYPE
                     </Typography>
                     <NuralAutocomplete
+                      width="100%"
                       options={options}
                       placeholder="With Serial"
                     />
@@ -348,7 +368,7 @@ const SaleReports = () => {
                   spacing={2}
                   sx={{
                     flexDirection: { xs: "column", sm: "row" },
-                    gap: { xs: 2, sm: 2 },
+                    // gap: { xs: 2, sm: 2 },
                   }}
                 >
                   <Grid item xs={12} sm={2} md={1}>
@@ -363,12 +383,12 @@ const SaleReports = () => {
                       width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={9} md={10}>
+                  <Grid item xs={12} sm={9} md={11}>
                     <NuralTextButton
                       icon={"./Icons/searchIcon.svg"}
                       iconPosition="right"
                       height="36px"
-                      backgroundColor={DARK_PURPLE}
+                      backgroundColor={PRIMARY_BLUE2}
                       color="#fff"
                       width="100%"
                       fontSize="12px"
@@ -390,7 +410,7 @@ const SaleReports = () => {
           sx={{
             backgroundColor: LIGHT_GRAY2,
             color: PRIMARY_BLUE2,
-            maxHeight: "calc(100vh - 380px)", // Adjusted to account for headers
+            maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
             overflow: "auto",
             position: "relative",
             "& .MuiTable-root": {
@@ -434,7 +454,7 @@ const SaleReports = () => {
                   sx={{
                     ...tableHeaderStyle,
                     position: "sticky",
-                    top: "39px", // Adjusted to account for "List" header
+                    top: "45px", // Adjusted to account for "List" header
                     backgroundColor: LIGHT_GRAY2,
                     zIndex: 1000,
                     "&::after": {
@@ -460,7 +480,7 @@ const SaleReports = () => {
                       ...tableHeaderStyle,
                       cursor: "pointer",
                       position: "sticky",
-                      top: "39px", // Same as S.NO cell
+                      top: "45px", // Same as S.NO cell
                       backgroundColor: LIGHT_GRAY2,
                       zIndex: 1000,
                     }}
@@ -505,10 +525,10 @@ const SaleReports = () => {
                 .map((row, index) => (
                   <TableRow
                     key={row.id}
-                    sx={{
-                      backgroundColor:
-                        index % 2 === 0 ? "#BCD4EC" : PRIMARY_LIGHT_GRAY,
-                    }}
+                    // sx={{
+                    //   backgroundColor:
+                    //     index % 2 === 0 ? "#BCD4EC" : PRIMARY_LIGHT_GRAY,
+                    // }}
                   >
                     <TableCell
                       sx={{

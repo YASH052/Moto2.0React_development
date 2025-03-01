@@ -56,7 +56,7 @@ const NuralButton = ({ text, ...props }) => {
         borderColor: props.borderColor ||PRIMARY_BLUE2,
         // Text Styling
         fontFamily: props.fontFamily,
-        fontSize: props.fontSize || "16px",
+        fontSize: props.fontSize || "14px",
         fontWeight: props.fontWeight || 700,
         lineHeight: props.lineHeight || "21.86px",
         letterSpacing: props.letterSpacing || "0.04em",
@@ -64,9 +64,9 @@ const NuralButton = ({ text, ...props }) => {
 
         // States
         "&:hover": {
-          backgroundColor: props.hoverBackgroundColor || PRIMARY_LIGHT_PURPLE,
+          // backgroundColor: props.hoverBackgroundColor || PRIMARY_LIGHT_PURPLE,
           border: props.hoverBorder,
-          color: props.hoverColor || "#fff",
+          color: props.hoverColor || AQUA_DARK,
         },
         "&:focus": {
           backgroundColor: props.focusBackgroundColor,

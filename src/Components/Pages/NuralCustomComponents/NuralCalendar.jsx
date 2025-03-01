@@ -1,22 +1,31 @@
 import React, { useState, useRef } from "react";
-import { Box, Typography, IconButton, styled, Modal, TextField, ClickAwayListener } from "@mui/material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  styled,
+  Modal,
+  TextField,
+  ClickAwayListener,
+} from "@mui/material";
 import {
   AQUA,
   DARK_PURPLE,
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_PURPLE,
+  PRIMARY_LIGHT_PURPLE2,
 } from "../../Common/colors";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
 const CalendarContainer = styled(Box)({
   width: "320px",
   padding: "20px",
   backgroundColor: "#F8F9FC",
   borderRadius: "12px",
-  border: "1px solid rgba(0, 0, 0, 0.1)",
+  border: `1px solid ${PRIMARY_LIGHT_PURPLE2}`,
   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
 });
 
@@ -101,16 +110,12 @@ const DayCell = styled(Box)(({ isSelected, isToday, isCurrentMonth }) => ({
   fontSize: "14px",
   fontWeight: isToday ? 600 : 400,
   backgroundColor: isToday ? AQUA : "transparent",
-  color: !isCurrentMonth 
-    ? "transparent" 
-    : isToday 
-      ? "#fff" 
-      : DARK_PURPLE,
+  color: !isCurrentMonth ? "transparent" : isToday ? "#fff" : DARK_PURPLE,
   visibility: isCurrentMonth ? "visible" : "hidden",
   "&:hover": {
     backgroundColor: isCurrentMonth
-      ? isToday 
-        ? AQUA 
+      ? isToday
+        ? AQUA
         : "rgba(198, 206, 237, 0.2)"
       : "transparent",
   },
@@ -121,7 +126,7 @@ const CalendarContent = styled(Box)({
   gap: "8px",
   borderRadius: "8px",
   borderWidth: "1px",
-  border: `1px solid ${PRIMARY_BLUE2}`,
+  border: `1px solid ${PRIMARY_LIGHT_PURPLE2}`,
   height: "280px",
   display: "flex",
   flexDirection: "column",
@@ -138,39 +143,40 @@ const StyledIconButton = styled(IconButton)({
 });
 
 const CalendarModal = styled(Box)({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  outline: 'none',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  outline: "none",
 });
 
 const DateTextField = styled(TextField)({
-  '& .MuiOutlinedInput-root': {
-    height: '40px',
-    '& fieldset': {
+  "& .MuiOutlinedInput-root": {
+    height: "40px",
+    "& fieldset": {
+      borderColor: PRIMARY_LIGHT_PURPLE2,
+    },
+    "&:hover fieldset": {
+      borderColor: PRIMARY_LIGHT_PURPLE2,
+    },
+    "&.Mui-focused fieldset": {
       borderColor: PRIMARY_BLUE2,
     },
-    '&:hover fieldset': {
-      borderColor: PRIMARY_BLUE2,
+    "& input": {
+      borderRadius: "8px",
+      padding: "0 8px",
+      fontSize: "14px",
+      height: "25px",
+      textTransform: "uppercase",
     },
-    '&.Mui-focused fieldset': {
-      borderColor: PRIMARY_BLUE2,
-    },
-    '& input': {
-      padding: '0 8px',
-      fontSize: '14px',
-      height: '25px',
-      textTransform: 'uppercase',
-    },
-    '& .MuiInputAdornment-root': {
-      height: '25px',
-      marginLeft: '0',
+    "& .MuiInputAdornment-root": {
+      height: "25px",
+      marginLeft: "0",
     },
   },
-  '& .MuiInputAdornment-root': {
-    cursor: 'pointer',
-  }
+  "& .MuiInputAdornment-root": {
+    cursor: "pointer",
+  },
 });
 
 const NuralCalendar = ({
@@ -234,7 +240,7 @@ const NuralCalendar = ({
     return Array.from(
       { length: Math.min(12, endYear - startYear + 1) },
       (_, i) => startYear + i
-    ).filter(year => year <= endYear);
+    ).filter((year) => year <= endYear);
   };
 
   const isDateDisabled = (date) => {
@@ -387,12 +393,12 @@ const NuralCalendar = ({
 
   // Format date for display in TextField
   const formatDate = (date) => {
-    if (!date) return '';
-    
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = date.toLocaleString('en-US', { month: 'short' });
+    if (!date) return "";
+
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = date.toLocaleString("en-US", { month: "short" });
     const year = date.getFullYear();
-    
+
     return `${day}-${month}-${year}`;
   };
 
@@ -408,24 +414,24 @@ const NuralCalendar = ({
     <Box ref={anchorRef}>
       <DateTextField
         fullWidth
-      
-        value={formatDate(selectedDate)}
+        placeholder="DD/MMM/YY"
+        value={""}
         onClick={handleCalendarOpen}
         InputProps={{
           readOnly: true,
           endAdornment: (
-            <CalendarTodayIcon 
-              sx={{ 
+            <CalendarTodayIcon
+              sx={{
                 color: PRIMARY_BLUE2,
-                cursor: 'pointer',
-                fontSize: '18px',
+                cursor: "pointer",
+                fontSize: "18px",
               }}
               onClick={handleCalendarOpen}
             />
           ),
         }}
       />
-      
+
       <Modal
         open={openCalendar}
         onClose={handleCalendarClose}
@@ -453,7 +459,11 @@ const NuralCalendar = ({
                   </StyledIconButton>
                   <StyledIconButton
                     onClick={handleNextClick}
-                    disabled={showYearGrid ? yearOffset + 12 >= yearRange.end - yearRange.start : false}
+                    disabled={
+                      showYearGrid
+                        ? yearOffset + 12 >= yearRange.end - yearRange.start
+                        : false
+                    }
                     sx={navigationButtonStyle}
                   >
                     <ChevronRightIcon />
@@ -471,7 +481,8 @@ const NuralCalendar = ({
                         onClick={() => handleYearClick(year)}
                         sx={{
                           ...dayStyle,
-                          cursor: year <= yearRange.end ? "pointer" : "not-allowed",
+                          cursor:
+                            year <= yearRange.end ? "pointer" : "not-allowed",
                           opacity: year <= yearRange.end ? 1 : 0.5,
                         }}
                       >
@@ -488,8 +499,14 @@ const NuralCalendar = ({
                         onClick={() => handleMonthClick(index)}
                         sx={{
                           ...dayStyle,
-                          backgroundColor: index === currentDate.getMonth() ? AQUA : "transparent",
-                          color: index === currentDate.getMonth() ? "#fff" : DARK_PURPLE,
+                          backgroundColor:
+                            index === currentDate.getMonth()
+                              ? AQUA
+                              : "transparent",
+                          color:
+                            index === currentDate.getMonth()
+                              ? "#fff"
+                              : DARK_PURPLE,
                         }}
                       >
                         {month.slice(0, 3)}
@@ -531,11 +548,16 @@ const NuralCalendar = ({
                             isCurrentMonth={dateObj.isCurrentMonth}
                             onClick={() =>
                               dateObj.isCurrentMonth &&
-                              handleDateClick(dateObj.day, dateObj.isCurrentMonth)
+                              handleDateClick(
+                                dateObj.day,
+                                dateObj.isCurrentMonth
+                              )
                             }
                             sx={{
                               ...dayStyle,
-                              cursor: !dateObj.isCurrentMonth ? "default" : "pointer",
+                              cursor: !dateObj.isCurrentMonth
+                                ? "default"
+                                : "pointer",
                             }}
                           >
                             {dateObj.day}

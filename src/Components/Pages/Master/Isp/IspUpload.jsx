@@ -14,9 +14,16 @@ import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
+import { useNavigate } from "react-router-dom";
+
+const options = [
+  { value: "interface", label: "Interface" },
+  { value: "batch", label: "Batch" },
+];
 const IspUpload = () => {
   const [activeTab, setActiveTab] = React.useState("addIsp");
-
+  const [selectedFormat, setSelectedFormat] = React.useState("batch");
+  const navigate = useNavigate();
   const tabs = [
     { label: "Add Isp", value: "addIsp" },
     { label: "Search", value: "searchIsp" },
@@ -49,6 +56,15 @@ const IspUpload = () => {
     setActiveTab(newValue);
   };
 
+  const handleFormatChange = (value) => {
+    console.log("Selected value:", value);
+    setSelectedFormat(value);
+    if (value === "interface") {
+      navigate("/add-retailer");
+    } else if (value === "batch") {
+      navigate("/retailer-excelUpload");
+    }
+  };
   return (
     <Grid container spacing={0}>
       <Grid
@@ -77,7 +93,13 @@ const IspUpload = () => {
 
       <Grid container spacing={2} lg={12} mt={1}>
         <Grid item xs={10} md={6} lg={6}>
-          <NuralUploadFormat title="Upload Format" backgroundColor={LIGHT_GRAY2} />
+          <NuralUploadFormat
+            title="Upload Format"
+            onChange={handleFormatChange}
+            backgroundColor={LIGHT_GRAY2}
+            options={options}
+            value={selectedFormat}
+          />
         </Grid>
         <Grid item xs={10} md={6} lg={6}>
           <NuralFileUpload backgroundColor={LIGHT_GRAY2} />
@@ -88,6 +110,7 @@ const IspUpload = () => {
             buttonColor={PRIMARY_BLUE2}
             buttonBg={MEDIUM_BLUE}
             width="100%"
+            backgroundColor={LIGHT_GRAY2}
             referenceIcon1={"./Icons/downloadIcon.svg"}
             referenceIcon2={"./Icons/downloadIcon.svg"}
             title="Templates"

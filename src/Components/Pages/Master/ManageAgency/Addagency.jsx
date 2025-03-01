@@ -8,13 +8,14 @@ import {
   LIGHT_BLUE,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
-  MEDIUM_BLUE
+  MEDIUM_BLUE,
 } from "../../../Common/colors";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import { Search, FileDownload } from "@mui/icons-material";
+import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 
 const tabs = [
   { label: "Add Agency", value: "addAgency" },
@@ -247,6 +248,7 @@ const AddAgancy = () => {
                       <Grid item xs={12}>
                         <NuralButton
                           text="ADD CONTACT +"
+                          color={"white"}
                           backgroundColor={PRIMARY_BLUE2}
                           variant="contained"
                           onClick={() => console.log("Add Contact clicked")}
@@ -290,7 +292,7 @@ const AddAgancy = () => {
                   title="Contact Details"
                   backgroundColor={LIGHT_GRAY2}
                 >
-                  <Grid container spacing={2}>
+                  <Grid container spacing={2} pr={2}>
                     <Grid item xs={12} md={3} lg={3}>
                       <Typography
                         variant="h6"
@@ -304,7 +306,7 @@ const AddAgancy = () => {
                           mb: 1,
                         }}
                       >
-                       Agency Name
+                        Agency Name
                       </Typography>
                       <NuralAutocomplete
                         placeholder="Select"
@@ -324,7 +326,7 @@ const AddAgancy = () => {
                           mb: 1,
                         }}
                       >
-                       Agency Code
+                        Agency Code
                       </Typography>
                       <NuralTextField
                         placeholder="xxxxx"
@@ -344,7 +346,7 @@ const AddAgancy = () => {
                           mb: 1,
                         }}
                       >
-                       mobile no.
+                        mobile no.
                       </Typography>
                       <NuralTextField
                         placeholder="xxxxx"
@@ -364,7 +366,7 @@ const AddAgancy = () => {
                           mb: 1,
                         }}
                       >
-                     username
+                        username
                       </Typography>
                       <NuralTextField
                         placeholder="xxxxx"
@@ -379,6 +381,8 @@ const AddAgancy = () => {
                       <NuralButton
                         text="CANCEL"
                         variant="outlined"
+                        height="36px"
+                        color={PRIMARY_BLUE2}
                         borderColor={PRIMARY_BLUE2}
                         onClick={() => console.log("Upload clicked")}
                         width="100%"
@@ -386,23 +390,27 @@ const AddAgancy = () => {
                     </Grid>
 
                     {/* Second button - 40% width */}
-                    <Grid item xs={12} md={4} lg={4}>
-                      <NuralButton
-                        text="SEARCH"
-                        backgroundColor={PRIMARY_BLUE2}
-                        variant="contained"
-                        onClick={() => console.log("Add Contact clicked")}
+                    <Grid item xs={12} md={5} lg={5}>
+                      <NuralTextButton
+                        icon={"./Icons/searchIcon.svg"}
+                        iconPosition="right"
+                        height="36px"
+                        backgroundColor={DARK_PURPLE}
+                        color="#fff"
                         width="100%"
-                        startIcon={<Search />}
-                      />
+                        fontSize="12px"
+                      >
+                        SEARCH
+                      </NuralTextButton>
                     </Grid>
 
                     {/* Third button - 40% width */}
-                    <Grid item xs={12} md={4} lg={4}>
+                    <Grid item xs={12} md={5} lg={5}>
                       <NuralButton
                         text="EXPORT"
                         backgroundColor={MEDIUM_BLUE}
                         variant="contained"
+                        color={PRIMARY_BLUE2}
                         onClick={() => console.log("Add Contact clicked")}
                         width="100%"
                         endIcon={<FileDownload />}

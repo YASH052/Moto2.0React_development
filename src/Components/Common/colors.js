@@ -13,6 +13,7 @@ export const DARK_PURPLE = "#32499F";
 export const AQUA_DARK = "#026668";
 export const PRIMARY_LIGHT_PURPLE2 = "#8D9EDB";
 export const LIGHT_GRAY2 = "#E2E7F6";
+export const LIGHT_GRAY3 = "#B9B2B4";
 
 // Transparent Colors
 export const TRANSPARENT_WHITE_15 = "rgba(255, 255, 255, 0.15)";
@@ -32,6 +33,7 @@ export const WHITE_COLOR = "#FFFFFF";
 // Text Colors
 export const TEXT_GRAY = "#888";
 // New status colors
+export const ERROR_MSSG = "#E63639";
 export const ERROR_RED = "#F1B9BA";
 export const WARNING_YELLOW = "#FFC107";
 export const SUCCESS_GREEN = "#EDFEFF";
@@ -42,4 +44,10 @@ export const LIGHT_BLUE = "#F1F3FB";
 export const MEDIUM_BLUE = "#C6CEED";
 export const DARK_BLUE = "#23346F";
 
-export const BORDER_BOTTOM = "#18244E";	
+export const BORDER_BOTTOM = "#18244E";
+
+// Add this if not already present
+export const RED = '#FF0000';  // or any other shade of red you prefer
+
+// Make sure you have a gray color defined
+export const lightGray = "#d3d3d3"; // or any gray shade you prefer
