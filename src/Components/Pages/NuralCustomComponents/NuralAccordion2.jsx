@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -8,46 +8,95 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { DARK_PURPLE } from "../../Common/colors";
+import { DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
 
-const StyledAccordion = styled(Accordion)({
-  backgroundColor: "rgba(235, 238, 245, 0.5)",
+const StyledAccordion = styled(Accordion)(({ isExpanded }) => ({
+  backgroundColor: "white",
   boxShadow: "none",
   borderRadius: "8px !important",
+  position: "relative",
+  transition: "all 0.3s ease-in-out",
   "&:before": {
     display: "none",
   },
   "&.Mui-expanded": {
     margin: 0,
   },
+  "& .MuiAccordionSummary-root": {
+    backgroundColor: isExpanded ? DARK_PURPLE : LIGHT_GRAY2,
+    borderRadius: "8px",
+    transition: "all 0.3s ease-in-out",
+    marginBottom: isExpanded ? "10px" : 0,
+  },
+  "& .MuiAccordionSummary-content": {
+    color: isExpanded ? "white" : DARK_PURPLE,
+  },
+  "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": {
+    color: isExpanded ? "white" : DARK_PURPLE,
+  },
   "&.MuiAccordion-root": {
     "&:focus": {
       outline: "none",
-    },
+    }
   },
   "& .MuiButtonBase-root": {
     "&:focus": {
       outline: "none",
-    },
-  },
-});
+    }
+  }
+}));
 
 const StyledAccordionSummary = styled(AccordionSummary)({
   padding: "0 16px",
+  minHeight: "48px !important",
   "& .MuiAccordionSummary-content": {
     margin: "12px 0",
   },
   "&.MuiButtonBase-root": {
     "&:focus": {
       outline: "none",
-    },
+    }
   },
+  "&.MuiAccordionSummary-root": {
+    "&:focus": {
+      outline: "none",
+    }
+  }
 });
 
-const NuralAccordion2 = ({ title = "Activations", children, ...props }) => {
+const StyledAccordionDetails = styled(AccordionDetails)(({ backgroundColor,padding }) => ({
+  padding: padding || "16px",
+  backgroundColor: backgroundColor || LIGHT_GRAY2,
+  borderRadius: "8px",
+  margin: "0px",
+}));
+
+const NuralAccordion2 = ({ 
+  title = "Activations", 
+  children, 
+  controlled = false,
+  defaultExpanded = true,
+  expanded: externalExpanded,
+  onChange: externalOnChange,
+  ...props 
+}) => {
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+
+  const isExpanded = controlled ? externalExpanded : internalExpanded;
+
+  const handleChange = (event, expanded) => {
+    if (controlled) {
+      externalOnChange?.(event, expanded);
+    } else {
+      setInternalExpanded(expanded);
+    }
+  };
+
   return (
     <StyledAccordion
-      defaultExpanded
+      expanded={isExpanded}
+      onChange={handleChange}
+      isExpanded={isExpanded}
       sx={{
         // Size
         width: props.width,
@@ -81,33 +130,26 @@ const NuralAccordion2 = ({ title = "Activations", children, ...props }) => {
         zIndex: props.zIndex,
 
         // Colors
-        backgroundColor: props.backgroundColor || "rgba(235, 238, 245, 0.5)",
+        backgroundColor:  "transparent",
         borderRadius: props.borderRadius || "8px",
 
         ...props.sx,
       }}
       {...props}
     >
-      <StyledAccordionSummary
-        expandIcon={
-          <ExpandMoreIcon
-            sx={{ color: props.expandIconColor || DARK_PURPLE }}
-          />
-        }
-      >
+      <StyledAccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography
           sx={{
             fontSize: props.titleFontSize || "14px",
             fontWeight: props.titleFontWeight || 600,
-            color: props.titleColor || DARK_PURPLE,
           }}
         >
           {title}
         </Typography>
       </StyledAccordionSummary>
-      <AccordionDetails sx={{ padding: "0 16px 16px" }}>
+      <StyledAccordionDetails backgroundColor={props.backgroundColor} padding={props.padding}>
         {children}
-      </AccordionDetails>
+      </StyledAccordionDetails>
     </StyledAccordion>
   );
 };

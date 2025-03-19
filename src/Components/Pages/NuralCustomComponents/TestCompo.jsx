@@ -41,6 +41,9 @@ import InfoCard from "./DashboardWidgets/InfoCard";
 import AttendanceOverview from "./DashboardWidgets/AttendanceOverview";
 import NsmTrendChart from "./DashboardWidgets/NsmTrendChart";
 import SalesDonutChart from "./DashboardWidgets/SalesDonutChart";
+import SelectionPanel from "./SelectionPanel";
+import NuralExport from "./NuralExport";
+import NuralReports from "./NuralReports";
 
 const TestCompo = () => {
   const quickLinks = ["Quick Link 1", "Quick Link 2", "Quick Link 3"];
@@ -342,6 +345,12 @@ const TestCompo = () => {
     ],
   };
 
+  const columns = [
+    { id: "name", label: "Name" },
+    { id: "age", label: "Age" },
+    { id: "city", label: "City" },
+  ];
+  const views = ["View 1", "View 2", "View 3"];
   return (
     <Container maxWidth="lg" sx={{ py: 4, mb: 6 }}>
       {/* Documentation Section */}
@@ -672,6 +681,18 @@ const TestCompo = () => {
       <Grid container spacing={2}>
         <Grid item xs={12} md={4} lg={4} xl={4} mt={2}>
           <SalesDonutChart data={donutData} brandData={brandData} />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2} mt={2}>
+        <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+          <SelectionPanel columns={columns} views={views} />
+        </Grid>
+        <Grid item xs={12} md={12} lg={12} xl={12} mt={0}>
+          <NuralExport title="Export" columns={columns} views={views} />
+        </Grid>
+
+        <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+          <NuralReports title="Reports"  views={views} />
         </Grid>
       </Grid>
     </Container>

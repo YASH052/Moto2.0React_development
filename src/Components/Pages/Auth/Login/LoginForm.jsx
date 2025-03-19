@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Grid,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import NuralLoginTextField from "../../NuralCustomComponents/NuralLoginTextField";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
@@ -11,6 +17,8 @@ import {
   PRIMARY_BLUE,
   PRIMARY_LIGHT_PURPLE2,
   WHITE,
+  ERROR_RED,
+  ERROR_RED2,
 } from "../../../Common/colors";
 import pdcard from "../../../../assets/carousel/pdcard.png";
 import one from "../../../../assets/carousel/one.png";
@@ -18,9 +26,12 @@ import two from "../../../../assets/carousel/two.png";
 import three from "../../../../assets/carousel/three.png";
 import four from "../../../../assets/carousel/Four.png";
 import five from "../../../../assets/carousel/five.png";
-import { toast, Toaster } from "react-hot-toast";
+
 import axios from "axios";
 import Loader from "../../../Common/Loader";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import LoginIcon from "@mui/icons-material/Login";
 const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 const LoginForm = () => {
   // const [accessKey, setAccessKey] = useState("");
@@ -42,6 +53,9 @@ const LoginForm = () => {
   const isLargeScreen = useMediaQuery("(min-width:512px)");
   const images = [pdcard, one, two, five, four, three];
   const navigate = useNavigate(); // ✅ Hook placed at the top level
+  const [loginStatus, setLoginStatus] = useState(null); // 'success', 'error', or null
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
+  const [otpStatus, setOtpStatus] = useState(null); // 'success', 'error', or null
 
   const countryCodes = [
     { code: "91", country: "IND" },
@@ -52,6 +66,7 @@ const LoginForm = () => {
   ];
 
   const handleUsernameChange = (e) => {
+    handleInputChange();
     const inputValue = e.target.value;
 
     // Check for spaces
@@ -80,6 +95,7 @@ const LoginForm = () => {
   };
 
   const handlePasswordChange = (e) => {
+    handleInputChange();
     const inputValue = e.target.value;
     if (inputValue.includes(" ")) {
       setPasswordError(true);
@@ -104,11 +120,13 @@ const LoginForm = () => {
   };
 
   const handleLogin = async () => {
-    // Reset error states
+    // Reset states
     setUsernameError(false);
     setPasswordError(false);
     setUsernameErrorMsg("");
     setPasswordErrorMsg("");
+    setInvalidCredentials(false);
+    setLoginStatus(null);
 
     // Basic validation
     if (!username) {
@@ -116,12 +134,15 @@ const LoginForm = () => {
       setUsernameErrorMsg("Please enter username");
       return;
     }
+
     if (!password) {
       setPasswordError(true);
       setPasswordErrorMsg("Please enter password");
       return;
     }
+
     setLoading(true);
+
     try {
       const res = await axios.post(`${BASE_URL}/login`, {
         ClientKey: "motoISP",
@@ -132,21 +153,39 @@ const LoginForm = () => {
       });
 
       if (res.data.statusCode == 200) {
-        toast.success(res.data.statusMessage);
-        // navigate("/");
+        setLoginStatus("success");
+
+        localStorage.setItem(
+          "log",
+          JSON.stringify(res.data.loginReturnInfoList[0])
+        );
+        localStorage.setItem("userId", res.data.loginReturnInfoList[0].userId);
+        localStorage.setItem(
+          "authKey",
+          res.data.loginReturnInfoList[0].authKey
+        );
+        setTimeout(() => {
+          navigate("/");
+        }, 800);
       } else {
-        toast.error(res.data.statusMessage);
+        setLoginStatus("error");
+        setInvalidCredentials(true);
+        localStorage.removeItem("user");
+        localStorage.removeItem("authKey");
         setUsernameError(true);
         setPasswordError(true);
       }
     } catch (error) {
-      toast.error(error.response.data.statusMessage);
-      console.error("Login failed:", error);
+      setLoginStatus("error");
+      setInvalidCredentials(true);
       setUsernameError(true);
       setPasswordError(true);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
+    
   };
 
   const handleOtpLoginClick = () => {
@@ -159,6 +198,7 @@ const LoginForm = () => {
   };
 
   const handlePhoneChange = (e) => {
+    setOtpStatus(null);
     const value = e.target.value;
 
     // Clear previous errors
@@ -184,6 +224,7 @@ const LoginForm = () => {
   };
 
   const handleEmailChange = (e) => {
+    setOtpStatus(null);
     const value = e.target.value;
 
     // Clear previous errors
@@ -205,12 +246,13 @@ const LoginForm = () => {
     setEmail(value);
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     // Reset errors
     setPhoneError(false);
     setEmailError(false);
     setPhoneErrorMsg("");
     setEmailErrorMsg("");
+    setOtpStatus(null);
 
     // Check if both fields are empty
     if (!phoneNumber && !email) {
@@ -221,16 +263,13 @@ const LoginForm = () => {
       return;
     }
 
-    // Validate phone number if provided
-    if (phoneNumber) {
-      if (phoneNumber.length < 10) {
-        setPhoneError(true);
-        setPhoneErrorMsg("Please enter a valid 10-digit phone number");
-        return;
-      }
+    // Validation checks...
+    if (phoneNumber && phoneNumber.length < 10) {
+      setPhoneError(true);
+      setPhoneErrorMsg("Please enter a valid 10-digit phone number");
+      return;
     }
 
-    // Validate email if provided
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -240,21 +279,32 @@ const LoginForm = () => {
       }
     }
 
-    // If validation passes, proceed with OTP sending
+    setLoading(true);
     try {
-      setLoading(true);
       // TODO: Implement your OTP API call here
-      // Example:
       // const response = await axios.post(`${BASE_URL}/send-otp`, {
       //   phoneNumber: phoneNumber ? `+${selectedCountry}${phoneNumber}` : null,
       //   email: email || null
       // });
-      toast.success("OTP sent successfully");
+      
+      // Simulating API call success
+      setOtpStatus('success');
+      
+      setTimeout(() => {
+        // navigate to OTP verification page or show OTP input
+      }, 1000);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send OTP");
+      setOtpStatus('error');
     } finally {
-      setLoading(false);
+     
+        setLoading(false);
+      
     }
+  };
+
+  const handleInputChange = () => {
+    setLoginStatus(null);
+    setInvalidCredentials(false);
   };
 
   return (
@@ -357,6 +407,18 @@ const LoginForm = () => {
                     border={passwordError ? "1px solid #FF0000" : undefined}
                     maxLength={20}
                   />
+                  {invalidCredentials && (
+                    <Typography
+                      sx={{
+                        color: "error.main",
+                        fontSize: "12px",
+                        mt: 1,
+                        textAlign: "center",
+                      }}
+                    >
+                      Invalid credentials. Please try again.
+                    </Typography>
+                  )}
                 </Box>
                 <Typography
                   sx={{
@@ -371,31 +433,51 @@ const LoginForm = () => {
                 >
                   FORGOT PASSWORD?
                 </Typography>
+
                 <Box
                   sx={{
+                    position: "relative",
+
                     display: "flex",
-                    flexDirection: "column",
+                    justifyContent: "center",
                     alignItems: "center",
-                    gap: 2,
+                    flexDirection: "column",
+                    gap: "10px",
                   }}
                 >
                   <NuralButton
-                    text="LOGIN"
-                    backgroundColor={AQUA}
-                    color={GREEN_COLOR}
+                    text={
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        {loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : loginStatus === "success" ? (
+                          <CheckIcon />
+                        ) : loginStatus === "error" ? (
+                          <CloseIcon sx={{ color: ERROR_RED2 }} />
+                        ) : (
+                          "LOGIN"
+                        )}
+                        {/* LOGIN */}
+                      </Box>
+                    }
+                    backgroundColor={loginStatus === "error" ? ERROR_RED : AQUA}
+                    color={loginStatus === "error" ? WHITE : GREEN_COLOR}
                     onClick={handleLogin}
                     width="50%"
                     border="none"
-                    fontSize="14px"
+                    fontSize="12px"
+                    disabled={loading}
                   />
-
                   <NuralButton
                     text="LOGIN WITH OTP"
                     variant="outlined"
                     onClick={handleOtpLoginClick}
                     color={"white"}
-                    width="max-content"
-                    fontSize="14px"
+                    width="50%"
+                    hoverColor="white"
+                    fontSize="12px"
                     borderColor="white"
                   />
                 </Box>
@@ -476,22 +558,38 @@ const LoginForm = () => {
                   }}
                 >
                   <NuralButton
-                    text="SEND OTP"
-                    backgroundColor={AQUA}
-                    color={GREEN_COLOR}
+                    text={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : otpStatus === "success" ? (
+                          <CheckIcon />
+                        ) : otpStatus === "error" ? (
+                          <CloseIcon sx={{ color: ERROR_RED2 }} />
+                        ) : (
+                          "SEND OTP"
+                        )}
+                      </Box>
+                    }
+                    backgroundColor={otpStatus === "error" ? ERROR_RED : AQUA}
+                    color={otpStatus === "error" ? WHITE : GREEN_COLOR}
                     onClick={handleSendOtp}
                     width="50%"
                     border="none"
-                    fontSize="16px"
+                    fontSize="12px"
+                    disabled={loading}
                   />
 
                   <NuralButton
                     text="LOGIN ANOTHER WAY"
                     variant="outlined"
-                    onClick={() => setIsOtpLogin(false)}
+                    onClick={() => {
+                      setIsOtpLogin(false);
+                      setOtpStatus(null);
+                    }}
                     color={"white"}
-                    width="70%"
-                    fontSize="14px"
+                    width="50%"
+                    fontSize="12px"
                     borderColor="white"
                   />
                 </Box>
@@ -624,8 +722,6 @@ const LoginForm = () => {
           </Grid>
         </Box>
       </Box>
-      <Toaster />
-      {loading && <Loader />}
     </Box>
   );
 };

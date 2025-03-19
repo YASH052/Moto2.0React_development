@@ -270,7 +270,7 @@ const SalesChannelView = () => {
                       width="100%"
                       label="Sales Channel Type"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
                     <Grid item xs={12} sm={5} md={3} lg={3}>
@@ -288,7 +288,7 @@ const SalesChannelView = () => {
                      width="100%"
                       label="State"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
                       <Grid item xs={12} sm={5} md={3} lg={3}>
@@ -357,7 +357,7 @@ const SalesChannelView = () => {
                     >
                       STATUS
                     </Typography>
-                    <NuralAutocomplete width="100%" options={options} placeholder="Select" />
+                    <NuralAutocomplete width="100%" options={options} placeholder="SELECT" />
                   </Grid>
                 </Grid>
 

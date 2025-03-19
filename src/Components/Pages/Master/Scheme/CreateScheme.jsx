@@ -155,7 +155,7 @@ const CreateScheme = () => {
                         SCHEME FOR
                       </Typography>
                       <NuralAutocomplete
-                        placeholder="Select"
+                        placeholder="SELECT"
                         width="100%"
                         onChange={(event, newValue) =>
                           setSelectedValue1(newValue)
@@ -178,7 +178,7 @@ const CreateScheme = () => {
                         SCHEME ON
                       </Typography>
                       <NuralAutocomplete
-                        placeholder="Select"
+                        placeholder="SELECT"
                         width="100%"
                         onChange={(event, newValue) =>
                           setSelectedValue2(newValue)
@@ -228,7 +228,7 @@ const CreateScheme = () => {
                       >
                         REGION
                       </Typography>
-                      <NuralAutocomplete placeholder="Select" width="100%" />
+                      <NuralAutocomplete placeholder="SELECT" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <Typography
@@ -245,7 +245,7 @@ const CreateScheme = () => {
                       >
                         STATE
                       </Typography>
-                      <NuralAutocomplete placeholder="Select" width="100%" />
+                      <NuralAutocomplete placeholder="SELECT" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <Typography
@@ -262,7 +262,7 @@ const CreateScheme = () => {
                       >
                         CITY
                       </Typography>
-                      <NuralAutocomplete placeholder="Select" width="100%" />
+                      <NuralAutocomplete placeholder="SELECT" width="100%" />
                     </Grid>
                   </Grid>
 
@@ -283,7 +283,7 @@ const CreateScheme = () => {
                       >
                         PREDEFINED TARGET
                       </Typography>
-                      <NuralAutocomplete placeholder="Select" width="100%" />
+                      <NuralAutocomplete placeholder="SELECT" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={4}>
                       <Typography
@@ -300,7 +300,7 @@ const CreateScheme = () => {
                       >
                         PAYOUT TYPE
                       </Typography>
-                      <NuralAutocomplete placeholder="Select" width="100%" />
+                      <NuralAutocomplete placeholder="SELECT" width="100%" />
                     </Grid>
                     <Grid item xs={12} md={2}>
                       <Typography
@@ -391,7 +391,7 @@ const CreateScheme = () => {
 
                     <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
                       <Grid container spacing={2} direction="column">
-                        <Grid item>
+                        <Grid item ml={2}>
                           <NuralFileUpload backgroundColor={LIGHT_GRAY2} />
                         </Grid>
                         <Grid item>

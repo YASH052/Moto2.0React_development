@@ -5,11 +5,14 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Grid,
+  Skeleton,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
+import { AccordionFileUploadSkeleton } from "../../Common/SkeletonComponents";
 
 const StyledAccordion = styled(Accordion)({
   backgroundColor: "rgba(235, 238, 245, 0.5)",
@@ -20,6 +23,18 @@ const StyledAccordion = styled(Accordion)({
   },
   "&.Mui-expanded": {
     margin: 0,
+  },
+  "& .MuiAccordionSummary-root": {
+    backgroundColor: "transparent ",
+    borderRadius: "8px",
+    transition: "all 0.3s ease-in-out",
+    marginBottom: 0,
+  },
+  "& .MuiAccordionSummary-content": {
+    color: DARK_PURPLE,
+  },
+  "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": {
+    color: DARK_PURPLE,
   },
   "&.MuiAccordion-root": {
     "&:focus": {
@@ -51,7 +66,7 @@ const FileItem = styled(Box)({
   padding: "12px 16px",
   cursor: "pointer",
   "&:hover": {
-    backgroundColor: "rgba(235, 238, 245, 0.8)",
+    // backgroundColor: "rgba(235, 238, 245, 0.8)",
   },
 });
 
@@ -81,9 +96,12 @@ const HiddenInput = styled("input")({
   display: "none",
 });
 
-const NuralFileUpload = ({ title = "File Upload", ...props }) => {
+const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ...props }) => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const internalFileRef = useRef(null);
+
+  // Use the provided ref or internal ref
+  const actualFileRef = fileRef || internalFileRef;
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -93,9 +111,28 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
     }
   };
 
+  // Reset file selection
+ 
+
   const handleClick = () => {
-    fileInputRef.current?.click();
+    actualFileRef.current?.click();
   };
+
+  // Listen for file input changes
+  React.useEffect(() => {
+    if (actualFileRef.current) {
+      actualFileRef.current.addEventListener('change', handleFileSelect);
+    }
+    return () => {
+      if (actualFileRef.current) {
+        actualFileRef.current.removeEventListener('change', handleFileSelect);
+      }
+    };
+  }, []);
+
+  if (isLoading) {
+    return <AccordionFileUploadSkeleton sx={props.sx} />;
+  }
 
   return (
     <StyledAccordion
@@ -158,7 +195,7 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
         </Typography>
       </StyledAccordionSummary>
       <AccordionDetails sx={{ padding: 0 }}>
-        <Box sx={{ padding: "12px 16px", marginBottom: "-30px" }}>
+        <Box sx={{ padding: "12px 16px", marginBottom: "-30px" ,mt:"-10"}}>
           <Typography
             textAlign={"start"}
             fontSize={"10px"}
@@ -171,7 +208,7 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
         <FileItem
           onClick={handleClick}
           sx={{
-            mt: "10px",
+            mt: "5px",
           }}
         >
           <FileIcon>
@@ -188,14 +225,22 @@ const NuralFileUpload = ({ title = "File Upload", ...props }) => {
             >
               {selectedFile ? selectedFile.name : "File Name"}
             </Typography>
-            <FileIcon>
-              <AttachFileIcon />
-            </FileIcon>
+            <Grid
+              item
+              xs={4}
+              sm={4}
+              md={4}
+              display={"flex"}
+              flexWrap={"wrap"}
+              alignItems={"center"}
+              justifyContent={"end"}
+            >
+              <img src="./Images/export_btn.svg" alt="" />
+            </Grid>
           </FileContent>
           <HiddenInput
-            ref={fileInputRef}
+            ref={actualFileRef}
             type="file"
-            onChange={handleFileSelect}
             accept={props.accept}
           />
         </FileItem>

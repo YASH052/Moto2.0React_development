@@ -1,5 +1,5 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import { Grid, Typography, Button, Skeleton } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -9,71 +9,52 @@ import {
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_GRAY,
+  SKELETON_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
-  IconButton,
-} from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+  GetSalerseport,
+  GetSalestype,
+  Regionmasterlist,
+  StateList,
+} from "../../../Api/Api";
+import { MenuConstants } from "../../../Common/MenuConstants";
+import {
+  getCurrentMonthFirstDate,
+  getTodayDate,
+} from "../../../Common/commonFunction";
+import { FormSkeleton } from "../../../Common/Skeletons";
+import StatusModel from "../../../Common/StatusModel";
+const tabs = [
+  { label: "Sale Report", value: "sale-report" },
+  // { label: "ISR Sales Report", value: "isr-sales-report" },
+  // { label: "Unique Sales Report", value: "unique-sales-report" },
+  // { label: "Primary to Tertiary Track", value: "primary-to-tertiary-track" },
+  // { label: "Competition Sales Report", value: "competition-sales-report" },
+];
+
+const labelStyle = {
+  fontSize: "10px",
+  lineHeight: "13.66px",
+  letterSpacing: "4%",
+  color: DARK_PURPLE,
+  marginBottom: "5px",
+  fontWeight: 400,
+};
+
+const options = [
+  "Nural Network",
+  "Deep Learning",
+  "Machine Learning",
+  "Artificial Intelligence",
+  "Computer Vision",
+];
 
 const SaleReports = () => {
-  const [activeTab, setActiveTab] = React.useState("sale-report");
-  const tabs = [
-    { label: "Sale Report", value: "sale-report" },
-    // { label: "ISR Sales Report", value: "isr-sales-report" },
-    // { label: "Unique Sales Report", value: "unique-sales-report" },
-    // { label: "Primary to Tertiary Track", value: "primary-to-tertiary-track" },
-    // { label: "Competition Sales Report", value: "competition-sales-report" },
-  ];
-
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
-
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
-  const handleTabChange = (newValue) => {
-    setActiveTab(newValue);
-  };
-
-  // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
-  });
-
-  // Replace the existing dummy data with this more realistic data
   const generateDummyData = () => {
     const regions = ["North", "South", "East", "West", "Central"];
     const states = [
@@ -105,103 +86,244 @@ const SaleReports = () => {
         column9: `Status-${Math.floor(Math.random() * 3)}`,
       }));
   };
+  const [state, setState] = useState([]);
 
+  const [activeTab, setActiveTab] = React.useState("sale-report");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [salesType, setSalesType] = React.useState([]);
   const [rows, setRows] = React.useState(generateDummyData());
   const [filteredRows, setFilteredRows] = React.useState(rows);
+  const [selectedSaleType, setSelectedSaleType] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [region, setRegion] = useState([]);
+  const [defaultLoading, setDefaultLoading] = React.useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [code, setcode] = useState("");
+  const [showStatus, setShowStatus] = useState(false);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  const [searchParams, setSearchParams] = useState({
+    datefrom: getCurrentMonthFirstDate(),
+    dateTo: getTodayDate(),
+    salesChannelID: 0,
+    salesType: 0,
+    filepath: "",
+    modelId: 0,
+    skuId: 0,
+    stateId: 0,
+    productCategoryId: 0,
+    orgnHierarchyId: 0,
+    wantZeroQuantity: 0,
+    withOrWithoutSerialBatch: 0,
+    comingFrom: 0,
+    cityId: 0,
+  });
+
+  const serialTypeOptions = [
+    { id: 0, name: "Without Serial" },
+    { id: 1, name: "With Serial" },
+  ];
+
+  const [dateError, setDateError] = useState("");
+
+  const handleStatus = (code, message) => {
+    console.log("code", code);
+    setStatusMessage(message);
+    setcode(code);
+    setShowStatus(true);
+    // setTimeout(() => setShowStatus(false), 3000);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Enhanced sorting function
-  const handleSort = (columnName) => {
-    let direction = "asc";
-    
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
+  useEffect(() => {
+    const fetchData = async () => {
+      setDefaultLoading(true);
+      setIsLoading(true);
+      try {
+        await Promise.all([fetchSalesType(), fetchRegion(), fetchState()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+        setDefaultLoading(false);
       }
-    }
-    
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-      
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-      
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setFilteredRows(sortedRows);
-  };
-
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
-  };
-
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
     };
-    handleSearch(searchValues);
+
+    fetchData();
+  }, []);
+
+  const fetchState = async () => {
+    setIsLoading(true);
+    let body = {
+      State: "",
+      CountryID: 0,
+      RegionID: 0,
+      PageIndex: 1,
+      PageSize: 10,
+      StateID: 0,
+      CallType: 1,
+    };
+    try {
+      const response = await StateList(body);
+      if (response.statusCode == 200) {
+        setState(response.stateMasterList);
+      }
+    } catch (error) {
+      console.error("Error fetching state:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRegion = async () => {
+    setIsLoading(true);
+    let body = {
+      Region: "",
+      CallType: 1,
+      pageIndex: 1,
+      pageSize: 10,
+      CountryID: 0,
+    };
+    try {
+      const response = await Regionmasterlist(body);
+      if (response.statusCode == 200) {
+        setRegion(response.regionMasterList);
+      }
+    } catch (error) {
+      console.error("Error fetching region:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSalesType = async () => {
+    setIsLoading(true);
+    let body = {
+      salesChannelTypeId: 0,
+      hierarchyLevelID: 0,
+    };
+    try {
+      const response = await GetSalestype(body);
+      if (response.statusCode == 200) {
+        setSalesType(response.saletypelist);
+      }
+    } catch (error) {
+      console.error("Error fetching sales type:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearchChange = (field, value, selectedOption = null) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    switch (field) {
+      case "salesType":
+        setSelectedSaleType(selectedOption);
+        break;
+      case "stateId":
+        setSelectedState(selectedOption);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleSearch = async () => {
+    setShowStatus(false);
+    setDefaultLoading(true);
+    setIsLoading(true);
+    const formattedParams = {
+      ...searchParams,
+      datefrom: searchParams.datefrom
+        ? new Date(searchParams.datefrom.setHours(12, 0, 0, 0))
+            .toISOString()
+            .split("T")[0]
+        : null,
+      dateTo: searchParams.dateTo
+        ? new Date(searchParams.dateTo.setHours(12, 0, 0, 0))
+            .toISOString()
+            .split("T")[0]
+        : null,
+      salesType: selectedSaleType?.salesTypeID || 1,
+      stateId: selectedState?.stateID || 0,
+    };
+
+    try {
+      let res = await GetSalerseport(formattedParams);
+      if (res.statusCode == 200) {
+        window.location.href = res.filepathlink;
+        handleStatus(res.statusCode, res.statusMessage);
+      } else {
+        handleStatus(res.statusCode, res.statusMessage);
+      }
+    } catch (error) {
+      
+      console.log(error);
+      handleStatus(
+        error.response.data.status,
+        MenuConstants.somethingWentWrong
+      );
+    } finally {
+      setIsLoading(false);
+     
+      setDefaultLoading(false);
+    }
+  };
+
+  const handleFromDateChange = (newValue) => {
+    console.log("newValue", newValue);
+    setDateError("");
+    if (searchParams.dateTo && newValue > searchParams.dateTo) {
+      setDateError("From date cannot be greater than To date");
+      return;
+    }
+    handleSearchChange("datefrom", newValue);
+  };
+
+  const handleToDateChange = (newValue) => {
+    setDateError("");
+    if (searchParams.datefrom && newValue < searchParams.datefrom) {
+      setDateError("To date cannot be less than From date");
+      return;
+    }
+    handleSearchChange("dateTo", newValue);
+  };
+
+  const initialSearchParams = {
+    datefrom: getCurrentMonthFirstDate(),
+    dateTo: getTodayDate(),
+    salesChannelID: 0,
+    salesType: 0,
+    filepath: "",
+    modelId: 0,
+    skuId: 0,
+    stateId: 0,
+    productCategoryId: 0,
+    orgnHierarchyId: 0,
+    wantZeroQuantity: 0,
+    withOrWithoutSerialBatch: null,
+    comingFrom: 0,
+    cityId: 0,
+  };
+
+  const handleCancel = () => {
+    setSearchParams(initialSearchParams);
+    setSelectedSaleType(null);
+    setSelectedState(null);
+    setDateError("");
+    setStatusMessage("");
+    setcode("");
+    setShowStatus(false);
+  };
+  const handleTabChange = (newValue) => {
+    setActiveTab(newValue);
   };
 
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
-      {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
       <Grid
         item
         xs={12}
@@ -214,7 +336,7 @@ const SaleReports = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Reports" />
+          <BreadcrumbsHeader pagecode="Reports" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -226,7 +348,6 @@ const SaleReports = () => {
         </Grid>
       </Grid>
 
-      {/* Rest of the content */}
       <Grid
         container
         spacing={0}
@@ -234,499 +355,248 @@ const SaleReports = () => {
         mt={1}
         sx={{ position: "relative", zIndex: 1 }}
       >
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-          <Grid container spacing={2} direction="column">
-            <Grid item>
-              <NuralAccordion2
-                title="Sale Report"
-                backgroundColor={LIGHT_GRAY2}
-              >
-                {/* First Row - 3 NuralAutocomplete */}
-                <Grid
-                  container
-                  spacing={2}
-                  mb={2}
-                  sx={{
-                    gap: { xs: 2, sm: 3, md: 0 },
-                    flexDirection: { xs: "column", sm: "row" },
-                  }}
+        {defaultLoading ? (
+          <FormSkeleton />
+        ) : (
+          <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+            <Grid container spacing={2} direction="column">
+              <Grid item>
+                <NuralAccordion2
+                  code="Sale Report"
+                  backgroundColor={LIGHT_GRAY2}
                 >
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
+                  <>
+                    <Grid
+                      container
+                      spacing={2}
+                      mb={2}
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
+                        gap: { xs: 2, sm: 3, md: 0 },
+                        flexDirection: { xs: "column", sm: "row" },
                       }}
-                      fontWeight={600}
                     >
-                      SALE TYPE
-                    </Typography>
-                    <NuralAutocomplete
-                      label="Sale Type"
-                      options={options}
-                      placeholder="Select"
-                      width="100%"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      REGION
-                    </Typography>
-                    <NuralAutocomplete
-                      width="100%"
-                      label="Region"
-                      options={options}
-                      placeholder="Select"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      STATE
-                    </Typography>
-                    <NuralAutocomplete
-                      width="100%"
-                      label="State"
-                      options={options}
-                      placeholder="Select"
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* Second Row */}
-                <Grid
-                  container
-                  spacing={2}
-                  mb={2}
-                  sx={{
-                    gap: { xs: 2, sm: 3, md: 0 },
-                    flexDirection: { xs: "column", sm: "row" },
-                  }}
-                >
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      FROM DATE
-                    </Typography>
-                    <NuralCalendar width="100%" placeholder="DD/MM/YY" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      TO DATE
-                    </Typography>
-                    <NuralCalendar width="100%" placeholder="DD/MM/YY" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      SERIAL TYPE
-                    </Typography>
-                    <NuralAutocomplete
-                      width="100%"
-                      options={options}
-                      placeholder="With Serial"
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* Third Row - Buttons */}
-                <Grid
-                  container
-                  spacing={2}
-                  sx={{
-                    flexDirection: { xs: "column", sm: "row" },
-                    // gap: { xs: 2, sm: 2 },
-                  }}
-                >
-                  <Grid item xs={12} sm={2} md={1}>
-                    <NuralButton
-                      text="CANCEL"
-                      variant="outlined"
-                      color={PRIMARY_BLUE2}
-                      fontSize="12px"
-                      height="36px"
-                      borderColor={PRIMARY_BLUE2}
-                      onClick={() => console.log("Upload clicked")}
-                      width="100%"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={9} md={11}>
-                    <NuralTextButton
-                      icon={"./Icons/searchIcon.svg"}
-                      iconPosition="right"
-                      height="36px"
-                      backgroundColor={PRIMARY_BLUE2}
-                      color="#fff"
-                      width="100%"
-                      fontSize="12px"
-                    >
-                      SEARCH
-                    </NuralTextButton>
-                  </Grid>
-                </Grid>
-              </NuralAccordion2>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-
-      {/* Add this after the NuralAccordion2 component */}
-      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-        <TableContainer
-          component={Paper}
-          sx={{
-            backgroundColor: LIGHT_GRAY2,
-            color: PRIMARY_BLUE2,
-            maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
-            overflow: "auto",
-            position: "relative",
-            "& .MuiTable-root": {
-              borderCollapse: "separate",
-              borderSpacing: 0,
-            },
-          }}
-        >
-          <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  colSpan={10}
-                  sx={{
-                    backgroundColor: LIGHT_GRAY2,
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1100,
-                    borderBottom: "none",
-                    boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
-                  }}
-                >
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontFamily: "Manrope",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      lineHeight: "19.12px",
-                      letterSpacing: "0%",
-                      color: PRIMARY_BLUE2,
-                      p: 1,
-                    }}
-                  >
-                    List
-                  </Typography>
-                </TableCell>
-              </TableRow>
-              <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                <TableCell
-                  sx={{
-                    ...tableHeaderStyle,
-                    position: "sticky",
-                    top: "45px", // Adjusted to account for "List" header
-                    backgroundColor: LIGHT_GRAY2,
-                    zIndex: 1000,
-                    "&::after": {
-                      // Add bottom border effect
-                      content: '""',
-                      position: "absolute",
-                      left: 0,
-                      bottom: 0,
-                      width: "100%",
-                      borderBottom: "2px solid #e0e0e0",
-                    },
-                  }}
-                >
-                  <Grid container alignItems="center" spacing={1}>
-                    <Grid item>S.NO</Grid>
-                  </Grid>
-                </TableCell>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                  <TableCell
-                    key={`column${num}`}
-                    onClick={() => handleSort(`column${num}`)}
-                    sx={{
-                      ...tableHeaderStyle,
-                      cursor: "pointer",
-                      position: "sticky",
-                      top: "45px", // Same as S.NO cell
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1000,
-                    }}
-                  >
-                    <Grid container alignItems="center" spacing={1}>
-                      <Grid item>COLUMN {num}</Grid>
-                      <Grid item sx={{ display: "flex", alignItems: "center" }}>
-                        {sortConfig.key === `column${num}` ? (
-                          sortConfig.direction === "asc" ? (
-                            <ArrowUpwardIcon
-                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                            />
-                          ) : (
-                            <ArrowDownwardIcon
-                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                            />
-                          )
-                        ) : (
-                          <Grid
-                            container
-                            direction="column"
-                            alignItems="center"
-                            sx={{ height: 16, width: 16 }}
-                          >
-                            <ArrowUpwardIcon
-                              sx={{ fontSize: 12, color: "grey.400" }}
-                            />
-                            <ArrowDownwardIcon
-                              sx={{ fontSize: 12, color: "grey.400" }}
-                            />
-                          </Grid>
-                        )}
+                      <Grid item xs={12} sm={5} md={4}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          SALE TYPE
+                        </Typography>
+                        <NuralAutocomplete
+                          label="Sale Type"
+                          options={salesType}
+                          placeholder="SELECT"
+                          width="100%"
+                          getOptionLabel={(option) =>
+                            option.salesTypeName || ""
+                          }
+                          isOptionEqualToValue={(option, value) =>
+                            option?.salesTypeID === value?.salesTypeID
+                          }
+                          onChange={(event, newValue) => {
+                            handleSearchChange(
+                              "salesType",
+                              newValue?.salesTypeID || 1,
+                              newValue
+                            );
+                          }}
+                          value={
+                            salesType.find(
+                              (option) =>
+                                option.salesTypeID === searchParams.salesType
+                            ) || null
+                          }
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={5} md={4}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          STATE
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          label="State"
+                          options={state}
+                          getOptionLabel={(option) => option.stateName || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.stateID === value?.stateID
+                          }
+                          onChange={(event, newValue) => {
+                            handleSearchChange(
+                              "stateId",
+                              newValue?.stateID || 0,
+                              newValue
+                            );
+                          }}
+                          value={
+                            state.find(
+                              (option) =>
+                                option.stateID === searchParams.stateId
+                            ) || null
+                          }
+                          placeholder="SELECT"
+                        />
                       </Grid>
                     </Grid>
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => (
-                  <TableRow
-                    key={row.id}
-                    // sx={{
-                    //   backgroundColor:
-                    //     index % 2 === 0 ? "#BCD4EC" : PRIMARY_LIGHT_GRAY,
-                    // }}
-                  >
-                    <TableCell
+
+                    <Grid
+                      container
+                      spacing={2}
+                      mb={2}
                       sx={{
-                        ...rowstyle,
-                        color: PRIMARY_BLUE2,
-                        fontWeight: 600,
+                        gap: { xs: 2, sm: 3, md: 0 },
+                        flexDirection: { xs: "column", sm: "row" },
                       }}
                     >
-                      {page * rowsPerPage + index + 1}
-                    </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column1}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column2}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column3}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column4}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>
-                      {row.column5.toLocaleString()}
-                    </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column6}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column7}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column8}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column9}</TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+                      <Grid item xs={12} sm={5} md={4}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          FROM DATE
+                        </Typography>
+                        <NuralCalendar
+                          width="100%"
+                          placeholder="DD/MMM/YY"
+                          value={searchParams.datefrom}
+                          onChange={handleFromDateChange}
+                          error={!!dateError}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={5} md={4}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          TO DATE
+                        </Typography>
+                        <NuralCalendar
+                          width="100%"
+                          placeholder="DD/MMM/YY"
+                          value={searchParams.dateTo}
+                          onChange={handleToDateChange}
+                          error={!!dateError}
+                        />
+                      </Grid>
+                      {dateError && (
+                        <Grid item xs={12}>
+                          <Typography
+                            color="error"
+                            sx={{
+                              fontSize: "12px",
+                              mt: -1,
+                            }}
+                          >
+                            {dateError}
+                          </Typography>
+                        </Grid>
+                      )}
+                      <Grid item xs={12} sm={5} md={4}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          SERIAL TYPE
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          options={serialTypeOptions}
+                          placeholder="SELECT"
+                          getOptionLabel={(option) => option.name || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.id === value?.id
+                          }
+                          onChange={(event, newValue) => {
+                            handleSearchChange(
+                              "withOrWithoutSerialBatch",
+                              newValue?.id || 0,
+                              newValue
+                            );
+                          }}
+                          value={
+                            serialTypeOptions.find(
+                              (option) =>
+                                option.id ===
+                                searchParams.withOrWithoutSerialBatch
+                            ) || null
+                          }
+                        />
+                      </Grid>
+                    </Grid>
 
-          {/* Custom Pagination */}
-          <Grid
-            container
-            sx={{
-              p: 2,
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Grid item>
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 400,
-                  fontSize: "10px",
-                  lineHeight: "13.66px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-                color="text.secondary"
-              >
-                TOTAL RECORDS:{" "}
-                <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                  {filteredRows.length} /{" "}
-                  {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                </span>
-              </Typography>
-            </Grid>
-
-            <Grid item>
-              <Grid
-                container
-                spacing={1}
-                sx={{
-                  maxWidth: 300,
-                  ml: 1,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  //   gap: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    mt: 1,
-                    fontSize: "10px",
-                    color: PRIMARY_BLUE2,
-                    fontWeight: 600,
-                  }}
-                >
-                  SHOW :
-                </Typography>
-                {[10, 25, 50, 100].map((value) => (
-                  <Grid item key={value}>
-                    <Button
-                      onClick={() =>
-                        handleChangeRowsPerPage({ target: { value } })
-                      }
+                    <Grid
+                      container
+                      spacing={2}
                       sx={{
-                        minWidth: "25px",
-                        height: "24px",
-                        padding: "4px",
-                        borderRadius: "50%",
-                        // border: `1px solid ${PRIMARY_BLUE2}`,
-                        backgroundColor:
-                          rowsPerPage === value ? PRIMARY_BLUE2 : "transparent",
-                        color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                        fontSize: "12px",
-                        "&:hover": {
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                        },
-                        mx: 0.5,
+                        flexDirection: { xs: "column", sm: "row" },
                       }}
                     >
-                      {value}
-                    </Button>
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                color: PRIMARY_BLUE2,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: "10px",
-                }}
-              >
-                JUMP TO FIRST
-              </Typography>
-              <IconButton
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
-                <NavigateBeforeIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                }}
-              >
-                PAGE {page + 1}
-              </Typography>
-
-              <IconButton
-                onClick={() => setPage(page + 1)}
-                disabled={
-                  page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                }
-              >
-                <NavigateNextIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 700,
-                  fontSize: "8px",
-                  lineHeight: "10.93px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-              >
-                JUMP TO LAST
-              </Typography>
-              <input
-                type="number"
-                placeholder="Jump to page"
-                min={1}
-                max={Math.ceil(filteredRows.length / rowsPerPage)}
-                // value={page + 1}
-                onChange={(e) => {
-                  const newPage = parseInt(e.target.value, 10) - 1;
-                  if (
-                    newPage >= 0 &&
-                    newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                  ) {
-                    setPage(newPage);
-                  }
-                }}
-                style={{
-                  width: "100px",
-                  height: "24px",
-                  paddingRight: "8px",
-                  paddingLeft: "8px",
-                  borderRadius: "8px",
-                  borderWidth: "1px",
-                  border: `1px solid ${PRIMARY_BLUE2}`,
-                }}
-              />
-              <Grid mt={1}>
-                <img src="./Icons/footerSearch.svg" alt="arrow" />
+                      <Grid item xs={12} sm={2} md={1}>
+                        <NuralButton
+                          text="CANCEL"
+                          variant="outlined"
+                          color={PRIMARY_BLUE2}
+                          fontSize="12px"
+                          height="36px"
+                          borderColor={PRIMARY_BLUE2}
+                          onClick={handleCancel}
+                          width="100%"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={9} md={11}>
+                        <NuralTextButton
+                          icon={"./Icons/searchIcon.svg"}
+                          iconPosition="right"
+                          height="36px"
+                          backgroundColor={PRIMARY_BLUE2}
+                          color="#fff"
+                          width="100%"
+                          fontSize="12px"
+                          onClick={() => {
+                            if (dateError) {
+                              handleStatus(dateError, "error");
+                              return;
+                            }
+                            handleSearch();
+                          }}
+                        >
+                          SEARCH
+                        </NuralTextButton>
+                      </Grid>
+                    </Grid>
+                  </>
+                </NuralAccordion2>
               </Grid>
             </Grid>
           </Grid>
-        </TableContainer>
+        )}
+      </Grid>
+      <Grid item xs={12} pr={4} sx={{ position: "relative" }}>
+        {showStatus && (
+          <StatusModel width="100%" status={code} title={statusMessage} />
+        )}
       </Grid>
     </Grid>
   );

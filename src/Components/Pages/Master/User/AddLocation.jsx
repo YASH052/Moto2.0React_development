@@ -36,6 +36,7 @@ import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
 import { useNavigate } from "react-router-dom";
+import StatusModel from "../../../Common/StatusModel";
 
 const radioOptions = [
   { value: "yes", label: "Interface" },
@@ -44,7 +45,9 @@ const radioOptions = [
 
 const AddLocation = () => {
   const navigate = useNavigate();
+  const [showModel, setShowModel] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("add-location");
+  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
   const tabbs = [
     { label: "Add Location", value: "add-location" },
     { label: "View Location", value: "view-location" },
@@ -146,7 +149,7 @@ const AddLocation = () => {
   // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
-    
+
     // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
@@ -158,16 +161,16 @@ const AddLocation = () => {
         return;
       }
     }
-    
+
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
       if (!a[columnName]) return 1;
       if (!b[columnName]) return -1;
-      
+
       const aValue = a[columnName].toString().toLowerCase();
       const bValue = b[columnName].toString().toLowerCase();
-      
+
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
       }
@@ -227,29 +230,6 @@ const AddLocation = () => {
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
       {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
-      <Grid
-        item
-        xs={12}
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          backgroundColor: "#fff",
-          paddingBottom: 1,
-        }}
-      >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Add Location" />
-        </Grid>
-
-        <Grid item xs={12} ml={1}>
-          <TabsBar
-            tabs={tabbs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </Grid>
-      </Grid>
 
       {/* Rest of the content */}
       <Grid
@@ -265,7 +245,27 @@ const AddLocation = () => {
               <NuralAccordion2
                 title="Create Location"
                 backgroundColor={LIGHT_GRAY2}
+                controlled={true}
+                expanded={accordionExpanded}
+                onChange={(event, expanded) => setAccordionExpanded(expanded)}
               >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontFamily: "Manrope",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    lineHeight: "100%",
+                    letterSpacing: "0%",
+                    color: DARK_PURPLE,
+                    marginBottom: "10px",
+                    marginTop: "10px",
+                    marginRight: "10px",
+                    mb: 3,
+                  }}
+                >
+                  Create Location
+                </Typography>
                 <Grid item xs={12} md={6} lg={6} mb={2}>
                   <Typography
                     variant="h6"
@@ -284,6 +284,7 @@ const AddLocation = () => {
                   <NuralRadioButton
                     label="Store Type"
                     options={radioOptions}
+                    value={radioOptions[0].value}
                     width="100%"
                     fontWeight={400}
                     fontSize="12px"
@@ -294,13 +295,12 @@ const AddLocation = () => {
                 <Grid
                   container
                   spacing={2}
-                  mb={2}
+                  mb={0.5}
                   sx={{
-                    gap: { xs: 2, sm: 3, md: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={5} md={3}>
+                  <Grid item xs={12} sm={6} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -314,10 +314,10 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="Hierarchy"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={3}>
+                  <Grid item xs={12} sm={6} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -331,10 +331,10 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="Reporting Hierarchy"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={3}>
+                  <Grid item xs={12} sm={12} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -348,10 +348,21 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="Country"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>{" "}
-                  <Grid item xs={12} sm={5} md={3}>
+                </Grid>
+
+                {/* Second Row */}
+                <Grid
+                  container
+                  spacing={2}
+                  mt={0.5}
+                  sx={{
+                    flexDirection: { xs: "column", sm: "row" },
+                  }}
+                >
+                  <Grid item xs={12} sm={6} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -365,23 +376,10 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="Region"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
-                </Grid>
-
-                {/* Second Row */}
-                <Grid
-                  container
-                  spacing={2}
-                  mb={2}
-                  mt={2}
-                  sx={{
-                    gap: { xs: 2, sm: 3, md: 0 },
-                    flexDirection: { xs: "column", sm: "row" },
-                  }}
-                >
-                  <Grid item xs={12} sm={5} md={3}>
+                  <Grid item xs={12} sm={6} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -395,10 +393,10 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="State"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={3}>
+                  <Grid item xs={12} sm={6} md={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -412,11 +410,11 @@ const AddLocation = () => {
                     <NuralAutocomplete
                       label="City"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={5} md={3} lg={3}>
+                  <Grid item xs={12} sm={6} md={6} lg={6} mt={0.5}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -427,9 +425,12 @@ const AddLocation = () => {
                     >
                       LOCATION NAME
                     </Typography>
-                    <NuralTextField placeholder="Enter Location Name" />
+                    <NuralTextField
+                      placeholder="ENTER LOCATION NAME"
+                      width="100%"
+                    />
                   </Grid>
-                  <Grid item xs={12} sm={5} md={3} lg={3}>
+                  <Grid item xs={12} sm={12} md={6} lg={6} mt={0.5}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -440,57 +441,59 @@ const AddLocation = () => {
                     >
                       LOCATION CODE
                     </Typography>
-                    <NuralTextField placeholder="Enter Location Code" />
+                    <NuralTextField
+                      placeholder="ENTER LOCATION CODE"
+                      width="100%"
+                    />
                   </Grid>
                 </Grid>
 
                 {/* Third Row - Buttons */}
               </NuralAccordion2>
-              <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
-                <NuralUploadStatus
-                  width="99%"
-                  status="success"
+              <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5} pr={2}>
+                <StatusModel
+                  width="100%"
+                  status="400"
                   title="New Upload Verified"
-                  actionText="RETRY UPLOAD"
-                  height="150px"
-                  onAction={() => console.log("Retry clicked")}
                 />
               </Grid>
 
-              <Grid
-                container
-                spacing={1}
-                mt={0.5}
-                sx={{
-                  flexDirection: { xs: "column", sm: "row" },
-                  gap: { xs: 2, sm: 0 },
-                }}
-              >
-                <Grid item xs={12} sm={6} md={6}>
-                  <NuralButton
-                    text="CANCEL"
-                    variant="outlined"
-                    color={PRIMARY_BLUE2}
-                    fontSize="12px"
-                    height="36px"
-                    borderColor={PRIMARY_BLUE2}
-                    onClick={() => console.log("Upload clicked")}
-                    width="100%"
-                  />
+              {accordionExpanded && (
+                <Grid
+                  container
+                  spacing={1}
+                  mt={0.5}
+                  sx={{
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 2, sm: 0 },
+                  }}
+                >
+                  <Grid item xs={12} sm={6} md={6}>
+                    <NuralButton
+                      text="CANCEL"
+                      variant="outlined"
+                      color={PRIMARY_BLUE2}
+                      fontSize="12px"
+                      height="36px"
+                      borderColor={PRIMARY_BLUE2}
+                      onClick={() => console.log("Upload clicked")}
+                      width="100%"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={6}>
+                    <NuralButton
+                      text="SAVE"
+                      variant="contained"
+                      color={PRIMARY_BLUE2}
+                      fontSize="12px"
+                      height="36px"
+                      backgroundColor={AQUA}
+                      onClick={() => console.log("Upload clicked")}
+                      width="100%"
+                    />
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6} md={6}>
-                  <NuralButton
-                    text="SAVE"
-                    variant="contained"
-                    color={PRIMARY_BLUE2}
-                    fontSize="12px"
-                    height="36px"
-                    backgroundColor={AQUA}
-                    onClick={() => console.log("Upload clicked")}
-                    width="100%"
-                  />
-                </Grid>
-              </Grid>
+              )}
             </Grid>
           </Grid>
         </Grid>

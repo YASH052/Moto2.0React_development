@@ -2,24 +2,26 @@ import { Box, Grid, Card, CardContent, Typography } from "@mui/material";
 import React from "react";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { DARK_PURPLE, LIGHT_GRAY2 } from "../../../Common/colors";
+import { Link } from "react-router-dom";
 
 const TransationCard = ({ salesTypes, title }) => {
   return (
     <Grid item xs={12} md={12} lg={12} p={1}>
       <Card
         sx={{
+          boxShadow: "none",
           bgcolor: LIGHT_GRAY2,
           p: 2,
           Width: 568,
-          height: 270,
+          height: "max-content",
           borderRadius: "8px",
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "end", mt: 5 }}>
+        <Box sx={{ display: "flex", justifyContent: "end", mt: 0, mb: 3 }}>
           <img
             width={80}
             height={80}
-            src={"./Icons/module.svg"}
+            src={"./Images/Reports.svg"}
             alt="transaction"
           />
         </Box>
@@ -39,16 +41,27 @@ const TransationCard = ({ salesTypes, title }) => {
           >
             {title}
           </Typography>
-          <Grid container spacing={0}>
+          <Grid
+            container
+            spacing={1}
+            mb={-3}
+            sx={{
+              display: "grid",
+
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gridAutoFlow: "column",
+              gridTemplateRows: "repeat(3, auto)",
+              gap: " 0px 100px",
+            }}
+          >
             {salesTypes.map((sale, index) => (
-              <Grid item xs={12} sm={6} key={index}>
+              <Grid item key={index}>
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     border: "1px solid #E2E7F6",
-                    p: 0,
-
+                    p: 0.5,
                     fontWeight: 700,
                     gap: "8px",
                     cursor: "pointer",
@@ -58,25 +71,30 @@ const TransationCard = ({ salesTypes, title }) => {
                     },
                   }}
                 >
-                  <Typography
-                    variant="subtitle1"
-                    color={DARK_PURPLE}
-                    sx={{
+                  <Link
+                    style={{
+                      display: "flex",
                       fontFamily: "Manrope",
                       fontWeight: 700,
                       fontSize: "10px",
                       lineHeight: "13.66px",
                       letterSpacing: "4%",
-                      textAlign: "center",
+                      textAlign: "left",
+                      color: DARK_PURPLE,
+                      textDecoration: "none",
+                      flex: 1,
                     }}
+                    to={sale.link}
                   >
                     {sale.title}
-                  </Typography>
-                  &nbsp;
-                  <ArrowForwardIosIcon
-                    color={DARK_PURPLE}
-                    sx={{ fontSize: "0.8rem" }}
-                  />
+                    &nbsp; &nbsp;
+                    <Box>
+                      <ArrowForwardIosIcon
+                        color={DARK_PURPLE}
+                        sx={{ fontSize: "0.8rem" }}
+                      />
+                    </Box>
+                  </Link>
                 </Box>
               </Grid>
             ))}

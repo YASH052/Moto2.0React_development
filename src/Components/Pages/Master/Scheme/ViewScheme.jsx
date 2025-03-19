@@ -279,7 +279,7 @@ const ViewScheme = () => {
                     <NuralAutocomplete
                       label="Scheme Type"
                       options={schemeTypeOptions}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -297,7 +297,7 @@ const ViewScheme = () => {
                     <NuralAutocomplete
                       label="Scheme For"
                       options={schemeForOptions}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -312,7 +312,7 @@ const ViewScheme = () => {
                     >
                       FROM DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MM/YYYY" />
                   </Grid>
                   <Grid item xs={12} sm={6} md={2}>
                     <Typography
@@ -325,7 +325,7 @@ const ViewScheme = () => {
                     >
                       TO DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MM/YYYY" />
                   </Grid>
                 </Grid>
 
@@ -401,7 +401,6 @@ const ViewScheme = () => {
                     lineHeight: "13.66px",
                     letterSpacing: "4%",
                     fontWeight: 400,
-                   
                   }}
                 >
                   <Grid

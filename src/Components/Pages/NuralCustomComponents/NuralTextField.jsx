@@ -23,6 +23,12 @@ const StyledTextField = styled(TextField)({
     "&::placeholder": {
       lineHeight: "normal",
       verticalAlign: "middle",
+      fontFamily: "Manrope",
+      fontWeight: 400,
+      fontSize: "12px",
+      lineHeight: "16.39px",
+      letterSpacing: "4%",
+      textTransform: "capitalize",
     },
   },
 });

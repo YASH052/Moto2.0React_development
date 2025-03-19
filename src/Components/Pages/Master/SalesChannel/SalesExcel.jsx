@@ -81,7 +81,7 @@ const SalesExcel = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={3}
         mb={0}
         sx={{
           position: "sticky",

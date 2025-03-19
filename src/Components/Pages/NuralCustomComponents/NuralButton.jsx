@@ -1,7 +1,11 @@
 import React from "react";
 import { Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { PRIMARY_LIGHT_PURPLE, PRIMARY_BLUE2, AQUA_DARK } from "../../Common/colors";
+import {
+  PRIMARY_LIGHT_PURPLE,
+  PRIMARY_BLUE2,
+  AQUA_DARK,
+} from "../../Common/colors";
 
 const StyledButton = styled(Button)({
   textTransform: "none",
@@ -53,7 +57,7 @@ const NuralButton = ({ text, ...props }) => {
         color: props.color || AQUA_DARK,
         border: props.border,
         borderRadius: props.borderRadius || "40px",
-        borderColor: props.borderColor ||PRIMARY_BLUE2,
+        borderColor: props.borderColor || PRIMARY_BLUE2,
         // Text Styling
         fontFamily: props.fontFamily,
         fontSize: props.fontSize || "14px",
@@ -78,13 +82,13 @@ const NuralButton = ({ text, ...props }) => {
           border: props.disabledBorder,
           color: props.disabledColor,
         },
-        ...props.sx
+        ...props.sx,
       }}
       {...props}
     >
-        {text}
+      {text}
     </Button>
   );
 };
 
-export default NuralButton; 
+export default NuralButton;

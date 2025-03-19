@@ -23,7 +23,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 
 const tabs = [
-  { label: "Upload", value: "upload" },
+  { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
   { label: "Category", value: "category" },
   { label: "Sub Category", value: "sub-category" },
@@ -171,7 +171,7 @@ const SKU = () => {
           />
         </Grid>
       </Grid>
-        {activeTab === "sku" && (
+      
           <>
             <Grid item xs={12} pr={1.5}>
               <Grid container spacing={2} direction="column">
@@ -602,7 +602,7 @@ const SKU = () => {
                     </Grid>
 
                     <Grid container spacing={1} mt={1}>
-                      <Grid item spacing={1} xs={6} sm={1} md={1}>
+                      <Grid item spacing={1} xs={11} sm={2} md={1}>
                         <NuralButton
                           text="CANCEL"
                           variant="outlined"
@@ -614,7 +614,7 @@ const SKU = () => {
                           width="100%"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={11} md={11} pr={1.5}>
+                      <Grid item xs={12} sm={10} md={11} pr={1.5}>
                         <NuralTextButton
                           icon={"./Icons/searchIcon.svg"}
                           iconPosition="right"
@@ -629,7 +629,14 @@ const SKU = () => {
                       </Grid>
                     </Grid>
 
-                    <Grid item xs={12} mt={2}>
+                   
+                  </NuralAccordion2>
+                </Grid>
+              </Grid>
+            </Grid>
+          </>
+
+          <Grid item xs={12} mt={2} sx={{ p: { xs: 1, sm: 2 } }}>
                       <TableContainer
                         component={Paper}
                         sx={{
@@ -1018,12 +1025,7 @@ const SKU = () => {
                         </Grid>
                       </TableContainer>
                     </Grid>
-                  </NuralAccordion2>
-                </Grid>
-              </Grid>
-            </Grid>
-          </>
-        )}
+       
       </Grid>
     </>
   );

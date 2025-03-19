@@ -14,19 +14,34 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import NuralTextButton from "./NuralTextButton";
 import {
   DARK_PURPLE,
+  LIGHT_GRAY2,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_PURPLE2,
 } from "../../Common/colors";
 
 const StyledAccordion = styled(Accordion)({
-  backgroundColor: "rgba(235, 238, 245, 0.5)",
+  backgroundColor: "transparent",
   boxShadow: "none",
   borderRadius: "8px !important",
+  position: "relative",
+  transition: "all 0.3s ease-in-out",
   "&:before": {
     display: "none",
   },
   "&.Mui-expanded": {
     margin: 0,
+  },
+  "& .MuiAccordionSummary-root": {
+    backgroundColor: "transparent",
+    borderRadius: "8px",
+    transition: "all 0.3s ease-in-out",
+    marginBottom: 0,
+  },
+  "& .MuiAccordionSummary-content": {
+    color: DARK_PURPLE,
+  },
+  "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": {
+    color: DARK_PURPLE,
   },
   "&.MuiAccordion-root": {
     "&:focus": {
@@ -61,11 +76,20 @@ const TemplateItem = styled(Box)({
   "&:last-child": {
     borderBottom: "none",
   },
+  "@media (max-width: 600px)": {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "8px",
+  },
 });
 
 const ActionButtons = styled(Box)({
   display: "flex",
   gap: "16px",
+  "@media (max-width: 600px)": {
+    width: "100%",
+    justifyContent: "flex-end",
+  },
 });
 
 const IconButton = styled(Box)({
@@ -87,6 +111,10 @@ const ButtonContainer = styled(Box)({
   gap: "16px",
   padding: "16px",
   borderTop: "1px solid rgba(0, 0, 0, 0.1)",
+  "@media (max-width: 600px)": {
+    flexDirection: "column",
+    gap: "8px",
+  },
 });
 
 const NuralAccordion = ({ title, templates, ...props }) => {
@@ -95,7 +123,12 @@ const NuralAccordion = ({ title, templates, ...props }) => {
       defaultExpanded
       sx={{
         // Size
-        width: props.width,
+        width: {
+          xs: "95%",
+          sm: "98%",
+          md: "98%",
+          lg: "98%",
+        },
         height: props.height,
         minWidth: props.minWidth,
         maxWidth: props.maxWidth,
@@ -110,7 +143,10 @@ const NuralAccordion = ({ title, templates, ...props }) => {
         marginRight: props.marginRight,
 
         // Padding
-        padding: props.padding,
+        padding: {
+          xs: props.mobilePadding || "8px",
+          sm: props.padding,
+        },
         paddingTop: props.paddingTop,
         paddingBottom: props.paddingBottom,
         paddingLeft: props.paddingLeft,
@@ -199,28 +235,33 @@ const NuralAccordion = ({ title, templates, ...props }) => {
             </ActionButtons>
           </TemplateItem>
         ))}
-       {props.buttons && <ButtonContainer sx={props.buttonContainerStyle}>
-          <NuralTextButton
-            icon={props.referenceIcon1}
-            iconPosition="right"
-            backgroundColor={props.buttonBg}
-            color={props.buttonColor}
-            width="100%"
-            {...props.binButtonProps}
-          >
-            BIN CODE
-          </NuralTextButton>
-          <NuralTextButton
-            icon={props.referenceIcon2}
-            iconPosition="right"
-            backgroundColor={props.buttonBg}
-            color={props.buttonColor}
-            width="100%"
-            {...props.referenceButtonProps}
-          >
-            REFERENCE CODE
-          </NuralTextButton>
-        </ButtonContainer>}
+        {props.buttons && (
+          <ButtonContainer sx={props.buttonContainerStyle}>
+            <NuralTextButton
+              icon={props.referenceIcon1}
+              iconPosition="right"
+              backgroundColor={props.buttonBg}
+              onClick={props.onClickBin}
+              color={props.buttonColor}
+              width="100%"
+              {...props.binButtonProps}
+            >
+              BIN CODE
+            </NuralTextButton>
+            <NuralTextButton
+              icon={props.referenceIcon2}
+              iconPosition="right"
+              onClick={props.onClickReference}
+
+              backgroundColor={props.buttonBg}
+              color={props.buttonColor}
+              width="100%"
+              {...props.referenceButtonProps}
+            >
+              REFERENCE CODE
+            </NuralTextButton>
+          </ButtonContainer>
+        )}
       </AccordionDetails>
     </StyledAccordion>
   );

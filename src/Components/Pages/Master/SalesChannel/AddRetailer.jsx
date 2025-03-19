@@ -118,7 +118,7 @@ const AddRetailer = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={3} mb={0} ml={1}>
           <BreadcrumbsHeader pageTitle="Sales" />
         </Grid>
 

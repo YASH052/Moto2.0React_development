@@ -1,38 +1,38 @@
 import { Autocomplete, TextField } from "@mui/material";
 import React, { useState } from "react";
-import { LIGHT_GRAY2, PRIMARY_BLUE2, PRIMARY_LIGHT_GRAY } from "../../Common/colors";
+import {
+  LIGHT_GRAY2,
+  PRIMARY_BLUE2,
+  PRIMARY_LIGHT_GRAY,
+} from "../../Common/colors";
 
 const NuralAutocomplete = ({
-  options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ],
-  placeholderText = "SELECT",
-  onSelect = () => {},
+  options,
+  label,
+  placeholder,
+  width,
+  getOptionLabel,
+  isOptionEqualToValue,
+  onChange,
+  value,
   ...props
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedValue, setSelectedValue] = useState(null);
 
   const handleChange = (event, newValue) => {
-    setSelectedValue(newValue);
-    onSelect(newValue);
+    console.log(newValue);
   };
 
   return (
     <Autocomplete
       options={options}
-      value={selectedValue}
-      onChange={handleChange}
-      inputValue={inputValue}
-      onInputChange={(event, newValue) => {
-        setInputValue(newValue);
-      }}
+      getOptionLabel={getOptionLabel || ((option) => option)}
+      isOptionEqualToValue={isOptionEqualToValue}
+      onChange={onChange}
+      value={value}
       sx={{
-        width: props.width || "232px",
+        width: width || "100%",
         height: props.height || "36px",
         minWidth: props.minWidth,
         maxWidth: props.maxWidth,
@@ -102,7 +102,7 @@ const NuralAutocomplete = ({
       renderInput={(params) => (
         <TextField
           {...params}
-          placeholder={placeholderText}
+          placeholder={placeholder}
           sx={{
             border: props.border || `1.8px solid ${PRIMARY_BLUE2}`,
             borderRadius: props.borderRadius || "8px",

@@ -626,14 +626,13 @@ const CounterShareReport = () => {
             </TableBody>
           </Table>
 
-          {/* Custom Pagination */}
-          <Grid
+           {/* Custom Pagination */}
+           <Grid
             container
             sx={{
               p: 2,
               alignItems: "center",
               justifyContent: "space-between",
-              backgroundColor: LIGHT_GRAY2, // Light blue-gray background
             }}
           >
             <Grid item>
@@ -658,19 +657,29 @@ const CounterShareReport = () => {
             </Grid>
 
             <Grid item>
-              <Grid container alignItems="center" spacing={1}>
-                <Grid item>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    SHOW :
-                  </Typography>
-                </Grid>
+              <Grid
+                container
+                spacing={1}
+                sx={{
+                  maxWidth: 300,
+                  ml: 1,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  //   gap: 1,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    fontSize: "10px",
+                    color: PRIMARY_BLUE2,
+                    fontWeight: 600,
+                  }}
+                >
+                  SHOW :
+                </Typography>
                 {[10, 25, 50, 100].map((value) => (
                   <Grid item key={value}>
                     <Button
@@ -678,9 +687,11 @@ const CounterShareReport = () => {
                         handleChangeRowsPerPage({ target: { value } })
                       }
                       sx={{
-                        minWidth: "30px",
+                        minWidth: "25px",
                         height: "24px",
-                        padding: "4px 8px",
+                        padding: "4px",
+                        borderRadius: "50%",
+                        // border: `1px solid ${PRIMARY_BLUE2}`,
                         backgroundColor:
                           rowsPerPage === value ? PRIMARY_BLUE2 : "transparent",
                         color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
@@ -691,6 +702,7 @@ const CounterShareReport = () => {
                               ? PRIMARY_BLUE2
                               : "transparent",
                         },
+                        mx: 0.5,
                       }}
                     >
                       {value}
@@ -705,31 +717,35 @@ const CounterShareReport = () => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
+                gap: 2,
+                color: PRIMARY_BLUE2,
               }}
             >
-              <Button
-                onClick={() => setPage(0)}
+              <Typography
+                variant="body2"
                 sx={{
-                  color: PRIMARY_BLUE2,
-                  textTransform: "none",
-                  fontSize: "10px",
-                  fontWeight: 700,
-                }}
+                    fontFamily: "Manrope",
+                    fontWeight: 700,
+                    fontSize: "8px",
+                    lineHeight: "10.93px",
+                    letterSpacing: "4%",
+                    textAlign: "center",
+                  }}
               >
                 JUMP TO FIRST
-              </Button>
-
+              </Typography>
               <IconButton
                 onClick={() => setPage(page - 1)}
                 disabled={page === 0}
-                sx={{ color: PRIMARY_BLUE2 }}
               >
                 <NavigateBeforeIcon />
               </IconButton>
 
               <Typography
-                sx={{ fontSize: "10px", fontWeight: 700, color: PRIMARY_BLUE2 }}
+                sx={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                }}
               >
                 PAGE {page + 1}
               </Typography>
@@ -739,28 +755,29 @@ const CounterShareReport = () => {
                 disabled={
                   page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
                 }
-                sx={{ color: PRIMARY_BLUE2 }}
               >
                 <NavigateNextIcon />
               </IconButton>
 
-              <Button
-                onClick={() =>
-                  setPage(Math.ceil(filteredRows.length / rowsPerPage) - 1)
-                }
+              <Typography
                 sx={{
-                  color: PRIMARY_BLUE2,
-                  textTransform: "none",
-                  fontSize: "10px",
+                  fontFamily: "Manrope",
                   fontWeight: 700,
+                  fontSize: "8px",
+                  lineHeight: "10.93px",
+                  letterSpacing: "4%",
+                  textAlign: "center",
                 }}
+                variant="body2"
               >
                 JUMP TO LAST
-              </Button>
-
+              </Typography>
               <input
-                type="text"
-                placeholder="JUMP TO PAGE"
+                type="number"
+                placeholder="Jump to page"
+                min={1}
+                max={Math.ceil(filteredRows.length / rowsPerPage)}
+                // value={page + 1}
                 onChange={(e) => {
                   const newPage = parseInt(e.target.value, 10) - 1;
                   if (
@@ -771,22 +788,19 @@ const CounterShareReport = () => {
                   }
                 }}
                 style={{
-                  width: "120px",
+                  width: "100px",
                   height: "24px",
-                  padding: "0 8px",
-                  borderRadius: "4px",
+                  paddingRight: "8px",
+                  paddingLeft: "8px",
+                  borderRadius: "8px",
+                  borderWidth: "1px",
                   border: `1px solid ${PRIMARY_BLUE2}`,
-                  backgroundColor: "#F8F9FD",
-                  fontSize: "10px",
+                  backgroundColor: LIGHT_GRAY2,
                 }}
               />
-              <IconButton sx={{ color: PRIMARY_BLUE2 }}>
-                <img
-                  src="./Icons/footerSearch.svg"
-                  alt="search"
-                  style={{ width: 20, height: 20 }}
-                />
-              </IconButton>
+              <Grid mt={1}>
+                <img src="./Icons/footerSearch.svg" alt="arrow" />
+              </Grid>
             </Grid>
           </Grid>
         </TableContainer>

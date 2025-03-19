@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Grid,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import {
   AQUA,
   DARK_PURPLE,
@@ -9,7 +15,9 @@ import {
   PRIMARY_BLUE,
   PRIMARY_LIGHT_PURPLE2,
   WHITE,
-  RED
+  RED,
+  ERROR_RED2,
+  ERROR_RED,
 } from "../../Common/colors";
 import NuralLoginTextField from "../NuralCustomComponents/NuralLoginTextField";
 import NuralButton from "../NuralCustomComponents/NuralButton";
@@ -21,73 +29,135 @@ import five from "../../../assets/carousel/five.png";
 import pdcard from "../../../assets/carousel/pdcard.png";
 import { CheckCircleOutlined as CheckCircleOutlinedIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import axios from "axios";
+const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
+
 const ResetPasswordForm = () => {
+  let log = JSON.parse(localStorage.getItem("log"));
+  console.log(log.userId);
   const [newPassword, setNewPassword] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({
-    password: '',
-    confirmPassword: ''
+    password: "",
+    confirmPassword: "",
   });
   const images = [pdcard, one, two, five, four, three];
-
+  const [loginStatus, setLoginStatus] = useState(null);
   const isLargeScreen = useMediaQuery("(min-width:512px)");
-  const [accessKey, setAccessKey] = useState("");
-  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validatePassword = (pass) => {
     if (!pass) {
-      return 'Password is required';
+      return "Password is required";
     }
-    if (pass.includes(' ')) {
-      return 'Password cannot contain spaces';
+    if (pass.includes(" ")) {
+      return "Password cannot contain spaces";
     }
     if (pass.length < 8) {
-      return 'Password must be at least 8 characters';
+      return "Password must be at least 8 characters";
     }
     if (pass.length > 16) {
-      return 'Password must not exceed 16 characters';
+      return "Password must not exceed 16 characters";
     }
-    return '';
+
+    // New validation rules
+    const hasUpperCase = /[A-Z]/.test(pass);
+    const hasLowerCase = /[a-z]/.test(pass);
+    const hasSpecialChar = /[!@#$%^&*+]/.test(pass);
+    const hasNumber = /\d/.test(pass);
+
+    if (!hasUpperCase) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!hasLowerCase) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!hasNumber) {
+      return "Password must contain at least one number";
+    }
+    if (!hasSpecialChar) {
+      return "Password must contain at least one special character";
+    }
+
+    return "";
   };
 
   const handlePasswordChange = (e) => {
     const value = e.target.value.trim();
-    if (!value.includes(' ')) {
+    if (!value.includes(" ")) {
       setPassword(value);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         password: validatePassword(value),
-        confirmPassword: value !== confirmPassword ? 'Passwords do not match' : ''
+        confirmPassword:
+          value !== confirmPassword ? "Passwords do not match" : "",
       }));
     }
   };
 
   const handleConfirmPasswordChange = (e) => {
     const value = e.target.value.trim();
-    if (!value.includes(' ')) {
+    if (!value.includes(" ")) {
       setConfirmPassword(value);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        confirmPassword: value !== password ? 'Passwords do not match' : ''
+        confirmPassword: value !== password ? "Passwords do not match" : "",
       }));
     }
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     const passwordError = validatePassword(password);
-    const confirmError = !confirmPassword ? 'Please confirm password' : 
-                        password !== confirmPassword ? 'Passwords do not match' : '';
+    const confirmError = !confirmPassword
+      ? "Please confirm password"
+      : password !== confirmPassword
+      ? "Passwords do not match"
+      : "";
 
     setErrors({
       password: passwordError,
-      confirmPassword: confirmError
+      confirmPassword: confirmError,
     });
 
-    if (!passwordError && !confirmError) {
-      setNewPassword(true);
-      // Add your API call or password reset logic here
+    console.log(log.userName);
+    let body = {
+      userName: log.userName,
+      oldPassword: password,
+      newPassword: confirmPassword,
+      confirmPassword: confirmPassword,
+    };
+    console.log(body);
+
+    setLoading(true);
+
+    try {
+      let response = await axios.post(
+        `${BASE_URL}/ChangePassword/${log.userId}`,
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            authKey: log.authKey,
+          },
+        }
+      );
+
+      if (response.status == 200) {
+        setNewPassword(true);
+        setLoginStatus("success");
+      } else {
+        setLoginStatus("error");
+        alert(response.data.statusMessage || "Password change failed");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setLoginStatus("error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,11 +166,11 @@ const ResetPasswordForm = () => {
   };
 
   const handleCancel = () => {
-    navigate("/login");
+    navigate("/");
   };
 
   const preventSpaces = (e) => {
-    if (e.key === ' ') {
+    if (e.key === " ") {
       e.preventDefault();
     }
   };
@@ -193,7 +263,7 @@ const ResetPasswordForm = () => {
                 re-enter the new password to confirm.
               </Typography>
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
-                <Box sx={{ position: 'relative', marginBottom: '24px' }}>
+                <Box sx={{ position: "relative", marginBottom: "24px" }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Enter New Password"
@@ -207,11 +277,11 @@ const ResetPasswordForm = () => {
                     <Typography
                       sx={{
                         color: RED,
-                        fontSize: '12px',
-                        position: 'absolute',
-                        bottom: '-20px',
-                        left: '0',
-                        width: '100%',
+                        fontSize: "12px",
+                        position: "absolute",
+                        bottom: "-20px",
+                        left: "0",
+                        width: "100%",
                       }}
                     >
                       {errors.password}
@@ -219,7 +289,7 @@ const ResetPasswordForm = () => {
                   )}
                 </Box>
 
-                <Box sx={{ position: 'relative', marginBottom: '24px' }}>
+                <Box sx={{ position: "relative", marginBottom: "24px" }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Re Enter New Password"
@@ -233,11 +303,11 @@ const ResetPasswordForm = () => {
                     <Typography
                       sx={{
                         color: RED,
-                        fontSize: '12px',
-                        position: 'absolute',
-                        bottom: '-20px',
-                        left: '0',
-                        width: '100%',
+                        fontSize: "12px",
+                        position: "absolute",
+                        bottom: "-20px",
+                        left: "0",
+                        width: "100%",
                       }}
                     >
                       {errors.confirmPassword}
@@ -256,16 +326,21 @@ const ResetPasswordForm = () => {
                     marginTop: "20px",
                   }}
                 >
-                  Note: Your password should be between 8-16 characters<br></br>
-                  <br></br>Use a combo of uppercase letters, lowercase
-                  letters, numbers, & even some special characters (!, @, $,
-                  %, ^, &, *, +, #)
+                  Password requirements:
+                  <br />
+                  • 8-16 characters
+                  <br />
+                  • At least one uppercase letter
+                  <br />
+                  • At least one lowercase letter
+                  <br />
+                  • At least one number
+                  <br />• At least one special character (!@#$%^&*+)
                 </Typography>
-
-                
 
                 <Box
                   sx={{
+                    mt: 2,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -283,12 +358,31 @@ const ResetPasswordForm = () => {
                     }}
                   >
                     <NuralButton
-                      text="Reset Password"
-                      // variant="outlined"
-                      backgroundColor={AQUA}
-                      width="60%"
-                      color={GREEN_COLOR}
+                      text={
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          {loading ? (
+                            <CircularProgress size={20} color="inherit" />
+                          ) : loginStatus === "success" ? (
+                            <CheckIcon />
+                          ) : loginStatus === "error" ? (
+                            <CloseIcon sx={{ color: ERROR_RED2 }} />
+                          ) : (
+                            "RESET PASSWORD"
+                          )}
+                          {/* LOGIN */}
+                        </Box>
+                      }
+                      backgroundColor={
+                        loginStatus === "error" ? ERROR_RED : AQUA
+                      }
+                      color={loginStatus === "error" ? WHITE : GREEN_COLOR}
                       onClick={handleResetPassword}
+                      width="50%"
+                      border="none"
+                      fontSize="12px"
+                      disabled={loading}
                     />
                   </Box>
                   <Box
@@ -302,11 +396,12 @@ const ResetPasswordForm = () => {
                     }}
                   >
                     <NuralButton
+                      hoverColor={AQUA}
                       text="CANCEL"
                       variant="outlined"
                       onClick={handleCancel}
                       color={"white"}
-                      width="50%"
+                      width="60%"
                       fontSize="14px"
                       borderColor="white"
                       fontWeight="400"

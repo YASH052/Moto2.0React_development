@@ -8,16 +8,18 @@ import TransationCard from "../Transaction/TransationCard";
 
 const salesReports = [
   { title: "SALES REPORT", link: "/sales-report" },
-  { title: "ISR SALES REPORT", link: "/isr-sales-report" },
+  { title: "ISP SALES REPORT", link: "/isr-sales-report" },
   { title: "UNIQUE SALES REPORT", link: "/unique-sales-report" },
   { title: "PRIMARY TO TERTIARY TRACK", link: "/primary-tertiary-track" },
   { title: "COMPETITION SALES REPORT", link: "/competition-sales-report" },
+  { title: "COUNTER SHARE REPORT", link: "/counter-share-report" },
 ];
 
 const stockReports = [
   { title: "STOCK REPORT", link: "/stock-report" },
   { title: "SALESCHANNEL STOCK SB", link: "/saleschannel-stock-sb" },
   { title: "STOCK ADJUSTMENT REPORT", link: "/stock-adjustment-report" },
+  { title: "SERIAL NO. MOVEMENT", link: "/serial-no-movement" },
 ];
 
 const appReports = [
@@ -36,6 +38,21 @@ const retailReports = [
   { title: "DEMO PRODUCTIVITY REPORT", link: "/demo-productivity-report" },
 ];
 
+const targetIncentiveReports = [
+  { title: "TARGET VS ACHIEVEMENT REPORT", link: "/target-achievement-report" },
+  { title: "SCHEME REPORT", link: "/scheme-report" },
+];
+
+const miscReports = [
+  { title: "ACTIVATION FILE RECEIVED", link: "/activation-file-received" },
+  { title: "SAP INTEGRATION FILE", link: "/sap-integration-file" },
+];
+
+const attendanceReports = [
+  { title: "ATTENDANCE REPORT", link: "/view-attendance-report" },
+  { title: "LEAVE REPORT", link: "/leave-report" },
+];
+
 const Reports = () => {
   const [activeTab, setActiveTab] = React.useState("primary");
 
@@ -51,23 +68,34 @@ const Reports = () => {
   };
 
   return (
-    <Grid container spacing={2}>
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        position: "relative",
+      }}
+    >
       <Grid
         item
         xs={12}
         md={6}
         lg={12}
         mt={1}
-        mb={0}
         sx={{
           position: "sticky",
           top: 0,
+          zIndex: 1000,
+          backgroundColor: "#fff",
+          p: 2,
+          // borderBottom: '1px solid #eee'
         }}
       >
-        <BreadcrumbsHeader pageTitle="Reports" />
+        <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Reports" />
+        </Grid>
       </Grid>
 
-      <Grid container spacing={2} p={1}>
+      <Grid container spacing={0} p={1}>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={salesReports} title="Sales" />
         </Grid>
@@ -79,6 +107,18 @@ const Reports = () => {
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={retailReports} title="Retail" />
+        </Grid>
+        <Grid item xs={12} md={6} lg={6}>
+          <TransationCard
+            salesTypes={targetIncentiveReports}
+            title="Target & Incentive"
+          />
+        </Grid>
+        <Grid item xs={12} md={6} lg={6}>
+          <TransationCard salesTypes={miscReports} title="Misc" />
+        </Grid>
+        <Grid item xs={12} md={6} lg={6}>
+          <TransationCard salesTypes={attendanceReports} title="Attendance" />
         </Grid>
       </Grid>
     </Grid>

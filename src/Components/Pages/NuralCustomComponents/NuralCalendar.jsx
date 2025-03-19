@@ -180,6 +180,8 @@ const DateTextField = styled(TextField)({
 });
 
 const NuralCalendar = ({
+  value,
+  onChange,
   onDateSelect,
   onMonthChange,
   onYearChange,
@@ -205,6 +207,7 @@ const NuralCalendar = ({
   navigationButtonStyle = {},
   yearGridStyle = {},
   monthGridStyle = {},
+  error,
   ...props
 }) => {
   const [currentDate, setCurrentDate] = useState(initialDate || new Date());
@@ -332,15 +335,17 @@ const NuralCalendar = ({
 
   const handleDateClick = (day, isCurrentMonth) => {
     if (isCurrentMonth) {
+      // Create date at start of day in local timezone
       const newDate = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
-        day
+        day,
+        12  // Set to noon to avoid timezone issues
       );
       setCurrentDate(newDate);
       setSelectedDate(newDate);
-      onDateSelect?.(newDate);
-      setOpenCalendar(false); // Close calendar after selection
+      onChange?.(newDate);
+      setOpenCalendar(false);
     }
   };
 
@@ -394,10 +399,22 @@ const NuralCalendar = ({
   // Format date for display in TextField
   const formatDate = (date) => {
     if (!date) return "";
+    
+    let dateObj;
+    if (typeof date === 'string') {
+      // Parse string date and set to noon to avoid timezone issues
+      dateObj = new Date(date);
+      dateObj.setHours(12, 0, 0, 0);
+    } else {
+      dateObj = new Date(date);
+      dateObj.setHours(12, 0, 0, 0);
+    }
 
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = date.toLocaleString("en-US", { month: "short" });
-    const year = date.getFullYear();
+    if (isNaN(dateObj.getTime())) return "";
+
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = dateObj.toLocaleString("en-US", { month: "short" });
+    const year = dateObj.getFullYear();
 
     return `${day}-${month}-${year}`;
   };
@@ -415,14 +432,15 @@ const NuralCalendar = ({
       <DateTextField
         fullWidth
         placeholder="DD/MMM/YY"
-        value={""}
+        value={formatDate(value)}
         onClick={handleCalendarOpen}
+        error={error}
         InputProps={{
           readOnly: true,
           endAdornment: (
             <CalendarTodayIcon
               sx={{
-                color: PRIMARY_BLUE2,
+                color: error ? 'error.main' : PRIMARY_BLUE2,
                 cursor: "pointer",
                 fontSize: "18px",
               }}
@@ -430,6 +448,15 @@ const NuralCalendar = ({
             />
           ),
         }}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderColor: error ? 'error.main' : PRIMARY_LIGHT_PURPLE2,
+            '&:hover fieldset': {
+              borderColor: error ? 'error.main' : PRIMARY_LIGHT_PURPLE2,
+            },
+          }
+        }}
+        {...props}
       />
 
       <Modal

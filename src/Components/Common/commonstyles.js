@@ -17,6 +17,7 @@ export const tableHeaderStyle = {
   fontWeight: 700,
   fontSize: "10px",
   lineHeight: "13.66px",
+
   letterSpacing: "4%",
   textAlign: "start",
   backgroundColor: LIGHT_GRAY2,

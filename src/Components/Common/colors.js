@@ -14,6 +14,7 @@ export const AQUA_DARK = "#026668";
 export const PRIMARY_LIGHT_PURPLE2 = "#8D9EDB";
 export const LIGHT_GRAY2 = "#E2E7F6";
 export const LIGHT_GRAY3 = "#B9B2B4";
+export const SKELETON_GRAY = "#dbe0ee";
 
 // Transparent Colors
 export const TRANSPARENT_WHITE_15 = "rgba(255, 255, 255, 0.15)";

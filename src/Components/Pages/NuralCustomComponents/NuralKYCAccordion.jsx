@@ -97,6 +97,8 @@ const NuralKYCAccordion = ({
   fields = [],
   ...props
 }) => {
+  const [isExpanded, setIsExpanded] = React.useState(true);
+
   const fileInputRefs = React.useRef([]);
 
   React.useEffect(() => {
@@ -117,6 +119,7 @@ const NuralKYCAccordion = ({
   return (
     <StyledAccordion
       defaultExpanded
+      onChange={(_, expanded) => setIsExpanded(expanded)}
       sx={{
         // Size
         width: props.width,
@@ -176,19 +179,31 @@ const NuralKYCAccordion = ({
         opacity: props.opacity,
         overflow: props.overflow,
 
+        "& .MuiAccordionSummary-root": {
+          backgroundColor: isExpanded ? DARK_PURPLE : LIGHT_GRAY2,
+          borderRadius: "8px",
+          transition: "all 0.3s ease-in-out",
+          marginBottom: isExpanded ? "10px" : 0,
+        },
+        "& .MuiAccordionSummary-content": {
+          color: isExpanded ? "white" : DARK_PURPLE,
+        },
+        "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": {
+          color: isExpanded ? "white" : DARK_PURPLE,
+        },
+
         ...props.sx,
       }}
       {...props}
     >
       <StyledAccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ color: color }} />}
+        expandIcon={<ExpandMoreIcon />}
         sx={props.summaryStyle}
       >
         <Typography
           sx={{
             fontSize: props.titleFontSize || "14px",
             fontWeight: props.titleFontWeight || 800,
-            color: color,
             fontFamily: "Manrope, sans-serif",
             ...props.titleStyle,
           }}

@@ -98,7 +98,7 @@ const AddSalesChannel = () => {
             xs={12}
             md={6}
             lg={12}
-            mt={1}
+            mt={3}
             sx={{
               ml: 1,
             }}
