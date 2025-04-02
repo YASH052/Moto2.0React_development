@@ -32,11 +32,15 @@ import { useNavigate } from "react-router-dom";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
+import toast from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+import { baseUrl } from "../../Common/urls";
 const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 
 const ResetPasswordForm = () => {
   let log = JSON.parse(localStorage.getItem("log"));
-  console.log(log.userId);
+  let email = localStorage.getItem("resetPasswordEmail");
+
   const [newPassword, setNewPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -125,39 +129,39 @@ const ResetPasswordForm = () => {
 
     console.log(log.userName);
     let body = {
-      userName: log.userName,
-      oldPassword: password,
-      newPassword: confirmPassword,
-      confirmPassword: confirmPassword,
+      clientKey: "motoISP",
+      userLoginName: log.userName,
+      emailID: email,
+      newPassword: password,
     };
     console.log(body);
 
     setLoading(true);
 
     try {
-      let response = await axios.post(
-        `${BASE_URL}/ChangePassword/${log.userId}`,
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            authKey: log.authKey,
-          },
-        }
-      );
+      let response = await axios.post(`${baseUrl}/ResetPassword/`, body);
 
-      if (response.status == 200) {
+      if (response.data.statusCode == 200) {
         setNewPassword(true);
         setLoginStatus("success");
+        toast.success(
+          response.data.statusMessage || "Password changed successfully"
+        );
       } else {
         setLoginStatus("error");
-        alert(response.data.statusMessage || "Password change failed");
+        toast.error(response.data.statusMessage || "Password change failed");
       }
     } catch (error) {
       console.error("Error changing password:", error);
       setLoginStatus("error");
+      toast.error(
+        error.message ||
+          "Error in sending mail. Please contact to administrator."
+      );
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 
@@ -184,6 +188,7 @@ const ResetPasswordForm = () => {
         // backgroundColor: "#F4F7FC",
       }}
     >
+      <Toaster />
       {/* Login Form Section (70% Height) */}
       <Box
         sx={{

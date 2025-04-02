@@ -45,10 +45,60 @@ const SalesTrendGraph = ({
   indicatorTextSize = "12px",
   paperPadding = 2,
   paperBorderRadius = 2,
+  period = 'week', // Add new prop for time period
+  showLegend = true, // Add new prop for legend visibility
 }) => {
   const [activeDate, setActiveDate] = React.useState(null);
 
-  // Custom tooltip component
+  // Add function to determine grid line intervals
+  const getGridConfig = () => {
+    switch (period) {
+      case 'week':
+        return {
+          xTicks: 7, // Show 7 ticks for week view
+          yTicks: 5,
+          strokeDasharray: '3 3', // Dashed lines
+        };
+      case 'month':
+        return {
+          xTicks: 4, // Show 4 ticks for month view (one per week)
+          yTicks: 5,
+          strokeDasharray: '3 3',
+        };
+      case 'year':
+        return {
+          xTicks: 12, // Show 12 ticks for year view (one per month)
+          yTicks: 5,
+          strokeDasharray: '3 3',
+        };
+      default:
+        return {
+          xTicks: 7,
+          yTicks: 5,
+          strokeDasharray: '3 3',
+        };
+    }
+  };
+
+  const gridConfig = getGridConfig();
+
+  // Add formatting logic based on period
+  const formatXAxis = (value) => {
+    switch (period) {
+      case 'week':
+        return `WEEK ${value}`;
+      case 'month':
+        // Convert month number to short month name
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        return months[value - 1] || value;
+      case 'year':
+        return value;
+      default:
+        return value;
+    }
+  };
+
+  // Custom tooltip component with period-specific formatting
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       setActiveDate(label);
@@ -63,7 +113,9 @@ const SalesTrendGraph = ({
             transform: "translateY(-20px)",
           }}
         >
-          <Typography sx={{ fontSize: "12px" }}>{label}</Typography>
+          <Typography sx={{ fontSize: "12px" }}>
+            {formatXAxis(label)}
+          </Typography>
           <Typography
             sx={{
               color: tooltipTextColor,
@@ -111,8 +163,10 @@ const SalesTrendGraph = ({
             >
               <CartesianGrid
                 stroke={gridColor}
+                strokeDasharray={gridConfig.strokeDasharray}
                 vertical={true}
                 horizontal={true}
+                tickCount={gridConfig.xTicks}
               />
               {activeDate && (
                 <ReferenceLine
@@ -126,42 +180,50 @@ const SalesTrendGraph = ({
                 axisLine={true}
                 tickLine={false}
                 tick={{ fill: axisColor, fontSize: axisFontSize }}
+                tickFormatter={formatXAxis}
+                interval={0}
+                tickCount={gridConfig.xTicks}
               />
               <YAxis
                 axisLine={true}
                 tickLine={false}
                 tick={{ fill: axisColor, fontSize: axisFontSize }}
                 tickFormatter={(value) => `${value / 1000}K`}
+                tickCount={gridConfig.yTicks}
               />
               <Tooltip content={<CustomTooltip />} cursor={false} />
-              {["total", "nsm1"].map((key, index) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  name={key === "total" ? "TOTAL" : "NSM 1"}
-                  stroke={DARK_PURPLE}
-                  strokeWidth={lineWidth}
-                  dot={false}
-                  activeDot={{
-                    r: dotSize,
-                    fill: dotColor,
-                    stroke: dotColor,
-                    strokeWidth: 0,
+              {data && data.length > 0 && Object.keys(data[0])
+                .filter(key => key !== 'date')
+                .map((key, index) => (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={key === "total" ? "TOTAL" : key.toUpperCase()}
+                    stroke={DARK_PURPLE}
+                    strokeWidth={lineWidth}
+                    dot={false}
+                    activeDot={{
+                      r: dotSize,
+                      fill: dotColor,
+                      stroke: dotColor,
+                      strokeWidth: 0,
+                    }}
+                  />
+                ))}
+              {showLegend && (
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  iconType="circle"
+                  iconSize={indicatorSize}
+                  wrapperStyle={{
+                    fontSize: indicatorTextSize,
+                    color: indicatorColor || DARK_PURPLE,
+                    paddingBottom: "10px",
                   }}
                 />
-              ))}
-              <Legend
-                verticalAlign="bottom"
-                align="center"
-                iconType="circle"
-                iconSize={indicatorSize}
-                wrapperStyle={{
-                  fontSize: indicatorTextSize,
-                  color: indicatorColor || DARK_PURPLE,
-                  paddingBottom: "10px",
-                }}
-              />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </Grid>

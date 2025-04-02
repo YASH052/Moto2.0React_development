@@ -59,7 +59,7 @@ const AddLocation = () => {
     fontSize: "10px",
     lineHeight: "13.66px",
     letterSpacing: "4%",
-    color: DARK_PURPLE,
+    color: PRIMARY_BLUE2,
     marginBottom: "5px",
     fontWeight: 400,
   };
@@ -271,7 +271,7 @@ const AddLocation = () => {
                     variant="h6"
                     sx={{
                       ml: 0,
-                      color: DARK_PURPLE,
+                      color: PRIMARY_BLUE2,
                       fontFamily: "Manrope",
                       fontWeight: 400,
                       fontSize: "10px",

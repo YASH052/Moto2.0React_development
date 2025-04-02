@@ -1,14 +1,11 @@
+import React, { useEffect, useState } from "react";
 import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
-  AQUA,
-  DARK_PURPLE,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
@@ -22,16 +19,15 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
-  IconButton,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { fetchProcessList, fetchSAPList } from "../../../Api/Api";
+import Required from "../../../Common/Required";
+import StatusModel from "../../../Common/StatusModel";
+import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import NuralPagination from "../../../Common/NuralPagination";
 
 const ActivationFileRecieved = () => {
   const [activeTab, setActiveTab] = React.useState("activation-file-received");
@@ -43,7 +39,7 @@ const ActivationFileRecieved = () => {
     fontSize: "10px",
     lineHeight: "13.66px",
     letterSpacing: "4%",
-    color: DARK_PURPLE,
+    color: PRIMARY_BLUE2,
     marginBottom: "5px",
     fontWeight: 400,
   };
@@ -69,127 +65,284 @@ const ActivationFileRecieved = () => {
     direction: null,
   });
 
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const statuses = ["Completed", "Pending", "Failed"];
-    const dates = ["2024-01-15", "2024-02-01", "2024-02-15"];
+  // Add state from RedingtonFile
+  const [processList, setProcessList] = useState([]);
+  const [processStatus, setProcessStatus] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchClicked, setSearchClicked] = useState(false);
+  const [status, setStatus] = useState(false);
+  const [title, setTitle] = useState("");
+  const [fromDateError, setFromDateError] = useState("");
+  const [toDateError, setToDateError] = useState("");
+  const [defaultLoading, setDefaultLoading] = useState(false);
 
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        column1: Math.floor(Math.random() * 100), // File check count
-        column2: Math.floor(Math.random() * 50), // File errors count
-        column3: statuses[Math.floor(Math.random() * statuses.length)],
-        column4: Math.floor(Math.random() * 1000), // Upload records
-        column5: Math.floor(Math.random() * 800), // Processed records
-        column6: Math.floor(Math.random() * 200), // Invalid records
-        column7: dates[Math.floor(Math.random() * dates.length)], // Processed on
-        column8: "Download", // Download link/button text
-      }));
+  // Replace existing search params state
+  const [searchParams, setSearchParams] = useState({
+    service_network_id: 0,
+    interfaceMasterID: 0,
+    processStatusId: -1,
+    uploadFromDate: "",
+    uploadToDate: "",
+    export: 0,
+    exportType: 1,
+    interfaceFileID: 0,
+    poNumber: "",
+    pageIndex: 1,
+    pageSize: 10,
+    callType: 2 // Different callType for activation files
+  });
+
+  // Add missing state declarations near other state hooks
+  const [tableData, setTableData] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+ 
+  // Add column mapping at the top
+  const columnMapping = {
+    "FILE CHECK": "interfaceFileName",
+    "FILE ERRORS": "errorMsg",
+    "STATUS": "transStatus",
+    "UPLOAD RECORDS": "totalRecords",
+    "PROCESSED RECORDS": "processedRecords",
+    "INVALID RECORDS": "invalidRecords",
+    "PROCESSED ON": "createdOn",
   };
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  // Add handlePaginationChange function
+  const handlePaginationChange = (paginationState) => {
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: paginationState.page + 1,
+      pageSize: paginationState.rowsPerPage,
+    };
+    setPage(paginationState.page);
+    setRowsPerPage(paginationState.rowsPerPage);
+    setSearchParams(updatedParams);
+    getActivationList(updatedParams);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Enhanced sorting function
+  // Add handleSort function
   const handleSort = (columnName) => {
+    const key = columnMapping[columnName];
     let direction = "asc";
-
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
-      }
+    
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === "asc" ? "desc" : "asc";
     }
-
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
+    
+    const sortedData = [...tableData].sort((a, b) => {
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
     });
 
-    setFilteredRows(sortedRows);
+    setTableData(sortedData);
+    setSortConfig({ key, direction });
   };
 
-  // Update the handleSearch function
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.isp ||
-          row.column1.toString().includes(searchValues.isp)) &&
-        (!searchValues.fromDate ||
-          new Date(row.column7) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column7) <= new Date(searchValues.toDate)) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.city ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.city.toLowerCase())) &&
-        (!searchValues.product ||
-          row.column4.toString().includes(searchValues.product))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0);
-  };
-
-  // Update the handleSearchClick function
-  const handleSearchClick = () => {
-    const searchValues = {
-      isp: document.querySelector('[placeholder="Select"]')?.value || "",
-      fromDate: document.querySelector('[placeholder="Select"]')?.value || "",
-      toDate: document.querySelector('[placeholder="DD/MM/YY"]')?.value || "",
-      state: document.querySelector('[label="State"]')?.value || "",
-      city: document.querySelector('[label="City"]')?.value || "",
-      product:
-        document.querySelector('[placeholder="Select"]')?.lastValue || "",
-    };
-    handleSearch(searchValues);
-  };
-
+  // Add handleReset function
   const handleReset = () => {
-    // Reset all filters
-    const inputs = document.querySelectorAll("input");
-    inputs.forEach((input) => {
-      input.value = "";
+    setSearchParams({
+      service_network_id: 0,
+      interfaceMasterID: 0,
+      processStatusId: -1,
+      uploadFromDate: "",
+      uploadToDate: "",
+      export: 0,
+      exportType: 1,
+      interfaceFileID: 0,
+      poNumber: "",
+      pageIndex: 1,
+      pageSize: 10,
+      callType: 2
     });
-
-    // Reset the table to show all rows
-    setFilteredRows(rows);
+    setTableData([]);
+    setTotalRecords(0);
     setPage(0);
-    setSortConfig({ key: null, direction: null });
+    setSearchClicked(false);
+    setStatus(null);
+    setTitle('');
+  };
+
+  // Add API functions from RedingtonFile
+  const getProcessTypeList = async () => {
+    try {
+      setDefaultLoading(true);
+      const params = {
+        service_network_id: 0,
+        callType: 2, // Activation files
+      };
+      const response = await fetchProcessList(params);
+      if (response.statusCode == 200) {
+        setProcessList(response.processTypeList);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setDefaultLoading(false);
+    }
+  };
+
+  const getProcessStatusList = async () => {
+    try {
+      setDefaultLoading(true);
+      const params = {
+        service_network_id: 0,
+        callType: 2, // Activation files
+      };
+      const response = await fetchProcessList(params);
+      if (response.statusCode == 200) {
+        setProcessStatus(response.processStatusList);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setDefaultLoading(false);
+    }
+  };
+
+  // Replace handleSearchClick with RedingtonFile version
+  const handleSearchClick = () => {
+    setStatus(null);
+    setTitle("");
+    if (!searchParams.uploadFromDate || !searchParams.uploadToDate) {
+      setFromDateError("From Date is mandatory");
+      setToDateError("To Date is mandatory");
+      return;
+    }
+
+    if (fromDateError || toDateError) return;
+
+    setSearchClicked(true);
+    const fromDate = new Date(searchParams.uploadFromDate);
+    const toDate = new Date(searchParams.uploadToDate);
+
+    if (fromDate > toDate) {
+      setFromDateError("From date cannot be greater than To date");
+      setToDateError("To date cannot be less than From date");
+      return;
+    }
+
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: 1,
+      pageSize: rowsPerPage,
+    };
+
+    setPage(0);
+    setSearchParams(updatedParams);
+    getActivationList(updatedParams);
+  };
+
+  // Add getActivationList function
+  const getActivationList = async (params = searchParams) => {
+  // console.log(status, title)
+    setStatus(false);
+    setTitle("");
+    try {
+      setLoading(true);
+      const response = await fetchSAPList(params);
+      if (response.statusCode == 200) {
+        if (response.sapProcessList?.length > 0) {
+          setTableData(response.sapProcessList);
+          setTotalRecords(response.totalRecords);
+        } else {
+         
+          setTableData([]);
+          setTotalRecords(0);
+        }
+      } else {
+      setSearchClicked(false);
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "No Data Found");
+        setTableData([]);
+        setTotalRecords(0);
+      }
+    } catch (error) {
+      console.log(error);
+      setSearchClicked(false);
+      setStatus(error.statusCode);
+      setTitle(error.statusMessage || "No Data Found");
+      setTableData([]);
+      setTotalRecords(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add useEffect for initial load
+  useEffect(() => {
+    getProcessTypeList();
+    getProcessStatusList();
+  }, []);
+
+  // Update table rendering with skeleton
+  <TableBody>
+    {loading ? (
+      <TableRowSkeleton 
+        columns={8} 
+        imagePath="./Icons/emptyFile.svg" 
+        sx={{ height: "calc(100vh - 420px)" }}
+      />
+    ) : tableData.length === 0 ? (
+      <TableRow>
+        <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+          <Typography variant="body1" sx={{ color: PRIMARY_BLUE2, fontWeight: 500 }}>
+            No Data Available
+          </Typography>
+        </TableCell>
+      </TableRow>
+    ) : (
+      tableData.map((row, index) => (
+        <TableRow key={row.id}>
+          <TableCell sx={{ ...rowstyle, color: PRIMARY_BLUE2, fontWeight: 600 }}>
+            {page * rowsPerPage + index + 1}
+          </TableCell>
+          <TableCell sx={rowstyle}>{row.interfaceFileName}</TableCell>
+          <TableCell sx={rowstyle}>{row.errorMsg}</TableCell>
+          <TableCell sx={rowstyle}>{row.transStatus}</TableCell>
+          <TableCell sx={rowstyle}>{row.totalRecords}</TableCell>
+          <TableCell sx={rowstyle}>{row.processedRecords}</TableCell>
+          <TableCell sx={rowstyle}>{row.invalidRecords}</TableCell>
+          <TableCell sx={rowstyle}>{row.createdOn}</TableCell>
+          <TableCell sx={rowstyle}>
+            <Button variant="text" sx={{ color: PRIMARY_BLUE2, fontSize: "12px" }}>
+              Download
+            </Button>
+          </TableCell>
+        </TableRow>
+      ))
+    )}
+  </TableBody>;
+
+  // Replace pagination section with
+  <NuralPagination
+    totalRecords={totalRecords}
+    initialPage={page}
+    initialRowsPerPage={rowsPerPage}
+    onPaginationChange={handlePaginationChange}
+  />;
+
+  // Add date change handlers after the searchParams state
+  const handleFromDateChange = (newValue) => {
+    setFromDateError("");
+    if (searchParams.uploadToDate && new Date(newValue) > new Date(searchParams.uploadToDate)) {
+      setFromDateError("From date cannot be greater than To date");
+    }
+    const formattedDate = newValue instanceof Date 
+      ? `${newValue.getFullYear()}-${String(newValue.getMonth()+1).padStart(2,'0')}-${String(newValue.getDate()).padStart(2,'0')}`
+      : newValue;
+    setSearchParams(prev => ({ ...prev, uploadFromDate: formattedDate }));
+  };
+
+  const handleToDateChange = (newValue) => {
+    setToDateError("");
+    if (searchParams.uploadFromDate && new Date(newValue) < new Date(searchParams.uploadFromDate)) {
+      setToDateError("To date cannot be less than From date");
+    }
+    const formattedDate = newValue instanceof Date
+      ? `${newValue.getFullYear()}-${String(newValue.getMonth()+1).padStart(2,'0')}-${String(newValue.getDate()).padStart(2,'0')}`
+      : newValue;
+    setSearchParams(prev => ({ ...prev, uploadToDate: formattedDate }));
   };
 
   return (
@@ -247,64 +400,100 @@ const ActivationFileRecieved = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Typography
                       variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
+                      sx={{ ...labelStyle, fontSize: { xs: "12px", sm: "10px" }}}
                       fontWeight={600}
                     >
                       PROCESS TYPE
                     </Typography>
                     <NuralAutocomplete
                       label="Process Type"
-                      options={options}
-                      placeholder="Select"
+                      options={processList}
+                      getOptionLabel={(option) => option.interfaceName || ""}
+                      isOptionEqualToValue={(option, value) => 
+                        option?.interfaceMasterID === value?.interfaceMasterID
+                      }
+                      onChange={(event, newValue) => {
+                        setSearchParams(prev => ({
+                          ...prev,
+                          interfaceMasterID: newValue?.interfaceMasterID || 0
+                        }));
+                      }}
+                      value={processList.find(option => 
+                        option.interfaceMasterID === searchParams.interfaceMasterID
+                      ) || null}
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Typography
                       variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
+                      sx={{ ...labelStyle, fontSize: { xs: "12px", sm: "10px" }}}
                       fontWeight={600}
                     >
                       PROCESS STATUS
                     </Typography>
                     <NuralAutocomplete
                       label="Process Status"
-                      options={options}
-                      placeholder="Select"
+                      options={processStatus}
+                      getOptionLabel={(option) => option.processStatus || ""}
+                      isOptionEqualToValue={(option, value) => 
+                        option?.processStatusId === value?.processStatusId
+                      }
+                      onChange={(event, newValue) => {
+                        setSearchParams(prev => ({
+                          ...prev,
+                          processStatusId: newValue?.processStatusId || -1
+                        }));
+                      }}
+                      value={processStatus.find(option => 
+                        option.processStatusId === searchParams.processStatusId
+                      ) || null}
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Typography
                       variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
+                      sx={{ ...labelStyle, fontSize: { xs: "12px", sm: "10px" }}}
                       fontWeight={600}
                     >
-                      FROM DATE
+                      FROM DATE <Required />
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar
+                      width="100%"
+                      placeholder="SELECT"
+                      value={searchParams.uploadFromDate}
+                      onChange={handleFromDateChange}
+                      error={!!fromDateError}
+                    />
+                    {fromDateError && (
+                      <Typography color="error" sx={{ fontSize: "12px", mt: 0.5 }}>
+                        {fromDateError}
+                      </Typography>
+                    )}
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Typography
                       variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
+                      sx={{ ...labelStyle, fontSize: { xs: "12px", sm: "10px" }}}
                       fontWeight={600}
                     >
-                      TO DATE
+                      TO DATE <Required />
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="DD/MM/YY" />
+                    <NuralCalendar
+                      width="100%"
+                      placeholder="DD/MM/YY"
+                      value={searchParams.uploadToDate}
+                      onChange={handleToDateChange}
+                      error={!!toDateError}
+                    />
+                    {toDateError && (
+                      <Typography color="error" sx={{ fontSize: "12px", mt: 0.5 }}>
+                        {toDateError}
+                      </Typography>
+                    )}
                   </Grid>
                 </Grid>
 
@@ -351,9 +540,20 @@ const ActivationFileRecieved = () => {
           </Grid>
         </Grid>
       </Grid>
+      {status && (
+        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+          <StatusModel
+            status={status}
+            title={title}
+            onClose={() => setStatus(false)}
+            width="100%"
+          />
+        </Grid>
+      )}
+    
 
       {/* Add this after the NuralAccordion2 component */}
-      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+      {searchClicked && (<Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
         <TableContainer
           component={Paper}
           sx={{
@@ -421,12 +621,13 @@ const ActivationFileRecieved = () => {
                   </Grid>
                 </TableCell>
                 {[
-                  "FILE CHECK",
+                  "FILE ",
                   "FILE ERRORS",
-                  "STATUS",
-                  "UPLOAD RECORDS",
+                  "UPLOAD STATUS",
+                  "TOTAL RECORDS",
                   "PROCESSED RECORDS",
                   "INVALID RECORDS",
+                  "CREATED ON",
                   "PROCESSED ON",
                   "DOWNLOAD",
                 ].map((header, index) => (
@@ -477,9 +678,22 @@ const ActivationFileRecieved = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => (
+              {loading ? (
+                <TableRowSkeleton 
+                  columns={8} 
+                  imagePath="./Icons/emptyFile.svg" 
+                  sx={{ height: "calc(100vh - 420px)" }}
+                />
+              ) : tableData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+                    <Typography variant="body1" sx={{ color: PRIMARY_BLUE2, fontWeight: 500 }}>
+                      No Data Available
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tableData.map((row, index) => (
                   <TableRow key={row.id}>
                     <TableCell
                       sx={{
@@ -490,209 +704,47 @@ const ActivationFileRecieved = () => {
                     >
                       {page * rowsPerPage + index + 1}
                     </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column1}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column2}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column3}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column4}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column5}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column6}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.column7}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.interfaceFileName || ''}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.errorMsg || ''}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.transStatus || ''}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.totalRecords || 0} </TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.processedRecords || 0}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.invalidRecords || 0}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.createdOn || ''}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row?.modifyOn || ''}</TableCell>
                     <TableCell sx={{ ...rowstyle }}>
                       <Button
                         variant="text"
+                        disabled={!row?.existingFilePath}
+                        onClick={() => {
+                          if (row?.existingFilePath) {
+                           window.location.href = row?.existingFilePath;
+                          }
+                        }}
                         sx={{
                           color: PRIMARY_BLUE2,
                           textTransform: "none",
                           fontSize: "12px",
-                        }}
+                        }}  
                       >
-                        {row.column8}
+                        Download
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
             </TableBody>
           </Table>
-
-          {/* Custom Pagination */}
-          <Grid
-            container
-            sx={{
-              p: 2,
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Grid item>
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 400,
-                  fontSize: "10px",
-                  lineHeight: "13.66px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-                color="text.secondary"
-              >
-                TOTAL RECORDS:{" "}
-                <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                  {filteredRows.length} /{" "}
-                  {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                </span>
-              </Typography>
-            </Grid>
-
-            <Grid item>
-              <Grid
-                container
-                spacing={1}
-                sx={{
-                  maxWidth: 300,
-                  ml: 1,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  //   gap: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    mt: 1,
-                    fontSize: "10px",
-                    color: PRIMARY_BLUE2,
-                    fontWeight: 600,
-                  }}
-                >
-                  SHOW :
-                </Typography>
-                {[10, 25, 50, 100].map((value) => (
-                  <Grid item key={value}>
-                    <Button
-                      onClick={() =>
-                        handleChangeRowsPerPage({ target: { value } })
-                      }
-                      sx={{
-                        minWidth: "25px",
-                        height: "24px",
-                        padding: "4px",
-                        borderRadius: "50%",
-                        // border: `1px solid ${PRIMARY_BLUE2}`,
-                        backgroundColor:
-                          rowsPerPage === value ? PRIMARY_BLUE2 : "transparent",
-                        color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                        fontSize: "12px",
-                        "&:hover": {
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                        },
-                        mx: 0.5,
-                      }}
-                    >
-                      {value}
-                    </Button>
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                color: PRIMARY_BLUE2,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 700,
-                  fontSize: "8px",
-                  lineHeight: "10.93px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-              >
-                JUMP TO FIRST
-              </Typography>
-              <IconButton
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
-                <NavigateBeforeIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                }}
-              >
-                PAGE {page + 1}
-              </Typography>
-
-              <IconButton
-                onClick={() => setPage(page + 1)}
-                disabled={
-                  page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                }
-              >
-                <NavigateNextIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 700,
-                  fontSize: "8px",
-                  lineHeight: "10.93px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-              >
-                JUMP TO LAST
-              </Typography>
-              <input
-                type="number"
-                placeholder="Jump to page"
-                min={1}
-                max={Math.ceil(filteredRows.length / rowsPerPage)}
-                // value={page + 1}
-                onChange={(e) => {
-                  const newPage = parseInt(e.target.value, 10) - 1;
-                  if (
-                    newPage >= 0 &&
-                    newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                  ) {
-                    setPage(newPage);
-                  }
-                }}
-                style={{
-                  width: "100px",
-                  height: "24px",
-                  paddingRight: "8px",
-                  paddingLeft: "8px",
-                  borderRadius: "8px",
-                  borderWidth: "1px",
-                  border: `1px solid ${PRIMARY_BLUE2}`,
-                  backgroundColor: LIGHT_GRAY2,
-                }}
-              />
-              <Grid mt={1}>
-                <img src="./Icons/footerSearch.svg" alt="arrow" />
-              </Grid>
-            </Grid>
-          </Grid>
+          <NuralPagination
+            totalRecords={totalRecords}
+            initialPage={page}
+            initialRowsPerPage={rowsPerPage}
+            onPaginationChange={handlePaginationChange}
+          />  
+        
         </TableContainer>
       </Grid>
+      )}
     </Grid>
   );
 };

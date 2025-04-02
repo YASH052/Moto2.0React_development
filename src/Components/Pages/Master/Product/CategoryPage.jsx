@@ -1,5 +1,5 @@
 import { Box, Button, Checkbox, Grid, Typography, Switch } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -14,6 +14,8 @@ import {
   BLACK,
 } from "../../../Common/colors";
 import EditIcon from "@mui/icons-material/Edit";
+import Required from "../../../Common/Required";
+import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
@@ -25,6 +27,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { getbrandlist, GetCategoryList, ManageProductCategory } from "../../../Api/Api";
 
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
@@ -51,6 +54,9 @@ import {
 } from "@mui/material";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import { useNavigate } from "react-router-dom";
+import NuralPagination from "../../../Common/NuralPagination";
+import StatusModel from "../../../Common/StatusModel";
+
 const CategoryPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("category");
@@ -60,6 +66,320 @@ const CategoryPage = () => {
     key: null,
     direction: null,
   });
+
+  // Add brand list state
+  const [brandList, setBrandList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Add category list state
+  const [categoryList, setCategoryList] = useState([]);
+
+  // Update search params state
+  const [searchParams, setSearchParams] = useState({
+    brandID: 0,
+    categoryID: 0,
+    callType: 0 /* 1 = Active List, 0= bind for table List*/,
+    pageIndex: 1,
+    pageSize: 10,
+  });
+
+  const [formData, setFormData] = useState({
+    brandID: 0, //comma separated brand IDs
+    categoryID: 0, //category ID 0 for new category
+    categoryName: "",
+    categoryDesc: "",
+    active: 1,
+    callType: 0 /* 0-save, 1-update */,
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  // Add form validation
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Category Name validation
+    if (!formData.categoryName || formData.categoryName.trim() === "") {
+      newErrors.categoryName = "Category Name is required";
+    } else if (formData.categoryName.length > 50) {
+      newErrors.categoryName = "Category Name cannot exceed 50 characters";
+    } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.categoryName)) {
+      newErrors.categoryName = "Category Name can only contain alphanumeric characters and spaces";
+    }
+
+    // Category Code validation
+    if (!formData.categoryDesc || formData.categoryDesc.trim() === "") {
+      newErrors.categoryDesc = "Category Code is required";
+    } else if (formData.categoryDesc.length > 50) {
+      newErrors.categoryDesc = "Category Code cannot exceed 50 characters";
+    } else if (!/^[a-zA-Z0-9]+$/.test(formData.categoryDesc)) {
+      newErrors.categoryDesc = "Category Code can only contain alphanumeric characters (no spaces)";
+    }
+
+    // Brand selection validation
+    if (selectedBrands.length === 0) {
+      newErrors.brands = "Please select at least one brand";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Add new state for selected brands
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [tableData, setTableData] = useState([]); 
+  const [tableLoading, setTableLoading] = useState(false);
+  const [status,setStatus] = useState(null);
+  const [title,setTitle] = useState(null);
+  const [searchStatus,setSearchStatus] = useState(null);
+  const [searchTitle,setSearchTitle] = useState(null);
+  const [totalRecords,setTotalRecords] = useState(0);
+
+  // Add new state variables at the top with other state declarations
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [updatingRowId, setUpdatingRowId] = useState(null);
+  const [isTableUpdating, setIsTableUpdating] = useState(false);
+
+  // Add accordion state
+  const [accordionExpanded, setAccordionExpanded] = useState(true);
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [formLoading, setFormLoading] = useState(true);
+  const [searchFormLoading, setSearchFormLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Update handleBrandSelection to clear error
+  const handleBrandSelection = (brand) => {
+    setSelectedBrands((prev) => {
+      const isSelected = prev.some((b) => b.brandID === brand.brandID);
+      if (isSelected) {
+        return prev.filter((b) => b.brandID !== brand.brandID);
+      } else {
+        return [...prev, brand];
+      }
+    });
+    // Clear brand error when a brand is selected
+    if (errors.brands) {
+      setErrors(prev => ({ ...prev, brands: undefined }));
+    }
+  };
+
+  // Add handler for select all
+  const handleSelectAll = () => {
+    if (selectedBrands.length === brandList.length) {
+      setSelectedBrands([]);
+    } else {
+      setSelectedBrands([...brandList]);
+    }
+  };
+
+  // Add getBrandDropdown function
+  const getBrandDropdown = async () => {
+    try {
+      setIsLoading(true);
+      const params = {
+        ...searchParams,
+        CallType: 1,
+      };
+      const response = await getbrandlist(params);
+      if (response.statusCode === "200") {
+        setBrandList(response.brandMasterList || []);
+      } else {
+        setBrandList([]);
+      }
+    } catch (error) {
+      setBrandList([]);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update getCategoryDropdown function
+  const getCategoryDropdown = async () => {
+    try {
+      setIsLoading(true);
+      const params = {
+        ...searchParams,
+        callType: 1, // 1 for active list
+        brandID: searchParams.brandID, // Add brandID to params
+      };
+      const response = await GetCategoryList(params);
+      if (response.statusCode === "200") {
+        setCategoryList(response.categoryMasterList || []);
+      } else {
+        setCategoryList([]);
+      }
+    } catch (error) {
+      setCategoryList([]);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add pagination handler
+  const handlePaginationChange = (paginationState) => {
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: paginationState.page + 1,
+      pageSize: paginationState.rowsPerPage,
+    };
+
+    setPage(paginationState.page);
+    setRowsPerPage(paginationState.rowsPerPage);
+    setSearchParams(updatedParams);
+
+    getCategoryList(updatedParams);
+  };
+
+  // Update getCategoryList function
+  const getCategoryList = async (params = searchParams) => {
+    try {
+      setTableLoading(true);
+      const response = await GetCategoryList(params);
+      if (response.statusCode === "200") {
+        setTableData(response.categoryMasterList || []);
+        setFilteredRows(response.categoryMasterList || []);
+        setTotalRecords(response.totalRecords || 0);
+      } else {
+        setSearchStatus(response.status);
+        setSearchTitle(response.title);
+        setTableData([]);
+        setFilteredRows([]);
+        setTotalRecords(0);
+      }
+    } catch (error) {
+      console.log(error);
+      setSearchStatus(error.status);
+      setSearchTitle(error.title);
+      setTableData([]);
+      setFilteredRows([]);
+      setTotalRecords(0);
+    } finally {
+      setTableLoading(false);
+    }
+  };
+
+  // Update search handler
+  const handleSearch = async () => {
+    try {
+      setSearchFormLoading(true);
+      setTableLoading(true);
+      setIsTableUpdating(true);
+      const updatedParams = {
+        ...searchParams,
+        pageIndex: 1,
+        callType: 0,
+      };
+
+      if (searchParams.brandID === 0 && searchParams.categoryID === 0) {
+        setSearchStatus("400");
+        setSearchTitle("Please select at least one filter");
+        return;
+      }
+
+      const response = await GetCategoryList(updatedParams);
+      if (response.statusCode === "200") {
+        setTableData(response.categoryMasterList || []);
+        setFilteredRows(response.categoryMasterList || []);
+        setTotalRecords(response.totalRecords || 0);
+        setTimeout(() => {
+          setSearchStatus(null);
+          setSearchTitle(null);
+        }, 5000);
+      } else {
+        setTableData([]);
+        setFilteredRows([]);
+        setTotalRecords(0);
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "No data found");
+      }
+    } catch (error) {
+      console.log(error);
+      setTableData([]);
+      setFilteredRows([]);
+      setTotalRecords(0);
+      setSearchStatus(error.statusCode || "500");
+      setSearchTitle(error.statusMessage || "Something went wrong");
+    } finally {
+      setSearchFormLoading(false);
+      setTableLoading(false);
+      setIsTableUpdating(false);
+    }
+  };
+
+  // Update clear search handler
+  const handleClearSearch = () => {
+    setSearchFormLoading(true);
+    setSearchParams({
+      brandID: 0,
+      categoryID: 0,
+      callType: 0,
+      pageIndex: 1,
+      pageSize: 10,
+    });
+    setTableData([]);
+    setFilteredRows([]);
+    setTotalRecords(0);
+    setSearchStatus(null);
+    setSearchTitle(null);
+    setPage(0);
+    setRowsPerPage(10);
+    setTimeout(() => {
+      Promise.all([getCategoryList(), getBrandDropdown()]).finally(() => {
+        setSearchFormLoading(false);
+      });
+    }, 500);
+  };
+
+  // Update useEffect to initialize data
+  useEffect(() => {
+    setFormLoading(true);
+    setSearchFormLoading(true);
+    setTableLoading(true);
+    setIsTableUpdating(true);
+
+    Promise.all([getBrandDropdown(), getCategoryList()]).finally(() => {
+      setFormLoading(false);
+      setSearchFormLoading(false);
+      setTableLoading(false);
+      setIsTableUpdating(false);
+    });
+  }, []);
+
+  // Add effect to fetch categories when brand changes
+  useEffect(() => {
+    if (searchParams.brandID !== 0) {
+      getCategoryDropdown();
+    } else {
+      setCategoryList([]);
+      setSearchParams(prev => ({ ...prev, categoryID: 0 }));
+    }
+  }, [searchParams.brandID]);
+
+  // Update brand dropdown onChange handler
+  const handleBrandChange = (event, newValue) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      brandID: newValue?.brandID || 0,
+      categoryID: 0, // Reset category when brand changes
+    }));
+  };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -76,7 +396,7 @@ const CategoryPage = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...tableData]); // Reset to original order
         return;
       }
     }
@@ -145,15 +465,200 @@ const CategoryPage = () => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
-  const [selectedValue, setSelectedValue] = useState("Brand 1");
 
-  const options = [
-    { label: "Option 1", value: "option1" },
-    { label: "Option 2", value: "option2" },
-    { label: "Option 3", value: "option3" },
-  ];
+  // Add downloadExcel function
+  const downloadExcel = async () => {
+    try {
+      setTableLoading(true);
+      setIsTableUpdating(true);
+      const params = {
+        ...searchParams,
+        pageIndex: -1,
+        callType: 0,
+      };
+      const response = await GetCategoryList(params);
+      if (response.statusCode === "200") {
+        window.location.href = response?.reportLink;
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "File downloaded successfully");
+        setTimeout(() => {
+          setSearchStatus(null);
+          setSearchTitle(null);
+        }, 5000);
+      } else if (response.statusCode === "400") {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Something went wrong");
+      } else if (response.statusCode === "500") {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Internal server error");
+      }
+    } catch (error) {
+      console.log(error);
+      setSearchStatus(error.statusCode);
+      setSearchTitle(error.statusMessage || "Something went wrong");
+    } finally {
+      setTableLoading(false);
+      setIsTableUpdating(false);
+    }
+  };
 
-  const options2 = ["Brand 1", "Brand 2", "Brand 3"];
+  // Update handlePost function
+  const handlePost = async () => {
+    if (validateForm()) {
+      try {
+        setFormLoading(true);
+        setTableLoading(true);
+        setIsTableUpdating(true);
+
+        const requestData = {
+          categoryName: formData.categoryName,
+          categoryDesc: formData.categoryDesc,
+          brandID: selectedBrands.map(brand => brand.brandID).join(','),
+          active: formData.active || 1,
+          callType: formData.callType,
+          categoryID: formData.categoryID
+        };
+
+        const response = await ManageProductCategory(requestData);
+        
+        if (response.statusCode === "200") {
+          setStatus(response.statusCode);
+          setTitle(response.statusMessage || (formData.callType === 1 ? "Category updated successfully" : "Category created successfully"));
+          setTimeout(() => {
+            setStatus(null);
+            setTitle("");
+          }, 5000);
+          
+          handleClearForm();
+          getCategoryList();
+          getBrandDropdown();
+        } else {
+          setStatus(response.statusCode);
+          setTitle(response.statusMessage || (formData.callType === 1 ? "Failed to update category" : "Failed to create category"));
+        }
+      } catch (error) {
+        console.log(error);
+        setStatus(error.statusCode || "500");
+        setTitle(error.statusMessage || "Something went wrong");
+      } finally {
+        setFormLoading(false);
+        setTableLoading(false);
+        setIsTableUpdating(false);
+      }
+    }
+  };
+
+  // Update handleClearForm to not close accordion
+  const handleClearForm = () => {
+    setFormLoading(true);
+    setFormData({
+      categoryName: "",
+      categoryDesc: "",
+      brandID: "",
+      active: 1,
+      callType: 0,
+      categoryID: 0
+    });
+    setSelectedBrands([]);
+    setErrors({});
+    setIsEditMode(false);
+    setTimeout(() => {
+      Promise.all([getCategoryList(), getBrandDropdown()]).finally(() => {
+        setFormLoading(false);
+      });
+    }, 500);
+  };
+
+  // Update handleStatus to show loading state
+  const handleStatus = async (row) => {
+    try {
+      setUpdatingRowId(row.productCategoryID);
+      setStatusUpdateLoading(true);
+      setIsTableUpdating(true);
+      const requestData = {
+        ...formData,
+        active: row.status === 1 ? 1 : 0,
+        callType: 2,
+        categoryID: row.productCategoryID,
+        brandID: row.brandID.toString(),
+        categoryName: row.category,
+        categoryDesc: row.categoryDesc,
+      };
+
+      const response = await ManageProductCategory(requestData);
+      if (response.statusCode === "200") {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage);
+        setTimeout(() => {
+          setSearchStatus(null);
+          setSearchTitle(null);
+        }, 5000);
+
+        setTimeout(() => {
+          getCategoryList();
+        }, 500);
+      } else {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Something went wrong");
+        const newRows = [...filteredRows];
+        const rowIndex = newRows.findIndex((r) => r.productCategoryID === row.productCategoryID);
+        if (rowIndex !== -1) {
+          newRows[rowIndex] = {
+            ...newRows[rowIndex],
+            status: row.status,
+          };
+          setFilteredRows(newRows);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setSearchStatus("500");
+      setSearchTitle(error.message || "Something went wrong");
+      const newRows = [...filteredRows];
+      const rowIndex = newRows.findIndex((r) => r.productCategoryID === row.productCategoryID);
+      if (rowIndex !== -1) {
+        newRows[rowIndex] = {
+          ...newRows[rowIndex],
+          status: row.status,
+        };
+        setFilteredRows(newRows);
+      }
+    } finally {
+      setStatusUpdateLoading(false);
+      setUpdatingRowId(null);
+      setIsTableUpdating(false);
+    }
+  };
+
+  // Update handleEdit to set edit mode
+  const handleEdit = (row) => {
+    setFormData({
+      active: row.status,
+      brandID: row.brandID,
+      callType: 1,
+      categoryDesc: row.categoryDesc,
+      categoryID: row.productCategoryID || 0,
+      categoryName: row.category
+    });
+
+    const selectedBrandIds = row.brandID.toString().split(',');
+    const selectedBrandObjects = brandList.filter(brand => 
+      selectedBrandIds.includes(brand.brandID.toString())
+    );
+    setSelectedBrands(selectedBrandObjects);
+    setIsEditMode(true);
+    setAccordionExpanded(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Add accordion change handlers
+  const handleAccordionChange = (event, expanded) => {
+    setAccordionExpanded(expanded);
+  };
+
+  const handleSearchAccordionChange = (event, expanded) => {
+    setSearchAccordionExpanded(expanded);
+  };
 
   return (
     <>
@@ -186,171 +691,334 @@ const CategoryPage = () => {
         <>
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
-              <Grid item >
-                <NuralAccordion2
-                  title="Create Category"
-                  backgroundColor={LIGHT_GRAY2}
-                >
-                  <Grid container spacing={4} sx={{ width: "100%" }}>
-                    <Grid item xs={12} sm={12} md={12} lg={12}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        CATEGORY NAME
-                      </Typography>
-                      <NuralTextField
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
-                    </Grid>
-                    <Grid
-                      container
-                      spacing={2}
-                      sx={{ width: "100%", marginLeft: "0%" }}
+              <Grid item>
+                {formLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <>
+                    <NuralAccordion2
+                      title={isEditMode ? "Edit Category" : "Create Category"}
+                      backgroundColor={LIGHT_GRAY2}
+                      expanded={accordionExpanded}
+                      onChange={handleAccordionChange}
+                      controlled={true}
+                      defaultExpanded={true}
                     >
-                      {/* First Dropdown */}
-                      <Grid item xs={12} md={12} lg={12}>
-                        <Box
-                          sx={{
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "space-between", // 🔹 Space between both texts
-                            alignItems: "center", // 🔹 Align vertically in center
-                            marginTop: 2, // 🔹 Space from top
-                          }}
-                        >
-                          {/* Left Side - COUNTRY MAPPING */}
+                      <Grid container spacing={4} sx={{ width: "100%" }}>
+                        <Grid item xs={12} sm={12} md={6} lg={6}>
                           <Typography
                             variant="h6"
                             sx={{
-                              color: PRIMARY_BLUE2,
+                              color: DARK_PURPLE,
                               fontFamily: "Manrope",
-                              fontWeight: 700,
+                              fontWeight: 400,
                               fontSize: "10px",
                               lineHeight: "13.66px",
                               letterSpacing: "4%",
-                              textAlign: "center",
-                              ml: 2,
+                              mb: 1,
                             }}
                           >
-                            BRAND MAPPING
+                            CATEGORY NAME <Required />
                           </Typography>
+                          <NuralTextField
+                            width="100%"
+                            value={formData.categoryName || ""}
+                            onChange={(event) => {
+                              const newValue = event.target.value;
+                              // Check length first - display error but allow typing to continue
+                              if (newValue.length > 50) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  categoryName: newValue.substring(0, 50), // Truncate to 50 chars
+                                }));
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryName: "Category Name cannot exceed 50 characters",
+                                }));
+                                return; // Don't continue with normal update
+                              }
 
-                          {/* Right Side - SELECT ALL */}
+                              // If input contains non-alphanumeric-space characters, don't update
+                              if (newValue && !/^[a-zA-Z0-9 ]*$/.test(newValue)) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryName: "Category Name can only contain alphanumeric characters and spaces",
+                                }));
+                                return; // Don't update the form data
+                              }
+
+                              // Clear errors for valid input
+                              if (newValue.trim() !== "") {
+                                setErrors((prev) => ({ ...prev, categoryName: "" }));
+                              } else {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryName: "Category Name is required",
+                                }));
+                              }
+
+                              handleChange("categoryName", newValue);
+                            }}
+                            placeholder="Enter Category Name"
+                            backgroundColor={LIGHT_BLUE}
+                            error={!!errors.categoryName}
+                          />
+                          {errors.categoryName && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{
+                                fontSize: "0.75rem",
+                                mt: 0.5,
+                                display: "block",
+                              }}
+                            >
+                              {errors.categoryName}
+                            </Typography>
+                          )}
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={6} lg={6}>
                           <Typography
                             variant="h6"
                             sx={{
-                              color: PRIMARY_BLUE2,
+                              color: DARK_PURPLE,
                               fontFamily: "Manrope",
-                              fontWeight: 700,
+                              fontWeight: 400,
                               fontSize: "10px",
                               lineHeight: "13.66px",
                               letterSpacing: "4%",
-                              textAlign: "center",
-                              cursor: "pointer",
+                              mb: 1,
                             }}
                           >
-                            SELECT ALL
+                            CATEGORY CODE <Required />  
                           </Typography>
-                        </Box>
+                          <NuralTextField
+                            width="100%"
+                            value={formData.categoryDesc || ""}
+                            onChange={(event) => {
+                              const newValue = event.target.value;
+                              // Check length first - display error but allow typing to continue
+                              if (newValue.length > 50) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  categoryDesc: newValue.substring(0, 50), // Truncate to 50 chars
+                                }));
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryDesc: "Category Code cannot exceed 50 characters",
+                                }));
+                                return; // Don't continue with normal update
+                              }
 
+                              // If input contains non-alphanumeric characters, don't update
+                              if (newValue && !/^[a-zA-Z0-9]*$/.test(newValue)) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryDesc: "Category Code can only contain alphanumeric characters (no spaces)",
+                                }));
+                                return; // Don't update the form data
+                              }
+
+                              // Clear errors for valid input
+                              if (newValue.trim() !== "") {
+                                setErrors((prev) => ({ ...prev, categoryDesc: "" }));
+                              } else {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  categoryDesc: "Category Code is required",
+                                }));
+                              }
+
+                              handleChange("categoryDesc", newValue);
+                            }}
+                            placeholder="Enter Category Code"
+                            backgroundColor={LIGHT_BLUE}
+                            error={!!errors.categoryDesc}
+                          />
+                          {errors.categoryDesc && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{
+                                fontSize: "0.75rem",
+                                mt: 0.5,
+                                display: "block",
+                              }}
+                            >
+                              {errors.categoryDesc}
+                            </Typography>
+                          )}
+                        </Grid>
                         <Grid
                           container
                           spacing={2}
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                            ml: "2px",
-                            
-                          }}
+                          sx={{ width: "100%", marginLeft: "0%" }}
                         >
-                          {options2.map((option, index) => (
-                            <Grid
-                              item
-                              xs={12}
-                              md={3}
-                              lg={3}
-                              key={index}
+                          {/* First Dropdown */}
+                          <Grid item xs={12} md={12} lg={12}>
+                            <Box
                               sx={{
+                                width: "100%",
                                 display: "flex",
+                                justifyContent: "space-between",
                                 alignItems: "center",
-                                // gap: 1,
+                                marginTop: 2,
                               }}
                             >
-                              {/* Checkbox */}
-                              <Checkbox
-                                checked={selectedValue === option}
-                                onChange={() => setSelectedValue(option)}
-                                sx={{
-                                  "&.Mui-checked": {},
-                                  borderRadius: "8px",
-                                }}
-                              />
-
-                              {/* Country Name with Blue Background When Selected */}
                               <Typography
+                                variant="h6"
                                 sx={{
-                                  color:
-                                    selectedValue === option ? WHITE : BLACK,
-                                  backgroundColor:
-                                    selectedValue === option
-                                      ? PRIMARY_BLUE
-                                      : "transparent",
-                                  padding: "8px",
-                                  paddingLeft: "10px",
-                                  borderRadius: "8px",
-                                  fontSize: "12px",
-                                  fontWeight: 500,
-                                  width: {
-                                    xs: "100%",
-                                    md: "220px",
-                                  },
-
-                                  // height: "30px",
-                                  textAlign: "left",
+                                  color: PRIMARY_BLUE2,
+                                  fontFamily: "Manrope",
+                                  fontWeight: 700,
+                                  fontSize: "10px",
+                                  lineHeight: "13.66px",
+                                  letterSpacing: "4%",
+                                  textAlign: "center",
+                                  ml: 2,
                                 }}
                               >
-                                {option}
+                                BRAND MAPPING <Required />
                               </Typography>
+
+                              <Typography
+                                variant="h6"
+                                onClick={handleSelectAll}
+                                sx={{
+                                  color: PRIMARY_BLUE2,
+                                  fontFamily: "Manrope",
+                                  fontWeight: 700,
+                                  fontSize: "10px",
+                                  lineHeight: "13.66px",
+                                  letterSpacing: "4%",
+                                  textAlign: "center",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {selectedBrands.length === brandList.length ? "DESELECT ALL" : "SELECT ALL"}
+                              </Typography>
+                            </Box>
+
+                            <Grid
+                              container
+                              spacing={2}
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 2,
+                                ml: "2px",
+                              }}
+                            >
+                              {brandList.map((brand) => (
+                                <Grid
+                                  item
+                                  xs={12}
+                                  md={3}
+                                  lg={3}
+                                  key={brand.brandID}
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Checkbox
+                                    checked={selectedBrands.some(
+                                      (b) => b.brandID === brand.brandID
+                                    )}
+                                    onChange={() => handleBrandSelection(brand)}
+                                    sx={{
+                                      "&.Mui-checked": {},
+                                      borderRadius: "8px",
+                                    }}
+                                  />
+
+                                  <Typography
+                                    sx={{
+                                      color: selectedBrands.some(
+                                        (b) => b.brandID === brand.brandID
+                                      )
+                                        ? WHITE
+                                        : BLACK,
+                                      backgroundColor: selectedBrands.some(
+                                        (b) => b.brandID === brand.brandID
+                                      )
+                                        ? PRIMARY_BLUE
+                                        : "transparent",
+                                      padding: "8px",
+                                      paddingLeft: "10px",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                      fontWeight: 500,
+                                      width: {
+                                        xs: "100%",
+                                        md: "220px",
+                                      },
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    {brand.brand}
+                                  </Typography>
+                                </Grid>
+                              ))}
                             </Grid>
-                          ))}
+                          </Grid>
+                          {errors.brands && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{
+                                fontSize: "0.75rem",
+                                mt: 0.5,
+                                display: "block",
+                                ml: 2,
+                              }}
+                            >
+                              {errors.brands}
+                            </Typography>
+                          )}
                         </Grid>
                       </Grid>
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={1} mt={1} pr={1}>
-                    <Grid item xs={12} md={6} lg={6}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="97%"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={6}>
-                      <NuralButton
-                        text="SAVE"
-                        backgroundColor={AQUA}
-                        variant="contained"
-                        onClick={() => console.log("Upload clicked")}
-                        width="97%"
-                      />
-                    </Grid>
-                  </Grid>
-                </NuralAccordion2>
+                     
+                    </NuralAccordion2>
+
+                    {/* Always show buttons when accordion is expanded */}
+                    {accordionExpanded && (
+                      <Grid container spacing={1} mt={1} pr={1}>
+                        {status && (
+                          <StatusModel
+                            width="100%"
+                            status={status}
+                            title={title}
+                            onClose={() => {
+                              setStatus(null);
+                              setTitle("");
+                            }}
+                            autoDismiss={status === "200"}
+                          />
+                        )}
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text="CANCEL"
+                            variant="outlined"
+                            borderColor={PRIMARY_BLUE2}
+                            onClick={handleClearForm}
+                            width="97%"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text="SAVE"
+                            backgroundColor={AQUA}
+                            variant="contained"
+                            onClick={handlePost}
+                            width="97%"
+                          />
+                        </Grid>
+                      </Grid>
+                    )}
+                  </>
+                )}
               </Grid>
             </Grid>
           </Grid>
@@ -358,85 +1026,141 @@ const CategoryPage = () => {
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
               <Grid item>
-                <NuralAccordion2 title="View" backgroundColor={LIGHT_GRAY2}>
-                  <Grid container spacing={2} sx={{ width: "100%" }}>
-                    <Grid item xs={12} sm={12} md={6} lg={6}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        BRAND
-                      </Typography>
-                      <NuralAutocomplete
-                        options={options}
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
+                {searchFormLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <NuralAccordion2
+                    title="View"
+                    backgroundColor={LIGHT_GRAY2}
+                    expanded={searchAccordionExpanded}
+                    onChange={handleSearchAccordionChange}
+                  >
+                    <Grid container spacing={2} sx={{ width: "100%" }}>
+                      <Grid item xs={12} sm={12} md={6} lg={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_PURPLE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            mb: 1,
+                          }}
+                        >
+                          BRAND
+                        </Typography>
+                        <NuralAutocomplete
+                          options={brandList}
+                          getOptionLabel={(option) => option.brand}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.brandID === value?.brandID
+                          }
+                          value={
+                            brandList.find(
+                              (item) => item.brandID === searchParams.brandID
+                            ) || null
+                          }
+                          onChange={handleBrandChange}
+                          placeholder="SELECT"
+                          width="100%"
+                          backgroundColor={LIGHT_BLUE}
+                          loading={isLoading}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={12} md={6} lg={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_PURPLE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            mb: 1,
+                          }}
+                        >
+                          CATEGORY NAME
+                        </Typography>
+                        <NuralAutocomplete
+                          options={categoryList}
+                          getOptionLabel={(option) => option.category || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.productCategoryID === value?.productCategoryID
+                          }
+                          value={
+                            categoryList.find(
+                              (item) => item.productCategoryID === searchParams.categoryID
+                            ) || null
+                          }
+                          onChange={(event, newValue) => {
+                            setSearchParams((prev) => ({
+                              ...prev,
+                              categoryID: newValue?.productCategoryID || 0,
+                            }));
+                          }}
+                          placeholder="SELECT"
+                          width="100%"
+                          backgroundColor={LIGHT_BLUE}
+                          loading={isLoading}
+                          disabled={searchParams.brandID === 0}
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={12} md={6} lg={6}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        CATEGORY NAME
-                      </Typography>
-                      <NuralTextField
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
-                    </Grid>
-                  </Grid>
 
-                  <Grid container spacing={1} mt={1}>
-                    <Grid item spacing={1} xs={6} sm={2} md={1}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        color={PRIMARY_BLUE2}
-                        fontSize="12px"
-                        height="36px"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="100%"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={10} md={11} pr={1.5}>
-                      <NuralTextButton
-                        icon={"./Icons/searchIcon.svg"}
-                        iconPosition="right"
-                        height="36px"
-                        backgroundColor={PRIMARY_BLUE2}
-                        color="#fff"
-                        width="100%"
-                        fontSize="12px"
-                      >
-                        SEARCH
-                      </NuralTextButton>
-                    </Grid>
-                  </Grid>
-                </NuralAccordion2>
+                    {/* Always show search buttons when accordion is expanded */}
+                    {searchAccordionExpanded && (
+                      <Grid container spacing={1} mt={1}>
+                        <Grid item spacing={1} xs={6} sm={2} md={1}>
+                          <NuralButton
+                            text="CANCEL"
+                            variant="outlined"
+                            color={PRIMARY_BLUE2}
+                            fontSize="12px"
+                            height="36px"
+                            borderColor={PRIMARY_BLUE2}
+                            onClick={handleClearSearch}
+                            width="100%"
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={10} md={11} pr={1.5}>
+                          <NuralTextButton
+                            icon={"./Icons/searchIcon.svg"}
+                            iconPosition="right"
+                            height="36px"
+                            backgroundColor={PRIMARY_BLUE2}
+                            color="#fff"
+                            width="100%"
+                            fontSize="12px"
+                            onClick={handleSearch}
+                          >
+                            SEARCH
+                          </NuralTextButton>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </NuralAccordion2>
+                )}
               </Grid>
             </Grid>
           </Grid>
         </>
+        <Grid container mt={1} mb={1}>
+        {searchStatus && (
+          <StatusModel
+            width="100%"
+            status={searchStatus}
+            title={searchTitle}
+            onClose={() => {
+              setSearchStatus(null);
+              setSearchTitle(null);
+            }}
+            autoDismiss={searchStatus === "200"}
+          />
+        )}
+      </Grid>
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <TableContainer
             component={Paper}
@@ -493,7 +1217,12 @@ const CategoryPage = () => {
                           cursor: "pointer",
                         }}
                       >
-                        <img src="./Images/export.svg" alt="export" />
+                        <img 
+                          src="./Images/export.svg" 
+                          alt="export" 
+                          onClick={downloadExcel}
+                          style={{ cursor: "pointer" }}
+                        />
                       </Grid>
                     </Grid>
                   </TableCell>
@@ -514,8 +1243,8 @@ const CategoryPage = () => {
                   </TableCell>
                   {[
                     { label: "BRAND NAME", key: "brandName" },
-                    { label: "CATEGORY NAME", key: "categoryName" },
-                    { label: "CATEGORY CODE", key: "categoryCode" },
+                    { label: "CATEGORY NAME", key: "category" },
+                    { label: "CATEGORY CODE", key: "categoryDesc" },
                     { label: "STATUS", sortable: false },
                     { label: "EDIT", sortable: false },
                   ].map((header) => (
@@ -585,16 +1314,17 @@ const CategoryPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => (
+                {tableLoading || statusUpdateLoading || isTableUpdating ? (
+                  <TableRowSkeleton
+                  columns={10}
+                  />
+                ) : filteredRows.length > 0 ? (
+                  filteredRows.map((row, index) => (
                     <TableRow
-                      key={row.id}
+                      key={row.productCategoryID}
                       sx={{
                         fontSize: "10px",
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
-                        },
+                       
                         "& td": {
                           borderBottom: `1px solid #C6CEED`,
                         },
@@ -607,34 +1337,37 @@ const CategoryPage = () => {
                         {row.brandName}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.categoryName}
+                        {row.category}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.categoryCode}
+                        {row.categoryDesc}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
                         <Switch
-                          checked={row.status}
-                          onChange={(e) => {
+                          checked={row.status === 1}
+                          onChange={() => {
                             const newRows = [...filteredRows];
                             const rowIndex = newRows.findIndex(
-                              (r) => r.id === row.id
+                              (r) => r.productCategoryID === row.productCategoryID
                             );
-                            newRows[rowIndex] = {
-                              ...newRows[rowIndex],
-                              status: e.target.checked,
-                            };
-                            setFilteredRows(newRows);
+                            if (rowIndex !== -1) {
+                              newRows[rowIndex] = {
+                                ...newRows[rowIndex],
+                                status: row.status === 1 ? 0 : 1,
+                              };
+                              setFilteredRows(newRows);
+                              handleStatus(newRows[rowIndex]);
+                            }
                           }}
                           size="small"
+                          disabled={statusUpdateLoading && updatingRowId === row.productCategoryID}
                           sx={{
                             "& .MuiSwitch-switchBase.Mui-checked": {
                               color: PRIMARY_BLUE2,
                             },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: DARK_PURPLE,
-                              },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: DARK_PURPLE,
+                            },
                           }}
                         />
                       </TableCell>
@@ -646,7 +1379,10 @@ const CategoryPage = () => {
                           minWidth: "60px",
                         }}
                       >
-                        <IconButton size="small">
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleEdit(row)}
+                        >
                           <EditIcon
                             sx={{
                               fontSize: 16,
@@ -656,193 +1392,31 @@ const CategoryPage = () => {
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No data available
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
 
             {/* Custom Pagination */}
-            <Grid
-              container
-              sx={{
-                p: 2,
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Grid item>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 400,
-                    fontSize: "10px",
-                    lineHeight: "13.66px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  TOTAL RECORDS:{" "}
-                  <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {filteredRows.length} /{" "}
-                    {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                  </span>
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Grid
-                  container
-                  spacing={1}
-                  sx={{
-                    maxWidth: 300,
-                    ml: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    //   gap: 1,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1.5,
-                      fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    SHOW :
-                  </Typography>
-                  {[10, 25, 50, 100].map((value) => (
-                    <Grid item key={value}>
-                      <Button
-                        onClick={() =>
-                          handleChangeRowsPerPage({
-                            target: { value },
-                          })
-                        }
-                        sx={{
-                          minWidth: "25px",
-                          height: "24px",
-                          padding: "4px",
-                          borderRadius: "50%",
-                          // border: `1px solid ${PRIMARY_BLUE2}`,
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                          fontSize: "12px",
-                          "&:hover": {
-                            backgroundColor:
-                              rowsPerPage === value
-                                ? PRIMARY_BLUE2
-                                : "transparent",
-                          },
-                          mx: 0.5,
-                        }}
-                      >
-                        {value}
-                      </Button>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-
-              <Grid
-                item
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  color: PRIMARY_BLUE2,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                >
-                  JUMP TO FIRST
-                </Typography>
-                <IconButton
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                  }}
-                >
-                  PAGE {page + 1}
-                </Typography>
-
-                <IconButton
-                  onClick={() => setPage(page + 1)}
-                  disabled={
-                    page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                  }
-                >
-                  <NavigateNextIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                >
-                  JUMP TO LAST
-                </Typography>
-                <input
-                  type="number"
-                  placeholder="Jump to page"
-                  min={1}
-                  max={Math.ceil(filteredRows.length / rowsPerPage)}
-                  // value={page + 1}
-                  onChange={(e) => {
-                    const newPage = parseInt(e.target.value, 10) - 1;
-                    if (
-                      newPage >= 0 &&
-                      newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                    ) {
-                      setPage(newPage);
-                    }
-                  }}
-                  style={{
-                    width: "100px",
-                    height: "24px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
-                    borderRadius: "8px",
-                    borderWidth: "1px",
-                    border: `1px solid ${PRIMARY_BLUE2}`,
-                  }}
-                />
-                <Grid mt={1}>
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
-                </Grid>
-              </Grid>
-            </Grid>
+            <NuralPagination
+              key={`pagination-${page}-${rowsPerPage}`}
+              totalRecords={totalRecords}
+              initialPage={page}
+              initialRowsPerPage={rowsPerPage}
+              onPaginationChange={handlePaginationChange}
+            />
           </TableContainer>
         </Grid>
       </Grid>
+
+      {/* Add status model for showing export messages */}
+      
     </>
   );
 };

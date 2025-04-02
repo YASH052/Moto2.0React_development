@@ -384,7 +384,7 @@ const PrebookingSKUview = () => {
                     <NuralAutocomplete
                       label="model"
                       options={options.categories}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -403,7 +403,7 @@ const PrebookingSKUview = () => {
                     <NuralAutocomplete
                       label="sku"
                       options={options.subcategories}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -438,7 +438,7 @@ const PrebookingSKUview = () => {
                     >
                       START DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={6}>
@@ -452,7 +452,7 @@ const PrebookingSKUview = () => {
                     >
                       END DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
                   </Grid>
                 </Grid>
                 {/* Second Row */}
@@ -976,7 +976,6 @@ const PrebookingSKUview = () => {
           </Grid>
         </TableContainer>
       </Grid>
-      
     </Grid>
   );
 };

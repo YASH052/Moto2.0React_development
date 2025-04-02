@@ -27,7 +27,7 @@ const BreadcrumbsHeader = ({pageTitle}) => {
       >
         <Link
           component={RouterLink}
-          to="/"
+          to="/settings"
           sx={{
             display: "flex",
             alignItems: "center",

@@ -24,6 +24,7 @@ import StatusModel from "../../../Common/StatusModel";
 import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
+import { templateUrl } from "../../../Common/urls";
 const options = [
   { value: "interface", label: "Interface" },
   { value: "batch", label: "Batch" },
@@ -42,7 +43,7 @@ const PrimaryTransactionUpload = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const tabs = [
     { label: "Primary", value: "primary-transaction" },
-    { label: "Intermediary", value: "intermediary" },
+    { label: "Intermediary", value: "intermediary-sale" },
     { label: "Secondary", value: "secondary-sale" },
     { label: "Tertiary", value: "tertiary" },
   ];
@@ -54,8 +55,7 @@ const PrimaryTransactionUpload = () => {
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href =
-            "http://moto.nuralsales.com/Excel/Templates/PrimarySales.xlsx";
+          window.location.href = `${templateUrl}PrimarySales.xlsx`;
           setIsLoading(false);
         }, 1000);
       },
@@ -90,8 +90,8 @@ const PrimaryTransactionUpload = () => {
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(error.statusCode);
-      setTitle(error.statusMessage);
+      setStatus(error.status || 500);
+      setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -119,8 +119,8 @@ const PrimaryTransactionUpload = () => {
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(error.statusCode);
-      setTitle(error.statusMessage);
+      setStatus(error.status || 500);
+      setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
     } finally {
       setIsLoading(false);

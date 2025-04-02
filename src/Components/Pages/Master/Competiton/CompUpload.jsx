@@ -16,13 +16,12 @@ import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import { useNavigate } from "react-router-dom";
 const tabs = [
-    { label: "Upload", value: "competiton-upload" },
-    { label: "Brand", value: "competition-brand" },
-    { label: "Category", value: "competition-category" },
-    { label: "Model", value: "competition-model" },
+  { label: "Upload", value: "competiton-upload" },
+  { label: "Brand", value: "competition-brand" },
+  { label: "Category", value: "competition-category" },
+  { label: "Model", value: "competition-model" },
   { label: "Price Band", value: "competition-price-band" },
-
-  ];
+];
 const CompUpload = () => {
   const [activeTab, setActiveTab] = React.useState("competiton-upload");
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
@@ -32,7 +31,6 @@ const CompUpload = () => {
     { value: "interface", label: "Interface" },
     { value: "batch", label: "Batch" },
   ];
-
 
   const templates = [
     {
@@ -60,7 +58,6 @@ const CompUpload = () => {
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
-
   };
 
   const handleFormatChange = (value) => {
@@ -73,46 +70,35 @@ const CompUpload = () => {
     }
   };
 
-  
-
   return (
     <Grid container spacing={0}>
-         <Grid
-          item
-          xs={12}
-          sx={{
-            position: "sticky",
-            top: 0,
-            zIndex: 1000,
-            backgroundColor: "#fff",
-            paddingBottom: 1,
-          }}
-        >
-          <Grid item xs={12} mt={3} mb={0} ml={1}>
-            <BreadcrumbsHeader pageTitle="Competition" />
-          </Grid>
-
-          <Grid item xs={12} ml={1}>
-            <TabsBar
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-            />
-          </Grid>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "#fff",
+          paddingBottom: 1,
+        }}
+      >
+        <Grid item xs={12} mt={3} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Competition" />
         </Grid>
+
+        <Grid item xs={12} ml={1}>
+          <TabsBar
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </Grid>
+      </Grid>
 
       <Grid container spacing={0} lg={12} mt={2}>
         <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
           <Grid container spacing={2} direction="column">
-            <Grid item>
-              <NuralUploadFormat
-                title="Upload Format"
-                onChange={handleFormatChange}
-                backgroundColor={LIGHT_GRAY2}
-                options={options}
-                value={selectedFormat}
-              />
-            </Grid>
             <Grid item>
               <NuralAccordion
                 titleColor={DARK_PURPLE}

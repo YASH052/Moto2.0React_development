@@ -26,13 +26,13 @@ import two from "../../../../assets/carousel/two.png";
 import three from "../../../../assets/carousel/three.png";
 import four from "../../../../assets/carousel/Four.png";
 import five from "../../../../assets/carousel/five.png";
-
 import axios from "axios";
 import Loader from "../../../Common/Loader";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from "@mui/icons-material/Login";
-const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
+import { baseUrl } from "../../../Common/urls";
+
 const LoginForm = () => {
   // const [accessKey, setAccessKey] = useState("");
   const [loading, setLoading] = useState(false);
@@ -144,7 +144,7 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${BASE_URL}/login`, {
+      const res = await axios.post(`${baseUrl}/login`, {
         ClientKey: "motoISP",
         UserName: username,
         Password: password,
@@ -164,8 +164,9 @@ const LoginForm = () => {
           "authKey",
           res.data.loginReturnInfoList[0].authKey
         );
+        sessionStorage.setItem("token", res.data.loginReturnInfoList[0].authKey);
         setTimeout(() => {
-          navigate("/");
+          navigate("/dashboard");
         }, 800);
       } else {
         setLoginStatus("error");
@@ -369,7 +370,7 @@ const LoginForm = () => {
             <Typography
               sx={{ fontSize: "24px", fontWeight: 600, color: MEDIUM_BLUE }}
             >
-              Welcome back!
+              Welcome!
             </Typography>
             <Typography
               sx={{
@@ -379,8 +380,8 @@ const LoginForm = () => {
                 color: PRIMARY_LIGHT_PURPLE2,
               }}
             >
-              Nice to see you again.
-              <br /> Login with your access key, username & password.
+              Nice to see you.
+              <br /> Login with your username & password.
             </Typography>
             {!isOtpLogin ? (
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
@@ -470,7 +471,7 @@ const LoginForm = () => {
                     fontSize="12px"
                     disabled={loading}
                   />
-                  <NuralButton
+                  {/* <NuralButton
                     text="LOGIN WITH OTP"
                     variant="outlined"
                     onClick={handleOtpLoginClick}
@@ -479,7 +480,7 @@ const LoginForm = () => {
                     hoverColor="white"
                     fontSize="12px"
                     borderColor="white"
-                  />
+                  /> */}
                 </Box>
               </Box>
             ) : (

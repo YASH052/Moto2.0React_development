@@ -6,7 +6,7 @@ import { DARK_PURPLE } from "../../../Common/colors";
 import TabsBar from "../../../Common/TabsBar";
 
 const salesTypes = [
-  { title: "PRIMARY SALE", link: "/primary-sale" },
+  { title: "PRIMARY SALE", link: "/primary-transaction" },
   { title: "SECONDARY SALE", link: "/secondary-sale" },
   { title: "INTERMEDIARY SALE", link: "/intermediary-sale" },
   { title: "TERTIARY SALE", link: "/tertiary-sale" },
@@ -43,16 +43,17 @@ const Transactions = () => {
       <Grid
         item
         xs={12}
-        md={6}
-        lg={12}
-        mt={1}
-        mb={0}
         sx={{
           position: "sticky",
           top: 0,
+          zIndex: 1000,
+          backgroundColor: "#fff",
+          paddingBottom: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Transactions" />
+        <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Transactions" />
+        </Grid>
       </Grid>
 
       <Grid container spacing={0} p={1}>

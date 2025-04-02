@@ -5,14 +5,13 @@ import TransationCard from "../Transaction/TransationCard";
 
 const inventoryTypes = [
   { title: "AI NORMS", link: "/ai-norms" },
-  { title: "STOCK ADJUSTMENT", link: "/stock-adjustment" },
+  { title: "STOCK ADJUSTMENT REASON", link: "/stock-adjustment-reason" },
   { title: "GRN", link: "/grn" },
 ];
 
 const financeTypes = [
   { title: "FINANCE API BLOCK ACCESS", link: "/finance-api-block" },
   { title: "SERVIFY OFFER", link: "/servify-offer" },
-  { title: "SAP INTEGRATION", link: "/sap-integration" },
 ];
 
 const attendanceTypes = [

@@ -2,9 +2,10 @@ import { Box, Grid, Card, CardContent, Typography } from "@mui/material";
 import React from "react";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { DARK_PURPLE, LIGHT_GRAY2 } from "../../../Common/colors";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TransationCard = ({ salesTypes, title }) => {
+  const navigate = useNavigate();
   return (
     <Grid item xs={12} md={12} lg={12} p={1}>
       <Card
@@ -13,7 +14,7 @@ const TransationCard = ({ salesTypes, title }) => {
           bgcolor: LIGHT_GRAY2,
           p: 2,
           Width: 568,
-          height: "max-content",
+          height: "250px",
           borderRadius: "8px",
         }}
       >
@@ -30,6 +31,7 @@ const TransationCard = ({ salesTypes, title }) => {
             variant="h6"
             component="div"
             color={DARK_PURPLE}
+            onClick={() => navigate(`/${title}`)}
             sx={{
               mb: 2,
               fontFamily: "Manrope",
@@ -37,6 +39,7 @@ const TransationCard = ({ salesTypes, title }) => {
               fontSize: "24px",
               lineHeight: "28px",
               letterSpacing: "0%",
+              cursor: "pointer",
             }}
           >
             {title}

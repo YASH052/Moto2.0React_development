@@ -34,34 +34,40 @@ import axios from "axios";
 const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 import Loader from "../../Common/Loader";
 import toast, { Toaster } from "react-hot-toast";
+import { baseUrl } from "../../Common/urls";
 
 const ForgotPasswordForm = () => {
   // const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const log = JSON.parse(localStorage.getItem("log"));
+  console.log("log", log);
   const [selectedCountry, setSelectedCountry] = useState("IND +91");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [sendOtp, setSendOtp] = useState(false);
   const [otpSubmitted, setOtpSubmitted] = useState(false);
   const [isOtpLogin, setIsOtpLogin] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width:512px)");
   const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState("");
+  const [otp, setOtp] = useState("");
   const images = [pdcard, one, two, five, four, three];
   const navigate = useNavigate();
   const [errors, setErrors] = useState({
-    phone: "",
+    username: "",
     email: "",
     otp: "",
   });
+  const [displayField, setDisplayField] = useState("");
+  const [otpResponse, setOtpResponse] = useState("");
 
   const ResetHooks = () => {
     navigate("/reset-password");
   };
 
-  const validatePhone = (number) => {
-    if (!number) return "";
-    if (!isValidPhone(number)) {
-      return "Please enter a valid 10-digit phone number";
+  const validateUsername = (username) => {
+    if (!username) return "Please enter your username";
+    if (username.length < 3) {
+      return "Username must be at least 3 characters long";
     }
     return "";
   };
@@ -74,22 +80,18 @@ const ForgotPasswordForm = () => {
     return "";
   };
 
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // Only allow digits
-    if (value.length <= 10) {
-      // Max length validation
-      setPhoneNumber(value);
-      setErrors((prev) => ({
-        ...prev,
-        phone: validatePhone(value),
-      }));
-    }
+  const handleUserChange = (e) => {
+    const value = e.target.value;
+    setUsername(value);
+    setErrors((prev) => ({
+      ...prev,
+      username: validateUsername(value),
+    }));
   };
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
     if (value.length <= 50) {
-      // Max length validation
       setEmail(value);
       setErrors((prev) => ({
         ...prev,
@@ -99,66 +101,70 @@ const ForgotPasswordForm = () => {
   };
 
   const handleSendOtp = async () => {
-    // setSendOtp(true);
     // Reset errors
     setErrors({
-      phone: "",
+      username: "",
       email: "",
       otp: "",
     });
 
     // Validate fields
-    const phoneError = phoneNumber ? validatePhone(phoneNumber) : "";
+    const usernameError = username ? validateUsername(username) : "";
     const emailError = email ? validateEmail(email) : "";
 
     // Check if at least one field is filled
-    if (!phoneNumber && !email) {
+    if (!username && !email) {
       setErrors({
-        phone: "Please enter either phone number or email",
-        email: "Please enter either phone number or email",
+        username: "Please enter either username or email",
+        email: "Please enter either username or email",
         otp: "",
       });
       return;
     }
 
     // If there are validation errors, show them
-    if (phoneError || emailError) {
+    if (usernameError || emailError) {
       setErrors({
-        phone: phoneError,
+        username: usernameError,
         email: emailError,
         otp: "",
       });
       return;
     }
+
+    // Set which field to display in OTP screen
+    if (email) {
+      setDisplayField(email);
+    } else {
+      setDisplayField(username);
+    }
+
     setLoading(true);
     try {
-      let res = await axios.post(`${BASE_URL}/ForgotPasswordAPI`, {
-        phone: phoneNumber,
+      let res = await axios.post(`${baseUrl}/ForgotPasswordOTP`, {
+        clientKey: "motoISP",
+        userLoginName: username,
         emailID: email,
       });
       if (res.status === 200) {
-        toast.success(res.data.message);
-        setTimeout(() => {
-          setSendOtp(true);
-        }, 3000);
+        toast.success(res.data.statusMessage);
+        setOtpResponse(res.data.otp);
+        setSendOtp(true);
       } else {
         toast.error(res.data.message);
       }
     } catch (error) {
       console.log(error);
-      toast.error( error.message || error.response.data.message );
+      toast.error(error.message || error.response.data.message);
     } finally {
       setLoading(false);
     }
-
-    // Proceed with sending OTP
   };
 
   const handleOtpChange = (e) => {
     const value = e.target.value.replace(/\D/g, ""); // Only allow digits
     if (value.length <= 6) {
-      // Assuming 6-digit OTP
-      setUsername(value);
+      setOtp(value);
       setErrors((prev) => ({
         ...prev,
         otp: value.length === 6 ? "" : "Please enter a valid 6-digit OTP",
@@ -167,7 +173,7 @@ const ForgotPasswordForm = () => {
   };
 
   const handleVerifyOtp = () => {
-    if (!username || username.length !== 6) {
+    if (!otp || otp.length !== 6) {
       setErrors((prev) => ({
         ...prev,
         otp: "Please enter a valid 6-digit OTP",
@@ -175,8 +181,20 @@ const ForgotPasswordForm = () => {
       return;
     }
 
-    // Proceed with OTP verification
-    ResetHooks();
+    // Verify OTP
+    if (otp === otpResponse) {
+      // Store email in localStorage for reset password page
+      if (email) {
+        localStorage.setItem("resetPasswordEmail", email);
+      }
+      // Proceed with OTP verification
+      ResetHooks();
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        otp: "Incorrect OTP. Please try again.",
+      }));
+    }
   };
 
   const handleCancel = () => {
@@ -273,7 +291,7 @@ const ForgotPasswordForm = () => {
               >
                 Forgotten your password? Don't worry.
                 <br />
-                Reset it with your phone number.
+                Reset it with your username.
               </Typography>
 
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
@@ -285,85 +303,19 @@ const ForgotPasswordForm = () => {
                     flexDirection: "column",
                   }}
                 >
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
-                      sx={{
-                        width: "120px",
-                        backgroundColor: "transparent",
-                        color: "white",
-                        border: "1px solid white",
-                        borderRadius: "4px",
-                        "& .MuiSelect-select": {
-                          padding: "8px 12px",
-                        },
-                      }}
-                    >
-                      <MenuItem
-                        value="IND +91"
-                        sx={{
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "12px",
-                          lineHeight: "16.39px",
-                          letterSpacing: "4%",
-                          textAlign: "center",
-                        }}
-                      >
-                        IND +91
-                      </MenuItem>
-                      <MenuItem
-                        value="IND +91"
-                        sx={{
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "12px",
-                          lineHeight: "16.39px",
-                          letterSpacing: "4%",
-                          textAlign: "center",
-                        }}
-                      >
-                        IND +91
-                      </MenuItem>{" "}
-                      <MenuItem
-                        value="IND +91"
-                        sx={{
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "12px",
-                          lineHeight: "16.39px",
-                          letterSpacing: "4%",
-                          textAlign: "center",
-                        }}
-                      >
-                        IND +91
-                      </MenuItem>{" "}
-                      <MenuItem
-                        value="IND +91"
-                        sx={{
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "12px",
-                          lineHeight: "16.39px",
-                          letterSpacing: "4%",
-                          textAlign: "center",
-                        }}
-                      >
-                        IND +91
-                      </MenuItem>
-                    </Select>
+                  <Box sx={{ width: "100%" }}>
                     <NuralLoginTextField
                       type="text"
-                      placeholder="ENTER PHONE NO."
-                      value={phoneNumber}
-                      onChange={handlePhoneChange}
+                      width="100%"
+                      placeholder="ENTER USERNAME"
+                      value={username}
+                      onChange={handleUserChange}
                       fullWidth
-                      error={!!errors.phone}
+                      error={!!errors.username}
                       sx={{ backgroundColor: WHITE }}
                     />
                   </Box>
-                  {errors.phone && (
+                  {errors.username && (
                     <Typography
                       sx={{
                         color: "error.main",
@@ -371,7 +323,7 @@ const ForgotPasswordForm = () => {
                         marginTop: "4px",
                       }}
                     >
-                      {errors.phone}
+                      {errors.username}
                     </Typography>
                   )}
                 </Box>
@@ -471,23 +423,21 @@ const ForgotPasswordForm = () => {
                   color: PRIMARY_LIGHT_PURPLE2,
                 }}
               >
-                Verify your phone number with OTP
+                Verify your username with OTP
               </Typography>
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
                 <NuralLoginTextField
-                  type="phone"
-                  placeholder="ENTER MOBILE NO."
-                  value={phoneNumber}
+                  type="text"
+                  placeholder={email ? "ENTER EMAIL" : "ENTER USERNAME"}
+                  value={displayField}
                   readOnly={true}
-                 
-                  // onChange={(e) => setAccessKey(e.target.value)}
                 />
 
                 <Box sx={{ marginTop: "20px" }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Enter OTP"
-                    value={username}
+                    value={otp}
                     onChange={handleOtpChange}
                     error={!!errors.otp}
                   />

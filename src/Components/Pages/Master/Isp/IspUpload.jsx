@@ -21,13 +21,15 @@ const options = [
   { value: "batch", label: "Batch" },
 ];
 const IspUpload = () => {
-  const [activeTab, setActiveTab] = React.useState("addIsp");
+  const [activeTab, setActiveTab] = React.useState("add-isp");
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const navigate = useNavigate();
-  const tabs = [
-    { label: "Add Isp", value: "addIsp" },
-    { label: "Search", value: "searchIsp" },
-  ];
+  const [tabbs, setTabbs] = React.useState([
+    { label: "Org People", value: "org-people" },
+    { label: "ISP", value: "add-isp" },
+    { label: "Ranking Weightage", value: "ranking-weightage" },
+    { label: "Salesman", value: "create-salesman" },
+  ]);
 
   const templates = [
     {
@@ -60,9 +62,9 @@ const IspUpload = () => {
     console.log("Selected value:", value);
     setSelectedFormat(value);
     if (value === "interface") {
-      navigate("/add-retailer");
+      navigate("/add-isp");
     } else if (value === "batch") {
-      navigate("/retailer-excelUpload");
+      navigate("/isp-upload");
     }
   };
   return (
@@ -72,7 +74,7 @@ const IspUpload = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={3}
         mb={0}
         sx={{
           position: "sticky",
@@ -85,7 +87,7 @@ const IspUpload = () => {
 
       <Grid item xs={12} md={6} lg={12}>
         <TabsBar
-          tabs={tabs}
+          tabs={tabbs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />

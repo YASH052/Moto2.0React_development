@@ -13,6 +13,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
 import { AccordionFileUploadSkeleton } from "../../Common/SkeletonComponents";
+import Required from "../../Common/Required";
 
 const StyledAccordion = styled(Accordion)({
   backgroundColor: "rgba(235, 238, 245, 0.5)",
@@ -96,7 +97,7 @@ const HiddenInput = styled("input")({
   display: "none",
 });
 
-const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ...props }) => {
+const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, mandatory = false, error = false, helperText = "", ...props }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const internalFileRef = useRef(null);
 
@@ -112,10 +113,11 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ..
   };
 
   // Reset file selection
- 
-
-  const handleClick = () => {
-    actualFileRef.current?.click();
+  const resetFile = () => {
+    setSelectedFile(null);
+    if (actualFileRef.current) {
+      actualFileRef.current.value = "";
+    }
   };
 
   // Listen for file input changes
@@ -129,6 +131,17 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ..
       }
     };
   }, []);
+
+  // Reset file when props.selectedFile is null
+  React.useEffect(() => {
+    if (props.selectedFile === null) {
+      resetFile();
+    }
+  }, [props.selectedFile]);
+
+  const handleClick = () => {
+    actualFileRef.current?.click();
+  };
 
   if (isLoading) {
     return <AccordionFileUploadSkeleton sx={props.sx} />;
@@ -202,7 +215,7 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ..
             fontWeight={400}
             color={DARK_PURPLE}
           >
-            UPLOADED FILE
+            UPLOADED FILE{mandatory && <Required/>}
           </Typography>
         </Box>
         <FileItem
@@ -244,6 +257,13 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ..
             accept={props.accept}
           />
         </FileItem>
+        {error && helperText && (
+          <Box sx={{ padding: "0 16px 12px" }}>
+            <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem' }}>
+              {helperText}
+            </Typography>
+          </Box>
+        )}
       </AccordionDetails>
     </StyledAccordion>
   );

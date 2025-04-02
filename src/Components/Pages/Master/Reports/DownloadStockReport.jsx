@@ -1,4 +1,4 @@
-import { Grid, Typography, Button, Switch } from "@mui/material";
+import { Grid, Typography, Button } from "@mui/material";
 import React from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
@@ -6,8 +6,8 @@ import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
   AQUA,
   DARK_PURPLE,
+  LIGHT_BLUE,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
@@ -26,31 +26,30 @@ import {
   TablePagination,
   IconButton,
 } from "@mui/material";
-
+import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
+import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import { useNavigate } from "react-router-dom";
-import { Edit } from "@mui/icons-material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-const ViewRetailer = () => {
-  const [activeTab, setActiveTab] = React.useState("retailer-view");
+import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 
+const DownloadStockReport = () => {
+  const [activeTab, setActiveTab] = React.useState("download-stock-report");
   const tabs = [
-    { label: "Bulk Upload", value: "sales-bulk-upload" },
-    { label: "Add Saleschannel", value: "add-sales-channel" },
-    { label: "Add Retailer", value: "add-retailer" },
-    { label: "Search", value: "search" },
-    { label: "Approve Saleschannel", value: "approveSaleschannel" },
+    { label: "Download Stock Report", value: "download-stock-report" },
+    // { label: "ISR Sales Report", value: "isr-sales-report" },
+    // { label: "Unique Sales Report", value: "unique-sales-report" },
+    // { label: "Primary to Tertiary Track", value: "primary-to-tertiary-track" },
+    // { label: "Competition Sales Report", value: "competition-sales-report" },
   ];
-  const navigate = useNavigate();
+
   const labelStyle = {
     fontSize: "10px",
     lineHeight: "13.66px",
     letterSpacing: "4%",
-    color: DARK_PURPLE,
+    color: PRIMARY_BLUE2,
     marginBottom: "5px",
     fontWeight: 400,
   };
@@ -64,7 +63,6 @@ const ViewRetailer = () => {
   ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    navigate(`/${newValue}`);
   };
 
   // Add these states for pagination
@@ -77,89 +75,107 @@ const ViewRetailer = () => {
     direction: null,
   });
 
-  // Update the column definitions
-  const tableColumns = [
-    { id: "retailerCode", label: "RETAILER CODE", sortable: true },
-    { id: "name", label: "NAME", sortable: true },
-    { id: "parentRetailer", label: "PARENT RETAILER", sortable: true },
-    { id: "state", label: "STATE", sortable: true },
-    { id: "city", label: "CITY", sortable: true },
-    { id: "loginId", label: "LOGIN ID", sortable: false },
-    { id: "password", label: "PASSWORD", sortable: false },
-    { id: "nd", label: "ND", sortable: false },
-    { id: "channel", label: "CHANNEL", sortable: true },
-    { id: "channelCode", label: "CHANNEL CODE", sortable: true },
-    { id: "mobile", label: "MOBILE", sortable: false },
-    { id: "details", label: "DETAILS", sortable: false },
-    { id: "status", label: "STATUS", sortable: false },
-    { id: "edit", label: "EDIT", sortable: false },
-  ];
-
-  // Update the dummy data generator
+  // Replace the existing dummy data with this more realistic data
   const generateDummyData = () => {
+    const types = [
+      "Distributor",
+      "Retailer",
+      "Dealer",
+      "Wholesaler",
+      "Direct Dealer",
+      "Sub Dealer",
+    ];
+
+    const names = [
+      "Sharma Electronics",
+      "Metro Distributors",
+      "City Mobile Hub",
+      "Galaxy Communications",
+      "Tech Zone",
+      "Digital World",
+      "Mobile Planet",
+      "Smart Store",
+      "Phone Gallery",
+      "Gadget World",
+    ];
+
+    const codes = [
+      "DST-001",
+      "RTL-002",
+      "DLR-003",
+      "WHS-004",
+      "DD-005",
+      "SD-006",
+    ];
+
+    const parentChannels = [
+      "Main Distributor",
+      "Regional Distributor",
+      "Zone Distributor",
+      "Area Distributor",
+      "City Distributor",
+    ];
+
+    const regions = [
+      "North",
+      "South",
+      "East",
+      "West",
+      "Central",
+      "North-East",
+    ];
+
     const states = [
       "Maharashtra",
       "Gujarat",
       "Karnataka",
       "Tamil Nadu",
       "Delhi",
-    ];
-    const cities = {
-      Maharashtra: ["Mumbai", "Pune", "Nagpur"],
-      Gujarat: ["Ahmedabad", "Surat", "Vadodara"],
-      Karnataka: ["Bangalore", "Mysore", "Hubli"],
-      "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
-      Delhi: ["New Delhi", "Delhi NCR"],
-    };
-    const channels = ["Direct", "Distributor", "Online", "Retail"];
-    const retailerNames = [
-      "Retail Store A",
-      "Super Market B",
-      "Mega Mart C",
-      "Shop D",
-      "Store E",
-    ];
-    const parentRetailers = [
-      "Parent Corp A",
-      "Group B",
-      "Holdings C",
-      "Enterprise D",
+      "Uttar Pradesh",
     ];
 
-    return Array(50)
+    const models = [
+      "Model A",
+      "Model B",
+      "Model C",
+      "Model D",
+      "Model E",
+      "Model F",
+    ];
+
+    const skus = [
+      "SKU-001",
+      "SKU-002",
+      "SKU-003",
+      "SKU-004",
+      "SKU-005",
+      "SKU-006",
+    ];
+
+    const bins = [
+      "BIN-A1",
+      "BIN-B1",
+      "BIN-C1",
+      "BIN-D1",
+      "BIN-E1",
+      "BIN-F1",
+    ];
+
+    return Array(100)
       .fill()
-      .map((_, index) => {
-        const retailerCode = `${1234 + index}`; // Unique retailer codes
-        const selectedState = states[Math.floor(Math.random() * states.length)];
-        const selectedCities = cities[selectedState];
-        const selectedChannel =
-          channels[Math.floor(Math.random() * channels.length)];
-
-        return {
-          id: index + 1,
-          retailerCode: retailerCode,
-          name: retailerNames[Math.floor(Math.random() * retailerNames.length)],
-          parentRetailer:
-            parentRetailers[Math.floor(Math.random() * parentRetailers.length)],
-          state: selectedState,
-          city: selectedCities[
-            Math.floor(Math.random() * selectedCities.length)
-          ],
-          loginId: `user${retailerCode}`,
-          password: `********`, // Masked password
-          nd: `${Math.floor(Math.random() * 9999)}.${Math.floor(
-            Math.random() * 99
-          )}K`,
-          channel: selectedChannel,
-          channelCode: `${selectedChannel.substring(0, 3).toUpperCase()}${
-            1000 + index
-          }`,
-          mobile: `+91 ${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-          details: `View`,
-          status: `•`,
-          edit: `✎`,
-        };
-      });
+      .map((_, index) => ({
+        id: `${1000 + index}`,
+        type: types[Math.floor(Math.random() * types.length)],
+        name: names[Math.floor(Math.random() * names.length)],
+        code: codes[Math.floor(Math.random() * codes.length)],
+        parentChannel: parentChannels[Math.floor(Math.random() * parentChannels.length)],
+        region: regions[Math.floor(Math.random() * regions.length)],
+        state: states[Math.floor(Math.random() * states.length)],
+        model: models[Math.floor(Math.random() * models.length)],
+        sku: skus[Math.floor(Math.random() * skus.length)],
+        bin: bins[Math.floor(Math.random() * bins.length)],
+        quantity: Math.floor(Math.random() * 1000) + 1,
+      }));
   };
 
   const [rows, setRows] = React.useState(generateDummyData());
@@ -174,7 +190,7 @@ const ViewRetailer = () => {
     setPage(0);
   };
 
-  // Enhanced sorting function
+  // Update the handleSort function
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -211,48 +227,63 @@ const ViewRetailer = () => {
     setFilteredRows(sortedRows);
   };
 
-  // Add search/filter functionality
+  // Update the handleSearch function
   const handleSearch = (searchValues) => {
     const filtered = rows.filter((row) => {
       return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
+        (!searchValues.isp ||
+          row.column1.toLowerCase().includes(searchValues.isp.toLowerCase())) &&
         (!searchValues.fromDate ||
           new Date(row.column4) >= new Date(searchValues.fromDate)) &&
         (!searchValues.toDate ||
           new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
+        (!searchValues.state ||
+          row.column3
             .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
+            .includes(searchValues.state.toLowerCase())) &&
+        (!searchValues.city ||
+          row.column2
+            .toLowerCase()
+            .includes(searchValues.city.toLowerCase())) &&
+        (!searchValues.product ||
+          row.column7
+            .toLowerCase()
+            .includes(searchValues.product.toLowerCase()))
       );
     });
 
     setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
+    setPage(0);
   };
 
-  // Update the search button click handler
+  // Update the handleSearchClick function
   const handleSearchClick = () => {
     const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
+      isp: document.querySelector('[placeholder="Select"]')?.value || "",
+      fromDate: document.querySelector('[placeholder="Select"]')?.value || "",
+      toDate: document.querySelector('[placeholder="DD/MM/YY"]')?.value || "",
+      state: document.querySelector('[label="State"]')?.value || "",
+      city: document.querySelector('[label="City"]')?.value || "",
+      product:
+        document.querySelector('[placeholder="Select"]')?.lastValue || "",
     };
     handleSearch(searchValues);
+  };
+
+  // Update the handleReset function to also reset sorting
+  const handleReset = () => {
+    // Reset all filters
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach((input) => {
+      input.value = "";
+    });
+
+    // Reset sorting
+    setSortConfig({ key: null, direction: null });
+
+    // Reset the table to show all rows in original order
+    setFilteredRows([...rows]);
+    setPage(0);
   };
 
   return (
@@ -269,8 +300,8 @@ const ViewRetailer = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={3} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Sales" />
+        <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Stock Reports" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -293,18 +324,21 @@ const ViewRetailer = () => {
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
-              <NuralAccordion2 title="Search" backgroundColor={LIGHT_GRAY2}>
-                {/* First Row - 3 NuralAutocomplete */}
+              <NuralAccordion2
+                title="Sales Channel Stock SB"
+                backgroundColor={LIGHT_GRAY2}
+              >
+                {/* First Row - Channel Type, Channel Name, Region, State */}
                 <Grid
                   container
                   spacing={2}
-                  mb={3}
+                  mb={2}
                   sx={{
-                    gap: { xs: 2, sm: 0, md: 0, lg: 0 },
+                    gap: { xs: 0, sm: 0, md: 0 },
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={6} md={4} lg={4}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -313,13 +347,31 @@ const ViewRetailer = () => {
                       }}
                       fontWeight={600}
                     >
-                      ND
+                      CHANNEL TYPE
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
-                      label="nd"
+                      label="Channel Type"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        ...labelStyle,
+                        fontSize: { xs: "12px", sm: "10px" },
+                      }}
+                      fontWeight={600}
+                    >
+                      CHANNEL NAME
+                    </Typography>
+                    <NuralAutocomplete
+                      label="Channel Name"
+                      options={options}
+                      placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={4} lg={4}>
@@ -331,15 +383,16 @@ const ViewRetailer = () => {
                       }}
                       fontWeight={600}
                     >
-                      SALES CHANNEL
+                      REGION
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
-                      label="Sales Channel"
+                      label="Region"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
+
                   <Grid item xs={12} sm={6} md={4} lg={4}>
                     <Typography
                       variant="body1"
@@ -352,14 +405,38 @@ const ViewRetailer = () => {
                       STATE
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
                       label="State"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
+                  <Grid item xs={12} sm={6} md={4} lg={4}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        ...labelStyle,
+                        fontSize: { xs: "12px", sm: "10px" },
+                      }}
+                      fontWeight={600}
+                    >
+                      CLOSING AS ON DATE
+                    </Typography>
+                    <NuralCalendar width="100%" placeholder="01/01/24" />
+                  </Grid>
+                </Grid>
 
-                  <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
+                {/* Second Row - Category, Model, SKU, Show Zero City Stock */}
+                <Grid
+                  container
+                  spacing={2}
+                  mb={2}
+                  sx={{
+                    gap: { xs: 0, sm: 0, md: 0 },
+                    flexDirection: { xs: "column", sm: "row" },
+                  }}
+                >
+                  <Grid item xs={12} sm={6} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -368,16 +445,16 @@ const ViewRetailer = () => {
                       }}
                       fontWeight={600}
                     >
-                      RETAILER CODE
+                      CATEGORY
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
-                      label="Retailer Code"
+                      label="Category"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
+                  <Grid item xs={12} sm={6} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -386,16 +463,16 @@ const ViewRetailer = () => {
                       }}
                       fontWeight={600}
                     >
-                      RETAILER NAME
+                      MODEL
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
-                      label="Retailer Name"
+                      label="Model"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
+                  <Grid item xs={12} sm={6} md={3} lg={3}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -404,18 +481,38 @@ const ViewRetailer = () => {
                       }}
                       fontWeight={600}
                     >
-                      STATUS
+                      SKU
                     </Typography>
                     <NuralAutocomplete
-                      width="100%"
-                      label="Status"
+                      label="SKU"
                       options={options}
                       placeholder="SELECT"
+                      width="100%"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3} lg={3}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        ...labelStyle,
+                        fontSize: { xs: "12px", sm: "10px" },
+                      }}
+                      fontWeight={600}
+                    >
+                      SHOW ZERO CITY STOCK
+                    </Typography>
+                    <NuralAutocomplete
+                      label="Show Zero City Stock"
+                      options={options}
+                      placeholder="SELECT"
+                      width="100%"
                     />
                   </Grid>
                 </Grid>
 
-                {/* Second Row - Buttons */}
+                {/* Third Row - Closing as on Date */}
+
+                {/* Fourth Row - Buttons */}
                 <Grid
                   container
                   spacing={2}
@@ -424,7 +521,7 @@ const ViewRetailer = () => {
                     // gap: { xs: 2, sm: 2 },
                   }}
                 >
-                  <Grid item xs={12} sm={3} md={1}>
+                  <Grid item xs={12} sm={2} md={1}>
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
@@ -432,11 +529,11 @@ const ViewRetailer = () => {
                       fontSize="12px"
                       height="36px"
                       borderColor={PRIMARY_BLUE2}
-                      onClick={() => console.log("Upload clicked")}
+                      onClick={handleReset}
                       width="100%"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={9} md={11}>
+                  <Grid item xs={12} sm={10} md={11}>
                     <NuralTextButton
                       icon={"./Icons/searchIcon.svg"}
                       iconPosition="right"
@@ -445,6 +542,7 @@ const ViewRetailer = () => {
                       color="#fff"
                       width="100%"
                       fontSize="12px"
+                      onClick={handleSearchClick}
                     >
                       SEARCH
                     </NuralTextButton>
@@ -463,21 +561,27 @@ const ViewRetailer = () => {
           sx={{
             backgroundColor: LIGHT_GRAY2,
             color: PRIMARY_BLUE2,
-            maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+            maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
             overflow: "auto",
+            position: "relative",
+            "& .MuiTable-root": {
+              borderCollapse: "separate",
+              borderSpacing: 0,
+            },
           }}
         >
           <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell
-                  colSpan={15}
+                  colSpan={10}
                   sx={{
                     backgroundColor: LIGHT_GRAY2,
                     position: "sticky",
                     top: 0,
                     zIndex: 1100,
                     borderBottom: "none",
+                    boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
                   }}
                 >
                   <Typography
@@ -501,62 +605,97 @@ const ViewRetailer = () => {
                   sx={{
                     ...tableHeaderStyle,
                     position: "sticky",
-                    top: "49px",
+                    top: "45px",
                     backgroundColor: LIGHT_GRAY2,
-                    zIndex: 1100,
+                    zIndex: 1000,
+                    cursor: "pointer",
                   }}
+                  onClick={() => handleSort("type")}
                 >
                   <Grid container alignItems="center" spacing={1}>
-                    <Grid item>S.NO</Grid>
+                    <Grid item>TYPE</Grid>
+                    <Grid item sx={{ display: "flex", alignItems: "center" }}>
+                      {sortConfig.key === "type" ? (
+                        sortConfig.direction === "asc" ? (
+                          <ArrowUpwardIcon
+                            sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                          />
+                        ) : (
+                          <ArrowDownwardIcon
+                            sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                          />
+                        )
+                      ) : (
+                        <Grid
+                          container
+                          direction="column"
+                          alignItems="center"
+                          sx={{ height: 16, width: 16 }}
+                        >
+                          <ArrowUpwardIcon
+                            sx={{ fontSize: 12, color: "grey.400" }}
+                          />
+                          <ArrowDownwardIcon
+                            sx={{ fontSize: 12, color: "grey.400" }}
+                          />
+                        </Grid>
+                      )}
+                    </Grid>
                   </Grid>
                 </TableCell>
-                {tableColumns.map((column) => (
+
+                {[
+                  { header: "NAME", key: "name" },
+                  { header: "CODE", key: "code" },
+                  { header: "PARENT CHANNEL", key: "parentChannel" },
+                  { header: "REGION", key: "region" },
+                  { header: "STATE", key: "state" },
+                  { header: "MODEL", key: "model" },
+                  { header: "SKU", key: "sku" },
+                  { header: "BIN", key: "bin" },
+                  { header: "QUANTITY", key: "quantity" }
+                ].map(({ header, key }) => (
                   <TableCell
-                    key={column.id}
-                    onClick={() => column.sortable && handleSort(column.id)}
+                    key={header}
+                    onClick={() => handleSort(key)}
                     sx={{
                       ...tableHeaderStyle,
-                      cursor: column.sortable ? "pointer" : "default",
+                      cursor: "pointer",
                       position: "sticky",
-                      top: "48px",
+                      top: "45px",
                       backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
+                      zIndex: 1000,
                     }}
                   >
                     <Grid container alignItems="center" spacing={1}>
-                      <Grid item>{column.label}</Grid>
-                      {column.sortable && (
-                        <Grid
-                          item
-                          sx={{ display: "flex", alignItems: "center" }}
-                        >
-                          {sortConfig.key === column.id ? (
-                            sortConfig.direction === "asc" ? (
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            ) : (
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            )
+                      <Grid item>{header}</Grid>
+                      <Grid item sx={{ display: "flex", alignItems: "center" }}>
+                        {sortConfig.key === key ? (
+                          sortConfig.direction === "asc" ? (
+                            <ArrowUpwardIcon
+                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                            />
                           ) : (
-                            <Grid
-                              container
-                              direction="column"
-                              alignItems="center"
-                              sx={{ height: 16, width: 16 }}
-                            >
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                            </Grid>
-                          )}
-                        </Grid>
-                      )}
+                            <ArrowDownwardIcon
+                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                            />
+                          )
+                        ) : (
+                          <Grid
+                            container
+                            direction="column"
+                            alignItems="center"
+                            sx={{ height: 16, width: 16 }}
+                          >
+                            <ArrowUpwardIcon
+                              sx={{ fontSize: 12, color: "grey.400" }}
+                            />
+                            <ArrowDownwardIcon
+                              sx={{ fontSize: 12, color: "grey.400" }}
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
                     </Grid>
                   </TableCell>
                 ))}
@@ -566,42 +705,19 @@ const ViewRetailer = () => {
               {filteredRows
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => (
-                  <TableRow key={row.id}>
-                    <TableCell
-                      sx={{
-                        ...rowstyle,
-                        color: PRIMARY_BLUE2,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {page * rowsPerPage + index + 1}
-                    </TableCell>
-                    {tableColumns.map((column) => (
-                      <TableCell key={column.id} sx={{ ...rowstyle }}>
-                        {column.id === "details" ? (
-                          <div style={{ display: "flex", alignItems: "center" }}>
-                            <span>{row[column.id]}</span>
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                fontWeight: "600",
-                                marginLeft: "5px",
-                                color: DARK_PURPLE,
-                              }}
-                            >
-                              {" "}
-                              <VisibilityIcon fontSize="small" />
-                            </span>
-                          </div>
-                        ) : column.id === "status" ? (
-                          <Switch size="small" />
-                        ) : column.id == "edit" ? (
-                          <Edit sx={{ color: DARK_PURPLE }} fontSize="small" />
-                        ) : (
-                          row[column.id]
-                        )}
-                      </TableCell>
-                    ))}
+                  <TableRow
+                    key={row.id}
+                  >
+                    <TableCell sx={{ ...rowstyle }}>{row.type}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.name}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.code}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.parentChannel}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.region}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.state}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.model}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.sku}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.bin}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.quantity}</TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -776,6 +892,7 @@ const ViewRetailer = () => {
                   borderRadius: "8px",
                   borderWidth: "1px",
                   border: `1px solid ${PRIMARY_BLUE2}`,
+                  backgroundColor: LIGHT_GRAY2,
                 }}
               />
               <Grid mt={1}>
@@ -789,4 +906,4 @@ const ViewRetailer = () => {
   );
 };
 
-export default ViewRetailer;
+export default DownloadStockReport;

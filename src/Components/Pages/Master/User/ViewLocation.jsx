@@ -66,7 +66,7 @@ const ViewLocation = () => {
     fontSize: "10px",
     lineHeight: "13.66px",
     letterSpacing: "4%",
-    color: DARK_PURPLE,
+    color: PRIMARY_BLUE2,
     marginBottom: "5px",
     fontWeight: 400,
   };

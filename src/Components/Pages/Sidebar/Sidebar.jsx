@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Drawer,
@@ -46,11 +47,12 @@ import {
   NOTIFICATION_BLUE,
   HOVER_BLUE,
   GREEN_COLOR,
-} from '../../Common/colors';
+  DARK_PURPLE,
+} from "../../Common/colors";
 // Make sure to update the path to the actual image location
 
 const collapsedWidth = 90; // Reduced from 80
-const expandedWidth = 270; // Reduced from 300
+const expandedWidth = 280; // Reduced from 300
 
 const SearchWrapper = styled("div")(({ theme }) => ({
   position: "relative",
@@ -81,35 +83,47 @@ const menuGroups = [
   {
     title: "Primary Module",
     items: [
-      { text: "Dashboard", icon: <Dashboard /> },
-      { text: "Transactions", icon: <SwapHoriz /> },
-      { text: "Target", icon: <TargetIcon /> },
-      { text: "Incentive", icon: <EmojiEvents /> },
-      { text: "Merchandizing", icon: <LocalOffer /> },
+      { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
+      {
+        text: "Attendance",
+        icon: <EventNote />,
+        path: "/view-attendance-report",
+      },
+      { text: "Tertiary Sale", icon: <SwapHoriz />, path: "/tertiary-sale" },
+      {
+        text: "Inventory",
+        icon: <LocalOffer />,
+        path: "/stock-adjustment-report",
+      },
+      { text: "Competition", icon: <FlagIcon />, path: "/competition-brand" },
     ],
   },
   {
     title: "Secondary Module",
     items: [
-      { text: "Learning & Dev.", icon: <School /> },
-      { text: "Competition", icon: <FlagIcon /> },
-      { text: "Reports", icon: <Assessment /> },
-      { text: "Attendance", icon: <EventNote /> },
-      { text: "Survey", icon: <Poll /> },
-      { text: "Queries", icon: <HelpOutline /> },
+      { text: "Merchandising", icon: <LocalOffer />, path: "/merchandizing" },
+      {
+        text: "Prebooking",
+        icon: <EventNote />,
+        path: "/prebooking-sku-create",
+      },
+      { text: "Learning & Dev.", icon: <School />, path: "/learning" },
+      { text: "Survey", icon: <Poll />, path: "/survey" },
     ],
   },
 ];
 
 const bottomMenuItems = [
-  { text: "Profile", icon: <Person /> },
-  { text: "Settings", icon: <Settings /> },
-  { text: "Log Out", icon: <Logout /> },
+  { text: "Profile", icon: <Person />, path: "/profile" },
+  { text: "Settings", icon: <Settings />, path: "/settings" },
+  { text: "Log Out", icon: <Logout />, path: "/logout" },
 ];
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [myAppsExpanded, setMyAppsExpanded] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleMouseEnter = () => {
     setIsExpanded(true);
@@ -117,6 +131,14 @@ const Sidebar = () => {
 
   const handleMouseLeave = () => {
     setIsExpanded(false);
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  const isSelected = (path) => {
+    return location.pathname === path;
   };
 
   const renderSidebarContent = (collapsed) => (
@@ -150,7 +172,6 @@ const Sidebar = () => {
               alignItems: "center",
               justifyContent: collapsed ? "center" : "space-between",
               mb: 2,
-             
             }}
           >
             {!collapsed ? (
@@ -185,25 +206,57 @@ const Sidebar = () => {
 
           {/* Search and notification */}
           {!collapsed ? (
-            <Box sx={{ display: "flex", justifyContent: "space-between", p:0, alignItems: "center", mb: 2, }}>
-               <IconButton color="inherit">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                p: 0,
+                alignItems: "center",
+                mb: 2,
+                ml: -2,
+              }}
+            >
+              <IconButton color="inherit">
                 <img
-                  width={40}
-                  height={40}
+                  width={45}
+                  height={45}
                   src="./Icons/Notification.png"
                   alt="notification"
                 />
               </IconButton>
-              <SearchWrapper>
-                <IconButton sx={{ position: "absolute", p: 1, color: "white" }}>
+              <SearchWrapper
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid #DFDDDE",
+                  borderRadius: "5px",
+                  height: "45px",
+                  width: "145px",
+                  backgroundColor: DARK_PURPLE,
+                 
+                }}
+              >
+                <IconButton
+                  sx={{ position: "absolute", p: 1, color: "white", left: 15 }}
+                >
                   <SearchIcon />
                 </IconButton>
+
                 <StyledInputBase
+                  sx={{
+                    width: "152px",
+                    height: "45px",
+                    marginLeft: "30px",
+                    color: "white",
+                    backgroundColor: 'none',
+                   
+                  }}
                   placeholder="Search"
+
                   inputProps={{ "aria-label": "search" }}
                 />
               </SearchWrapper>
-             
             </Box>
           ) : (
             <Box
@@ -219,7 +272,7 @@ const Sidebar = () => {
                 sx={{
                   width: 45,
                   height: 45,
-                  bgcolor: "transparent",
+                  bgcolor: DARK_PURPLE,
                   border: "1px solid #DFDDDE",
                   borderRadius: 2,
                   display: "flex",
@@ -331,7 +384,7 @@ const Sidebar = () => {
                 outline: "none",
                 bgcolor: "transparent",
                 color: SECONDARY_BLUE,
-               
+
                 boxShadow: "none",
                 "&:before": {
                   display: "none",
@@ -357,7 +410,6 @@ const Sidebar = () => {
                       color: "#fff",
                       marginRight: "px",
                       fontSize: "1.2rem",
-                      
                     }}
                   />
                 }
@@ -391,7 +443,6 @@ const Sidebar = () => {
                     <Dashboard sx={{ fontSize: "1.2rem" }} />
                     <Typography
                       sx={{
-                       
                         fontWeight: 500,
                         fontSize: "0.875rem",
                         "&:hover": { bgcolor: WHITE, color: PRIMARY_BLUE },
@@ -504,7 +555,6 @@ const Sidebar = () => {
             </Accordion>
           ) : (
             <></>
-          
           )}
         </Box>
 
@@ -549,7 +599,10 @@ const Sidebar = () => {
                     },
                   }}
                 >
-                  <Typography variant="body2" sx={{ color: SECONDARY_BLUE, px: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: SECONDARY_BLUE, px: 1 }}
+                  >
                     {group.title}
                   </Typography>
                 </AccordionSummary>
@@ -559,6 +612,7 @@ const Sidebar = () => {
                       <ListItem
                         button
                         key={item.text}
+                        onClick={() => handleNavigation(item.path)}
                         sx={{
                           display: "flex",
                           alignItems: "center",
@@ -569,9 +623,33 @@ const Sidebar = () => {
                           borderRadius: 1,
                           pb: 0.5,
                           pt: 1,
+                          position: "relative",
+                          ...(isSelected(item.path) && {
+                            "& .MuiListItemText-root": {
+                              position: "relative",
+                              "& .MuiTypography-root": {
+                                position: "relative",
+                                display: "inline-block",
+                                "&::after": {
+                                  content: '""',
+                                  position: "absolute",
+                                  bottom: -4,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "2px",
+                                  backgroundColor: WHITE,
+                                },
+                              },
+                            },
+                          }),
                         }}
                       >
-                        <ListItemIcon sx={{ color: SECONDARY_BLUE, minWidth: 35 }}>
+                        <ListItemIcon
+                          sx={{ 
+                            color: isSelected(item.path) ? WHITE : SECONDARY_BLUE, 
+                            minWidth: 35 
+                          }}
+                        >
                           <Box sx={{ fontSize: "1.2rem" }}>{item.icon}</Box>
                         </ListItemIcon>
                         <ListItemText
@@ -580,6 +658,7 @@ const Sidebar = () => {
                             mb: 1.5,
                             "& .MuiTypography-root": {
                               fontSize: "0.875rem",
+                              color: isSelected(item.path) ? WHITE : SECONDARY_BLUE,
                             },
                           }}
                         />
@@ -597,15 +676,24 @@ const Sidebar = () => {
                 <ListItem
                   button
                   key={item.text}
+                  onClick={() => handleNavigation(item.path)}
                   sx={{
                     "&:hover": {
                       backgroundColor: "rgba(255, 255, 255, 0.1)",
                     },
                     py: 0.5,
                     justifyContent: "center",
+                    ...(isSelected(item.path) && {
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    }),
                   }}
                 >
-                  <ListItemIcon sx={{ color: SECONDARY_BLUE, minWidth: "auto" }}>
+                  <ListItemIcon
+                    sx={{ 
+                      color: isSelected(item.path) ? WHITE : SECONDARY_BLUE, 
+                      minWidth: "auto" 
+                    }}
+                  >
                     {item.icon}
                   </ListItemIcon>
                 </ListItem>
@@ -631,6 +719,7 @@ const Sidebar = () => {
             <ListItem
               button
               key={item.text}
+              onClick={() => handleNavigation(item.path)}
               sx={{
                 "&:hover": {
                   backgroundColor: "rgba(0, 0, 0, 0.04)",
@@ -639,11 +728,30 @@ const Sidebar = () => {
                 justifyContent: collapsed ? "center" : "flex-start",
                 minHeight: 35,
                 color: GREEN_COLOR,
+                position: "relative",
+                ...(isSelected(item.path) && {
+                  "& .MuiListItemText-root": {
+                    position: "relative",
+                    "& .MuiTypography-root": {
+                      position: "relative",
+                      display: "inline-block",
+                      "&::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: -4,
+                        left: 0,
+                        width: "100%",
+                        height: "2px",
+                        backgroundColor: GREEN_COLOR,
+                      },
+                    },
+                  },
+                }),
               }}
             >
               <ListItemIcon
                 sx={{
-                  color: GREEN_COLOR,
+                  color: isSelected(item.path) ? GREEN_COLOR : "inherit",
                   minWidth: collapsed ? "auto" : 35,
                   "& .MuiSvgIcon-root": {
                     fontSize: "1.2rem",

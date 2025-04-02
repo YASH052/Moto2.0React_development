@@ -113,6 +113,7 @@ const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
           {title}
         </Typography>
       </StyledAccordionSummary>
+
       <AccordionDetails sx={{ padding: "0 16px 16px" }}>
         <Box sx={{ marginBottom: "12px" }}>
           <Typography
@@ -141,8 +142,10 @@ const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
           />
         </Box>
       </AccordionDetails>
+
     </StyledAccordion>
   );
 };
 
 export default NuralUploadFormat;
+

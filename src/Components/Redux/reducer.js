@@ -1,11 +1,13 @@
+import { SET_EDIT_AGENCY_DATA } from "./actionTypes";
+
 const initialState = {
-    login: ""
+    editAgencyData: {}
 }
 
 const reducer = (state = initialState, action) => {
     switch (action.type) {
-        case "LOGIN":
-            return { ...state, login: action.payload };
+        case SET_EDIT_AGENCY_DATA:
+            return { ...state, editAgencyData: action.payload };
         default:
             return state;
     }

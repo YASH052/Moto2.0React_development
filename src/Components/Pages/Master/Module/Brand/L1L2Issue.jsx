@@ -1,19 +1,19 @@
 import { Grid, Typography, Button } from "@mui/material";
 import React from "react";
-import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
-import TabsBar from "../../../Common/TabsBar";
-import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
+import BreadcrumbsHeader from "../../../../Common/BreadcrumbsHeader";
+import TabsBar from "../../../../Common/TabsBar";
+import NuralAccordion2 from "../../../NuralCustomComponents/NuralAccordion2";
 import {
   AQUA,
   DARK_PURPLE,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_GRAY,
-} from "../../../Common/colors";
-import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
-import NuralButton from "../../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+} from "../../../../Common/colors";
+import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
+import NuralCalendar from "../../../NuralCustomComponents/NuralCalendar";
+import NuralButton from "../../../NuralCustomComponents/NuralButton";
+import NuralTextButton from "../../../NuralCustomComponents/NuralTextButton";
 import {
   Table,
   TableBody,
@@ -31,31 +31,25 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
-import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
+import { rowstyle, tableHeaderStyle } from "../../../../Common/commonstyles";
+import NuralTextField from "../../../NuralCustomComponents/NuralTextField";
+import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
+import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
 import { useNavigate } from "react-router-dom";
-import StatusModel from "../../../Common/StatusModel";
-import AddUser from "../User/AddUser";
-import AddLocation from "../User/AddLocation";
-import ViewUser from "../User/ViewUser";
-import ViewLocation from "../User/ViewLocation";
-import CreateCategory from "./CreateCategory";
-import CreateIssue from "./CreateIssue";
-import View from "./View";
+import StatusModel from "../../../../Common/StatusModel";
 
-const radioOptions = [
-  { value: "yes", label: "Interface" },
-  { value: "no", label: "Batch" },
-];
+import CreateCategory from "../../L1&L2/CreateCategory";
+import CreateIssue from "../../L1&L2/CreateIssue";
+import View from "../../L1&L2/View";
+
+
 
 const L1L2Issue = () => {
   const navigate = useNavigate();
   const [showModel, setShowModel] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("l1l2-issue");
   const [tabbs, setTabbs] = React.useState([
-    { label: "Demo Planogram", value: "demo-planogram" },
+    { label: "Demo Planogram", value: "demo-categorization" },
     { label: "MEZ Audit", value: "mez-audit" },
     { label: "ISP Audit", value: "isp-audit" },
     { label: "Visibility Audit", value: "visibility-audit" },
@@ -63,24 +57,10 @@ const L1L2Issue = () => {
     { label: "L1L2 Issue", value: "l1l2-issue" },
   ]);
 
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
-
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
+ 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   // Add these states for pagination
@@ -234,7 +214,7 @@ const L1L2Issue = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="People" />
+          <BreadcrumbsHeader pageTitle="Brand" />
         </Grid>
 
         <Grid item xs={12} ml={1}>

@@ -895,7 +895,7 @@ const CompetitonSalesReport = () => {
                     .map((_, index) => (
                       <TableRowSkeleton key={index} columns={9} />
                     ))
-                ) : filteredRows.length > 0 ? (
+                ) : filteredRows.length > 0 && (
                   filteredRows
                     // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => (
@@ -936,13 +936,7 @@ const CompetitonSalesReport = () => {
                         </TableCell>
                       </TableRow>
                     ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center">
-                      No records found
-                    </TableCell>
-                  </TableRow>
-                )}
+                ) }
               </TableBody>
             </Table>
 

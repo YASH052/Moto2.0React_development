@@ -3,46 +3,61 @@ import React from "react";
 import BreadcrumbsHeader from "../../Common/BreadcrumbsHeader";
 import TransationCard from "./Transaction/TransationCard";
 
-const inventoryTypes = [
-  { title: "AI NORMS", link: "/ai-norms" },
-  { title: "STOCK ADJUSTMENT", link: "/stock-adjustment" },
-  { title: "GRN", link: "/grn" },
+const appSettingsTypes = [
+  { title: "WEB", link: "/web" },
+  { title: "MOBILE", link: "/mobile" },
 ];
 
-const financeTypes = [
-  { title: "FINANCE API BLOCK ACCESS", link: "/finance-api-block" },
-  { title: "SERVIFY OFFER", link: "/servify-offer" },
-  { title: "SAP INTEGRATION", link: "/sap-integration" },
+const helpTypes = [
+  { title: "FEEDBACK", link: "/feedback" },
+  { title: "TUTORIAL", link: "/tutorial" },
+  { title: "PRODUCT DOCUMENTATION", link: "/product-documentation" },
 ];
 
-const attendanceTypes = [
-  { title: "LEAVE TYPE", link: "/leave-type" },
-  { title: "LEAVE ALLOCATION", link: "/leave-allocation" },
+const organizationTypes = [
+  { title: "COMPANY INFO", link: "/org-people" },
+  { title: "AGENCY", link: "/add-agancy" },
+  { title: "GEOGRAPHY", link: "/geography-bulk-upload" },
+  { title: "ANNOUNCEMENT", link: "/announcement" },
+  { title: "HIERARCHY", link: "/org-people" },
+  { title: "QUERY", link: "/query" },
 ];
 
-const merchandizingTypes = [
-  { title: "TASK TYPE", link: "/task-type" },
-  { title: "MANAGE TASK", link: "/manage-task" },
+const channelTypes = [
+  { title: "CHANNEL", link: "/add-sales-channel" },
+  { title: "RETAILER", link: "/add-retailer" },
 ];
 
-const competitionTypes = [
-  { title: "BRAND", link: "/competition-brand" },
-  { title: "CATEGORY", link: "/competition-category" },
-  { title: "MODEL", link: "/competition-model" },
-  { title: "PRICE BAND", link: "/price-band" },
-  { title: "UPLOAD", link: "/competition-upload" },
+const peopleTypes = [
+  { title: "ORG PEOPLE", link: "/org-people" },
+  { title: "ISP", link: "/add-isp" },
+  { title: "RANKING WEIGHTAGE", link: "/ranking-weightage" },
+  { title: "SEARCH", link: "/search" },
+  { title: "SALESMAN", link: "/create-salesman" },
 ];
 
-const brandTypes = [
-  { title: "DEMO CATEGORIZATION", link: "/demo-categorization" },
-  { title: "L1/L2 ISSUE", link: "/l1l2-issue" },
-  { title: "MEZ AUDIT", link: "/mez-audit" },
-  { title: "ISP AUDIT", link: "/isp-audit" },
-  { title: "VISIBILITY AUDIT", link: "/visibility-audit" },
-  { title: "STORE OPS", link: "/store-ops" },
+const productTypes = [
+  { title: "BRAND", link: "/brand" },
+  { title: "CATEGORY", link: "/category" },
+  { title: "SUB CATEGORY", link: "/sub-category" },
+  { title: "MODEL", link: "/model" },
+  { title: "COLOR", link: "/color" },
+  { title: "SKU", link: "/sku" },
+  // { title: "FOCUS MODEL", link: "/focus-model" },
+  // { title: "PRICE", link: "/create-price" },
+  // { title: "PRE BOOKING", link: "/prebooking-sku-create" },
+  // { title: "UPLOAD", link: "/product-bulk-upload" },
 ];
 
-const lndTypes = [{ title: "CATEGORY", link: "/lnd-category" }];
+const moduleTypes = [
+  { title: "INVENTORY", link: "/stock-adjustment-report" },
+  { title: "FINANCE", link: "/unblock-finance" },
+  { title: "ATTENDANCE", link: "/view-attendance-report" },
+  { title: "MERCHANDIZING", link: "/merchandizing" },
+  { title: "COMPETITION", link: "/competition-sales-report" },
+  { title: "L & D", link: "/lnd" },
+  // { title: "BRAND", link: "/l1l2-issue" },
+];
 
 const MasterSetting = () => {
   return (
@@ -59,34 +74,31 @@ const MasterSetting = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Master Setting" />
+          <BreadcrumbsHeader pageTitle="Settings" />
         </Grid>
       </Grid>
 
       <Grid container spacing={0} p={1}>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={inventoryTypes} title="Inventory" />
+          <TransationCard salesTypes={appSettingsTypes} title="App Settings" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={financeTypes} title="Finance" />
+          <TransationCard salesTypes={helpTypes} title="Help" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={attendanceTypes} title="Attendance" />
+          <TransationCard salesTypes={organizationTypes} title="Organization" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard
-            salesTypes={merchandizingTypes}
-            title="Merchandizing"
-          />
+          <TransationCard salesTypes={channelTypes} title="Channel" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={competitionTypes} title="Competition" />
+          <TransationCard salesTypes={peopleTypes} title="People" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={brandTypes} title="Brand" />
+          <TransationCard salesTypes={productTypes} title="Product" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={lndTypes} title="L & D" />
+          <TransationCard salesTypes={moduleTypes} title="Module" />
         </Grid>
       </Grid>
     </Grid>

@@ -25,6 +25,7 @@ import {
   BLUE_COLOR,
   MEDIUM_BLUE,
   LIGHT_GRAY2,
+  PRIMARY_BLUE2,
 } from "../../Common/colors";
 import NuralNotificationPanel from "./NuralNotificationPanel";
 import NuralActivityPanel from "./NuralActivityPanel";
@@ -35,7 +36,7 @@ import SalesTrendGraph from "./DashboardWidgets/SalesTrendGraph";
 import TargetAchievementGraph from "./DashboardWidgets/TargetAchievement";
 import SalesMetricsGrid from "./DashboardWidgets/SalesMetricsGrid";
 import CounterShare from "./DashboardWidgets/CounterShare";
-import FocusModelPerformance from "./DashboardWidgets/FocusModelPerformance";
+
 import RankingCard from "./DashboardWidgets/RankingCard";
 import InfoCard from "./DashboardWidgets/InfoCard";
 import AttendanceOverview from "./DashboardWidgets/AttendanceOverview";
@@ -44,7 +45,99 @@ import SalesDonutChart from "./DashboardWidgets/SalesDonutChart";
 import SelectionPanel from "./SelectionPanel";
 import NuralExport from "./NuralExport";
 import NuralReports from "./NuralReports";
+import FocusModelPerformance from "../../Common/NuralCustomComponents/DashboardWidgets/FocusModelPerformance";
+export const data = [
+  { date: "14/03", total: 3000, nsm1: 2000 },
+  { date: "15/03", total: 9000, nsm1: 8000 },
+  { date: "16/03", total: 1000, nsm1: 7000 },
+  { date: "17/03", total: 6000, nsm1: 8000 },
+  { date: "18/03", total: 5000, nsm1: 4000 },
+  { date: "19/03", total: 9000, nsm1: 7000 },
+  { date: "20/03", total: 8500, nsm1: 8000 },
+];
 
+export const weeklyData = [
+  { date: "Week 1", total: 25000, nsm1: 22000 },
+  { date: "Week 2", total: 15000, nsm1: 32000 },
+  { date: "Week 3", total: 35000, nsm1: 42000 },
+  { date: "Week 4", total: 55000, nsm1: 52000 },
+];
+export const rankings = [
+  { name: "NSM 1", score: 340 },
+  { name: "NSM 2", score: 280 },
+  { name: "NSM 3", score: 100 },
+];
+
+export const monthlyData = [
+  { date: "Jan", total: 150000, nsm1: 140000 },
+  { date: "Feb", total: 110000, nsm1: 170000 },
+  { date: "Mar", total: 120000, nsm1: 210000 },
+  { date: "Apr", total: 250000, nsm1: 240000 },
+];
+
+export const yearlyData = [
+  { date: "2020", total: 1800000, nsm1: 1700000 },
+  { date: "2021", total: 2200000, nsm1: 2100000 },
+  { date: "2022", total: 11100000, nsm1: 2700000 },
+  { date: "2023", total: 1200000, nsm1: 3100000 },
+];
+
+export const salesMetrics = [
+  {
+    title: "Yesterday Sales",
+    value: "₹14,200",
+    trend: 5.2,
+    comparedTo: "VS PREV. DAY",
+    backgroundColor: "#F8F7FF",
+  },
+
+  {
+    title: "MTD Sales",
+    value: "₹2,85,400",
+    trend: -12.3,
+    comparedTo: "VS PREV. MONTH",
+    backgroundColor: "#F8F7FF",
+  },
+  {
+    title: "YTD Sales",
+    value: "₹14.85Cr",
+    trend: -2.7,
+    comparedTo: "VS PREV. YEAR",
+    backgroundColor: "#FFF1F1",
+  },
+  {
+    title: "ISPs Present Yesterday",
+    value: "115/124",
+    trend: 92,
+    comparedTo: "ATTENDANCE",
+    subtitle: "93% ATTENDANCE",
+    backgroundColor: "#FFFFFF",
+  },
+  {
+    title: "ISPs Present Yesterday",
+    value: "78/124",
+    trend: 56,
+    comparedTo: "ATTENDANCE",
+    subtitle: "89% ATTENDANCE",
+    backgroundColor: "#FFFFFF",
+  },
+  {
+    title: "ISPs Present Yesterday",
+    value: "78/124",
+    trend: 56,
+    comparedTo: "ATTENDANCE",
+    subtitle: "89% ATTENDANCE",
+    backgroundColor: "#FFFFFF",
+  },
+  {
+    title: "ISPs Present Yesterday",
+    value: "78/124",
+    trend: 56,
+    comparedTo: "ATTENDANCE",
+    subtitle: "89% ATTENDANCE",
+    backgroundColor: "#FFFFFF",
+  },
+];
 const TestCompo = () => {
   const quickLinks = ["Quick Link 1", "Quick Link 2", "Quick Link 3"];
   const modelData = [
@@ -87,15 +180,6 @@ const TestCompo = () => {
       onView: () => console.log("View Template 2"),
       onDownload: () => console.log("Download Template 2"),
     },
-  ];
-  const data = [
-    { date: "14/03", total: 3000, nsm1: 2000 },
-    { date: "15/03", total: 9000, nsm1: 8000 },
-    { date: "16/03", total: 4000, nsm1: 7000 },
-    { date: "17/03", total: 6000, nsm1: 8000 },
-    { date: "18/03", total: 8000, nsm1: 4000 },
-    { date: "19/03", total: 9000, nsm1: 7000 },
-    { date: "20/03", total: 8500, nsm1: 8000 },
   ];
 
   // KYC Fields configuration
@@ -190,11 +274,6 @@ const TestCompo = () => {
     },
   ];
 
-  const rankings = [
-    { name: "NSM 1", score: 340 },
-    { name: "NSM 2", score: 280 },
-    { name: "NSM 3", score: 100 },
-  ];
   const brandData = {
     PRIMARY: { share: "140.15K", percentage: "17%" },
     SECONDARY: { share: "169K", percentage: "14%" },
@@ -203,47 +282,6 @@ const TestCompo = () => {
     QUINARY: { share: "90K", percentage: "8%" },
     OTHERS: { share: "139K", percentage: "23%" },
   };
-
-  const salesMetrics = [
-    {
-      title: "Yesterday Sales",
-      value: "₹14,200",
-      trend: 5.2,
-      comparedTo: "VS PREV. DAY",
-      backgroundColor: "#F8F7FF",
-    },
-
-    {
-      title: "MTD Sales",
-      value: "₹2,85,400",
-      trend: -12.3,
-      comparedTo: "VS PREV. MONTH",
-      backgroundColor: "#F8F7FF",
-    },
-    {
-      title: "YTD Sales",
-      value: "₹14.85Cr",
-      trend: -2.7,
-      comparedTo: "VS PREV. YEAR",
-      backgroundColor: "#FFF1F1",
-    },
-    {
-      title: "ISPs Present Yesterday",
-      value: "115/124",
-      trend: 92,
-      comparedTo: "ATTENDANCE",
-      subtitle: "93% ATTENDANCE",
-      backgroundColor: "#FFFFFF",
-    },
-    {
-      title: "ISPs Present Yesterday",
-      value: "78/124",
-      trend: 56,
-      comparedTo: "ATTENDANCE",
-      subtitle: "89% ATTENDANCE",
-      backgroundColor: "#FFFFFF",
-    },
-  ];
 
   const complianceData2 = [
     {
@@ -609,6 +647,17 @@ const TestCompo = () => {
           }}
         />
       </Box> */}
+
+      <Grid item xs={12} md={6}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          File Upload
+        </Typography>
+        <NuralFileUpload
+          width="100%"
+          onChange={(file) => console.log("Selected file:", file)}
+          accept=".pdf,.doc,.docx"
+        />
+      </Grid>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6} lg={6} xl={6}>
           <SalesTrendGraph
@@ -652,7 +701,15 @@ const TestCompo = () => {
       </Grid>
       <Grid container spacing={1} mt={5}>
         <Grid item xs={12} md={4} lg={4} xl={4}>
-          <RankingCard title="Ranking" data={rankings} />
+          <RankingCard 
+            title="Ranking" 
+            data={rankings} 
+            backgroundColor={LIGHT_GRAY2}
+            titleColor={PRIMARY_BLUE2}
+            dateColor={DARK_PURPLE}
+            scoreColor={DARK_PURPLE}
+            rankNumberColor={DARK_PURPLE}
+          />
         </Grid>
         <Grid item xs={12} md={4} lg={4} xl={4}>
           <InfoCard title="Compliance" data={complianceData} />
@@ -692,7 +749,7 @@ const TestCompo = () => {
         </Grid>
 
         <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
-          <NuralReports title="Reports"  views={views} />
+          <NuralReports title="Reports" views={views} />
         </Grid>
       </Grid>
     </Container>

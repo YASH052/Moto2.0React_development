@@ -237,22 +237,23 @@ const NuralAccordion = ({ title, templates, ...props }) => {
         ))}
         {props.buttons && (
           <ButtonContainer sx={props.buttonContainerStyle}>
-            <NuralTextButton
-              icon={props.referenceIcon1}
-              iconPosition="right"
-              backgroundColor={props.buttonBg}
-              onClick={props.onClickBin}
-              color={props.buttonColor}
-              width="100%"
-              {...props.binButtonProps}
-            >
-              BIN CODE
-            </NuralTextButton>
+            {props.referenceIcon1 && (
+              <NuralTextButton
+                icon={props.referenceIcon1}
+                iconPosition="right"
+                backgroundColor={props.buttonBg}
+                onClick={props.onClickBin}
+                color={props.buttonColor}
+                width="100%"
+                {...props.binButtonProps}
+              >
+                BIN CODE
+              </NuralTextButton>
+            )}
             <NuralTextButton
               icon={props.referenceIcon2}
               iconPosition="right"
               onClick={props.onClickReference}
-
               backgroundColor={props.buttonBg}
               color={props.buttonColor}
               width="100%"

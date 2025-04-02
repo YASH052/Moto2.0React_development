@@ -1,5 +1,5 @@
-import { Autocomplete, TextField } from "@mui/material";
-import React, { useState } from "react";
+import { Autocomplete, TextField, CircularProgress } from "@mui/material";
+import React, { useState, useMemo } from "react";
 import {
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
@@ -15,10 +15,20 @@ const NuralAutocomplete = ({
   isOptionEqualToValue,
   onChange,
   value,
+  loading = false,
+  error = false,
+  helperText = "",
+  filterOptions,
   ...props
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedValue, setSelectedValue] = useState(null);
+
+  // Memoize filtered options based on input value
+  const filteredOptions = useMemo(() => {
+    if (!filterOptions) return options;
+    return filterOptions(options, { inputValue });
+  }, [options, inputValue, filterOptions]);
 
   const handleChange = (event, newValue) => {
     console.log(newValue);
@@ -26,11 +36,41 @@ const NuralAutocomplete = ({
 
   return (
     <Autocomplete
-      options={options}
+      options={filteredOptions}
       getOptionLabel={getOptionLabel || ((option) => option)}
-      isOptionEqualToValue={isOptionEqualToValue}
+      isOptionEqualToValue={isOptionEqualToValue || ((option, value) => {
+        // If the options are objects, try to use an id or unique identifier
+        if (typeof option === 'object' && option !== null) {
+          return option.id === value.id;
+        }
+        // For primitive values, use direct comparison
+        return option === value;
+      })}
       onChange={onChange}
       value={value}
+      loading={loading}
+      loadingText="Loading..."
+      onInputChange={(event, newInputValue) => {
+        setInputValue(newInputValue);
+      }}
+      renderOption={(props, option, state) => {
+        // Generate a unique key based on the option's properties
+        const key = typeof option === 'object' && option !== null
+          ? (option.id || JSON.stringify(option))
+          : String(option);
+        
+        return (
+          <li {...props} key={key}>
+            {getOptionLabel ? getOptionLabel(option) : String(option)}
+          </li>
+        );
+      }}
+      ListboxProps={{
+        style: {
+          maxHeight: 300,
+          overflow: 'auto',
+        },
+      }}
       sx={{
         width: width || "100%",
         height: props.height || "36px",
@@ -103,22 +143,45 @@ const NuralAutocomplete = ({
         <TextField
           {...params}
           placeholder={placeholder}
+          error={error}
+          helperText={helperText}
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <React.Fragment>
+                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                {params.InputProps.endAdornment}
+              </React.Fragment>
+            ),
+          }}
           sx={{
-            border: props.border || `1.8px solid ${PRIMARY_BLUE2}`,
+            border: error 
+              ? "1.8px solid #d32f2f" 
+              : (props.border || `1.8px solid ${PRIMARY_BLUE2}`),
             borderRadius: props.borderRadius || "8px",
             height: "100%",
             "& .MuiInputBase-root": {
               height: "100%",
             },
             "&:hover": {
-              border: props.hoverBorder,
+              border: error 
+                ? "1.8px solid #d32f2f" 
+                : props.hoverBorder,
             },
             "&:focus-within": {
-              border: props.focusBorder || `1.8px solid ${PRIMARY_BLUE2}`,
+              border: error 
+                ? "1.8px solid #d32f2f" 
+                : (props.focusBorder || `1.8px solid ${PRIMARY_BLUE2}`),
               outline: "none",
             },
             "& .MuiInputBase-input::placeholder": {
               opacity: 1,
+            },
+            "& .MuiFormHelperText-root": {
+              marginLeft: 0,
+              fontSize: "10px",
+              marginTop: "4px",
+              color: "#d32f2f",
             },
           }}
         />

@@ -1,6 +1,7 @@
 // Brand Colors
 export const PRIMARY_BLUE = "#32499F";
 export const SECONDARY_BLUE = "#8D9EDB";
+export const LIGHTAQUA = "#DBFEFE";
 
 // UI Colors
 export const WHITE = "#FFFFFF";
@@ -15,6 +16,7 @@ export const PRIMARY_LIGHT_PURPLE2 = "#8D9EDB";
 export const LIGHT_GRAY2 = "#E2E7F6";
 export const LIGHT_GRAY3 = "#B9B2B4";
 export const SKELETON_GRAY = "#dbe0ee";
+export const PURPLE_GRAPH = "#231F20";
 
 // Transparent Colors
 export const TRANSPARENT_WHITE_15 = "rgba(255, 255, 255, 0.15)";
@@ -48,7 +50,8 @@ export const DARK_BLUE = "#23346F";
 export const BORDER_BOTTOM = "#18244E";
 
 // Add this if not already present
-export const RED = '#FF0000';  // or any other shade of red you prefer
+export const RED = "#FF0000"; // or any other shade of red you prefer
 
 // Make sure you have a gray color defined
 export const lightGray = "#d3d3d3"; // or any gray shade you prefer
+export const FIELD_ERROR_COLOR = "#d96a70";

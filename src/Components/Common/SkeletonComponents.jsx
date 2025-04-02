@@ -199,3 +199,77 @@ export const UploadContentSkeleton = () => (
     </Grid>
   </Grid>
 );
+
+// Add Agency Skeleton
+export const AddAgencySkeleton = () => (
+  <Grid container spacing={0}>
+    {/* Breadcrumb Skeleton */}
+    <Grid item xs={12} md={6} lg={12} mt={1} mb={0} sx={{ ml: 1 }}>
+      <Skeleton variant="text" width={200} height={40} sx={{ backgroundColor: SKELETON_GRAY }} />
+    </Grid>
+
+    {/* Tabs Skeleton */}
+    <Grid item xs={12} md={6} lg={12} sx={{ ml: 1 }}>
+      <Skeleton variant="rectangular" width="100%" height={48} sx={{ backgroundColor: SKELETON_GRAY }} />
+    </Grid>
+
+    <Grid container spacing={2}>
+      {/* Agency Details Skeleton */}
+      <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+        <Grid container spacing={2} direction="column">
+          <Grid item>
+            <Box sx={{ bgcolor: LIGHT_GRAY2, p: 2, borderRadius: '4px' }}>
+              <Skeleton variant="text" width={150} height={24} sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+        </Grid>
+      </Grid>
+
+      {/* Contact Details Skeleton */}
+      <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+        <Grid container spacing={2} direction="column">
+          <Grid item>
+            <Box sx={{ bgcolor: LIGHT_GRAY2, p: 2, borderRadius: '4px' }}>
+              <Skeleton variant="text" width={150} height={24} sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </Grid>
+                <Grid item xs={12}>
+                  <Skeleton variant="rectangular" width="100%" height={36} />
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
+  </Grid>
+);

@@ -248,7 +248,7 @@ const PrebookingSKUcreate = () => {
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
-              <NuralAccordion2 title="Search" backgroundColor={LIGHT_GRAY2}>
+              <NuralAccordion2 title="Add" backgroundColor={LIGHT_GRAY2}>
                 {/* First Row - 3 NuralAutocomplete */}
                 <Grid
                   container
@@ -273,7 +273,7 @@ const PrebookingSKUcreate = () => {
                     <NuralAutocomplete
                       label="Category"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -291,7 +291,7 @@ const PrebookingSKUcreate = () => {
                     <NuralAutocomplete
                       label="Sub Category"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>{" "}
@@ -309,7 +309,7 @@ const PrebookingSKUcreate = () => {
                     <NuralAutocomplete
                       label="Model"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -327,7 +327,7 @@ const PrebookingSKUcreate = () => {
                     <NuralAutocomplete
                       label="SKU"
                       options={options}
-                      placeholder="Select"
+                      placeholder="SELECT"
                       width="100%"
                     />
                   </Grid>
@@ -353,7 +353,7 @@ const PrebookingSKUcreate = () => {
                     >
                       START DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={6}>
@@ -367,7 +367,7 @@ const PrebookingSKUcreate = () => {
                     >
                       END DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
                   </Grid>
                 </Grid>
                 {/* Second Row */}

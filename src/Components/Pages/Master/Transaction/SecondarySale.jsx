@@ -25,6 +25,7 @@ import StatusModel from "../../../Common/StatusModel";
 import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
+import { templateUrl } from "../../../Common/urls";
 const options = [
   { value: "interface", label: "Interface" },
   { value: "batch", label: "Batch" },
@@ -43,9 +44,9 @@ const SecondarySale = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const tabs = [
     { label: "Primary", value: "primary-transaction" },
-    { label: "Intermediary", value: "intermediary" },
+    { label: "Intermediary", value: "intermediary-sale" },
     { label: "Secondary", value: "secondary-sale" },
-    { label: "Tertiary", value: "tertiary" },
+    { label: "Tertiary", value: "tertiary-sale" },
   ];
 
   const templates = [
@@ -55,8 +56,7 @@ const SecondarySale = () => {
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href =
-            "http://moto.nuralsales.com/Excel/Templates/SecondarySales.xlsx";
+          window.location.href = `${templateUrl}SecondarySales.xlsx`;
           setIsLoading(false);
         }, 1000);
       },
@@ -91,8 +91,8 @@ const SecondarySale = () => {
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(error.statusCode);
-      setTitle(error.statusMessage);
+      setStatus(error.status || 500);
+      setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -120,8 +120,8 @@ const SecondarySale = () => {
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(error.statusCode);
-      setTitle(error.statusMessage);
+      setStatus(error.status || 500);
+      setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
     } finally {
       setIsLoading(false);

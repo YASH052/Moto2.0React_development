@@ -50,7 +50,7 @@ import {
 } from "../../../Common/commonFunction";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
-
+import { useNavigate } from "react-router-dom";
 
 // Add this before the ViewAttendanceReport component definition
 const columnMapping = {
@@ -115,6 +115,7 @@ const ViewAttendanceReport = () => {
   const [tableData, setTableData] = useState([]);
 
   const [activeTab, setActiveTab] = React.useState("view-attendance-report");
+  const navigate = useNavigate();
   const tabs = [
     { label: "Attendance Report", value: "view-attendance-report" },
     { label: "Leave Report", value: "leave-report" },
@@ -151,9 +152,14 @@ const ViewAttendanceReport = () => {
   const views = ["View 1", "View 2", "View 3"];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
-  // Update fetchTableData to use single loading state
+  // Add new state variables at the top with other states
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
+  const [isUserNameLoading, setIsUserNameLoading] = useState(false);
+
+  // Update the fetchTableData to use single loading state
   const fetchTableData = async (params) => {
     setIsSearchLoading(true);
     try {
@@ -318,6 +324,7 @@ const ViewAttendanceReport = () => {
   }, []); // Empty dependency array for initial load only
 
   const fetchRoleList = async () => {
+    setIsRoleLoading(true);
     try {
       const res = await GetRoleList();
       if (res.statusCode == 200) {
@@ -325,10 +332,13 @@ const ViewAttendanceReport = () => {
       }
     } catch (error) {
       console.error("Error fetching role list:", error);
+    } finally {
+      setIsRoleLoading(false);
     }
   };
 
   const fetchUserName = async (roleId) => {
+    setIsUserNameLoading(true);
     let body = {
       roleID: roleId,
     };
@@ -339,6 +349,8 @@ const ViewAttendanceReport = () => {
       }
     } catch (error) {
       console.error("Error fetching role list:", error);
+    } finally {
+      setIsUserNameLoading(false);
     }
   };
 
@@ -424,7 +436,7 @@ const ViewAttendanceReport = () => {
       container
       sx={{
         position: "relative",
-        pr: { xs: 0, sm: 0, md: "240px", lg: "260px" },
+        pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
         minHeight: "100vh",
         filter: isDownloadLoading ? "blur(2px)" : "none",
         transition: "filter 0.3s ease",
@@ -447,7 +459,7 @@ const ViewAttendanceReport = () => {
               zIndex: 2000,
               backgroundColor: "#fff",
               paddingBottom: 1,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              // boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
             <Grid item xs={12} mt={1} mb={0} ml={1}>
@@ -465,7 +477,7 @@ const ViewAttendanceReport = () => {
 
           {/* Rest of your existing content */}
 
-          <Grid item xs={12} mt={1}>
+          <Grid item xs={12} mt={0}>
             <Grid container spacing={2} direction="column">
               {defaultLoading ? (
                 <FormSkeleton />
@@ -494,7 +506,7 @@ const ViewAttendanceReport = () => {
                           }}
                           fontWeight={600}
                         >
-                          USER ROLE
+                          ROLE
                         </Typography>
 
                         <NuralAutocomplete
@@ -502,6 +514,7 @@ const ViewAttendanceReport = () => {
                           options={roleList}
                           placeholder="SELECT"
                           width="100%"
+                          loading={isRoleLoading}
                           getOptionLabel={(option) => option.roleName || ""}
                           isOptionEqualToValue={(option, value) =>
                             option?.roleId === value?.roleId
@@ -525,13 +538,14 @@ const ViewAttendanceReport = () => {
                           }}
                           fontWeight={600}
                         >
-                          USER NAME
+                          NAME
                         </Typography>
                         <NuralAutocomplete
                           label="User Name"
                           options={userNameList}
                           placeholder="SELECT"
                           width="100%"
+                          loading={isUserNameLoading}
                           getOptionLabel={(option) =>
                             option.entityTypeName || ""
                           }
@@ -540,14 +554,14 @@ const ViewAttendanceReport = () => {
                           }
                           onChange={(event, newValue) => {
                             handleSearchChange(
-                              "entityTypeId",
+                              "entitytypeUserId",
                               newValue?.userID || 0
                             );
                           }}
                           value={
                             userNameList.find(
                               (option) =>
-                                option.userID === searchParams.entityTypeId
+                                option.userID === searchParams.entitytypeUserId
                             ) || null
                           }
                         />
@@ -782,13 +796,15 @@ const ViewAttendanceReport = () => {
                       .map((_, index) => (
                         <TableRowSkeleton key={index} columns={13} />
                       ))
-                  ) : filteredRows.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={13} align="center">
-                        No records found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
+                  )
+                  //  : filteredRows.length === 0 ? (
+                  //   <TableRow>
+                  //     <TableCell colSpan={13} align="center">
+                  //       No records found
+                  //     </TableCell>
+                  //   </TableRow>
+                  // ) 
+                  : (
                     filteredRows.map((row, index) => (
                       <TableRow key={index} sx={{ fontSize: "10px" }}>
                         <TableCell sx={{ padding: "8px", fontSize: "12px" }}>
@@ -923,7 +939,6 @@ const ViewAttendanceReport = () => {
                             height: "24px",
                             padding: "4px",
                             borderRadius: "50%",
-                            // border: `1px solid ${PRIMARY_BLUE2}`,
                             backgroundColor:
                               rowsPerPage === value
                                 ? PRIMARY_BLUE2
@@ -938,6 +953,9 @@ const ViewAttendanceReport = () => {
                                   : "transparent",
                             },
                             mx: 0.5,
+                            '&:focus': {
+                              outline: 'none'
+                            }
                           }}
                         >
                           {value}
@@ -974,6 +992,11 @@ const ViewAttendanceReport = () => {
                   <IconButton
                     onClick={() => handleChangePage(null, page - 1)}
                     disabled={page === 0}
+                    sx={{
+                      '&:focus': {
+                        outline: 'none'
+                      }
+                    }}
                   >
                     <NavigateBeforeIcon />
                   </IconButton>
@@ -990,6 +1013,9 @@ const ViewAttendanceReport = () => {
                   <IconButton
                     sx={{
                       cursor: "pointer",
+                      '&:focus': {
+                        outline: 'none'
+                      }
                     }}
                     onClick={() => handleChangePage(null, page + 1)}
                     disabled={page >= Math.ceil(totalRecords / rowsPerPage) - 1}
@@ -1006,6 +1032,9 @@ const ViewAttendanceReport = () => {
                       letterSpacing: "4%",
                       textAlign: "center",
                       cursor: "pointer",
+                      '&:focus': {
+                        outline: 'none'
+                      }
                     }}
                     onClick={handleJumpToLast}
                     variant="body2"
@@ -1032,6 +1061,10 @@ const ViewAttendanceReport = () => {
                       border: `1px solid ${PRIMARY_BLUE2}`,
                       backgroundColor: LIGHT_GRAY2,
                       "&::placeholder": {},
+                      outline: 'none',
+                      '&:focus': {
+                        outline: 'none'
+                      }
                     }}
                   />
                   <Grid mt={1} onClick={handlePageSearch}>
@@ -1060,8 +1093,8 @@ const ViewAttendanceReport = () => {
         right={{
           xs: 0,
           sm: 5,
-          md: 5,
-          lg: 5,
+          md: 10,
+          lg: 10,
         }}
         sx={{
           zIndex: 10000,

@@ -10,7 +10,7 @@ import {
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { DARK_PURPLE, LIGHT_GRAY2, PRIMARY_BLUE, PRIMARY_BLUE2 } from "../../Common/colors";
+import { DARK_PURPLE, LIGHT_GRAY2, PRIMARY_BLUE, PRIMARY_BLUE2, ERROR_RED } from "../../Common/colors";
 import NuralTextField from "./NuralTextField";
 
 const StyledAccordion = styled(Accordion)({
@@ -73,6 +73,8 @@ const FieldRow = styled(Grid)({
 
 const TextFieldSection = styled(Grid)({
   flex: "0 0 45%",
+  display: "flex",
+  flexDirection: "column",
 });
 
 const FileUploadSection = styled(Grid)({
@@ -89,6 +91,14 @@ const FieldLabel = styled(Typography)({
 
 const HiddenInput = styled("input")({
   display: "none",
+});
+
+const ErrorText = styled(Typography)({
+  color: ERROR_RED,
+  fontSize: "12px",
+  marginTop: "4px",
+  fontFamily: "Manrope, sans-serif",
+  paddingLeft: "8px",
 });
 
 const NuralKYCAccordion = ({
@@ -112,7 +122,13 @@ const NuralKYCAccordion = ({
   const handleFileChange = (index, event) => {
     const file = event.target.files?.[0];
     if (file && fields[index].onFileSelect) {
-      fields[index].onFileSelect(file);
+      // Create object with both file and path info
+      const fileData = {
+        file: file,
+        name: file.name,
+        path: URL.createObjectURL(file)
+      };
+      fields[index].onFileSelect(fileData);
     }
   };
 
@@ -240,6 +256,8 @@ const NuralKYCAccordion = ({
                   name={field.name}
                   value={field.value}
                   onChange={field.onChange}
+                  error={field.error}
+                  errorMessage={field.errorMessage}
                   {...field.inputProps}
                 />
               </TextFieldSection>
@@ -255,7 +273,9 @@ const NuralKYCAccordion = ({
                   </FieldLabel>
                   <FileUploadBox
                     onClick={() => handleFileClick(index)}
-                    sx={props.fileUploadStyle}
+                    sx={{
+                      ...props.fileUploadStyle,
+                    }}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <Box
@@ -281,7 +301,7 @@ const NuralKYCAccordion = ({
                           ...props.fileNameStyle,
                         }}
                       >
-                        {field.fileName}
+                        {field.fileName || "File Name"}
                       </Typography>
                     </Box>
                     <AttachFileIcon sx={{ color: color }} />
@@ -289,7 +309,7 @@ const NuralKYCAccordion = ({
                   <HiddenInput
                     ref={fileInputRefs.current[index]}
                     type="file"
-                    accept={field.accept || ".pdf,.doc,.docx"}
+                    accept={field.accept || ".pdf,.jpg,.jpeg,.png"}
                     onChange={(e) => handleFileChange(index, e)}
                   />
                 </FileUploadSection>

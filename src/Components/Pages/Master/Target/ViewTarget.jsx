@@ -1,10 +1,10 @@
 import { Grid, Typography, Button, Link } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from '@mui/icons-material/Edit';
+import EditIcon from "@mui/icons-material/Edit";
 import {
   AQUA,
   DARK_PURPLE,
@@ -35,15 +35,43 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import { useNavigate } from "react-router-dom";
+import {
+  GetTargetInfoV2,
+  GetTargetForDropdown,
+  GetTargetNameList,
+} from "../../../Api/Api";
+import { TableRowSkeleton } from "../../../Common/Skeletons";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import NuralReports from "../../NuralCustomComponents/NuralReports";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
+
+const SKELETON_ROWS = 10;
 
 const ViewTarget = () => {
   const [activeTab, setActiveTab] = React.useState("view-target");
+  const [targetData, setTargetData] = useState([]);
+  const [targetForDropdown, setTargetForDropdown] = useState([]);
+  const [targetName, setTargetNameList] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({
+    targetID: 0,
+    targetUserTypeID: 13,
+    targetForID: 0,
+    targetName: "",
+    targetCategoryID: 0,
+    selectionMode: 1,
+    pageIndex: 1,
+    pageSize: 10,
+  });
+
   const navigate = useNavigate();
   const tabs = [
     { label: "Add Target", value: "target" },
     { label: "Search", value: "view-target" },
   ];
-
   const labelStyle = {
     fontSize: "10px",
     lineHeight: "13.66px",
@@ -53,157 +81,285 @@ const ViewTarget = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
+  // Update these state variables for pagination
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
-  });
+  const autocompleteArray = [
+    { id: 1, label: "SKU", value: "SKU" },
+    { id: 2, label: "Brand", value: "Brand" },
+    {
+      id: 3,
+      label: "Product Category (Subcategory)",
+      value: "ProductCategory",
+    },
+    { id: 4, label: "Product (Category)", value: "Product" },
+    { id: 5, label: "Consolidated", value: "Consolidated" },
+  ];
 
-  // Update the dummy data generator
-  const generateDummyData = () => {
-    const targetTypes = ["Type A", "Type B", "Type C"];
-    const categories = ["Category 1", "Category 2", "Category 3"];
-    const targetFors = ["Sales", "Revenue", "Units"];
+  console.log(autocompleteArray);
 
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        targetName: `Target ${index + 1}`,
-        targetFor: targetFors[Math.floor(Math.random() * targetFors.length)],
-        targetFrom: new Date(2024, Math.floor(Math.random() * 12), 1).toLocaleDateString(),
-        targetTo: new Date(2024, Math.floor(Math.random() * 12), 28).toLocaleDateString(),
-        targetCategory: categories[Math.floor(Math.random() * categories.length)],
-        targetType: targetTypes[Math.floor(Math.random() * targetTypes.length)],
-        targetBasedOn: `Metric ${index + 1}`,
-        target: Math.floor(Math.random() * 1000),
-      }));
-  };
+  const handleChangePage = async (event, newPage) => {
+    // Prevent unnecessary API calls if the page is the same
+    if (page === newPage) return;
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
+    // Update page state and searchParams together
     setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Update the handleSort function
-  const handleSort = (columnName) => {
-    let direction = "asc";
-    
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
-      }
-    }
-    
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-      
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-      
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setFilteredRows(sortedRows);
-  };
-
-  // Update the handleSearch function
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.isp ||
-          row.column1.toLowerCase().includes(searchValues.isp.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.city ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.city.toLowerCase())) &&
-        (!searchValues.product ||
-          row.column7
-            .toLowerCase()
-            .includes(searchValues.product.toLowerCase()))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0);
-  };
-
-  // Update the handleSearchClick function
-  const handleSearchClick = () => {
-    const searchValues = {
-      isp: document.querySelector('[placeholder="Select"]')?.value || "",
-      fromDate: document.querySelector('[placeholder="Select"]')?.value || "",
-      toDate: document.querySelector('[placeholder="DD/MM/YY"]')?.value || "",
-      state: document.querySelector('[label="State"]')?.value || "",
-      city: document.querySelector('[label="City"]')?.value || "",
-      product:
-        document.querySelector('[placeholder="Select"]')?.lastValue || "",
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: newPage + 1, // API expects 1-based index
     };
-    handleSearch(searchValues);
+    setSearchParams(updatedParams);
+
+    // Make API call with the updated params directly
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(updatedParams); // Use updatedParams directly
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleReset = () => {
-    // Reset all filters
-    const inputs = document.querySelectorAll("input");
-    inputs.forEach((input) => {
-      input.value = "";
-    });
+  const handleChangeRowsPerPage = async (value) => {
+    // Prevent unnecessary API calls if the page size is the same
+    if (searchParams.pageSize === value) return;
 
-    // Reset the table to show all rows
-    setFilteredRows(rows);
+    // Update states
+    setRowsPerPage(value);
     setPage(0);
-    setSortConfig({ key: null, direction: null });
+
+    // Create updated params
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: 1, // Reset to first page
+      pageSize: value,
+    };
+
+    // Update search params and make API call directly
+    setSearchParams(updatedParams);
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(updatedParams); // Use updatedParams directly
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearchClick = async () => {
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(searchParams);
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExportToExcel = async () => {
+    setIsDownloadLoading(true);
+    let body = {
+      ...searchParams,
+      selectionMode: 0,
+    };
+    try {
+      let res = await GetTargetInfoV2(body);
+      if (res.statusCode == 200) {
+        window.location.href = res.filePathlink;
+        console.log(res.filePathlink);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsDownloadLoading(false);
+    }
+  };
+  const handleReset = () => {
+    setSearchParams({
+      targetID: 0,
+      targetUserTypeID: 13,
+      targetForID: 0,
+      targetName: "",
+      targetCategoryID: 0,
+      selectionMode: 1,
+      pageIndex: 1,
+      pageSize: 10,
+    });
+  };
+
+  const handleSearchChange = (field, value, newvalue) => {
+    setSearchParams((p) => ({
+      ...p,
+      [field]: value,
+    }));
+  };
+
+  const fetchGetTargetForDropdown = async () => {
+    let body = {
+      callType: 4,
+    };
+    try {
+      const response = await GetTargetForDropdown(body);
+      if (response.statusCode == 200) {
+        setTargetForDropdown(response.targetForDropdownList);
+      }
+    } catch (error) {
+      console.error("Error fetching state:", error);
+    }
+  };
+
+  const fetchGetTargetNameForDropdown = async () => {
+    let body = {
+      TargetUserTypeID: 0,
+      targetID: 0,
+      targetName: "",
+      targetUserType: 0,
+      targetStatus: 255 /* 0 = Expired, 1= Running,  255= All */,
+    };
+    try {
+      const response = await GetTargetNameList(body);
+      if (response.statusCode == 200) {
+        setTargetNameList(response.targetNameList);
+      }
+    } catch (error) {
+      console.error("Error fetching state:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGetTargetForDropdown();
+    fetchGetTargetNameForDropdown();
+    handleSearchClick();
+  }, []);
+
+  // Update handleJumpToFirst
+  const handleJumpToFirst = async () => {
+    if (searchParams.pageIndex === 1) return;
+
+    setPage(0);
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: 1,
+    };
+    setSearchParams(updatedParams);
+
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(updatedParams);
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update handleJumpToLast
+  const handleJumpToLast = async () => {
+    const lastPage = Math.ceil(totalRecords / searchParams.pageSize);
+
+    if (searchParams.pageIndex === lastPage) return;
+
+    setPage(lastPage - 1);
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: lastPage,
+    };
+    setSearchParams(updatedParams);
+
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(updatedParams);
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update handleJumpToPage
+  const handleJumpToPage = async (pageNumber) => {
+    if (
+      pageNumber <= 0 ||
+      pageNumber > Math.ceil(totalRecords / searchParams.pageSize) ||
+      pageNumber === searchParams.pageIndex
+    ) {
+      return;
+    }
+
+    setPage(pageNumber - 1);
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: pageNumber,
+    };
+    setSearchParams(updatedParams);
+
+    setIsLoading(true);
+    try {
+      let res = await GetTargetInfoV2(updatedParams);
+      if (res.statusCode == 200) {
+        setTargetData(res.targetList);
+        setTotalRecords(res.totalRecords);
+      }
+    } catch (error) {
+      console.log(error, "error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add this state to track the input value
+  const [jumpToPageInput, setJumpToPageInput] = useState("");
+
+  // Add this handler function for the search icon click
+  const handleSearchIconClick = () => {
+    if (jumpToPageInput) {
+      const pageNumber = parseInt(jumpToPageInput, 10);
+      handleJumpToPage(pageNumber);
+      setJumpToPageInput("");
+    }
   };
 
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        position: "relative",
+        pl: { xs: 1, sm: 1 },
+        pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
+      }}
+    >
       {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
+
       <Grid
         item
         xs={12}
@@ -263,9 +419,26 @@ const ViewTarget = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="Target For"
-                      options={options}
-                      placeholder="Select"
+                      options={targetForDropdown}
+                      placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) => option.entityType || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.entityTypeID === value?.entityTypeID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "targetUserTypeID",
+                          newValue?.entityTypeID || null
+                        );
+                      }}
+                      value={
+                        targetForDropdown.find(
+                          (option) =>
+                            option.entityTypeID ===
+                            searchParams.targetUserTypeID
+                        ) || null
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={4}>
@@ -281,11 +454,27 @@ const ViewTarget = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="Target Name"
-                      options={options}
-                      placeholder="Select"
+                      options={targetName}
+                      placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) => option.targetName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.targetID === value?.targetID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "targetName",
+                          newValue?.targetName || null
+                        );
+                      }}
+                      value={
+                        targetName.find(
+                          (option) =>
+                            option.targetName === searchParams.targetName
+                        ) || null
+                      }
                     />
-                  </Grid>{" "}
+                  </Grid>
                   <Grid item xs={12} sm={12} md={4}>
                     <Typography
                       variant="body1"
@@ -298,14 +487,30 @@ const ViewTarget = () => {
                       TARGET CATEGORY
                     </Typography>
                     <NuralAutocomplete
-                      label="Target Category"
-                      options={options}
-                      placeholder="Select"
+                      label="targetCategory"
+                      options={autocompleteArray}
+                      placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) => option.value || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.id === value?.id
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "targetCategoryID",
+                          newValue?.id || null
+                        );
+                      }}
+                      value={
+                        autocompleteArray.find(
+                          (option) =>
+                            option.id === searchParams.targetCategoryID
+                        ) || null
+                      }
                     />
                   </Grid>
                 </Grid>
-                <Grid
+                {/* <Grid
                   container
                   spacing={2}
                   mb={2}
@@ -326,7 +531,13 @@ const ViewTarget = () => {
                     >
                       FROM DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar
+                      width="100%"
+                      placeholder="DD/MM/YYYY"
+                      value={searchParams.datefrom}
+                      onChange={handleFromDateChange}
+                      error={!!dateError}
+                    />
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={6}>
@@ -340,9 +551,15 @@ const ViewTarget = () => {
                     >
                       TO DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="Select" />
+                    <NuralCalendar
+                      width="100%"
+                      placeholder="DD/MM/YYYY"
+                      value={searchParams.dateTo}
+                      onChange={handleToDateChange}
+                      error={!!dateError}
+                    />
                   </Grid>
-                </Grid>
+                </Grid> */}
                 {/* Second Row */}
 
                 {/* Third Row - Buttons */}
@@ -458,10 +675,8 @@ const ViewTarget = () => {
                   </Grid>
                 </TableCell>
                 <TableCell
-                  onClick={() => handleSort('targetName')}
                   sx={{
                     ...tableHeaderStyle,
-                    cursor: "pointer",
                     position: "sticky",
                     top: "45px",
                     backgroundColor: LIGHT_GRAY2,
@@ -482,26 +697,7 @@ const ViewTarget = () => {
                   }}
                 >
                   <Grid container alignItems="center" spacing={1}>
-                    <Grid item>TARGET NAME</Grid>
-                    <Grid item sx={{ display: "flex", alignItems: "center" }}>
-                      {sortConfig.key === 'targetName' ? (
-                        sortConfig.direction === "asc" ? (
-                          <ArrowUpwardIcon sx={{ fontSize: 16, color: PRIMARY_BLUE2 }} />
-                        ) : (
-                          <ArrowDownwardIcon sx={{ fontSize: 16, color: PRIMARY_BLUE2 }} />
-                        )
-                      ) : (
-                        <Grid
-                          container
-                          direction="column"
-                          alignItems="center"
-                          sx={{ height: 16, width: 16 }}
-                        >
-                          <ArrowUpwardIcon sx={{ fontSize: 12, color: "grey.400" }} />
-                          <ArrowDownwardIcon sx={{ fontSize: 12, color: "grey.400" }} />
-                        </Grid>
-                      )}
-                    </Grid>
+                    <Grid item>NAME</Grid>
                   </Grid>
                 </TableCell>
                 {[
@@ -514,71 +710,54 @@ const ViewTarget = () => {
                   "TARGET",
                   "VIEW",
                   "EDIT",
-                ].map((header, index) => {
-                  // Convert header to camelCase for columnId
-                  const columnId = header.toLowerCase()
-                    .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
-                    .replace(/\s/g, '');
-
-                  return (
-                    <TableCell
-                      key={columnId}
-                      onClick={() =>
-                        header !== "VIEW" && header !== "EDIT" && handleSort(columnId)
-                      }
-                      sx={{
-                        ...tableHeaderStyle,
-                        cursor: header !== "VIEW" && header !== "EDIT" ? "pointer" : "default",
-                        position: "sticky",
-                        top: "45px",
-                        backgroundColor: LIGHT_GRAY2,
-                        zIndex: 100,
-                        padding: "8px 16px",
-                        minWidth: header === "VIEW" || header === "EDIT" ? "60px" : "100px",
-                        "& .MuiGrid-container": {
-                          justifyContent: "flex-start",
-                        },
-                      }}
-                    >
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{header}</Grid>
-                        {header !== "VIEW" && header !== "EDIT" && (
-                          <Grid item sx={{ display: "flex", alignItems: "center" }}>
-                            {sortConfig.key === columnId ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon sx={{ fontSize: 12, color: "grey.400" }} />
-                                <ArrowDownwardIcon sx={{ fontSize: 12, color: "grey.400" }} />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
-                      </Grid>
-                    </TableCell>
-                  );
-                })}
+                ].map((header, index) => (
+                  <TableCell
+                    key={header}
+                    sx={{
+                      ...tableHeaderStyle,
+                      position: "sticky",
+                      top: "45px",
+                      backgroundColor: LIGHT_GRAY2,
+                      zIndex: 100,
+                      padding: "8px 16px",
+                      minWidth:
+                        header === "VIEW" || header === "EDIT"
+                          ? "60px"
+                          : "100px",
+                      "& .MuiGrid-container": {
+                        justifyContent: "flex-start",
+                      },
+                    }}
+                  >
+                    <Grid container alignItems="center" spacing={1}>
+                      <Grid item>{header}</Grid>
+                    </Grid>
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => (
+              {isLoading ? (
+                Array(SKELETON_ROWS)
+                  .fill(0)
+                  .map((_, index) => (
+                    <TableRowSkeleton key={index} columns={11} />
+                  ))
+              ) : targetData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{ color: PRIMARY_BLUE2, fontWeight: 500 }}
+                    >
+                      No Data Available
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                targetData.map((row, index) => (
                   <TableRow
-                    key={row.id}
+                    key={index}
                     sx={{
                       fontSize: "10px",
                       "&:hover": {
@@ -594,7 +773,9 @@ const ViewTarget = () => {
                         width: "50px",
                       }}
                     >
-                      {page * rowsPerPage + index + 1}
+                      {(searchParams.pageIndex - 1) * searchParams.pageSize +
+                        index +
+                        1}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -604,7 +785,7 @@ const ViewTarget = () => {
                         minWidth: "100px",
                       }}
                     >
-                      {row.targetName || "Column 1"}
+                      {row.targetForName || "Column 1"}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -664,7 +845,7 @@ const ViewTarget = () => {
                         minWidth: "100px",
                       }}
                     >
-                      {row.targetBasedOn || "Column 1"}
+                      {row.targetBaseOn || "Column 1"}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -687,7 +868,7 @@ const ViewTarget = () => {
                         justifyContent: "left",
                       }}
                     >
-                      View{" "} &nbsp;
+                      View &nbsp;
                       <VisibilityIcon
                         sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
                       />
@@ -698,17 +879,15 @@ const ViewTarget = () => {
                         fontSize: "10px",
                         textAlign: "left",
                         minWidth: "60px",
-                       
                       }}
                     >
                       <IconButton size="small">
-                        <EditIcon
-                          sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                        />
+                        <EditIcon sx={{ fontSize: 16, color: PRIMARY_BLUE2 }} />
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
             </TableBody>
           </Table>
 
@@ -737,8 +916,8 @@ const ViewTarget = () => {
               >
                 TOTAL RECORDS:{" "}
                 <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                  {filteredRows.length} /{" "}
-                  {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
+                  {totalRecords} /{" "}
+                  {Math.ceil(totalRecords / searchParams.pageSize)} PAGES
                 </span>
               </Typography>
             </Grid>
@@ -760,20 +939,24 @@ const ViewTarget = () => {
                 {[10, 25, 50, 100].map((value) => (
                   <Grid item key={value}>
                     <Button
-                      onClick={() =>
-                        handleChangeRowsPerPage({ target: { value } })
-                      }
+                      onClick={() => handleChangeRowsPerPage(value)}
                       sx={{
                         minWidth: "30px",
                         height: "24px",
                         padding: "4px 8px",
+                        borderRadius: "50%",
                         backgroundColor:
-                          rowsPerPage === value ? PRIMARY_BLUE2 : "transparent",
-                        color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
+                          searchParams.pageSize === value
+                            ? PRIMARY_BLUE2
+                            : "transparent",
+                        color:
+                          searchParams.pageSize === value
+                            ? "#fff"
+                            : PRIMARY_BLUE2,
                         fontSize: "12px",
                         "&:hover": {
                           backgroundColor:
-                            rowsPerPage === value
+                            searchParams.pageSize === value
                               ? PRIMARY_BLUE2
                               : "transparent",
                         },
@@ -792,53 +975,81 @@ const ViewTarget = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
+                outline: "none",
               }}
             >
               <Button
-                onClick={() => setPage(0)}
+                onClick={handleJumpToFirst}
+                disabled={searchParams.pageIndex === 1}
                 sx={{
                   color: PRIMARY_BLUE2,
                   textTransform: "none",
                   fontSize: "10px",
                   fontWeight: 700,
+                  ":focus": {
+                    outline: "none",
+                  },
                 }}
               >
                 JUMP TO FIRST
               </Button>
 
               <IconButton
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-                sx={{ color: PRIMARY_BLUE2 }}
+                onClick={() => handleChangePage(null, page - 1)}
+                disabled={searchParams.pageIndex === 1}
+                sx={{
+                  color: PRIMARY_BLUE2,
+                  ":focus": {
+                    outline: "none",
+                  },
+                }}
               >
                 <NavigateBeforeIcon />
               </IconButton>
 
               <Typography
-                sx={{ fontSize: "10px", fontWeight: 700, color: PRIMARY_BLUE2 }}
+                sx={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: PRIMARY_BLUE2,
+                  ":focus": {
+                    outline: "none",
+                  },
+                }}
               >
-                PAGE {page + 1}
+                PAGE {searchParams.pageIndex}
               </Typography>
 
               <IconButton
-                onClick={() => setPage(page + 1)}
+                onClick={() => handleChangePage(null, page + 1)}
                 disabled={
-                  page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
+                  searchParams.pageIndex >=
+                  Math.ceil(totalRecords / searchParams.pageSize)
                 }
-                sx={{ color: PRIMARY_BLUE2 }}
+                sx={{
+                  color: PRIMARY_BLUE2,
+                  ":focus": {
+                    outline: "none",
+                  },
+                }}
               >
                 <NavigateNextIcon />
               </IconButton>
 
               <Button
-                onClick={() =>
-                  setPage(Math.ceil(filteredRows.length / rowsPerPage) - 1)
+                onClick={handleJumpToLast}
+                disabled={
+                  searchParams.pageIndex >=
+                  Math.ceil(totalRecords / searchParams.pageSize)
                 }
                 sx={{
                   color: PRIMARY_BLUE2,
                   textTransform: "none",
                   fontSize: "10px",
                   fontWeight: 700,
+                  ":focus": {
+                    outline: "none",
+                  },
                 }}
               >
                 JUMP TO LAST
@@ -847,13 +1058,13 @@ const ViewTarget = () => {
               <input
                 type="text"
                 placeholder="JUMP TO PAGE"
-                onChange={(e) => {
-                  const newPage = parseInt(e.target.value, 10) - 1;
-                  if (
-                    newPage >= 0 &&
-                    newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                  ) {
-                    setPage(newPage);
+                value={jumpToPageInput}
+                onChange={(e) => setJumpToPageInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    const pageNumber = parseInt(e.target.value, 10);
+                    handleJumpToPage(pageNumber);
+                    setJumpToPageInput("");
                   }
                 }}
                 style={{
@@ -864,18 +1075,77 @@ const ViewTarget = () => {
                   border: `1px solid ${PRIMARY_BLUE2}`,
                   backgroundColor: "#F8F9FD",
                   fontSize: "10px",
+                  outline: "none",
+                  "&:focus": {
+                    outline: "none",
+                  },
                 }}
               />
-              <IconButton sx={{ color: PRIMARY_BLUE2 }}>
+              <Grid mt={1}>
                 <img
                   src="./Icons/footerSearch.svg"
-                  alt="search"
-                  style={{ width: 20, height: 20 }}
+                  style={{ cursor: "pointer" }}
+                  alt="arrow"
+                  onClick={handleSearchIconClick}
                 />
-              </IconButton>
+              </Grid>
             </Grid>
           </Grid>
         </TableContainer>
+      </Grid>
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={5}
+        mt={1}
+        position={"fixed"}
+        right={{
+          xs: 0,
+          sm: 5,
+          md: 5,
+          lg: 12,
+        }}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <SelectionPanel columns={""} views={""} />
+          </Grid>
+          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <NuralReports title="Reports" views={""} />
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={handleExportToExcel}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </Grid>
   );

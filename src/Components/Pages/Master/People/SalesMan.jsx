@@ -33,10 +33,7 @@ const options = [
   { value: "all", label: "ALL" },
   { value: "custom", label: "CUSTOM" },
 ];
-const tabs = [
-  { label: "SalesMan", value: "create-SalesMan" },
-  //   { label: "Search", value: "view-SalesMan" },
-];
+
 
 const templates = [
   {
@@ -46,7 +43,13 @@ const templates = [
   },
 ];
 const SalesMan = () => {
-  const [activeTab, setActiveTab] = React.useState("create-SalesMan");
+  const [activeTab, setActiveTab] = React.useState("create-salesman");
+  const [tabbs, setTabbs] = React.useState([
+    { label: "Org People", value: "org-people" },
+    { label: "ISP", value: "add-isp" },
+    { label: "Ranking Weightage", value: "ranking-weightage" },
+    { label: "Salesman", value: "create-salesman" },
+  ]);
   const [selectedValue1, setSelectedValue1] = useState("");
   const [selectedValue2, setSelectedValue2] = useState("");
   const navigate = useNavigate();
@@ -71,12 +74,12 @@ const SalesMan = () => {
           }}
         >
           <Grid item xs={12} mt={1} mb={0} ml={1}>
-            <BreadcrumbsHeader pageTitle="SalesMan" />
+            <BreadcrumbsHeader pageTitle="People" />
           </Grid>
 
           <Grid item xs={12} ml={1}>
             <TabsBar
-              tabs={tabs}
+              tabs={tabbs}
               activeTab={activeTab}
               onTabChange={handleTabChange}
             />
@@ -93,7 +96,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",
@@ -115,7 +118,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",
@@ -136,7 +139,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",
@@ -157,7 +160,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",
@@ -181,7 +184,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",
@@ -202,7 +205,7 @@ const SalesMan = () => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: DARK_PURPLE,
+                          color: PRIMARY_BLUE2,
                           fontFamily: "Manrope",
                           fontWeight: 400,
                           fontSize: "10px",

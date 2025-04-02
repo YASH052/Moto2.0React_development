@@ -11,7 +11,7 @@ import ForgotPasswordForm from "../Pages/Auth/ForgotPasswordForm";
 import ResetPasswordForm from "../Pages/Auth/ResetPasswordForm";
 
 // Private Pages
-import TestCompo from "../Pages/NuralCustomComponents/TestCompo";
+import TestCompo from "../Pages/NuralCustomComponents/TestCompo.jsx";
 import Transactions from "../Pages/Master/Transaction/Transactions";
 import PrimaryTransactionUpload from "../Pages/Master/Transaction/PrimaryTransactionUpload";
 import IspUpload from "../Pages/Master/Isp/IspUpload";
@@ -22,7 +22,6 @@ import Reports from "../Pages/Master/Reports/Reports";
 import SaleReports from "../Pages/Master/Reports/SaleReports";
 import RetailerExcel from "../Pages/Master/SalesChannel/RetailerExcel";
 
-import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
 import AddRetailer from "../Pages/Master/SalesChannel/AddRetailer";
 import AddSalesChannel from "../Pages/Master/SalesChannel/AddSalesChannel";
 import LoginFormHome from "../Pages/Auth/Login/LoginFormHome";
@@ -49,7 +48,6 @@ import CreateScheme from "../Pages/Master/Scheme/CreateScheme";
 import ViewScheme from "../Pages/Master/Scheme/ViewScheme";
 import SKU from "../Pages/Master/Product/SKU";
 import Model from "../Pages/Master/Product/Model";
-
 import SubCategory from "../Pages/Master/Product/SubCategory";
 import BrandPage from "../Pages/Master/Product/BrandPage";
 import CategoryPage from "../Pages/Master/Product/CategoryPage";
@@ -61,10 +59,9 @@ import Brand from "../Pages/Master/Competiton/Brand";
 import Category from "../Pages/Master/Competiton/Category";
 import CompModel from "../Pages/Master/Competiton/CompModel";
 import CompUpload from "../Pages/Master/Competiton/CompUpload";
-import PriceListView from "../Pages/Master/PriceMaster/PriceListView";
-import PriceListName from "../Pages/Master/PriceMaster/PriceListName";
+
 import PrimaryToTertiary from "../Pages/Master/Reports/PrimaryToTertiary";
-import ViewRetailer from "../Pages/Master/SalesChannel/ViewRetailer";
+
 import ViewSalesChannelStockSB from "../Pages/Master/Reports/ViewSalesChannelStockSB";
 import StockAdjustUpload from "../Pages/Master/Reports/StockAdjustUpload";
 import UnblockFinance from "../Pages/Master/Reports/UnblockFinance";
@@ -79,9 +76,60 @@ import AddOrganisation from "../Pages/Master/People/AddOrganisation";
 import UserLaggards from "../Pages/Master/Reports/UserLaggards";
 import OrganisationHierarchyReport from "../Pages/Master/Reports/OrganisationHierarchyReport";
 import Color from "../Pages/Master/Product/Color";
-import L1L2Issue from "../Pages/Master/L1&L2/L1L2Issue";
+import L1L2Issue from "../Pages/Master/Module/Brand/L1L2Issue";
 import ProductBulkUpload from "../Pages/Master/Product/ProductBulkUpload";
+
 import MasterSetting from "../Pages/Master/MasteSetting";
+import LeaveReport from "../Pages/Master/Reports/LeaveReport";
+import State from "../Pages/Master/Geography/State";
+import GeographyBulkUpload from "../Pages/Master/Geography/GeographyBulkUpload";
+import ViewAgency from "../Pages/Master/ManageAgency/ViewAgency";
+import SalesChannelView from "../Pages/Master/SalesChannel/SalesChannelView";
+import RetailerView from "../Pages/Master/SalesChannel/RetailerView";
+import SAPIntegiration from "../Pages/Master/Others/SAPIntegiration";
+import IntermediarySale from "../Pages/Master/Transaction/IntermediarySale";
+import SecondarySaleReturn from "../Pages/Master/Transaction/SecondrySaleReturn";
+import IntermediarySaleReturn from "../Pages/Master/Transaction/IntermediarySaleReturn";
+import { ChangePassword } from "../Pages/Auth/ChangePassword";
+import { RankingWeightageCreate } from "../Pages/Master/People/RankingWeightageCreate";
+import RegingtonUpload from "../Pages/Master/Reports/RedingtonUpload";
+import PrimarySaleReturn from "../Pages/Master/Transaction/PrimarySaleReturn";
+import DownloadStockReport from "../Pages/Master/Reports/DownloadStockReport";
+import Banner from "../Pages/Master/Organization/Announcement/Banner";
+import L1L2IssueReport from "../Pages/Master/Retail/L1L2IssueReport";
+import AInorms from "../Pages/Master/Module/Inventory/AInorms";
+import StockAdjustmentReason from "../Pages/Master/Module/Inventory/StockAdjustmentReason";
+import Grn from "../Pages/Master/Module/Inventory/Grn";
+import FinanceApiBlock from "../Pages/Master/Module/Finance/FinanceApiBlock";
+import ServifyOffer from "../Pages/Master/Module/Finance/ServifyOffer";
+import LnDCategory from "../Pages/Master/Module/L&D/LnDCategory";
+import DemoCat from "../Pages/Master/Module/Brand/DemoCat";
+import MezAudit from "../Pages/Master/Module/Brand/MezAudit";
+import IspAudit from "../Pages/Master/Module/Brand/IspAudit";
+import VisibilityAudit from "../Pages/Master/Module/Brand/VisibilityAudit";
+import StoreOps from "../Pages/Master/Module/Brand/StoreOps";
+import Organization from "../Pages/Master/Organization/Organization";
+import Bulletin from "../Pages/Master/Organization/Bulletin/Bulletin";
+import PAN from "../Pages/Master/Organization/CompanyInfo/PAN";
+import GST from "../Pages/Master/Organization/CompanyInfo/GST";
+import Registration from "../Pages/Master/Organization/CompanyInfo/Registration";
+import CIN from "../Pages/Master/Organization/CompanyInfo/CIN";
+import Country from "../Pages/Master/Geography/Country";
+import Region from "../Pages/Master/Geography/Region";
+import Area from "../Pages/Master/Geography/Area";
+import RolesEntity from "../Pages/Master/Organization/Hierarchy/RolesEntity";
+import TeamRoles from "../Pages/Master/Organization/Hierarchy/TeamRoles";
+import Reporting from "../Pages/Master/Organization/Hierarchy/Reporting";
+import Relations from "../Pages/Master/Organization/Hierarchy/Relations";
+import View from "../Pages/Master/Organization/Hierarchy/View";
+import QCategory from "../Pages/Master/Organization/Query/QCategory";
+import QMapping from "../Pages/Master/Organization/Query/QMapping";
+import HoDashboard from "../Pages/Dashboard/HoDashboard";
+import RATDashboard from "../Pages/Dashboard/RATDashboard.jsx";
+import ChannelsDashBoard from "../Pages/Dashboard/ChannelsDashBoard.jsx";
+import RATChannelDashBoard from "../Pages/Dashboard/RATChannelDasboard.jsx";
+import AvailabilityDashboard from "../Pages/Dashboard/AvailabilityDashboard.jsx";
+import RATAvailability from "../Pages/Dashboard/RATAvailability.jsx";
 const AllRoutes = () => {
   return (
     <Routes>
@@ -92,116 +140,180 @@ const AllRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPasswordForm />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
+        <Route path="/change-password" element={<ChangePassword />} />
       </Route>
 
       {/* Private Routes */}
-      {/* <Route element={<PrivateRoute />}> */}
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/master-setting" element={<MasterSetting />} />
+      <Route element={<PrivateRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/ho-dashboard" element={<HoDashboard />} />
+        <Route path="/rat-dashboard" element={<RATDashboard />} />
+        <Route path="/channels-dashboard" element={<ChannelsDashBoard />} />
+        <Route
+          path="/rat-channel-dashboard"
+          element={<RATChannelDashBoard />}
+        />
+        <Route
+          path="/availability-dashboard"
+          element={<AvailabilityDashboard />}
+        />
+        <Route path="/rat-availability" element={<RATAvailability />} />
+        <Route path="/settings" element={<MasterSetting />} />
+        <Route path="/transaction" element={<Transactions />} />
+        <Route
+          path="/primary-transaction"
+          element={<PrimaryTransactionUpload />}
+        />
+        <Route path="/intermediary-sale" element={<IntermediarySale />} />
+        <Route
+          path="/secondary-sale-return"
+          element={<SecondarySaleReturn />}
+        />
+        <Route path="/product" element={<Product />} />
+        <Route path="/target" element={<Target />} />
+        <Route path="/view-target" element={<ViewTarget />} />
+        <Route path="/price" element={<Pricemaster />} />
+        <Route path="/add-agancy" element={<AddAgancy />} />
+        <Route path="/search-agancy" element={<ViewAgency />} />
+        <Route path="/isp-upload" element={<IspUpload />} />
+        <Route path="/add-isp" element={<AddIsp />} />
+        <Route path="/view-retailer" element={<RetailerView />} />
+        <Route path="/sales-bulk-upload" element={<SalesBulkUpload />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/primary-to-tertiary" element={<PrimaryToTertiary />} />
+        <Route path="/sales-report" element={<SaleReports />} />
+        <Route path="/retailer-excelUpload" element={<RetailerExcel />} />
+        <Route path="/sales-channel-view" element={<SalesChannelView />} />
+        <Route path="/sap-integration" element={<SAPIntegiration />} />
+        <Route path="/add-retailer" element={<AddRetailer />} />
+        <Route path="/add-sales-channel" element={<AddSalesChannel />} />
+        <Route path="/sales-excel" element={<SalesExcel />} />
+        <Route path="/isp-sales-report" element={<IspSaleReport />} />
+        <Route path="/counter-share-report" element={<CounterShareReport />} />
+        <Route
+          path="/competition-sales-report"
+          element={<CompetitonSalesReport />}
+        />
+        <Route
+          path="/view-attendance-report"
+          element={<ViewAttendanceReport />}
+        />
+        <Route path="/leave-report" element={<LeaveReport />} />
+        <Route
+          path="/stock-adjustment-upload"
+          element={<StockAdjustmentUpload />}
+        />
+        <Route
+          path="/stock-adjustment-report"
+          element={<StockAdjustmentReport />}
+        />
+        <Route
+          path="/activation-file-received"
+          element={<ActivationFileRecieved />}
+        />
+        <Route
+          path="/intermediary-sale-return"
+          element={<IntermediarySaleReturn />}
+        />
+        <Route path="/ranking-weightage" element={<RankingWeightageCreate />} />
+        <Route path="/brand" element={<BrandPage />} />
+        <Route path="/category" element={<CategoryPage />} />
+        <Route path="/sub-category" element={<SubCategory />} />
+        <Route
+          path="/prebooking-sku-create"
+          element={<PrebookingSKUcreate />}
+        />
+        <Route path="/prebooking-sku-view" element={<PrebookingSKUview />} />
+        <Route path="/create-scheme" element={<CreateScheme />} />
+        <Route path="/view-scheme" element={<ViewScheme />} />
+        <Route path="/sku" element={<SKU />} />
+        <Route path="/model" element={<Model />} />
+        <Route path="/city" element={<City />} />
+        <Route path="/state" element={<State />} />
+        <Route path="/country" element={<Country />} />
+        <Route path="/region" element={<Region />} />
+        <Route path="/area" element={<Area />} />
+        <Route
+          path="/geography-bulk-upload"
+          element={<GeographyBulkUpload />}
+        />
+        <Route path="/competition-brand" element={<Brand />} />
+        <Route path="/competition-category" element={<Category />} />
+        <Route path="/competition-model" element={<CompModel />} />
+        <Route path="/product-bulk-upload" element={<ProductBulkUpload />} />
+        <Route path="/color" element={<Color />} />
+        <Route path="/l1l2-issue" element={<L1L2Issue />} />
+        <Route path="/competiton-upload" element={<CompUpload />} />
+        <Route path="/competition-price-band" element={<PriceBand />} />
+        <Route path="/serial-no-moment" element={<SerialNoMoment />} />
+        <Route
+          path="/view-sales-channel-stock-sb"
+          element={<ViewSalesChannelStockSB />}
+        />
+        <Route path="/stock-adjust-upload" element={<StockAdjustUpload />} />
+        <Route path="/unblock-finance" element={<UnblockFinance />} />
+        <Route path="/module" element={<Module />} />
+        <Route path="/leave-type" element={<LeaveType />} />
+        <Route path="/leave-allocation" element={<LeaveAllocation />} />
+        <Route path="/manage" element={<Manage />} />
+        <Route path="/create-salesman" element={<SalesMan />} />
+        <Route path="/redington-file" element={<RedingtonFile />} />
+        <Route path="/secondary-sale" element={<SecondarySale />} />
+        <Route path="/sales-channel-stock" element={<SalesChannelStockSB />} />
+        <Route path="/user-laggards" element={<UserLaggards />} />
+        <Route
+          path="/org-hierarchy-mapping-report"
+          element={<OrganisationHierarchyReport />}
+        />
+        <Route path="/org-people" element={<AddOrganisation />} />
+        <Route path="/redington-upload" element={<RegingtonUpload />} />
+        <Route path="/primary-sale-return" element={<PrimarySaleReturn />} />
+        <Route
+          path="/download-stock-report"
+          element={<DownloadStockReport />}
+        />
+        <Route path="/banner" element={<Banner />} />
+        <Route path="/l1l2-issue-report" element={<L1L2IssueReport />} />
 
-      {/* </Route> */}
+        <Route path="/ai-norms" element={<AInorms />} />
+        <Route
+          path="/stock-adjustment-reason"
+          element={<StockAdjustmentReason />}
+        />
+        <Route path="/grn" element={<Grn />} />
 
-      <Route path="/transaction" element={<Transactions />} />
-      <Route
-        path="/primary-transaction"
-        element={<PrimaryTransactionUpload />}
-      />
-      <Route path="/product" element={<Product />} />
-      <Route path="/target" element={<Target />} />
-      <Route path="/view-target" element={<ViewTarget />} />
-      <Route path="/create-price" element={<Pricemaster />} />
-      <Route path="/price-list-view" element={<PriceListView />} />
-      <Route path="/price-list-name" element={<PriceListName />} />
-      <Route path="/add-agancy" element={<AddAgancy />} />
-      <Route path="/isp-upload" element={<IspUpload />} />
-      <Route path="/add-isp" element={<AddIsp />} />
-      <Route path="/view-retailer" element={<ViewRetailer />} />
-      <Route path="/sales-bulk-upload" element={<SalesBulkUpload />} />
-      <Route path="/reports" element={<Reports />} />
-      <Route path="/primary-to-tertiary" element={<PrimaryToTertiary />} />
-      <Route path="/sales-report" element={<SaleReports />} />
-      <Route path="/retailer-excelUpload" element={<RetailerExcel />} />
-      <Route path="/sales-channel-view" element={<SalesChannelView />} />
-      <Route path="/add-retailer" element={<AddRetailer />} />
-      <Route path="/add-sales-channel" element={<AddSalesChannel />} />
-      <Route path="/sales-excel" element={<SalesExcel />} />
-      <Route path="/isp-sales-report" element={<IspSaleReport />} />
-      <Route path="/counter-share-report" element={<CounterShareReport />} />
-      <Route
-        path="/competition-sales-report"
-        element={<CompetitonSalesReport />}
-      />
-      <Route
-        path="/view-attendance-report"
-        element={<ViewAttendanceReport />}
-      />
-      <Route
-        path="/stock-adjustment-upload"
-        element={<StockAdjustmentUpload />}
-      />
-      <Route
-        path="/stock-adjustment-report"
-        element={<StockAdjustmentReport />}
-      />
-      <Route
-        path="/activation-file-received"
-        element={<ActivationFileRecieved />}
-      />
-      <Route path="/brand" element={<BrandPage />} />
-      <Route path="/category" element={<CategoryPage />} />
-      <Route path="/sub-category" element={<SubCategory />} />
-      <Route path="/prebooking-sku-create" element={<PrebookingSKUcreate />} />
-      <Route path="/prebooking-sku-view" element={<PrebookingSKUview />} />
-      <Route path="/create-scheme" element={<CreateScheme />} />
-      <Route path="/view-scheme" element={<ViewScheme />} />
-      <Route path="/sku" element={<SKU />} />
-      <Route path="/model" element={<Model />} />
+        <Route path="/finance-api-block" element={<FinanceApiBlock />} />
+        <Route path="/servify-offer" element={<ServifyOffer />} />
 
-      <Route path="/city" element={<City />} />
+        <Route path="/lnd-category" element={<LnDCategory />} />
 
-      <Route path="/competition-brand" element={<Brand />} />
-      <Route path="/competition-category" element={<Category />} />
-      <Route path="/competition-model" element={<CompModel />} />
-      <Route path="/product-bulk-upload" element={<ProductBulkUpload />} />
+        <Route path="/demo-categorization" element={<DemoCat />} />
 
-      <Route path="/color" element={<Color />} />
+        <Route path="/mez-audit" element={<MezAudit />} />
+        <Route path="/isp-audit" element={<IspAudit />} />
+        <Route path="/visibility-audit" element={<VisibilityAudit />} />
+        <Route path="/store-ops" element={<StoreOps />} />
 
-      <Route path="/l1l2-issue" element={<L1L2Issue />} />
+        <Route path="/organization" element={<Organization />} />
 
-      <Route path="/competiton-upload" element={<CompUpload />} />
-      <Route path="/competition-price-band" element={<PriceBand />} />
+        <Route path="/bulletin" element={<Bulletin />} />
 
-      <Route path="/serial-no-moment" element={<SerialNoMoment />} />
-      <Route
-        path="/view-sales-channel-stock-sb"
-        element={<ViewSalesChannelStockSB />}
-      />
-      <Route path="/stock-adjust-upload" element={<StockAdjustUpload />} />
-      <Route path="/unblock-finance" element={<UnblockFinance />} />
+        <Route path="/pan" element={<PAN />} />
+        <Route path="/gst" element={<GST />} />
+        <Route path="/registration" element={<Registration />} />
+        <Route path="/cin" element={<CIN />} />
 
-      <Route path="/module" element={<Module />} />
-      <Route path="/leave-type" element={<LeaveType />} />
-      <Route path="/leave-allocation" element={<LeaveAllocation />} />
-      <Route path="/manage" element={<Manage />} />
-      <Route path="/create-salesman" element={<SalesMan />} />
+        <Route path="/roles-entity" element={<RolesEntity />} />
+        <Route path="/team-roles" element={<TeamRoles />} />
+        <Route path="/reporting" element={<Reporting />} />
+        <Route path="/relations" element={<Relations />} />
+        <Route path="/view" element={<View />} />
 
-      <Route path="/redington-file" element={<RedingtonFile />} />
-      <Route path="/secondary-sale" element={<SecondarySale />} />
-      <Route path="/sales-channel-stock" element={<SalesChannelStockSB />} />
+        <Route path="/q-category" element={<QCategory />} />
+        <Route path="/q-mapping" element={<QMapping />} />
+      </Route>
 
-      <Route path="/user-laggards" element={<UserLaggards />} />
-      <Route
-        path="/org-hierarchy-mapping-report"
-        element={<OrganisationHierarchyReport />}
-      />
-
-      <Route path="/org-people" element={<AddOrganisation />} />
-      <Route path="/add-user" element={<AddUser />} />
-      <Route path="/view-user" element={<ViewUser />} />
-      <Route path="/add-location" element={<AddLocation />} />
-      <Route path="/view-location" element={<ViewLoaction />} />
       {/* Default and Not Found Routes */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

@@ -1,5 +1,5 @@
 import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -7,12 +7,9 @@ import {
   AQUA,
   DARK_PURPLE,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -23,24 +20,43 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
   IconButton,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import { useNavigate } from "react-router-dom";
+import { BindEntityList, GetUserLaggardReport } from "../../../Api/Api";
+import { TableRowSkeleton } from "../../../Common/Skeletons";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
 import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
 import NuralReports from "../../NuralCustomComponents/NuralReports";
 import NuralExport from "../../NuralCustomComponents/NuralExport";
-import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+
+const statusArray = [
+  { value: -1, label: "All Records" },
+  { value: 0, label: "Inactive" },
+  { value: 1, label: "Active" },
+];
 const UserLaggards = () => {
-  const [activeTab, setActiveTab] = React.useState("user-laggards");
+  const [activeTab, setActiveTab] = React.useState("user-laggards"); 
+  const [isLoading, setLoading] = useState(false);
+  const [bindEntityList, setBindEntityList] = useState([]);
+  const [userLaggardReport, setUserLaggardReport] = useState([]);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+  const [searchParams, setSearchParams] = useState({
+    salesChannelID: 0,
+    status: -1,
+    orgHierarchyId: 0,
+    pageSize: 10,
+    pageIndex: 1
+  });
 
   const tabs = [
     { label: "User Tracking", value: "user-tracking" },
@@ -52,6 +68,7 @@ const UserLaggards = () => {
       value: "org-hierarchy-mapping-report",
     },
   ];
+
   const navigate = useNavigate();
   const labelStyle = {
     fontSize: "10px",
@@ -74,86 +91,40 @@ const UserLaggards = () => {
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
-  });
-
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const parents = ["Parent 1", "Parent 2", "Parent 3", "Parent 4", "Parent 5"];
-    const channelTypes = ["Type A", "Type B", "Type C", "Type D"];
-    const channels = ["Channel 1", "Channel 2", "Channel 3", "Channel 4"];
-    const channelCodes = ["CODE-001", "CODE-002", "CODE-003", "CODE-004"];
-    const transactionTypes = ["Type 1", "Type 2", "Type 3", "Type 4"];
-    const statuses = ["Active", "Inactive", "Pending", "Suspended"];
-
-    // Generate 50 rows of realistic data
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: index + 1,
-        parent: parents[Math.floor(Math.random() * parents.length)],
-        channelType: channelTypes[Math.floor(Math.random() * channelTypes.length)],
-        channel: channels[Math.floor(Math.random() * channels.length)],
-        channelCode: channelCodes[Math.floor(Math.random() * channelCodes.length)],
-        transactionType: transactionTypes[Math.floor(Math.random() * transactionTypes.length)],
-        lastLogin: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-        lastTransaction: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-        ageingInDays: Math.floor(Math.random() * 365),
-        status: statuses[Math.floor(Math.random() * statuses.length)]
-      }));
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    setCurrentPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newPageSize = parseInt(event.target.value, 10);
+    setSearchParams(prev => ({
+      ...prev,
+      pageSize: newPageSize,
+      pageIndex: 1
+    }));
+    setCurrentPage(1);
   };
 
-  // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
 
-    // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
         direction = "desc";
       } else {
-        // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
         return;
       }
     }
 
     setSortConfig({ key: columnName, direction });
 
-    const sortedRows = [...filteredRows].sort((a, b) => {
+    const sortedData = [...userLaggardReport].sort((a, b) => {
       if (!a[columnName]) return 1;
       if (!b[columnName]) return -1;
 
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
+      const aValue = a[columnName]?.toString().toLowerCase() || '';
+      const bValue = b[columnName]?.toString().toLowerCase() || '';
 
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
@@ -164,41 +135,9 @@ const UserLaggards = () => {
       return 0;
     });
 
-    setFilteredRows(sortedRows);
+    setUserLaggardReport(sortedData);
   };
 
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
-  };
-
-  // Update the search button click handler
   const handleSearchClick = () => {
     const searchValues = {
       saleType: document.querySelector('[name="saleType"]')?.value || "",
@@ -210,6 +149,117 @@ const UserLaggards = () => {
     };
     handleSearch(searchValues);
   };
+  const handleSearchChange = (field, value, newvalue) => {
+    setSearchParams((p) => ({
+      ...p,
+      [field]: value,
+    }));
+  };
+  const handlePostBindEntityList = async () => {
+    let body = {
+      saleChannelID: 0,
+      countryID: 1,
+      stateid: 105,
+    };
+    try {
+      const response = await BindEntityList(body);
+
+      if (response.statusCode == 200) {
+        setBindEntityList(response.getBindEntityList);
+      }
+    } catch (error) {
+      console.error("error fetching data");
+    }
+  };
+
+  const handleReset = async () => {
+    const resetParams = {
+      salesChannelID: 0,
+      countryID: 1,
+      stateid: 105,
+      status: -1,
+    };
+
+    setSearchParams(resetParams);
+    setSortConfig({ key: null, direction: null });
+  };
+
+  const handleSearch = () => {
+    setLoading(true);
+    const handlePostGetUserLaggardReport = async () => {
+      let body = {
+        ...searchParams,
+        pageIndex: currentPage,
+      };
+
+      try {
+        const response = await GetUserLaggardReport(body);
+        if (response.statusCode == 200) {
+          setUserLaggardReport(response.reportList);
+          setTotalRecords(response.totalRecords);
+        }
+      } catch (error) {
+        console.error("error fetching data");
+      }
+      setLoading(false);
+    };
+    handlePostGetUserLaggardReport();
+  };
+
+  const handleExportToExcel = async () => {
+    setIsDownloadLoading(true);
+    let body2 = {
+      ...searchParams,
+      pageIndex: -1,
+    };
+    try {
+      const response = await GetUserLaggardReport(body2);
+
+      if (response.statusCode == 200) {
+        window.location.href = response.reportLink;
+      }
+    } catch (error) {
+      console.error("error Downloading Excel");
+    }
+    setIsDownloadLoading(false);
+  };
+
+  const handleJumpToFirst = () => {
+    setCurrentPage(1);
+    setSearchParams(prev => ({ ...prev, pageIndex: 1 }));
+    handleSearch();
+  };
+
+  const handleJumpToLast = () => {
+    const lastPage = Math.ceil(totalRecords / searchParams.pageSize);
+    setCurrentPage(lastPage);
+    setSearchParams(prev => ({ ...prev, pageIndex: lastPage }));
+    handleSearch();
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    setSearchParams(prev => ({ ...prev, pageIndex: newPage }));
+  };
+
+  const handlePageInputChange = (e) => {
+    const value = parseInt(e.target.value);
+    const maxPages = Math.ceil(totalRecords / searchParams.pageSize);
+    
+    if (value && value > 0 && value <= maxPages) {
+      setCurrentPage(value);
+      setSearchParams(prev => ({ ...prev, pageIndex: value }));
+      handleSearch();
+    }
+  };
+
+  useEffect(() => {
+    handlePostBindEntityList();
+  }, []);
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchParams, currentPage]);
 
   return (
     <>
@@ -218,10 +268,10 @@ const UserLaggards = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1,}, // Add padding to make space for activity panel
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
         }}
       >
-        {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
         <Grid
           item
           xs={12}
@@ -246,7 +296,6 @@ const UserLaggards = () => {
           </Grid>
         </Grid>
 
-        {/* Rest of the content */}
         <Grid
           container
           spacing={0}
@@ -261,7 +310,6 @@ const UserLaggards = () => {
                   title="Stock Adjustment   "
                   backgroundColor={LIGHT_GRAY2}
                 >
-                  {/* First Row - 3 NuralAutocomplete */}
                   <Grid
                     container
                     spacing={2}
@@ -283,10 +331,29 @@ const UserLaggards = () => {
                         ND
                       </Typography>
                       <NuralAutocomplete
-                        width="100%"
-                        label="nd"
-                        options={options}
+                        label="ND"
+                        options={bindEntityList}
                         placeholder="SELECT"
+                        width="100%"
+                        getOptionLabel={(option) =>
+                          option.salesChannelName || ""
+                        }
+                        isOptionEqualToValue={(option, value) =>
+                          option?.salesChannelID === value?.salesChannelID
+                        }
+                        onChange={(event, newValue) => {
+                          handleSearchChange(
+                            "salesChannelID",
+                            newValue?.salesChannelID || 0
+                          );
+                        }}
+                        value={
+                          bindEntityList.find(
+                            (option) =>
+                              option.salesChannelID ===
+                              searchParams.salesChannelID
+                          ) || null
+                        }
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={6} lg={6}>
@@ -301,21 +368,31 @@ const UserLaggards = () => {
                         STATUS
                       </Typography>
                       <NuralAutocomplete
-                        width="100%"
                         label="Status"
-                        options={options}
+                        options={statusArray}
                         placeholder="SELECT"
+                        width="100%"
+                        getOptionLabel={(option) => option.label || ""}
+                        isOptionEqualToValue={(option, value) =>
+                          option?.value === value?.value
+                        }
+                        onChange={(event, newValue) => {
+                          handleSearchChange("status", newValue?.value || 0);
+                        }}
+                        value={
+                          statusArray.find(
+                            (option) => option.value === searchParams.status
+                          ) || null
+                        }
                       />
                     </Grid>
                   </Grid>
 
-                  {/* Third Row - Buttons */}
                   <Grid
                     container
                     spacing={2}
                     sx={{
                       flexDirection: { xs: "column", sm: "row" },
-                      // gap: { xs: 2, sm: 2 },
                     }}
                   >
                     <Grid item xs={12} sm={3} md={1}>
@@ -326,7 +403,7 @@ const UserLaggards = () => {
                         fontSize="12px"
                         height="36px"
                         borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
+                        onClick={handleReset}
                         width="100%"
                       />
                     </Grid>
@@ -339,6 +416,7 @@ const UserLaggards = () => {
                         color="#fff"
                         width="100%"
                         fontSize="12px"
+                        onClick={handleSearch}
                       >
                         SEARCH
                       </NuralTextButton>
@@ -350,14 +428,13 @@ const UserLaggards = () => {
           </Grid>
         </Grid>
 
-        {/* Add this after the NuralAccordion2 component */}
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <TableContainer
             component={Paper}
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+              maxHeight: "calc(100vh - 300px)",
               overflow: "auto",
             }}
           >
@@ -365,7 +442,7 @@ const UserLaggards = () => {
               <TableHead>
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={9}
                     sx={{
                       backgroundColor: LIGHT_GRAY2,
                       position: "sticky",
@@ -391,7 +468,6 @@ const UserLaggards = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                
                   {[
                     { id: "parent", label: "PARENT" },
                     { id: "channelType", label: "CHANNEL TYPE" },
@@ -401,7 +477,7 @@ const UserLaggards = () => {
                     { id: "lastLogin", label: "LAST LOGIN" },
                     { id: "lastTransaction", label: "LAST TRANSACTION" },
                     { id: "ageingInDays", label: "AGEING IN DAYS" },
-                    { id: "status", label: "STATUS" }
+                    { id: "status", label: "STATUS" },
                   ].map(({ id, label }) => (
                     <TableCell
                       key={id}
@@ -453,25 +529,42 @@ const UserLaggards = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => (
-                    <TableRow key={row.id}>
-                      <TableCell sx={{ ...rowstyle }}>{row.parent}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.channelType}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.channel}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.channelCode}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.transactionType}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.lastLogin}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.lastTransaction}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.ageingInDays}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.status}</TableCell>
-                    </TableRow>
-                  ))}
+                {isLoading
+                  ? Array.from({ length: 10 }).map((_, index) => (
+                      <TableRowSkeleton key={index} row={10} columns={10} />
+                    ))
+                  : userLaggardReport.map((row, index) => (
+                      <TableRow key={row.id}>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.parentSalesChannelName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.salesChannelTypeName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.salesChannelName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.salesChannelCode}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.transactionType}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.lastLoginOn}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.lastTransactionCreationDate}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.agingSlabText}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>{row.status}</TableCell>
+                      </TableRow>
+                    ))}
               </TableBody>
             </Table>
 
-            {/* Custom Pagination */}
             <Grid
               container
               sx={{
@@ -495,8 +588,7 @@ const UserLaggards = () => {
                 >
                   TOTAL RECORDS:{" "}
                   <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {filteredRows.length} /{" "}
-                    {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
+                    {totalRecords} / {Math.ceil(totalRecords / searchParams.pageSize)} PAGES
                   </span>
                 </Typography>
               </Grid>
@@ -511,7 +603,6 @@ const UserLaggards = () => {
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    //   gap: 1,
                   }}
                 >
                   <Typography
@@ -536,16 +627,15 @@ const UserLaggards = () => {
                           height: "24px",
                           padding: "4px",
                           borderRadius: "50%",
-                          // border: `1px solid ${PRIMARY_BLUE2}`,
                           backgroundColor:
-                            rowsPerPage === value
+                            searchParams.pageSize === value
                               ? PRIMARY_BLUE2
                               : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
+                          color: searchParams.pageSize === value ? "#fff" : PRIMARY_BLUE2,
                           fontSize: "12px",
                           "&:hover": {
                             backgroundColor:
-                              rowsPerPage === value
+                              searchParams.pageSize === value
                                 ? PRIMARY_BLUE2
                                 : "transparent",
                           },
@@ -578,12 +668,14 @@ const UserLaggards = () => {
                     letterSpacing: "4%",
                     textAlign: "center",
                   }}
+                  onClick={handleJumpToFirst}
+                  style={{ cursor: "pointer" }}
                 >
                   JUMP TO FIRST
                 </Typography>
                 <IconButton
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
                 >
                   <NavigateBeforeIcon />
                 </IconButton>
@@ -594,19 +686,20 @@ const UserLaggards = () => {
                     fontWeight: 700,
                   }}
                 >
-                  PAGE {page + 1}
+                  PAGE {currentPage}
                 </Typography>
 
                 <IconButton
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => handlePageChange(currentPage + 1)}
                   disabled={
-                    page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
+                    currentPage >= Math.ceil(totalRecords / searchParams.pageSize)
                   }
                 >
                   <NavigateNextIcon />
                 </IconButton>
 
                 <Typography
+                  variant="body2"
                   sx={{
                     fontFamily: "Manrope",
                     fontWeight: 700,
@@ -615,7 +708,8 @@ const UserLaggards = () => {
                     letterSpacing: "4%",
                     textAlign: "center",
                   }}
-                  variant="body2"
+                  onClick={handleJumpToLast}
+                  style={{ cursor: "pointer" }}
                 >
                   JUMP TO LAST
                 </Typography>
@@ -623,36 +717,22 @@ const UserLaggards = () => {
                   type="number"
                   placeholder="Jump to page"
                   min={1}
-                  max={Math.ceil(filteredRows.length / rowsPerPage)}
-                  // value={page + 1}
-                  onChange={(e) => {
-                    const newPage = parseInt(e.target.value, 10) - 1;
-                    if (
-                      newPage >= 0 &&
-                      newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                    ) {
-                      setPage(newPage);
-                    }
-                  }}
+                  max={Math.ceil(totalRecords / searchParams.pageSize)}
+                  onChange={handlePageInputChange}
                   style={{
                     width: "100px",
                     height: "24px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
+                    padding: "0 8px",
                     borderRadius: "8px",
-                    borderWidth: "1px",
                     border: `1px solid ${PRIMARY_BLUE2}`,
                   }}
                 />
-                <Grid mt={1}>
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
-                </Grid>
               </Grid>
             </Grid>
           </TableContainer>
         </Grid>
       </Grid>
-      {/* <Grid
+      <Grid
         item
         xs={12}
         sm={3}
@@ -673,7 +753,6 @@ const UserLaggards = () => {
           paddingBottom: "20px",
           "& > *": {
             marginBottom: "16px",
-            // filter: isDownloadLoading ? "blur(2px)" : "none",
             transition: "filter 0.3s ease",
           },
           "& .export-button": {
@@ -701,12 +780,12 @@ const UserLaggards = () => {
             <NuralExport
               title="Export"
               views={""}
-              //   downloadExcel={downloadExcel}
-              //   isDownloadLoading={isDownloadLoading}
+              downloadExcel={handleExportToExcel}
+              isDownloadLoading={isDownloadLoading}
             />
           </Grid>
         </NuralActivityPanel>
-      </Grid> */}
+      </Grid>
     </>
   );
 };

@@ -26,11 +26,9 @@ const SalesBulkUpload = () => {
     { value: "batch", label: "Batch" },
   ];
   const tabs = [
-    { label: "Bulk Upload", value: "sales-bulk-upload" },
-    { label: "Add Saleschannel", value: "add-sales-channel" },
-    { label: "Add Retailer", value: "add-retailer" },
-    { label: "Search", value: "search" },
-    { label: "Approve Saleschannel", value: "approveSaleschannel" },
+    { label: "Add", value: "add-sales-channel" },
+    { label: "Search", value: "sales-channel-view" },
+    { label: "Approve", value: "approveSaleschannel" },
   ];
 
   const templates = [
@@ -88,7 +86,7 @@ const SalesBulkUpload = () => {
           ml: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Sales" />
+        <BreadcrumbsHeader pageTitle="Channel" />
       </Grid>
 
       <Grid item xs={12} md={6} lg={12}>

@@ -60,7 +60,7 @@ const NotFound = () => {
       
       <Button
         variant="contained"
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate('/')}
         sx={{
           backgroundColor: DARK_PURPLE,
           color: '#fff',
@@ -75,7 +75,7 @@ const NotFound = () => {
           },
         }}
       >
-        Back to Dashboard
+        Back to Main Page
       </Button>
     </Box>
   );

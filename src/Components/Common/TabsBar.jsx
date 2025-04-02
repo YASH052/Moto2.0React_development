@@ -29,7 +29,6 @@ const TabsBar = ({ tabs, activeTab, onTabChange }) => {
           },
           "& .Mui-selected": {
             color: `${DARK_PURPLE} !important`,
-           
             fontFamily: "Manrope",
             fontWeight: 700,
             fontSize: "14px",

@@ -70,7 +70,7 @@ const StatusModel = ({
       status={status}
       sx={{
         width: props.width || "542px",
-        height: props.height || "200px",
+        height: props.height || "175px",
         margin: props.margin,
         padding: props.padding,
         borderRadius: props.borderRadius || "8px",

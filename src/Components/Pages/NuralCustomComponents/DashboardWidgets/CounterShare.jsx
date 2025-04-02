@@ -19,11 +19,15 @@ import {
   Grid,
   Button,
 } from "@mui/material";
-import SalesMetricsGrid from "./SalesMetricsGrid";
-import SalesTrendGraph from "./SalesTrendGraph";
-import { DARK_PURPLE, LIGHT_GRAY2 } from "../../../Common/colors";
+import {
+  DARK_PURPLE,
+  LIGHT_GRAY2,
+  MEDIUM_BLUE,
+  PRIMARY_BLUE,
+  PRIMARY_BLUE2,
+} from "../../../Common/colors";
 import NuralAutocomplete from "../NuralAutocomplete";
-// Register ChartJS components
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -54,18 +58,32 @@ const CounterShare = ({ data }) => {
     labels: months,
     datasets: [
       {
-        label: "MOTOROLA",
-        data: [4000, 5000, 8000, 9000, 8500, 9500, 10000],
-        borderColor: "#4285F4",
+        label: "Line 1",
+        data: [8000, 9000, 7500, 6500, 9000, 11000, 12500],
+        borderColor: PRIMARY_BLUE2,
+        borderWidth: 1.5,
         tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 6,
       },
       {
-        label: "SAMSUNG",
-        data: [3000, 4500, 7000, 8000, 8000, 8500, 9000],
-        borderColor: "#34A853",
+        label: "Line 2",
+        data: [4000, 4500, 4000, 5500, 7000, 8500, 9000],
+        borderColor: PRIMARY_BLUE2,
+        borderWidth: 1.5,
         tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 6,
       },
-      // Add more datasets as needed
+      {
+        label: "Line 3",
+        data: [3000, 3500, 2000, 3000, 4500, 2500, 2000],
+        borderColor: PRIMARY_BLUE2,
+        borderWidth: 1.5,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+      },
     ],
   };
 
@@ -87,161 +105,149 @@ const CounterShare = ({ data }) => {
         max: 16000,
         ticks: {
           stepSize: 4000,
+          callback: function (value) {
+            return value === 0 ? "0" : `${value / 1000}k`;
+          },
+          color: DARK_PURPLE
         },
+        grid: {
+          color: "rgba(0, 0, 0, 0.1)",
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: DARK_PURPLE
+        }
       },
     },
   };
 
   return (
-    <Card sx={{ pt: 2, pb: 4, pl: 2, pr: 2, height: "200px", backgroundColor: LIGHT_GRAY2 }}>
-      <Box
+    <Card
+      sx={{
+        pt: 2,
+        pb: 4,
+        pl: 2,
+        pr: 2,
+        height: "85%",
+        backgroundColor: LIGHT_GRAY2,
+      }}
+    >
+      <Typography
+        variant="h6"
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
+          color: PRIMARY_BLUE,
+          fontSize: "16px",
+          fontWeight: 700,
           mb: 2,
-          alignItems: "center",
         }}
       >
-        <Typography
-          variant="subtitle1"
-          sx={{
-            fontFamily: "Manrope",
-            fontWeight: 700,
-            fontSize: "10px",
-            lineHeight: "13.66px",
-            letterSpacing: "0%",
-            color: DARK_PURPLE,
-          }}
-        >
-          Counter Share
-        </Typography>
+        Counter Share
+      </Typography>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              backgroundColor: DARK_PURPLE,
-              fontSize: "8px",
-              fontWeight: 700,
-              borderRadius: "40px",
-              padding: "4px 12px",
-              minWidth: "unset",
-              "&:hover": {
-                backgroundColor: "#2F3BC9",
-              },
-            }}
-          >
-            CTR
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: DARK_PURPLE,
-              fontSize: "8px",
-              fontWeight: 700,
-              borderRadius: "40px",
-              padding: "4px 12px",
-              minWidth: "unset",
-              border: "none",
-              "&:hover": {
-                backgroundColor: "#2F3BC9",
-              },
-            }}
-          >
-            IDC
-          </Button>
-        </Box>
+      <Box sx={{ mb: 3 }}>
+        <NuralAutocomplete
+          placeholder="ALL PRICE BANDS"
+          width="100%"
+          options={[]}
+          backgroundColor={LIGHT_GRAY2}
+        />
       </Box>
 
-      <Grid container spacing={5}>
-        <Grid item xs={12} md={6} lg={6} xl={6}>
-          <SalesTrendGraph
-            width="400px"
-            height="220px"
-            paperBgColor={LIGHT_GRAY2}
-            gap="15px"
-            borderRadius="8px"
-            data={data}
-            title="Counter Share"
-          />
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={5} lg={5} xl={5} mt={5}>
+          <Box
+            sx={{
+              backgroundColor: MEDIUM_BLUE,
+              width: 158.3330078125,
+              height: 106,
+              gap: 0,
+              borderRadius: 1,
+              paddingRight: 1,
+              paddingLeft: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
+              MOTOROLA
+            </Typography>
+            <Typography
+              sx={{
+                color: DARK_PURPLE,
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              140.15K
+            </Typography>
+            <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
+              17%
+            </Typography>
+          </Box>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={6} xl={6}>
-          <Grid item xs={12} md={12} lg={12} xl={12}>
-            <NuralAutocomplete
-              placeholderText="ALL PRICE BANDS"
-              width="100%"
-              backgroundColor={LIGHT_GRAY2}
-            />
+        <Grid item xs={12} md={7} lg={7} xl={7} >
+          <Grid container spacing={1} justifyContent="center">
+            {Object.entries(brandData)
+              .filter(([brand]) => brand !== "MOTOROLA")
+              .map(([brand, data]) => (
+                <Grid item xs={3} key={brand}>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <Typography
+                      sx={{ color: DARK_PURPLE, fontSize: "8px", mb: 0.5 }}
+                    >
+                      {brand}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: DARK_PURPLE,
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        mb: 0.5,
+                      }}
+                    >
+                      {data.share}
+                    </Typography>
+                    <Typography sx={{ color: DARK_PURPLE, fontSize: "12px" }}>
+                      {data.percentage}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
           </Grid>
-          <Grid container spacing={2} p={2}>
-            {Object.entries(brandData).map(([brand, data], index) => (
-              <Grid
-                item
-                xs={3}
-                md={3}
-                lg={3}
-                xl={3}
-                key={brand}
-                mt={1}
-                sx={{
-                  textAlign: "center",
-                  position: "relative",
-                  "&::after": {
-                    content: '""',
-                    display: (index + 1) % 4 !== 0 ? "block" : "none",
-                    position: "absolute",
-                    right: 0,
-                    top: "25%", // Adjust this value to control where the border starts
-                    height: "50%", // Adjust this value to control border height
-                    width: "1px",
-                    backgroundColor: "rgb(188, 186, 186)",
-                  },
-                  pb: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  sx={{
-                    fontSize: "8px",
-                    color: DARK_PURPLE,
-                  }}
-                >
-                  {brand}
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: DARK_PURPLE,
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    lineHeight: "19.12px",
-                    letterSpacing: "0%",
-                    textAlign: "center",
-                  }}
-                >
-                  {data.share}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: DARK_PURPLE,
-                    fontSize: "9px",
-                    // fontWeight: 400,
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                >
-                  {data.percentage}
-                </Typography>
-              </Grid>
-            ))}
-          </Grid>
+        </Grid>
+
+        <Grid item xs={12} pb={2}>
+          <Typography
+            sx={{
+              color: DARK_PURPLE,
+              fontSize: "8px",
+              mb: 1,
+              opacity: 0.7,
+            }}
+          >
+            LAST 6 MONTHS
+          </Typography>
+          <Box sx={{ height: "200px" }}>
+            <Line data={chartData} options={options} />
+          </Box>
         </Grid>
       </Grid>
     </Card>

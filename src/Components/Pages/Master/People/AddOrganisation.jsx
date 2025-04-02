@@ -53,9 +53,9 @@ const AddOrganisation = () => {
   const [activeTab, setActiveTab] = React.useState("org-people");
   const [tabbs, setTabbs] = React.useState([
     { label: "Org People", value: "org-people" },
-    { label: "ISP", value: "view-organisation" },
-    { label: "Ranking Weightage", value: "add-user" },
-    { label: "Salesman", value: "view-user" },
+    { label: "ISP", value: "add-isp" },
+    { label: "Ranking Weightage", value: "ranking-weightage" },
+    { label: "Salesman", value: "add-salesman" },
   ]);
 
   const labelStyle = {
@@ -76,22 +76,7 @@ const AddOrganisation = () => {
   ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    switch (newValue) {
-      case "add-location":
-        navigate("/add-location");
-        break;
-      case "view-location":
-        navigate("/view-location");
-        break;
-      case "add-user":
-        navigate("/add-user");
-        break;
-      case "view-user":
-        navigate("/view-user");
-        break;
-      default:
-        break;
-    }
+    navigate(`/${newValue}`);
   };
 
   // Add these states for pagination
@@ -265,14 +250,16 @@ const AddOrganisation = () => {
         mt={1}
         sx={{ position: "relative", zIndex: 1 }}
       >
-        <Grid item xs={12} sx={{ p: { xs: 2, sm: 2  }, pl:{xs:3} ,pr:{xs:0} }}>
-         <AddLocation/>
-          <AddUser/>
-          <ViewUser/>
-          <ViewLocation/>
+        <Grid
+          item
+          xs={12}
+          sx={{ p: { xs: 2, sm: 2 }, pl: { xs: 3 }, pr: { xs: 0 } }}
+        >
+          <AddLocation />
+          <AddUser />
+          <ViewUser />
+          <ViewLocation />
         </Grid>
-
-      
       </Grid>
     </Grid>
   );

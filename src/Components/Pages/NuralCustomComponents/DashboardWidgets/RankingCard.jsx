@@ -22,15 +22,21 @@ const RankNumber = styled(Typography)(({ theme, rankNumberColor }) => ({
 }));  
 
 const RankingCard = ({ 
+  height,
   title,
   data = [], 
   dateRange,
+  // Color props with default values
+  backgroundColor = LIGHT_GRAY2,
+  titleColor = DARK_PURPLE,
+  dateColor = "#6B7280",
+  scoreColor = DARK_PURPLE,
   // Style props with default values
   cardStyles = {
     padding: 1.5,
     borderRadius: 2,
     width: "200px",
-    backgroundColor: LIGHT_GRAY2,
+    height: height,
   },
   titleStyles = {
     ml: 0.5,
@@ -38,12 +44,10 @@ const RankingCard = ({
     fontWeight: 700,
     fontSize: "10px",
     lineHeight: "13.66px",
-    color: DARK_PURPLE,
     mb: 1,
   },
   dateStyles = {
-    color: "#6B7280",
-    fontSize: "10px",
+    fontSize: "8px",
   },
   rankContainerStyles = {
     gap: "0px",
@@ -53,7 +57,7 @@ const RankingCard = ({
   rankNumberStyles = {
     fontFamily: "Manrope",
     fontWeight: 700,
-    fontSize: "20px",
+    fontSize: "18px",
     lineHeight: "24px",
   },
   scoreStyles = {
@@ -67,18 +71,18 @@ const RankingCard = ({
   rankNumberColor
 }) => {
   return (
-    <Card sx={{ ...cardStyles }}>
+    <Card sx={{ ...cardStyles, backgroundColor }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0 }}>
         <Typography
           variant="h6"
-          sx={{ ...titleStyles }}
+          sx={{ ...titleStyles, color: titleColor }}
         >
           {title}
         </Typography>
         {dateRange && (
           <Typography
             variant="caption"
-            sx={{ ...dateStyles }}
+            sx={{ ...dateStyles, color: dateColor }}
           >
             {dateRange}
           </Typography>
@@ -99,7 +103,7 @@ const RankingCard = ({
           </RankNumber>
           <Typography
             variant="body2"
-            sx={{ ...scoreStyles }}
+            sx={{ ...scoreStyles, color: scoreColor }}
           >
             SCORE: {item.score}
           </Typography>
