@@ -164,7 +164,7 @@ const options = {
   },
 };
 
-const RetailerSalesChart = () => {
+const GraphWithTable = () => {
   const [selectedRetailer, setSelectedRetailer] = useState("RETAILER 4");
   const [viewMode, setViewMode] = useState("group");
   const [selectedBar, setSelectedBar] = useState(3);
@@ -173,22 +173,22 @@ const RetailerSalesChart = () => {
     group: true,
     individual: false,
     top: true,
-    bottom: false
+    bottom: false,
   });
 
   const handleButtonClick = (buttonType) => {
-    if (buttonType === 'group' || buttonType === 'individual') {
+    if (buttonType === "group" || buttonType === "individual") {
       setActiveButtons({
         ...activeButtons,
-        group: buttonType === 'group',
-        individual: buttonType === 'individual'
+        group: buttonType === "group",
+        individual: buttonType === "individual",
       });
       setViewMode(buttonType);
     } else {
       setActiveButtons({
         ...activeButtons,
-        top: buttonType === 'top',
-        bottom: buttonType === 'bottom'
+        top: buttonType === "top",
+        bottom: buttonType === "bottom",
       });
     }
   };
@@ -389,7 +389,7 @@ const RetailerSalesChart = () => {
           <Grid item xs={12} md={12} lg={12} xl={12} p={2}>
             <Box
               sx={{
-                height: "538px",
+                height: 165,
                 width: "100%",
                 "& canvas": {
                   borderLeft: "1px solid #E0E0E0",
@@ -426,9 +426,10 @@ const RetailerSalesChart = () => {
                 textAlign: "start",
               }}
             >
-                RETAILER 4.
+              RETAILER 4.
             </Typography>
           </Grid>
+
           <Grid item xs={12} md={10} lg={10} xl={10}>
             <Grid
               container
@@ -498,9 +499,10 @@ const RetailerSalesChart = () => {
             </Grid>
           </Grid>
         </Grid>
+        <ISPZeroSaleTable/>
       </Grid>
     </Grid>
   );
 };
 
-export default RetailerSalesChart;
+export default GraphWithTable;

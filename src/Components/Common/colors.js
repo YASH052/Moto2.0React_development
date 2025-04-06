@@ -42,7 +42,7 @@ export const WARNING_YELLOW = "#FFC107";
 export const SUCCESS_GREEN = "#EDFEFF";
 export const ERROR_RED2 = "#8A282A";
 export const SUCCESS_GREEN2 = "#026668";
-
+export const AQUA_DARK2 = "#039194";
 export const LIGHT_BLUE = "#F1F3FB";
 export const MEDIUM_BLUE = "#C6CEED";
 export const DARK_BLUE = "#23346F";

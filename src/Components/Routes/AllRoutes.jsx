@@ -130,6 +130,12 @@ import ChannelsDashBoard from "../Pages/Dashboard/ChannelsDashBoard.jsx";
 import RATChannelDashBoard from "../Pages/Dashboard/RATChannelDasboard.jsx";
 import AvailabilityDashboard from "../Pages/Dashboard/AvailabilityDashboard.jsx";
 import RATAvailability from "../Pages/Dashboard/RATAvailability.jsx";
+import InventoryDashBoard from "../Pages/Dashboard/InventoryDashboard.jsx";
+import RATInventory from "../Pages/Dashboard/RATInventory.jsx";
+import RATAttendance from "../Pages/Dashboard/RATAttendance.jsx";
+import RATTarget from "../Pages/Dashboard/RATTarget.jsx";
+import RATIncentive from "../Pages/Dashboard/RATIncentive.jsx";
+// import RATInventory from "../Pages/NuralCustomComponents/DashboardWidgets/RATInventory.jsx";
 const AllRoutes = () => {
   return (
     <Routes>
@@ -141,14 +147,15 @@ const AllRoutes = () => {
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
         <Route path="/change-password" element={<ChangePassword />} />
-      </Route>
-
-      {/* Private Routes */}
-      <Route element={<PrivateRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/ho-dashboard" element={<HoDashboard />} />
         <Route path="/rat-dashboard" element={<RATDashboard />} />
+        <Route path="/rat-attendance" element={<RATAttendance />} />
+        <Route path="/rat-incentive" element={<RATIncentive />} />
+        <Route path="/rat-target" element={<RATTarget />} />
         <Route path="/channels-dashboard" element={<ChannelsDashBoard />} />
+        <Route path="/inventory-dashboard" element={<InventoryDashBoard />} />
+        <Route path="/rat-inventory-dashboard" element={<RATInventory />} />
         <Route
           path="/rat-channel-dashboard"
           element={<RATChannelDashBoard />}
@@ -157,7 +164,11 @@ const AllRoutes = () => {
           path="/availability-dashboard"
           element={<AvailabilityDashboard />}
         />
-        <Route path="/rat-availability" element={<RATAvailability />} />
+      </Route>
+      <Route path="/rat-availability" element={<RATAvailability />} />
+
+      {/* Private Routes */}
+      <Route element={<PrivateRoute />}>
         <Route path="/settings" element={<MasterSetting />} />
         <Route path="/transaction" element={<Transactions />} />
         <Route
