@@ -9,8 +9,9 @@ import {
   Paper,
   Typography,
   Box,
+  Button,
 } from "@mui/material";
-import { DARK_BLUE, LIGHT_GRAY2 } from "../../Common/colors";
+import { DARK_BLUE, DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
 
 const dummyData = [
   {
@@ -87,8 +88,47 @@ const ISPZeroSaleTable = () => {
           }}
         >
           ISP Zero Sale Uploaded
+          <Button
+            variant="contained"
+            size="small"
+
+            sx={{
+              backgroundColor: DARK_PURPLE,
+              fontSize: "8px",
+              fontWeight: 700,
+              marginLeft: "80%",
+              borderRadius: "40px",
+              padding: "4px 12px",
+              minWidth: "unset",
+              "&:hover": {
+                backgroundColor: "#2F3BC9",
+              },
+            }}
+          >
+            QTY
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{
+              backgroundColor: LIGHT_GRAY2,
+              color: DARK_PURPLE,
+              fontSize: "8px",
+              fontWeight: 700,
+              borderRadius: "40px",
+              padding: "4px 12px",
+              minWidth: "unset",
+              border: "none",
+              "&:hover": {
+                backgroundColor: "#2F3BC9",
+              },
+            }}
+          >
+            VAL
+          </Button>
         </Typography>
       </Box>
+
       <TableContainer sx={{ backgroundColor: LIGHT_GRAY2 }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
