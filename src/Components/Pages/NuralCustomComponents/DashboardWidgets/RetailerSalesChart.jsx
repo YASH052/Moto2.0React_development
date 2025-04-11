@@ -12,37 +12,45 @@ import NuralAutocomplete from "../NuralAutocomplete";
 import ISPZeroSaleTable from "../../Dashboard/ISPZeroSaleTable";
 
 const data = [
-  { period: "P1", value: 35000, secondValue: 25000 },
-  { period: "P2", value: 58000, secondValue: 35000 },
-  { period: "P3", value: 48000, secondValue: 35000 },
+  { period: "P1", value: 35000, secondValue: 25000, thirdValue: 25000 },
+  { period: "P2", value: 58000, secondValue: 35000, thirdValue: 25000  },
+  { period: "P3", value: 48000, secondValue: 35000 , thirdValue: 25000 },
   {
     period: "P4",
     value: 35000,
-    secondValue: 35000,
+    secondValue: 35000, thirdValue: 25000 ,
     special: true,
     tooltipData: { tertiary: 25, lmtd: 40, activation: 60 },
   },
-  { period: "P5", value: 45000, secondValue: 35000 },
-  { period: "P6", value: 55000, secondValue: 35000 },
-  { period: "P7", value: 55000, secondValue: 35000 },
-  { period: "P8", value: 55000, secondValue: 35000 },
-  { period: "P9", value: 58000, secondValue: 35000 },
-  { period: "P10", value: 58000, secondValue: 35000 },
+  { period: "P5", value: 45000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P6", value: 55000, secondValue: 35000, thirdValue: 25000  },
+  { period: "P7", value: 55000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P8", value: 55000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P9", value: 58000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P10", value: 58000, secondValue: 35000 , thirdValue: 25000 },
 ];
 
 const brandData = [
   { id: 1, name: "PRIMARY", value: "140.15K" },
   { id: 2, name: "SECONDARY", value: "169K" },
-  { id: 3, name: "TERTIARY", value: "151K" },
-  { id: 4, name: "DRR", value: "150K" },
-  { id: 5, name: "LMTD", value: "150K" },
-  { id: 6, name: "ACTIVATION", value: "150K" },
-  { id: 7, name: "NORMAL", value: "150K" },
+
 ];
 
 const databar = {
   labels: ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"],
   datasets: [
+    {
+      data: [
+        58000, 58000, 48000, 35000, 45000, 55000, 55000, 55000, 58000, 58000,
+      ],
+      backgroundColor: (context) => {
+        const index = context.dataIndex;
+        return index === 3 ? "#00CED1" : "#DFDDDE";
+      },
+      barPercentage: 0.6,
+      categoryPercentage: 0.8,
+      borderRadius: 4,
+    },
     {
       data: [
         58000, 58000, 48000, 35000, 45000, 55000, 55000, 55000, 58000, 58000,
@@ -389,7 +397,7 @@ const RetailerSalesChart = () => {
           <Grid item xs={12} md={12} lg={12} xl={12} p={2}>
             <Box
               sx={{
-                height: "538px",
+                height: "566px",
                 width: "100%",
                 "& canvas": {
                   borderLeft: "1px solid #E0E0E0",
@@ -397,7 +405,7 @@ const RetailerSalesChart = () => {
                 },
               }}
             >
-              <Bar options={options} data={databar} />
+              <Bar options={options} data={databar}/>
             </Box>
           </Grid>
         </Grid>
@@ -410,7 +418,7 @@ const RetailerSalesChart = () => {
             backgroundColor: MEDIUM_BLUE,
             borderRadius: 2,
             justifyContent: "center",
-            height: "150px",
+            height: "70px",
           }}
         >
           <Grid item xs={12} md={12} lg={12} xl={12}>
@@ -470,7 +478,7 @@ const RetailerSalesChart = () => {
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
-                      p: 1,
+                      p: 0,
                     }}
                   >
                     <Typography
