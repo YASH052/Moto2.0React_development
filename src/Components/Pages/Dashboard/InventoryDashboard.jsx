@@ -24,6 +24,7 @@ import ProductSalesChart from "../NuralCustomComponents/DashboardWidgets/Product
 import RetailerSalesChart from "../NuralCustomComponents/DashboardWidgets/RetailerSalesChart";
 import ISPZeroSaleTable from "./ISPZeroSaleTable";
 import GraphWithTable from "../NuralCustomComponents/DashboardWidgets/GraphWithTable";
+import DistributorInventoryChart2 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart2";
 const data = [
   { date: "14/03", total: 3000, nsm: 2000 },
   { date: "15/03", total: 9000, nsm: 8000 },
@@ -233,7 +234,7 @@ const InventoryDashBoard = () => {
                     <DistributorInventoryChart />
                   </Grid>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
-                    <DistributorInventoryChart />
+                    <DistributorInventoryChart2 />
                   </Grid>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
                     <DistributorInventoryChart />

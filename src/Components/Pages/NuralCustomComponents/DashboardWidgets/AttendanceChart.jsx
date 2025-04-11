@@ -9,16 +9,27 @@ import {
   AQUA_DARK2,
   DARK_PURPLE,
   ERROR_MSSG,
+  ERROR_RED,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
+  PRIMARY_BLUE,
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
   WHITE,
+  WHITE_COLOR,
 } from "../../../Common/colors";
 import SalesMetricsGrid from "./SalesMetricsGrid";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
+ const tileColors = [
+   PRIMARY_BLUE2,
+   ERROR_MSSG,
+   ERROR_RED,
+   MEDIUM_BLUE,
+   MEDIUM_BLUE,
+   MEDIUM_BLUE,
+ ];
 const salesMetrics = [
   {
     title: "Yesterday Sales",
@@ -182,8 +193,8 @@ const AttendanceChart = () => {
         <Grid
           item
           xs={12}
-          md={3}
-          sx={{ position: "relative", height: "200px" }}
+          md={4}
+          sx={{ position: "relative", height: "250px" }}
         >
           <Doughnut data={data} options={options} />
           <CenterText>
@@ -192,9 +203,32 @@ const AttendanceChart = () => {
           </CenterText>
         </Grid>
 
-        {/* Sales Metrics Section */}
-        <Grid item xs={12} md={3}>
-          <SalesMetricsGrid metrics={salesMetrics} />
+        {/* Tiles Section in 2 rows x 3 columns */}
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={2}>
+            {[...Array(6)].map((_, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 500,
+                    color: index >= 3 ? PRIMARY_BLUE2 : WHITE_COLOR,
+                    paddingTop: "12px",
+                    textAlign: "center",
+                    borderRadius: "8px",
+                    height: "80px",
+                    marginTop: "10px",
+                    cursor: "pointer",
+                    backgroundColor: tileColors[index],
+                  }}
+                >
+                  Present
+                  <br />
+                  23
+                </Typography>
+              </Grid>
+            ))}
+          </Grid>
         </Grid>
       </Grid>
     </StyledCard>

@@ -33,11 +33,7 @@ const data = [
 const brandData = [
   { id: 1, name: "PRIMARY", value: "140.15K" },
   { id: 2, name: "SECONDARY", value: "169K" },
-  { id: 3, name: "TERTIARY", value: "151K" },
-  { id: 4, name: "DRR", value: "150K" },
-  { id: 5, name: "LMTD", value: "150K" },
-  { id: 6, name: "ACTIVATION", value: "150K" },
-  { id: 7, name: "NORMAL", value: "150K" },
+
 ];
 
 const databar = {
@@ -46,6 +42,18 @@ const databar = {
     {
       data: [
         58000, 58000, 48000, 35000, 45000, 55000, 55000, 55000, 58000, 58000,
+      ],
+      backgroundColor: (context) => {
+        const index = context.dataIndex;
+        return index === 3 ? "#00CED1" : "#DFDDDE";
+      },
+      barPercentage: 0.6,
+      categoryPercentage: 0.8,
+      borderRadius: 4,
+    },
+    {
+      data: [
+        48000, 48000, 58000, 75000, 49000, 95000, 25000, 15000, 78000, 88000,
       ],
       backgroundColor: (context) => {
         const index = context.dataIndex;
@@ -389,7 +397,7 @@ const GraphWithTable = () => {
           <Grid item xs={12} md={12} lg={12} xl={12} p={2}>
             <Box
               sx={{
-                height: 165,
+                height: 200,
                 width: "100%",
                 "& canvas": {
                   borderLeft: "1px solid #E0E0E0",
@@ -403,14 +411,14 @@ const GraphWithTable = () => {
         </Grid>
 
         <Grid
-          container
+          // container
           sx={{
-            p: 2,
-            mt: 1,
+            p: 1,
+            // mt: 1,
             backgroundColor: MEDIUM_BLUE,
             borderRadius: 2,
             justifyContent: "center",
-            height: "150px",
+            height: "70px",
           }}
         >
           <Grid item xs={12} md={12} lg={12} xl={12}>

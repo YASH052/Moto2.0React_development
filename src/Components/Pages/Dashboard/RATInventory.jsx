@@ -21,6 +21,7 @@ import TabsBar from "../../Common/TabsBar";
 import NuralAutocomplete from "../NuralCustomComponents/NuralAutocomplete";
 import NuralDistributorSales from "../NuralCustomComponents/NuralDistributorSales";
 import DistributorInventoryChart from "../NuralCustomComponents/DashboardWidgets/DistributorInventoryChart";
+import DistributerInventoryChart2 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart2";
 import ProductSalesChart from "../NuralCustomComponents/DashboardWidgets/ProductSalesChart";
 import RetailerSalesChart from "../NuralCustomComponents/DashboardWidgets/RetailerSalesChart";
 import ISPZeroSaleTable from "./ISPZeroSaleTable";
@@ -268,7 +269,7 @@ const RATInventory = () => {
                 {/* Add Product Sales Chart */}
                 <Grid container spacing={4} mb={2}>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <DistributorInventoryChart />
+                    <DistributerInventoryChart2 />
                   </Grid>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
                     <DistributorInventoryChart />
@@ -333,3 +334,4 @@ const RATInventory = () => {
 };
 
 export default RATInventory;
+

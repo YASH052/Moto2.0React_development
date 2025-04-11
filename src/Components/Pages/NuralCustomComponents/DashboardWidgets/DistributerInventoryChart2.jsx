@@ -1,10 +1,10 @@
 import React from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Box, Button, Card, Grid, Typography } from "@mui/material";
+import { Box, Button, Card, Divider, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import NuralAutocomplete from "../NuralAutocomplete";
-import { AQUA, DARK_PURPLE, LIGHT_GRAY2, MEDIUM_BLUE, PRIMARY_BLUE2, WHITE } from "../../../Common/colors";
+import { AQUA, BLUE_COLOR, DARK_PURPLE, LIGHT_GRAY2, MEDIUM_BLUE, PRIMARY_BLUE, PRIMARY_BLUE2, WHITE } from "../../../Common/colors";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -40,7 +40,7 @@ const CenterText = styled("div")({
   },
 });
 
-const DistributorInventoryChart = () => {
+const DistributorInventoryChart2 = () => {
   const distributors = ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"];
   const [selectedDistributor, setSelectedDistributor] = React.useState(
     distributors[0]
@@ -180,19 +180,85 @@ const DistributorInventoryChart = () => {
         <Grid
           item
           xs={12}
-          sx={{ position: "relative", height: "300px", color: AQUA ,
-            marginTop: "40px",
-          }}
+          sx={{ position: "relative", height: "300px", color: AQUA }}
         >
-          <Doughnut data={data} options={options}/>
+          <Doughnut data={data} options={options} />
           <CenterText>
             <h2 style={{ color: AQUA }}>103.72K</h2>
             <p>4 WEEKS</p>
           </CenterText>
+        </Grid>
+        <Grid
+          container
+          sx={{
+            marginTop: "20px",
+            marginLeft: "20px",
+            height: "90px",
+            borderRadius: "12px",
+            backgroundColor: MEDIUM_BLUE,
+            padding: "12px 16px",
+            alignItems: "center",
+          }}
+        >
+          <Grid item xs={12}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: PRIMARY_BLUE2,
+                fontWeight: 600,
+                marginBottom: "8px",
+              }}
+            >
+              REDINGTON
+            </Typography>
+
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              {/* Distributor */}
+              <Box textAlign="center" flex={1}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
+                  DISTRIBUTOR
+                </Typography>
+                <Typography
+                  
+                  sx={{ color: PRIMARY_BLUE, fontWeight: 700 }}
+                >
+                  328.64K
+                </Typography>
+              </Box>
+
+              {/* Divider */}
+              <Divider
+                orientation="vertical"
+                sx={{
+                  height: "30px", // adjust as needed
+                  alignSelf: "center",
+                  borderColor: DARK_PURPLE,
+                  mx: 1,
+                }}
+              />
+
+              {/* Retailer */}
+              <Box textAlign="center" flex={1}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
+                  RETAILER
+                </Typography>
+                <Typography
+                  
+                  sx={{ color: DARK_PURPLE , fontWeight: 700 }}
+                >
+                  236.5K
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
         </Grid>
       </Grid>
     </StyledCard>
   );
 };
 
-export default DistributorInventoryChart;
+export default DistributorInventoryChart2;
