@@ -227,6 +227,18 @@ const InventoryDashBoard = () => {
                     />
                   </Grid>
                 </Grid>
+ <Grid
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    marginBottom: "10px"
+                    
+                  }}
+                >
+                  <img src="/Images/Frame7.png" alt="Frame 7" />
+                  <img src="/Images/Frame 7.png" alt="Frame 7" />
+                </Grid>
 
                 {/* Add Product Sales Chart */}
                 <Grid container spacing={4} mb={2}>

@@ -4,12 +4,14 @@ import ISPZeroSaleTable from "./ISPZeroSaleTable";
 
 import {
   AQUA,
+  AQUA_DARK2,
   DARK_PURPLE,
   LIGHT_GRAY2,
   LIGHTAQUA,
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
+  BORDER_BOTTOM,
   WHITE,
 } from "../../Common/colors";
 
@@ -168,7 +170,7 @@ const RATTarget = () => {
     },
   ];
   const autocompleteOptions = [
-    { label: "Option 1", value: "option1" },
+    { label: "Wearables", value: "Wearables" },
     { label: "Option 2", value: "option2" },
     { label: "Option 3", value: "option3" },
   ];
@@ -325,6 +327,17 @@ const RATTarget = () => {
                     />
                   </Grid>
                 </Grid>
+                <Grid
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    
+                  }}
+                >
+                  <img src="/Images/Frame7.png" alt="Frame 7" />
+                  <img src="/Images/Frame 7.png" alt="Frame 7" />
+                </Grid>
 
                 {/* Third Row - Buttons */}
               </Grid>
@@ -349,17 +362,21 @@ const RATTarget = () => {
                   >
                     <Typography
                       variant="subtitle2"
-                      color="text.secondary"
+                      color={PRIMARY_BLUE2}
                       gutterBottom
                     >
                       {card.title}
                     </Typography>
-                    <Typography variant="h6" color="primary" fontWeight={600}>
+                    <Typography
+                      variant="h6"
+                      color={DARK_PURPLE}
+                      fontWeight={600}
+                    >
                       {card.value}
                     </Typography>
                     <Typography
                       variant="caption"
-                      color="info.main"
+                      color={AQUA_DARK2}
                       fontWeight={500}
                     >
                       {card.subText}
@@ -368,9 +385,8 @@ const RATTarget = () => {
                 </Grid>
               ))}
             </Grid>
-            <Grid item xs={12} md={4} lg={4} xl={4}>
+            <Grid item xs={12} md={4} lg={4} xl={4} marginLeft={5}>
               <SalesTrendGraph
-                height="248px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
@@ -379,88 +395,177 @@ const RATTarget = () => {
                 showLegend={false}
               />
             </Grid>
-            <Grid item xs={2} md={2} lg={2} xl={2}>
-              <Paper
+            <Grid item xs={3} md={3} lg={3} xl={2}>
+              <Grid
                 sx={{
-                  marginLeft: 3,
+                  borderRadius: 2,
+                  marginLeft: 6,
+
                   backgroundColor: LIGHT_GRAY2,
                   p: 3,
+
                   width: "165%", // Adjust based on your layout
                 }}
               >
-                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color={PRIMARY_BLUE2}
+                  fontWeight="bold"
+                >
                   Category Target
                 </Typography>
                 <NuralAutocomplete
                   options={autocompleteOptions}
                   getOptionLabel={(option) => option.label}
                   placeholder="Select an option"
-                  marginBottom="8px"
+                  marginBottom="2px"
+                  sx={{
+                    // "& .MuiInputBase-root": {
+                    //   fontSize: "14px",
+                    //   fontWeight: 700,
+                    //   color: PRIMARY_BLUE2,
+                    // },
+                    // "& .MuiInputLabel-root": {
+                    //   fontSize: "12px",
+                    //   fontWeight: 700,
+                    //   color: PRIMARY_BLUE2,
+                    // },
+                    "& .MuiAutocomplete-input": {
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: PRIMARY_BLUE2,
+                    },
+                  }}
                 />
                 <Grid
                   container
                   spacing={2}
                   justifyContent="space-between"
                   alignItems="center"
+                  marginTop={3}
                 >
                   {/* Top Row */}
                   <Grid item xs={4}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color={BORDER_BOTTOM}
+                      marginLeft={5}
+                      fontWeight={400}
+                      fontSize={8}
+                    >
                       Target Vol
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      165
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      1000 Units
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <Typography
+                      variant="caption"
+                      color={BORDER_BOTTOM}
+                      align="center"
+                      fontWeight={400}
+                      marginLeft={5}
+                      fontSize={8}
+                    >
+                      Volume Achieved
+                    </Typography>
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      459 Units
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
                     <Typography
                       variant="caption"
-                      color="text.secondary"
-                      align="center"
+                      color={BORDER_BOTTOM}
+                      fontWeight={400}
+                      marginLeft={5}
+                      fontSize={8}
                     >
-                      Volume Achieved
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      12
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography variant="caption" color="text.secondary">
                       volume %
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      15
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      48%
                     </Typography>
                   </Grid>
 
                   {/* Bottom Row */}
                   <Grid item xs={4}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color={BORDER_BOTTOM}
+                      marginLeft={5}
+                      fontWeight={400}
+                      fontSize={8}
+                    >
                       Target Value
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      5
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      72k
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color={BORDER_BOTTOM}
+                      marginLeft={5}
+                      fontWeight={400}
+                      fontSize={8}
+                    >
                       Value Ach.
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      21
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      {"\u20B9"}25K
                     </Typography>
                   </Grid>
 
                   <Grid item xs={4}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color={BORDER_BOTTOM}
+                      marginLeft={5}
+                      fontWeight={400}
+                      fontSize={8}
+                    >
                       Value ACH %
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      2
+                    <Typography
+                      marginLeft={5}
+                      color={DARK_PURPLE}
+                      fontWeight={700}
+                      fontSize={14}
+                    >
+                      31%
                     </Typography>
                   </Grid>
                 </Grid>
-              </Paper>
+              </Grid>
             </Grid>
           </Grid>
 
@@ -529,7 +634,6 @@ const RATTarget = () => {
               <ISPZeroSaleTable />
             </Grid>
           </Grid>
-        
         </Grid>
       </Grid>
     </>

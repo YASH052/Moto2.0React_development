@@ -45,7 +45,7 @@ const databar = {
   datasets: [
     {
       data: [
-        58000, 58000, 48000, 35000, 45000, 55000, 55000, 55000, 58000, 58000,
+        5800, 5800, 4800, 3500, 4500, 5500, 5500, 5500, 5800, 5800,
       ],
       backgroundColor: (context) => {
         const index = context.dataIndex;
@@ -57,7 +57,19 @@ const databar = {
     },
     {
       data: [
-        35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000, 35000,
+        5800, 5800, 4800, 3500, 4500, 5500, 5500, 5500, 5800, 5800,
+      ],
+      backgroundColor: (context) => {
+        const index = context.dataIndex;
+        return index === 3 ? "#00CED1" : "#DFDDDE";
+      },
+      barPercentage: 0.6,
+      categoryPercentage: 0.8,
+      borderRadius: 4,
+    },
+    {
+      data: [
+        3500, 3500, 3500, 3000, 3000, 3500, 3500, 3500, 3500, 3500,
       ],
       backgroundColor: (context) => {
         const index = context.dataIndex;
@@ -96,9 +108,9 @@ const options = {
     },
     y: {
       beginAtZero: true,
-      max: 80000,
+      max: 8000,
       ticks: {
-        stepSize: 20000,
+        stepSize: 2000,
         font: {
           family: "Manrope",
           size: 10,
@@ -227,7 +239,7 @@ const AttendanceChartWithData = () => {
           <Grid item xs={6} md={6} lg={6} xl={6} p={2}>
             <Box
               sx={{
-                height: 165,
+                height: 175,
                 width: "100%",
                 "& canvas": {
                   borderLeft: "1px solid #E0E0E0",
@@ -242,73 +254,102 @@ const AttendanceChartWithData = () => {
           <Paper
             sx={{
               backgroundColor: MEDIUM_BLUE,
-              p: 3,
-              width: 330, // Adjust based on your layout
+              p: 1,
+              width: 450, // Adjust based on your layout
             }}
           >
-            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              gutterBottom
+              marginBottom={3}
+            >
               THURSDAY, 6TH MARCH 2025
             </Typography>
-
             <Grid
               container
               spacing={2}
               justifyContent="space-between"
               alignItems="center"
+              
             >
               {/* Top Row */}
-              <Grid item xs={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid item xs={3} sx={{ borderRight: "1px solid black", marginLeft:"100px"}}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   PRESENT
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   165
                 </Typography>
               </Grid>
-              <Grid item xs={4}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  align="center"
-                >
+              <Grid item xs={3} sx={{ borderRight: "1px solid black" }}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   ABSENT
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   12
                 </Typography>
               </Grid>
-              <Grid item xs={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid item xs={3}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   LATE
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   15
                 </Typography>
               </Grid>
 
               {/* Bottom Row */}
-              <Grid item xs={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid
+                item
+                xs={3}
+                marginTop={2}
+                sx={{ borderRight: "1px solid black" }}
+              >
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   LEAVE
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   5
                 </Typography>
               </Grid>
-              <Grid item xs={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid item xs={3} sx={{ borderRight: "1px solid black" }}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   WEEKLY OFF
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   21
                 </Typography>
               </Grid>
-              
-              <Grid item xs={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid item xs={3}>
+                <Typography variant="caption" color={PRIMARY_BLUE2}>
                   STORE CLOSED
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={PRIMARY_BLUE2}
+                >
                   2
                 </Typography>
               </Grid>

@@ -22,14 +22,14 @@ import SalesMetricsGrid from "./SalesMetricsGrid";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
- const tileColors = [
-   PRIMARY_BLUE2,
-   ERROR_MSSG,
-   ERROR_RED,
-   MEDIUM_BLUE,
-   MEDIUM_BLUE,
-   MEDIUM_BLUE,
- ];
+const tileColors = [
+  PRIMARY_BLUE2,
+  ERROR_MSSG,
+  ERROR_RED,
+  MEDIUM_BLUE,
+  MEDIUM_BLUE,
+  MEDIUM_BLUE,
+];
 const salesMetrics = [
   {
     title: "Yesterday Sales",
@@ -91,40 +91,34 @@ const StyledCard = styled(Card)(({ theme }) => ({
 
 const CenterText = styled("div")({
   position: "absolute",
-  top: "50%",
-  left: "45%",
+  top: "52%",
+  left: "48%",
   transform: "translate(-50%, -50%)",
   textAlign: "center",
-  "& h2": {
-    margin: 0,
-    fontSize: "24px",
-    fontWeight: "bold",
-    color: DARK_PURPLE,
+  color: "aqua", // shared color
+  "& .label": {
+    fontSize: "10px",
   },
-  "& p": {
-    margin: 0,
-    fontSize: "12px",
-    color: DARK_PURPLE,
-    opacity: 0.7,
+  "& .value": {
+    fontSize: "24px",
   },
 });
 
 const AttendanceChart = () => {
-//   const distributors = ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"];
-//   const [selectedDistributor, setSelectedDistributor] = React.useState(
-//     distributors[0]
-//   );
+  //   const distributors = ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"];
+  //   const [selectedDistributor, setSelectedDistributor] = React.useState(
+  //     distributors[0]
+  //   );
 
   const data = {
-    labels: ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"],
+    // labels: ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"],
     datasets: [
       {
-        data: [90, 25, 15, 15, 50],
+        data: [90, 25, 15, 50],
         backgroundColor: [
           AQUA_DARK2,
           ERROR_MSSG,
           MEDIUM_BLUE,
-          PRIMARY_BLUE2,
           SECONDARY_BLUE,
         ],
         borderWidth: 0,
@@ -198,8 +192,8 @@ const AttendanceChart = () => {
         >
           <Doughnut data={data} options={options} />
           <CenterText>
-            <h2>103.72K</h2>
-            <p>4 WEEKS</p>
+            <div className="label">Present</div>
+            <div className="value">315</div>
           </CenterText>
         </Grid>
 
