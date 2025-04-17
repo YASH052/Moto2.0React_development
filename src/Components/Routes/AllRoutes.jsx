@@ -135,6 +135,12 @@ import RATInventory from "../Pages/Dashboard/RATInventory.jsx";
 import RATAttendance from "../Pages/Dashboard/RATAttendance.jsx";
 import RATTarget from "../Pages/Dashboard/RATTarget.jsx";
 import RATIncentive from "../Pages/Dashboard/RATIncentive.jsx";
+import TaskType from "../Pages/Master/Module/Merchandizing/TaskType/TaskType.jsx";
+import TaskSearch from "../Pages/Master/Module/Merchandizing/Search/TaskSearch.jsx";
+import ManageTask from "../Pages/Master/Module/Merchandizing/ManageTask/ManageTask.jsx";
+import LnDSearch from "../Pages/Master/Module/L&D/LnDSearch.jsx";
+import LnDContent from "../Pages/Master/Module/L&D/LnDContent.jsx";
+import LnDAssesment from "../Pages/Master/Module/L&D/LnDAssesment.jsx";
 // import RATInventory from "../Pages/NuralCustomComponents/DashboardWidgets/RATInventory.jsx";
 const AllRoutes = () => {
   return (
@@ -164,11 +170,11 @@ const AllRoutes = () => {
           path="/availability-dashboard"
           element={<AvailabilityDashboard />}
         />
-      </Route>
-      <Route path="/rat-availability" element={<RATAvailability />} />
+        {/* </Route> */}
+        <Route path="/rat-availability" element={<RATAvailability />} />
 
-      {/* Private Routes */}
-      <Route element={<PrivateRoute />}>
+        {/* Private Routes */}
+        {/* <Route element={<PrivateRoute />}> */}
         <Route path="/settings" element={<MasterSetting />} />
         <Route path="/transaction" element={<Transactions />} />
         <Route
@@ -199,6 +205,9 @@ const AllRoutes = () => {
         <Route path="/add-retailer" element={<AddRetailer />} />
         <Route path="/add-sales-channel" element={<AddSalesChannel />} />
         <Route path="/sales-excel" element={<SalesExcel />} />
+        <Route path="/task-type" element={<TaskType />} />
+        <Route path="/task-search" element={<TaskSearch />} />
+        <Route path="/manage-task" element={<ManageTask />} />
         <Route path="/isp-sales-report" element={<IspSaleReport />} />
         <Route path="/counter-share-report" element={<CounterShareReport />} />
         <Route
@@ -297,6 +306,10 @@ const AllRoutes = () => {
         <Route path="/servify-offer" element={<ServifyOffer />} />
 
         <Route path="/lnd-category" element={<LnDCategory />} />
+        <Route path="/lnd-search" element={<LnDSearch />} />
+        <Route path="/lnd-content" element={<LnDContent />} />
+        <Route path="/lnd-assesment" element={<LnDAssesment />} />
+
 
         <Route path="/demo-categorization" element={<DemoCat />} />
 

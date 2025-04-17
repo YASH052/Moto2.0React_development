@@ -392,7 +392,7 @@ const TestCompo = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4, mb: 6 }}>
       {/* Documentation Section */}
-      {/* <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
           Components Documentation
         </Typography>
@@ -419,10 +419,10 @@ const TestCompo = () => {
             </li>
           </ul>
         </Box>
-      </Paper> */}
+      </Paper> 
 
       {/* Components Showcase Section */}
-      {/* <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
           Components Showcase
         </Typography>
@@ -564,9 +564,9 @@ const TestCompo = () => {
             />
           </Grid>
         </Grid>
-      </Paper> */}
+      </Paper>
 
-      {/* <NuralNotificationPanel
+      <NuralNotificationPanel
         width="384px"
         height="962px"
         backgroundColor={BLUE_COLOR}
@@ -588,8 +588,8 @@ const TestCompo = () => {
         titleStyle={{
           fontWeight: 600,
         }}
-      /> */}
-      {/* <Grid
+      />
+      <Grid
         sx={{
           marginTop: "20px",
         }}
@@ -604,9 +604,9 @@ const TestCompo = () => {
         >
           <NuralAccordionItem title="TODAY" itemCount={4} models={modelData} />
         </NuralActivityPanel>
-      </Grid> */}
+      </Grid>
 
-      {/* <Box
+      <Box
         sx={{
           margin: "10px",
           maxWidth: "220px",
@@ -646,7 +646,7 @@ const TestCompo = () => {
             opacity: 0.5,
           }}
         />
-      </Box> */}
+      </Box>
 
       <Grid item xs={12} md={6}>
         <Typography variant="h6" sx={{ mb: 2 }}>

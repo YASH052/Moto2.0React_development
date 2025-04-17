@@ -11,9 +11,10 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { PRIMARY_BLUE2, LIGHT_GRAY2, DARK_PURPLE, PRIMARY_LIGHT_PURPLE2, MEDIUM_BLUE ,BORDER_BOTTOM} from "../../colors";
+import { PRIMARY_BLUE2, LIGHT_GRAY2, DARK_PURPLE, PRIMARY_LIGHT_PURPLE2, MEDIUM_BLUE ,BORDER_BOTTOM, lightGray, PRIMARY_BLUE, LIGHT_BLUE} from "../../colors";
 import NuralAutocomplete from "../../../Pages/NuralCustomComponents/NuralAutocomplete";
 import ISPZeroSaleTable from "../../../Pages/Dashboard/ISPZeroSaleTable";
+import { CenterFocusStrong } from "@mui/icons-material";
 
 
 ChartJS.register(
@@ -233,7 +234,7 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
           <Grid container spacing={4}></Grid>
 
           <Grid container spacing={4}>
-            <Grid item xs={7} md={7} lg={7} xl={7} mt={3}>
+            <Grid item xs={7} md={7} lg={7} xl={7} mt={3} marginTop={5}>
               <Typography
                 variant="caption"
                 sx={{
@@ -244,7 +245,6 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                   letterSpacing: "4%",
                   textTransform: "uppercase",
                   color: PRIMARY_LIGHT_PURPLE2,
-                  mt: 1,
                 }}
               >
                 LAST 6 MONTHS TREND
@@ -255,31 +255,66 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
               </Box>
             </Grid>
             <Grid item xs={4} md={4} lg={4} xl={4} mt={3}>
-              <Paper
+              <Grid
                 sx={{
                   backgroundColor: LIGHT_GRAY2,
                   p: 2,
                   width: "120%", // Adjust based on your layout
-                  marginLeft: "-10%",
-                  marginTop: "20%",
+                  marginLeft: "0%",
+                  marginTop: "10%",
                 }}
               >
-                <Typography variant="subtitle2" gutterBottom color={PRIMARY_BLUE2}> 
-                  lAST MTD vs MTD
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  color={PRIMARY_BLUE2}
+                >
+                  LAST MTD vs MTD
                 </Typography>
+                <Grid
+                  container
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ height: "100%" }}
+                  backgroundColor={MEDIUM_BLUE}
+                  borderRadius={4}
+                  padding={2}
+                >
+                  <Grid item textAlign="center">
+                    <Typography
+                      fontSize={10}
+                      fontWeight="bold"
+                      color={BORDER_BOTTOM}
+                    >
+                      + Growth
+                    </Typography>
+                    <Typography
+                      fontSize={24}
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE}
+                    >
+                      15%
+                    </Typography>
+                  </Grid>
+                </Grid>
 
                 <Grid
                   container
                   spacing={2}
                   justifyContent="space-between"
                   alignItems="center"
+                  marginLeft={2}
                 >
                   {/* Top Row */}
                   <Grid item xs={4}>
                     <Typography variant="caption" color={BORDER_BOTTOM}>
                       M1
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       165
                     </Typography>
                   </Grid>
@@ -291,7 +326,11 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                     >
                       M2
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       12
                     </Typography>
                   </Grid>
@@ -299,7 +338,11 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                     <Typography variant="caption" color={BORDER_BOTTOM}>
                       M3
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       15
                     </Typography>
                   </Grid>
@@ -309,7 +352,11 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                     <Typography variant="caption" color={BORDER_BOTTOM}>
                       M4
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       5
                     </Typography>
                   </Grid>
@@ -317,7 +364,11 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                     <Typography variant="caption" color={BORDER_BOTTOM}>
                       M5
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       21
                     </Typography>
                   </Grid>
@@ -326,12 +377,16 @@ const FocusModelPerformanceIncentive = ({ height = "300px" }) => {
                     <Typography variant="caption" color={BORDER_BOTTOM}>
                       M6
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      color={PRIMARY_BLUE2}
+                    >
                       2
                     </Typography>
                   </Grid>
                 </Grid>
-              </Paper>
+              </Grid>
             </Grid>
           </Grid>
         </Paper>

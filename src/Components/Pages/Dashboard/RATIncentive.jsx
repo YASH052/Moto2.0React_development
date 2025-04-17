@@ -255,6 +255,18 @@ const stats = [
             />
           </Grid>
         </Grid>
+ <Grid
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    marginTop: "30px"
+                    
+                  }}
+                >
+                  <img src="/Images/Frame7.png" alt="Frame 7" />
+                  <img src="/Images/Frame 7.png" alt="Frame 7" />
+                </Grid>
 
         <Grid item xs={12} md={8} lg={8} xl={8} pl={1} pr={1}>
           <FocusModelPerformanceIncentive data={data} />

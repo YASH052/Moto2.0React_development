@@ -283,6 +283,17 @@ const CenterText = styled("div")({
                     />
                   </Grid>
                 </Grid>
+ <Grid
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    
+                  }}
+                >
+                  <img src="/Images/Frame7.png" alt="Frame 7" />
+                  <img src="/Images/Frame 7.png" alt="Frame 7" />
+                </Grid>
 
                 {/* Third Row - Buttons */}
               </Grid>
