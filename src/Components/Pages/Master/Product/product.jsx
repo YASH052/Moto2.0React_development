@@ -21,32 +21,23 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { useNavigate } from "react-router-dom";
 
 const tabs = [
-  { label: "Upload", value: "upload" },
+  { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
   { label: "Category", value: "category" },
-  { label: "Sub Category", value: "SubCategory" },
+  { label: "Sub Category", value: "sub-category" },
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
-  { label: "Pre Booking", value: "preBooking" },
+  { label: "Pre Booking", value: "prebooking-sku-create" },
 ];
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  // TablePagination,
-  IconButton,
-} from "@mui/material";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+
 const Product = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("upload");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -62,7 +53,7 @@ const Product = () => {
 
   const handleSort = (columnName) => {
     let direction = "asc";
-    
+
     // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
@@ -74,16 +65,16 @@ const Product = () => {
         return;
       }
     }
-    
+
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
       if (!a[columnName]) return 1;
       if (!b[columnName]) return -1;
-      
+
       const aValue = a[columnName].toString().toLowerCase();
       const bValue = b[columnName].toString().toLowerCase();
-      
+
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
       }
@@ -133,6 +124,7 @@ const Product = () => {
   const [filteredRows, setFilteredRows] = React.useState(rows);
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   const options = [
@@ -176,8 +168,6 @@ const Product = () => {
             onTabChange={handleTabChange}
           />
         </Grid>
-       
-       
       </Grid>
     </>
   );

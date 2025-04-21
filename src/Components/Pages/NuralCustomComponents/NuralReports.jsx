@@ -47,6 +47,7 @@ const NuralReports = ({
       onColumnChange?.(columns.map((col) => col.id));
     }
   };
+  
 
   const handleColumnToggle = (columnId) => {
     setSelectedColumns((prev) => {

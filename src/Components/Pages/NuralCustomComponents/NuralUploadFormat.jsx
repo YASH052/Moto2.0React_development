@@ -31,6 +31,18 @@ const StyledAccordion = styled(Accordion)({
       outline: "none",
     },
   },
+  "&.Mui-disabled": {
+    backgroundColor: LIGHT_GRAY2,
+    opacity: 1,
+    borderRadius: "8px !important",
+    border: "none",
+    "&:before": {
+      display: "none",
+    },
+    "& .MuiTypography-root": {
+      color: `${DARK_PURPLE} !important`,
+    },
+  },
 });
 
 const StyledAccordionSummary = styled(AccordionSummary)({
@@ -43,9 +55,21 @@ const StyledAccordionSummary = styled(AccordionSummary)({
       outline: "none",
     },
   },
+  "&.Mui-disabled": {
+    backgroundColor: LIGHT_GRAY2,
+    opacity: 1,
+    borderRadius: "8px !important",
+    border: "none",
+    "&:before": {
+      display: "none",
+    },
+    "& .MuiTypography-root": {
+      color: `${DARK_PURPLE} !important`,
+    },
+  },
 });
 
-const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
+const NuralUploadFormat = ({ title, onChange, value, showExpandIcon = true, ...props }) => {
   const handleRadioChange = (newValue) => {
     console.log("Radio value changed:", newValue);
     if (onChange) {
@@ -56,6 +80,7 @@ const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
   return (
     <StyledAccordion
       defaultExpanded
+      disabled={!showExpandIcon}
       sx={{
         // Size
         width: props.width,
@@ -98,9 +123,11 @@ const NuralUploadFormat = ({ title, onChange, value, ...props }) => {
     >
       <StyledAccordionSummary
         expandIcon={
-          <ExpandMoreIcon
-            sx={{ color: props.expandIconColor || DARK_PURPLE }}
-          />
+          showExpandIcon ? (
+            <ExpandMoreIcon
+              sx={{ color: props.expandIconColor || DARK_PURPLE }}
+            />
+          ) : null
         }
       >
         <Typography

@@ -1,15 +1,14 @@
 import { Grid, Typography, Button, Link } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   AQUA,
   DARK_PURPLE,
+  ERROR_MSSG,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
@@ -23,16 +22,14 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
   IconButton,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
+
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { tableHeaderStyle } from "../../../Common/commonstyles";
 import {
   GetCompetitionBrand,
   GetCompetitionCategoryData,
@@ -40,12 +37,19 @@ import {
   GetCompetitionSaleReport,
   ISPForBindDropDown,
 } from "../../../Api/Api";
-import { Skeleton } from "@mui/material";
-import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 
+import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import StatusModel from "../../../Common/StatusModel";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import NuralReports from "../../NuralCustomComponents/NuralReports";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
+import LoadingOverLay from "../../../Common/LoadingOverLay";
+import { useNavigate } from "react-router-dom";
 const SKELETON_ROWS = 10;
 
 const CompetitonSalesReport = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState("competition-sales-report");
   const [ispDropDown, setIspDropDown] = React.useState([]);
   const [competitionBrand, setCompetitionBrand] = React.useState([]);
@@ -53,26 +57,46 @@ const CompetitonSalesReport = () => {
   const [competitionCategoryData, setCompetitionCategoryData] = React.useState(
     []
   );
+  const [show, setShow] = useState(false);
+  const [status, setStatus] = useState(false);
+  const [title, setTitle] = useState("");
+
   const [customPageInput, setCustomPageInput] = React.useState("");
+
+  // Get current date and first day of current month with proper formatting
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  // Format dates to YYYY-MM-DD without timezone issues
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formattedToday = formatDate(today);
+  const formattedFirstDay = formatDate(firstDayOfMonth);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
   const [defaultLoading, setDefaultLoading] = React.useState(false);
   const [searchParams, setSearchParams] = React.useState({
     brandId: 0,
     categoryId: 0,
     modelId: 0,
-    dateFrom: "2024-12-01",
-    dateTo: "2024-12-01",
-    pageIndex: 1, //-1 = export to excel
+    dateFrom: formattedFirstDay,
+    dateTo: formattedToday,
+    pageIndex: 1,
     pageSize: 10,
     ispId: 0,
     retailerId: 0,
   });
   const tabs = [
+    { label: "Sale Report", value: "sales-report" },
+    { label: "ISP Sales Report", value: "isp-sales-report" },
+    { label: "Unique Sales Report", value: "unique-sales-report" },
+    { label: "Primary to Tertiary Track", value: "primary-to-tertiary" },
     { label: "Competition Sales Report", value: "competition-sales-report" },
-    // { label: "ISR Sales Report", value: "isr-sales-report" },
-    // { label: "Unique Sales Report", value: "unique-sales-report" },
-    // { label: "Primary to Tertiary Track", value: "primary-to-tertiary-track" },
-    // { label: "Competition Sales Report", value: "competition-sales-report" },
   ];
 
   const labelStyle = {
@@ -84,15 +108,9 @@ const CompetitonSalesReport = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   // Add these states for pagination
@@ -108,6 +126,7 @@ const CompetitonSalesReport = () => {
   // Add this state near the top with other states
   const [showTable, setShowTable] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [dateError, setDateError] = useState("");
 
   // Add loading states for dropdowns
   // Add this state to track total records
@@ -119,7 +138,6 @@ const CompetitonSalesReport = () => {
     try {
       fetchISPForBindDropDown();
       fetchCompetitionBrand();
-      handleSearch();
     } catch (error) {
       console.log(error);
     } finally {
@@ -154,7 +172,6 @@ const CompetitonSalesReport = () => {
           setCompetitionCategoryData([]);
         }
       } else {
-       
         setSearchParams((prev) => ({
           ...prev,
 
@@ -403,46 +420,25 @@ const CompetitonSalesReport = () => {
     }
   };
 
-  // Add these navigation functions
-  const handleFirstPage = () => {
-    setPage(0);
-    setSearchParams((prev) => ({
-      ...prev,
-      pageIndex: 1,
-    }));
-  };
-
-  const handleLastPage = () => {
-    const lastPage = Math.ceil(totalRecords / rowsPerPage) - 1;
-    setPage(lastPage);
-    setSearchParams((prev) => ({
-      ...prev,
-      pageIndex: lastPage + 1,
-    }));
-  };
-
-  const handleJumpToPage = (pageNumber) => {
-    const totalPages = Math.ceil(totalRecords / rowsPerPage);
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setPage(pageNumber - 1);
-      setSearchParams((prev) => ({
-        ...prev,
-        pageIndex: pageNumber,
-      }));
-    }
-  };
-
   // Update handleSearch to set total records
   const handleSearch = async () => {
-    console.log("handleSearch", searchParams);
+    setStatus(null);
+    setTitle("");
+    setShow(false);
+    // Validate dates
+    if (!searchParams.dateFrom || !searchParams.dateTo) {
+      setDateError("Please select both From Date and To Date");
+      return;
+    }
+
     setIsLoading(true);
-    setShowTable(true);
-    setPage(0); // Reset to first page
+    setShowTable(false); // Hide table during search
+    setPage(0);
     setRowsPerPage(10);
     try {
       const searchParamsWithPagination = {
         ...searchParams,
-        pageIndex: 1, // Always start from page 1 on new search
+        pageIndex: 1,
         pageSize: 10,
       };
 
@@ -450,32 +446,45 @@ const CompetitonSalesReport = () => {
       if (res.statusCode == 200) {
         setFilteredRows(res.competitionSaleReportList || []);
         setTotalRecords(res.totalRecords || 0);
+        setShowTable(true); // Show table only after successful API call
       } else {
+        setStatus(res.statusCode);
+        setShow(true);
+        setTitle(res.statusMessage);
         setFilteredRows([]);
         setTotalRecords(0);
+        setShowTable(false); // Hide table on error
       }
     } catch (error) {
       console.log(error);
+      setStatus(500);
+      setShow(true);
+      setTitle(error.statusMessage || "Internal Server Error");
       setFilteredRows([]);
       setTotalRecords(0);
+      setShowTable(false); // Hide table on error
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleReset = async () => {
-    // Reset search params first
+    // Reset search params with default dates
     setSearchParams({
       brandId: 0,
       categoryId: 0,
       modelId: 0,
-      dateFrom: "2024-12-01",
-      dateTo: "2024-12-02",
+      dateFrom: formattedFirstDay,
+      dateTo: formattedToday,
       pageIndex: 1,
       pageSize: 10,
       ispId: 0,
       retailerId: 0,
     });
+    setStatus(null);
+    setTitle("");
+    setShow(false);
+    setDateError("");
 
     // Clear all dropdown data
     setCompetitionBrand([]);
@@ -490,9 +499,70 @@ const CompetitonSalesReport = () => {
 
     // Fetch initial brand data again
     await fetchCompetitionBrand();
+  };
 
-    // Finally perform the search with reset params
-    await handleSearch();
+  const handleFromDateChange = (newValue) => {
+    setDateError(""); // Clear error on change
+
+    if (!newValue) {
+      setSearchParams((prev) => ({
+        ...prev,
+        dateFrom: null,
+      }));
+      return;
+    }
+
+    // Format the new date
+    const formattedDate = formatDate(new Date(newValue));
+
+    // Check if To Date exists and compare dates
+    if (searchParams.dateTo) {
+      const fromDate = new Date(formattedDate);
+      const toDate = new Date(searchParams.dateTo);
+
+      if (fromDate > toDate) {
+        setDateError("From Date cannot be greater than To Date");
+        return;
+      }
+    }
+
+    // Update the search params with the formatted date
+    setSearchParams((prev) => ({
+      ...prev,
+      dateFrom: formattedDate,
+    }));
+  };
+
+  const handleToDateChange = (newValue) => {
+    setDateError(""); // Clear error on change
+
+    if (!newValue) {
+      setSearchParams((prev) => ({
+        ...prev,
+        dateTo: null,
+      }));
+      return;
+    }
+
+    // Format the new date
+    const formattedDate = formatDate(new Date(newValue));
+
+    // Check if From Date exists and compare dates
+    if (searchParams.dateFrom) {
+      const fromDate = new Date(searchParams.dateFrom);
+      const toDate = new Date(formattedDate);
+
+      if (fromDate > toDate) {
+        setDateError("To Date cannot be less than From Date");
+        return;
+      }
+    }
+
+    // Update the search params with the formatted date
+    setSearchParams((prev) => ({
+      ...prev,
+      dateTo: formattedDate,
+    }));
   };
 
   const handlePageSearch = async () => {
@@ -513,8 +583,53 @@ const CompetitonSalesReport = () => {
 
   // Replace the existing TableSkeleton component with this enhanced version
 
+  const downloadExcel = async () => {
+    let body = {
+      ...searchParams,
+      pageIndex: -1,
+    };
+    setIsDownloadLoading(true);
+    try {
+      let res = await GetCompetitionSaleReport(body);
+      if (res.statusCode == 200) {
+        window.location.href = res.reportLink;
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      } else {
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      }
+    } catch (error) {
+      setShow(true);
+      setTitle(error.statusMessage || "Internal Server Error");
+      setStatus(500);
+      console.log(error);
+    } finally {
+      setTimeout(() => {
+        setShow(false);
+      }, 3000);
+      setIsDownloadLoading(false);
+    }
+  };
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        position: "relative",
+        pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+        transition: "filter 0.3s ease",
+        cursor: isDownloadLoading || isLoading ? "wait" : "default",
+        pointerEvents: isDownloadLoading || isLoading ? "none" : "auto",
+
+        "& *": {
+          cursor:
+            isDownloadLoading || isLoading ? "wait !important" : "default",
+        },
+      }}
+    >
       {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
       <Grid
         item
@@ -527,8 +642,8 @@ const CompetitonSalesReport = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Report" />
+        <Grid item xs={12} mt={0} mb={0} ml={1} md={12} pr={2}>
+          <BreadcrumbsHeader pageTitle="Sales" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -541,7 +656,7 @@ const CompetitonSalesReport = () => {
       </Grid>
 
       {/* Rest of the content */}
-      {defaultLoading ? (
+      {defaultLoading || (isLoading && !showTable) ? (
         <FormSkeleton />
       ) : (
         <Grid
@@ -586,9 +701,11 @@ const CompetitonSalesReport = () => {
                         onChange={(event, newValue) => {
                           handleSearchChange("ispId", newValue?.ispID || 0);
                         }}
-                        value={ispDropDown.find(
-                          (isp) => isp.ispID === searchParams.ispId
-                        ) || null}
+                        value={
+                          ispDropDown.find(
+                            (isp) => isp.ispID === searchParams.ispId
+                          ) || null
+                        }
                         placeholder="SELECT"
                         width="100%"
                       />
@@ -615,10 +732,12 @@ const CompetitonSalesReport = () => {
                             newValue?.competitionBrandID || 0
                           );
                         }}
-                        value={competitionBrand.find(
-                          (brand) =>
-                            brand.competitionBrandID === searchParams.brandId
-                        ) || null}
+                        value={
+                          competitionBrand.find(
+                            (brand) =>
+                              brand.competitionBrandID === searchParams.brandId
+                          ) || null
+                        }
                         placeholder="SELECT"
                         width="100%"
                       />
@@ -647,10 +766,12 @@ const CompetitonSalesReport = () => {
                             newValue?.categoryId || 0
                           );
                         }}
-                        value={competitionCategoryData.find(
-                          (category) =>
-                            category.categoryId === searchParams.categoryId
-                        ) || null}
+                        value={
+                          competitionCategoryData.find(
+                            (category) =>
+                              category.categoryId === searchParams.categoryId
+                          ) || null
+                        }
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -677,11 +798,63 @@ const CompetitonSalesReport = () => {
                         }}
                         value={competitionModelData.find(
                           (model) =>
-                            model.competitionModelId === searchParams.modelId
+                            model.competitionModelId == searchParams.modelId
                         )}
                         getOptionLabel={(option) => option.competitionModelName}
                         placeholder="SELECT"
                       />
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={6}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          ...labelStyle,
+                          fontSize: { xs: "12px", sm: "10px" },
+                        }}
+                        fontWeight={600}
+                      >
+                        FROM DATE
+                      </Typography>
+                      <NuralCalendar
+                        onChange={handleFromDateChange}
+                        value={searchParams.dateFrom}
+                        placeholder="DD/MMM/YYYY"
+                        width="100%"
+                        error={!!dateError}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={6}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          ...labelStyle,
+                          fontSize: { xs: "12px", sm: "10px" },
+                        }}
+                        fontWeight={600}
+                      >
+                        TO DATE
+                      </Typography>
+                      <NuralCalendar
+                        onChange={handleToDateChange}
+                        value={searchParams.dateTo}
+                        placeholder="DD/MMM/YYYY"
+                        width="100%"
+                        error={!!dateError}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={6}>
+                      {dateError && (
+                        <Typography
+                          sx={{
+                            color: ERROR_MSSG,
+                            fontSize: "10px",
+                            mt: 0.5,
+                          }}
+                        >
+                          {dateError}
+                        </Typography>
+                      )}
                     </Grid>
                   </Grid>
 
@@ -730,9 +903,25 @@ const CompetitonSalesReport = () => {
         </Grid>
       )}
 
-      {/* Add this after the NuralAccordion2 component */}
-      {
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+      {/* Status Model */}
+      <Grid container sx={{ margin: "10px", px: 1 }}>
+        {show && (
+          <StatusModel
+            width="100%"
+            status={status}
+            title={title}
+            onClose={() => {
+              setStatus(null);
+              setTitle("");
+              setShow(false);
+            }}
+          />
+        )}
+      </Grid>
+
+      {/* Table Container - Only show when showTable is true and status model is not visible */}
+      {showTable && !show && (
+        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: -4 }}>
           <TableContainer
             component={Paper}
             sx={{
@@ -889,54 +1078,53 @@ const CompetitonSalesReport = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {isLoading ? (
-                  Array(SKELETON_ROWS)
-                    .fill(null)
-                    .map((_, index) => (
-                      <TableRowSkeleton key={index} columns={9} />
-                    ))
-                ) : filteredRows.length > 0 && (
-                  filteredRows
-                    // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row, index) => (
-                      <TableRow key={row.id} sx={{ fontSize: "10px" }}>
-                        <TableCell
-                          sx={{
-                            padding: "8px",
-                            fontSize: "10px",
-                            width: "60px",
-                            textAlign: "center",
-                          }}
-                        >
-                          {page * rowsPerPage + index + 1}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.saleDate}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.ispName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.retailerName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.brandName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.categoryName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.modelName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.priceBandName}
-                        </TableCell>
-                        <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
-                          {row.quantity}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                ) }
+                {isLoading
+                  ? Array(SKELETON_ROWS)
+                      .fill(null)
+                      .map((_, index) => (
+                        <TableRowSkeleton key={index} columns={9} />
+                      ))
+                  : filteredRows.length > 0 &&
+                    filteredRows
+                      // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row, index) => (
+                        <TableRow key={row.id} sx={{ fontSize: "10px" }}>
+                          <TableCell
+                            sx={{
+                              padding: "8px",
+                              fontSize: "10px",
+                              width: "60px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {page * rowsPerPage + index + 1}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.saleDate}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.ispName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.retailerName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.brandName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.categoryName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.modelName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.priceBandName}
+                          </TableCell>
+                          <TableCell sx={{ padding: "8px", fontSize: "10px" }}>
+                            {row.quantity}
+                          </TableCell>
+                        </TableRow>
+                      ))}
               </TableBody>
             </Table>
 
@@ -1129,7 +1317,57 @@ const CompetitonSalesReport = () => {
             </Grid>
           </TableContainer>
         </Grid>
-      }
+      )}
+
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={3}
+        lg={3}
+        mt={-1}
+        position={"fixed"}
+        right={{
+          xs: 0,
+          sm: 5,
+          md: 8,
+          lg: 8,
+        }}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            // filter: isDownloadLoading ? "blur(2px)" : "none",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={downloadExcel}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
+      </Grid>
     </Grid>
   );
 };

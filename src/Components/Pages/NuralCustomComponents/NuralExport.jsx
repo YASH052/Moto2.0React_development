@@ -92,7 +92,7 @@ const NuralExport = ({
           backgroundColor: "transparent",
         },
         "& > *:not(.spinner-visible)": {
-          filter: isDownloadLoading ? "blur(2px)" : "none",
+          // filter: isDownloadLoading ? "blur(2px)" : "none",
           pointerEvents: isDownloadLoading ? "none" : "auto",
         }
       }}
@@ -277,9 +277,9 @@ const NuralExport = ({
             lg={6} 
             xl={6} 
             mt={2}
-            sx={{
-              filter: isDownloadLoading ? "blur(2px)" : "none",
-            }}
+            // sx={{
+            //   filter: isDownloadLoading ? "blur(2px)" : "none",
+            // }}
           >
             <NuralButton
               text="SAVE AS"

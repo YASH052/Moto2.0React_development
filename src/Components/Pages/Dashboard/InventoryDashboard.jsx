@@ -25,6 +25,7 @@ import RetailerSalesChart from "../NuralCustomComponents/DashboardWidgets/Retail
 import ISPZeroSaleTable from "./ISPZeroSaleTable";
 import GraphWithTable from "../NuralCustomComponents/DashboardWidgets/GraphWithTable";
 import DistributorInventoryChart2 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart2";
+import DistributorInventoryChart4 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart4";
 const data = [
   { date: "14/03", total: 3000, nsm: 2000 },
   { date: "15/03", total: 9000, nsm: 8000 },
@@ -83,14 +84,14 @@ const salesMetrics = [
   },
 ];
 const InventoryDashBoard = () => {
-  const [activeTab, setActiveTab] = React.useState("inventory");
+  const [activeTab, setActiveTab] = React.useState("inventory-dashboard");
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
+    { label: "Business", value: "ho-dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
     { label: "Brand", value: "brand" },
-    { label: "Inventory", value: "inventory" },
+    { label: "Inventory", value: "inventory-dashboard" },
   ];
   const navigate = useNavigate();
   const labelStyle = {
@@ -227,36 +228,24 @@ const InventoryDashBoard = () => {
                     />
                   </Grid>
                 </Grid>
- <Grid
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginBottom: "10px"
-                    
-                  }}
-                >
-                  <img src="/Images/Frame7.png" alt="Frame 7" />
-                  <img src="/Images/Frame 7.png" alt="Frame 7" />
-                </Grid>
 
                 {/* Add Product Sales Chart */}
                 <Grid container spacing={4} mb={2}>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
-                    <DistributorInventoryChart />
+                    <DistributorInventoryChart button={false} />
                   </Grid>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
                     <DistributorInventoryChart2 />
                   </Grid>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
-                    <DistributorInventoryChart />
+                    <DistributorInventoryChart4 />
                   </Grid>
 
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <RetailerSalesChart />
+                    <RetailerSalesChart height="411px" />
                   </Grid>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                  <GraphWithTable/>
+                    <GraphWithTable />
                   </Grid>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
                     <Grid

@@ -39,6 +39,7 @@ import NuralReports from "../../NuralCustomComponents/NuralReports";
 import NuralExport from "../../NuralCustomComponents/NuralExport";
 import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
 import { FormSkeleton } from "../../../Common/Skeletons";
+import { useNavigate } from "react-router-dom";
 
 // Add this styled component near the top of the file, after imports
 const CustomPageInput = styled("input")(({ theme }) => ({
@@ -66,7 +67,15 @@ const SerialNoMoment = () => {
   const [activeTab, setActiveTab] = React.useState("serial-no-moment");
   const [showStatus, setShowStatus] = React.useState(false);
   const [defaultLoading, setDefaultLoading] = React.useState(false);
-  const tabs = [{ label: "Serial No Moment", value: "serial-no-moment" }];
+  const tabs = [
+    { label: "Stock Report", value: "stock-report" },
+    { label: "Stock Adjustment Report", value: "stock-adjustment-report" },
+    { label: "Saleschannel Stock SB", value: "saleschannel-stock-sb" },
+    { label: "Serial No. Movement", value: "serial-no-moment" },
+    { label: "REL Store Stock", value: "rel-store-reports" },
+  ];
+
+  const navigate = useNavigate();
 
   const labelStyle = {
     fontSize: "10px",
@@ -548,6 +557,7 @@ const SerialNoMoment = () => {
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   const handleReset = () => {
@@ -584,8 +594,8 @@ const SerialNoMoment = () => {
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
-            <BreadcrumbsHeader pageTitle="Reports" />
+          <Grid item xs={12} mt={0} mb={0} ml={1}>
+            <BreadcrumbsHeader pageTitle=" Stock Reports" />
           </Grid>
 
           <Grid item xs={12} ml={1}>

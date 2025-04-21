@@ -482,6 +482,7 @@ const AddSalesChannel = () => {
       }
     });
 
+    setIsLoading(true);
     try {
       let res = await ManageSalesChannelMoto(formDataToSend);
       if (res.statusCode == 200) {
@@ -489,7 +490,11 @@ const AddSalesChannel = () => {
 
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
-        handleCancel(); // Reset form after successful creation
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(false);
+          setTitle("");
+        }, 3000);
       } else if (res.statusCode == 500) {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -503,6 +508,8 @@ const AddSalesChannel = () => {
       setShowStatus(true);
       setStatus(res.statusCode);
       setTitle(error.response?.data?.message || "Error Creating Sales Channel");
+    } finally {
+      setIsLoading(false);
     }
   };
 

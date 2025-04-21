@@ -53,7 +53,7 @@ const BreadcrumbsHeader = ({pageTitle}) => {
                 fontSize: "12px",
               }}
             >
-              {formattedName}
+              {formattedName.toUpperCase()}
             </Typography>
           ) : (
             <Link

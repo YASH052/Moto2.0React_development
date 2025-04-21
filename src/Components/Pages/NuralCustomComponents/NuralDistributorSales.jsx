@@ -138,24 +138,6 @@ const NuralDistributorSales = () => {
     LMTD: "397.14K",
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Box
-          sx={{
-            backgroundColor: WHITE,
-            p: 1,
-            border: "1px solid #ccc",
-            borderRadius: 1,
-          }}
-        >
-          <Typography sx={{ color: DARK_PURPLE }}>{`${label}`}</Typography>
-          <Typography sx={{ color: AQUA }}>{`₹${payload[0].value}`}</Typography>
-        </Box>
-      );
-    }
-    return null;
-  };
 
   return (
     <Box sx={{ p: 2, backgroundColor: LIGHT_GRAY2, borderRadius: 2 }}>

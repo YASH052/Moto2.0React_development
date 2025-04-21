@@ -1,5 +1,21 @@
 import React, { useState } from "react";
-import { Box, Typography, Select, MenuItem, Grid, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Select,
+  MenuItem,
+  Grid,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TableSortLabel,
+} from "@mui/material";
+import { ArrowUpward } from "@mui/icons-material";
 
 import { Bar } from "react-chartjs-2";
 import {
@@ -7,33 +23,14 @@ import {
   PRIMARY_BLUE2,
   DARK_PURPLE,
   MEDIUM_BLUE,
+  SECONDARY_BLUE,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../NuralAutocomplete";
 import ISPZeroSaleTable from "../../Dashboard/ISPZeroSaleTable";
 
-const data = [
-  { period: "P1", value: 35000, secondValue: 25000 },
-  { period: "P2", value: 58000, secondValue: 35000 },
-  { period: "P3", value: 48000, secondValue: 35000 },
-  {
-    period: "P4",
-    value: 35000,
-    secondValue: 35000,
-    special: true,
-    tooltipData: { tertiary: 25, lmtd: 40, activation: 60 },
-  },
-  { period: "P5", value: 45000, secondValue: 35000 },
-  { period: "P6", value: 55000, secondValue: 35000 },
-  { period: "P7", value: 55000, secondValue: 35000 },
-  { period: "P8", value: 55000, secondValue: 35000 },
-  { period: "P9", value: 58000, secondValue: 35000 },
-  { period: "P10", value: 58000, secondValue: 35000 },
-];
-
 const brandData = [
   { id: 1, name: "PRIMARY", value: "140.15K" },
   { id: 2, name: "SECONDARY", value: "169K" },
-
 ];
 
 const databar = {
@@ -418,7 +415,7 @@ const GraphWithTable = () => {
             backgroundColor: MEDIUM_BLUE,
             borderRadius: 2,
             justifyContent: "center",
-            height: "70px",
+            // height: "70px",
           }}
         >
           <Grid item xs={12} md={12} lg={12} xl={12}>
@@ -507,10 +504,155 @@ const GraphWithTable = () => {
             </Grid>
           </Grid>
         </Grid>
-        <ISPZeroSaleTable/>
+        <Grid item xs={12} md={12} lg={12} xl={12} mt={0}>
+          {/* Product Ageing Table */}
+          <Box
+            sx={{
+              backgroundColor: LIGHT_GRAY2, // Light lavender background similar to image
+              p: 2,
+              borderRadius: 2,
+              // Dashed purple border
+            }}
+          >
+            <Typography
+              variant="caption"
+              display="block"
+              gutterBottom
+              sx={{
+                color: SECONDARY_BLUE, // Purple color for title
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                // Dashed purple underline
+                pb: 1,
+
+                fontSize: "10px", // Match size if needed
+                letterSpacing: "0.05em", // Adjust spacing if needed
+              }}
+            >
+              Product Ageing
+            </Typography>
+            <TableContainer
+              component={Paper}
+              sx={{ backgroundColor: "transparent", boxShadow: "none" }}
+            >
+              <Table size="small" aria-label="product ageing table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        color: PRIMARY_BLUE2, // Use existing color
+                        borderBottom: "1px solid #C5CAE9", // Light border
+                        fontSize: "10px",
+                      }}
+                    >
+                      MODEL
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        fontWeight: "bold",
+                        color: PRIMARY_BLUE2,
+                        borderBottom: "1px solid #C5CAE9",
+                        fontSize: "10px",
+                      }}
+                    >
+                      <TableSortLabel
+                        active={true} // Mark as active to show direction
+                        direction="asc" // or 'desc' based on actual state
+                        IconComponent={ArrowUpward}
+                        sx={{
+                          "& .MuiTableSortLabel-icon": {
+                            color: `${PRIMARY_BLUE2} !important`,
+                          },
+                        }} // Style icon
+                      >
+                        AGE RANGE
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        fontWeight: "bold",
+                        color: PRIMARY_BLUE2,
+                        borderBottom: "1px solid #C5CAE9",
+                        fontSize: "10px",
+                      }}
+                    >
+                      <TableSortLabel
+                        active={true}
+                        direction="asc"
+                        IconComponent={ArrowUpward}
+                        sx={{
+                          "& .MuiTableSortLabel-icon": {
+                            color: `${PRIMARY_BLUE2} !important`,
+                          },
+                        }}
+                      >
+                        STOCK
+                      </TableSortLabel>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {productAgeingData.map((row) => (
+                    <TableRow
+                      key={row.model}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                      }}
+                    >
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        sx={{
+                          color: PRIMARY_BLUE2,
+                          borderBottom: "1px solid #C5CAE9",
+                          fontSize: "10px",
+                        }}
+                      >
+                        {row.model}
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{
+                          color: PRIMARY_BLUE2,
+                          borderBottom: "1px solid #C5CAE9",
+                          fontSize: "10px",
+                        }}
+                      >
+                        {row.ageRange}
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{
+                          color: PRIMARY_BLUE2,
+                          borderBottom: "1px solid #C5CAE9",
+                          fontSize: "10px",
+                        }}
+                      >
+                        {row.stock}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Grid>
       </Grid>
     </Grid>
   );
 };
+
+// Define table data outside the component or fetch from API
+const productAgeingData = [
+  { model: "Model 1", ageRange: "<15 Days", stock: 637 },
+  { model: "Model 2", ageRange: "15-30 Days", stock: 4838 },
+  { model: "Model 3", ageRange: "31-45 Days", stock: 4890 },
+  { model: "Model 4", ageRange: "<15 Days", stock: 2290 },
+  
+  
+];
 
 export default GraphWithTable;

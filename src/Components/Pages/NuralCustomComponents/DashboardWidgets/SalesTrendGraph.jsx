@@ -45,37 +45,38 @@ const SalesTrendGraph = ({
   indicatorTextSize = "12px",
   paperPadding = 2,
   paperBorderRadius = 2,
-  period = 'week', // Add new prop for time period
+  period = "week", // Add new prop for time period
   showLegend = true, // Add new prop for legend visibility
+  subtitle = "",
 }) => {
   const [activeDate, setActiveDate] = React.useState(null);
 
   // Add function to determine grid line intervals
   const getGridConfig = () => {
     switch (period) {
-      case 'week':
+      case "week":
         return {
           xTicks: 7, // Show 7 ticks for week view
           yTicks: 5,
-          strokeDasharray: '3 3', // Dashed lines
+          strokeDasharray: "3 3", // Dashed lines
         };
-      case 'month':
+      case "month":
         return {
           xTicks: 4, // Show 4 ticks for month view (one per week)
           yTicks: 5,
-          strokeDasharray: '3 3',
+          strokeDasharray: "3 3",
         };
-      case 'year':
+      case "year":
         return {
           xTicks: 12, // Show 12 ticks for year view (one per month)
           yTicks: 5,
-          strokeDasharray: '3 3',
+          strokeDasharray: "3 3",
         };
       default:
         return {
           xTicks: 7,
           yTicks: 5,
-          strokeDasharray: '3 3',
+          strokeDasharray: "3 3",
         };
     }
   };
@@ -85,13 +86,26 @@ const SalesTrendGraph = ({
   // Add formatting logic based on period
   const formatXAxis = (value) => {
     switch (period) {
-      case 'week':
+      case "week":
         return `WEEK ${value}`;
-      case 'month':
+      case "month":
         // Convert month number to short month name
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const months = [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ];
         return months[value - 1] || value;
-      case 'year':
+      case "year":
         return value;
       default:
         return value;
@@ -144,17 +158,41 @@ const SalesTrendGraph = ({
             backgroundColor: paperBgColor,
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              mb: 2,
-              fontSize: titleSize,
-              color: titleColor,
-              fontWeight: 700,
-            }}
-          >
-            {title}
-          </Typography>
+          <Grid container>
+            <Grid item xs={12}>
+              {" "}
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 1,
+                  fontSize: titleSize,
+                  color: titleColor,
+                  fontWeight: 700,
+                }}
+              >
+                {title}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              {" "}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: "Manrope",
+                  fontWeight: 700,
+                  fontSize: "8px",
+                  lineHeight: "100%",
+                  letterSpacing: "4%",
+                  textTransform: "uppercase",
+                  color: "gray",
+                  mb: 1,
+                }}
+              >
+                {subtitle}
+              </Typography>
+            </Grid>
+          </Grid>
+
           <ResponsiveContainer width="100%" height="95%">
             <LineChart
               data={data}
@@ -192,25 +230,27 @@ const SalesTrendGraph = ({
                 tickCount={gridConfig.yTicks}
               />
               <Tooltip content={<CustomTooltip />} cursor={false} />
-              {data && data.length > 0 && Object.keys(data[0])
-                .filter(key => key !== 'date')
-                .map((key, index) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    name={key === "total" ? "TOTAL" : key.toUpperCase()}
-                    stroke={DARK_PURPLE}
-                    strokeWidth={lineWidth}
-                    dot={false}
-                    activeDot={{
-                      r: dotSize,
-                      fill: dotColor,
-                      stroke: dotColor,
-                      strokeWidth: 0,
-                    }}
-                  />
-                ))}
+              {data &&
+                data.length > 0 &&
+                Object.keys(data[0])
+                  .filter((key) => key !== "date")
+                  .map((key, index) => (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      name={key === "total" ? "TOTAL" : key.toUpperCase()}
+                      stroke={DARK_PURPLE}
+                      strokeWidth={lineWidth}
+                      dot={false}
+                      activeDot={{
+                        r: dotSize,
+                        fill: dotColor,
+                        stroke: dotColor,
+                        strokeWidth: 0,
+                      }}
+                    />
+                  ))}
               {showLegend && (
                 <Legend
                   verticalAlign="bottom"

@@ -19,13 +19,12 @@ import { useNavigate } from "react-router-dom";
 import TabsBar from "../../Common/TabsBar";
 
 import NuralAutocomplete from "../NuralCustomComponents/NuralAutocomplete";
-import NuralDistributorSales from "../NuralCustomComponents/NuralDistributorSales";
 import DistributorInventoryChart from "../NuralCustomComponents/DashboardWidgets/DistributorInventoryChart";
-import DistributerInventoryChart2 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart2";
-import ProductSalesChart from "../NuralCustomComponents/DashboardWidgets/ProductSalesChart";
 import RetailerSalesChart from "../NuralCustomComponents/DashboardWidgets/RetailerSalesChart";
 import ISPZeroSaleTable from "./ISPZeroSaleTable";
 import GraphWithTable from "../NuralCustomComponents/DashboardWidgets/GraphWithTable";
+import DistributerInventoryChart3 from "../NuralCustomComponents/DashboardWidgets/DistributerInventoryChart3";
+
 const data = [
   { date: "14/03", total: 3000, nsm: 2000 },
   { date: "15/03", total: 9000, nsm: 8000 },
@@ -35,77 +34,27 @@ const data = [
   { date: "19/03", total: 9000, nsm: 7000 },
   { date: "20/03", total: 8500, nsm: 8000 },
 ];
-const salesMetrics = [
-  {
-    title: "Yesterday Sales",
-    value: "₹14,200",
-    trend: 5.2,
-    comparedTo: "VS PREV. DAY",
-    backgroundColor: "#F8F7FF",
-  },
 
-  {
-    title: "MTD Sales",
-    value: "₹2,85,400",
-    trend: -12.3,
-    comparedTo: "VS PREV. MONTH",
-    backgroundColor: "#F8F7FF",
-  },
-  {
-    title: "YTD Sales",
-    value: "₹14.85Cr",
-    trend: -2.7,
-    comparedTo: "VS PREV. YEAR",
-    backgroundColor: "#FFF1F1",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "115/124",
-    trend: 92,
-    comparedTo: "ATTENDANCE",
-    subtitle: "93% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-];
 const RATInventory = () => {
-  const [activeTab, setActiveTab] = React.useState("inventory");
+  const [activeTab, setActiveTab] = React.useState("inventory-dashboard");
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
+    { label: "Business", value: "ho-dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
     { label: "Brand", value: "brand" },
-    { label: "Attendance", value: "attendance" },
-    { label: "Inventory", value: "inventory" },
-    { label: "Target", value: "target" },
-    { label: "Incentive", value: "incentive" },
+    { label: "Inventory", value: "inventory-dashboard" },
   ];
-   const tabRoutes = {
-     business: "/business-dashboard",
-     channels: "/channel-performance",
-     availability: "/availability-overview",
-     attendance: "/rat-attendance",
-     inventory: "/rat-inventory-dashboard",
-     brand: "/brand-monitor",
-     target: "/rat-target",
-     incentive: "/rat-incentive",
-   };
+  const tabRoutes = {
+    business: "/business-dashboard",
+    channels: "/channel-performance",
+    availability: "/availability-overview",
+    attendance: "/rat-attendance",
+    inventory: "/rat-inventory-dashboard",
+    brand: "/brand-monitor",
+    target: "/rat-target",
+    incentive: "/rat-incentive",
+  };
 
   const navigate = useNavigate();
   const labelStyle = {
@@ -124,24 +73,24 @@ const RATInventory = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
- const handleTabChange = (newValue) => {
-   setActiveTab(newValue);
-   const route = tabRoutes[newValue];
-   if (route) {
-     navigate(route);
-   }
- };
- {
-   tabs.map((tab) => (
-     <Button
-       key={tab.value}
-       variant={activeTab === tab.value ? "contained" : "outlined"}
-       onClick={() => handleTabChange(tab.value)}
-     >
-       {tab.label}
-     </Button>
-   ));
- }
+  const handleTabChange = (newValue) => {
+    setActiveTab(newValue);
+    const route = tabRoutes[newValue];
+    if (route) {
+      navigate(route);
+    }
+  };
+  {
+    tabs.map((tab) => (
+      <Button
+        key={tab.value}
+        variant={activeTab === tab.value ? "contained" : "outlined"}
+        onClick={() => handleTabChange(tab.value)}
+      >
+        {tab.label}
+      </Button>
+    ));
+  }
 
   // Add these states for pagination
 
@@ -265,35 +214,22 @@ const RATInventory = () => {
                     />
                   </Grid>
                 </Grid>
- <Grid
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginBottom:"10px"
-                    
-                  }}
-                >
-                  <img src="/Images/Frame7.png" alt="Frame 7" />
-                  <img src="/Images/Frame 7.png" alt="Frame 7" />
-                </Grid>
 
                 {/* Add Product Sales Chart */}
                 <Grid container spacing={4} mb={2}>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <DistributerInventoryChart2 />
+                    <DistributerInventoryChart3 />
                   </Grid>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <DistributorInventoryChart />
+                    <DistributorInventoryChart button={true} />
                   </Grid>
 
                   <Grid item xs={12} md={6} lg={6} xl={6}>
                     <RetailerSalesChart />
                   </Grid>
                   <Grid item xs={12} md={6} lg={6} xl={6}>
-                   <GraphWithTable/>
+                    <GraphWithTable />
                   </Grid>
-                  
                 </Grid>
                 <Grid item xs={12}>
                   <ISPZeroSaleTable />
@@ -346,4 +282,3 @@ const RATInventory = () => {
 };
 
 export default RATInventory;
-

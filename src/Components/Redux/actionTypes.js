@@ -1,1 +1,2 @@
 export const SET_EDIT_AGENCY_DATA = "SET_EDIT_AGENCY_DATA";
+export const SET_RETAILER_ID = "SET_RETAILER_ID";

@@ -32,6 +32,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from "@mui/icons-material/Login";
 import { baseUrl } from "../../../Common/urls";
+import Slider from "../../../Common/Slider";
 
 const LoginForm = () => {
   // const [accessKey, setAccessKey] = useState("");
@@ -164,7 +165,10 @@ const LoginForm = () => {
           "authKey",
           res.data.loginReturnInfoList[0].authKey
         );
-        sessionStorage.setItem("token", res.data.loginReturnInfoList[0].authKey);
+        localStorage.setItem(
+          "token",
+          res.data.loginReturnInfoList[0].authKey
+        );
         setTimeout(() => {
           navigate("/dashboard");
         }, 800);
@@ -186,16 +190,6 @@ const LoginForm = () => {
         setLoading(false);
       }, 500);
     }
-    
-  };
-
-  const handleOtpLoginClick = () => {
-    setIsOtpLogin(true);
-    // Reset any existing errors
-    setUsernameError(false);
-    setPasswordError(false);
-    setUsernameErrorMsg("");
-    setPasswordErrorMsg("");
   };
 
   const handlePhoneChange = (e) => {
@@ -287,19 +281,17 @@ const LoginForm = () => {
       //   phoneNumber: phoneNumber ? `+${selectedCountry}${phoneNumber}` : null,
       //   email: email || null
       // });
-      
+
       // Simulating API call success
-      setOtpStatus('success');
-      
+      setOtpStatus("success");
+
       setTimeout(() => {
         // navigate to OTP verification page or show OTP input
       }, 1000);
     } catch (error) {
-      setOtpStatus('error');
+      setOtpStatus("error");
     } finally {
-     
-        setLoading(false);
-      
+      setLoading(false);
     }
   };
 
@@ -340,17 +332,11 @@ const LoginForm = () => {
                 backgroundColor: WHITE,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  fontWeight: 600,
-                  textAlign: "center",
-                  bgcolor: PRIMARY_BLUE,
-                  padding: "50px",
-                }}
-              >
-                Client Logo
-              </Typography>
+              <img
+                src="/Images/innerlogo.gif"
+                alt="logo"
+                style={{ width: "50%" }}
+              />
             </Box>
           )}
           <Box
@@ -560,7 +546,9 @@ const LoginForm = () => {
                 >
                   <NuralButton
                     text={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         {loading ? (
                           <CircularProgress size={20} color="inherit" />
                         ) : otpStatus === "success" ? (
@@ -641,56 +629,7 @@ const LoginForm = () => {
         }}
       >
         {/* Image Slider Section (85% of 30vh) */}
-        <Box
-          sx={{
-            width: "100%",
-            height: "85%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 2,
-              overflowX: "auto",
-              width: "100%",
-              height: "100%",
-              whiteSpace: "nowrap",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": {
-                display: "none",
-              },
-            }}
-          >
-            {images.map((img, index) => (
-              <Box
-                key={index}
-                sx={{
-                  flexShrink: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: "10px",
-                  marginBottom: "10px",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`Slide ${index}`}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    borderRadius: "10px",
-                  }}
-                />
-              </Box>
-            ))}
-          </Box>
-        </Box>
+        <Slider />
 
         {/* Footer (15% of 30vh) */}
         <Box

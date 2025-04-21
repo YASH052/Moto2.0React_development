@@ -45,12 +45,12 @@ const PrimaryTransactionUpload = () => {
     { label: "Primary", value: "primary-transaction" },
     { label: "Intermediary", value: "intermediary-sale" },
     { label: "Secondary", value: "secondary-sale" },
-    { label: "Tertiary", value: "tertiary" },
+    // { label: "Tertiary", value: "tertiary" },
   ];
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Download Primary Sales Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
@@ -85,13 +85,25 @@ const PrimaryTransactionUpload = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       }
     } catch (error) {
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
+      setTimeout(() => {
+        setStatus(null);
+        setTitle(null);
+      }, 3000);
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -114,13 +126,25 @@ const PrimaryTransactionUpload = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       }
     } catch (error) {
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
+      setTimeout(() => {
+        setStatus(null);
+        setTitle(null);
+      }, 3000);
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -147,10 +171,13 @@ const PrimaryTransactionUpload = () => {
         fileInput.value = "";
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -167,6 +194,7 @@ const PrimaryTransactionUpload = () => {
   };
 
   const handleClearStatus = () => {
+    
     setStatus(null);
     setTitle(null);
   };
@@ -190,7 +218,7 @@ const PrimaryTransactionUpload = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",
@@ -198,7 +226,7 @@ const PrimaryTransactionUpload = () => {
           ml: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Sales" />
+        <BreadcrumbsHeader mt={1} pageTitle="Sales" />
       </Grid>
 
       <Grid item xs={12} md={6} lg={12}>

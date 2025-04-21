@@ -3,6 +3,7 @@ import { Grid, Typography, Button, IconButton } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import { PRIMARY_BLUE2, LIGHT_GRAY2 } from "../Common/colors";
+import { jumpToPageStyle } from "./commonstyles";
 
 const NuralPagination = ({
   totalRecords,
@@ -230,18 +231,8 @@ const NuralPagination = ({
           value={customPageInput}
           onChange={handleCustomPageInputChange}
           onKeyPress={handleCustomPageKeyPress}
-          style={{
-            width: "100px",
-            height: "24px",
-            fontSize: "8px",
-            paddingRight: "8px",
-            paddingLeft: "8px",
-            textAlign: "center",
-            borderRadius: "8px",
-            borderWidth: "1px",
-            border: `1px solid ${PRIMARY_BLUE2}`,
-            backgroundColor: LIGHT_GRAY2,
-          }}
+          style={jumpToPageStyle}
+
         />
         <Grid mt={1} onClick={handlePageSearch}>
           <img

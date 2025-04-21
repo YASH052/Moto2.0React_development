@@ -26,24 +26,6 @@ const dummyData = [
     storeName: "Store Name",
     cityName: "City Name",
   },
-  {
-    name: "Name",
-    surname: "Surname",
-    storeName: "Store Name",
-    cityName: "City Name",
-  },
-  {
-    name: "Name",
-    surname: "Surname",
-    storeName: "Store Name",
-    cityName: "City Name",
-  },
-  {
-    name: "Name",
-    surname: "Surname",
-    storeName: "Store Name",
-    cityName: "City Name",
-  },
 ];
 
 const RowStyles = {
@@ -91,7 +73,6 @@ const ISPZeroSaleTable = () => {
           <Button
             variant="contained"
             size="small"
-
             sx={{
               backgroundColor: DARK_PURPLE,
               fontSize: "8px",

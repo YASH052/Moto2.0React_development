@@ -65,6 +65,9 @@ const StyledAccordionSummary = styled(AccordionSummary)({
       outline: "none",
     },
   },
+  "& .MuiAccordionSummary-expandIconWrapper": {
+    display: "none",
+  },
 });
 
 const TemplateItem = styled(Box)({
@@ -250,17 +253,32 @@ const NuralAccordion = ({ title, templates, ...props }) => {
                 BIN CODE
               </NuralTextButton>
             )}
-            <NuralTextButton
-              icon={props.referenceIcon2}
-              iconPosition="right"
-              onClick={props.onClickReference}
-              backgroundColor={props.buttonBg}
-              color={props.buttonColor}
-              width="100%"
-              {...props.referenceButtonProps}
-            >
-              REFERENCE CODE
-            </NuralTextButton>
+            {!props.thirdButton && (
+              <NuralTextButton
+                icon={props.referenceIcon2}
+                iconPosition="right"
+                onClick={props.onClickReference}
+                backgroundColor={props.buttonBg}
+                color={props.buttonColor}
+                width="100%"
+                {...props.referenceButtonProps}
+              >
+                REFERENCE CODE
+              </NuralTextButton>
+            )}
+            {props.thirdButton && (
+              <NuralTextButton
+                icon={props.referenceIcon2}
+                iconPosition="right"
+                onClick={props.onClickReference}
+                backgroundColor={props.buttonBg}
+                color={props.buttonColor}
+                width="100%"
+                {...props.referenceButtonProps}
+              >
+                EXISTING DEMO DATA
+              </NuralTextButton>
+            )}
           </ButtonContainer>
         )}
       </AccordionDetails>

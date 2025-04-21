@@ -25,12 +25,10 @@ const SAPIntegiration = () => {
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const navigate = useNavigate();
   const tabs = [
-    { label: "Stock GRN", value: "stock-grn" },
-    { label: "Stock adjust Upload", value: "stock-adjustment-upload" },
-    { label: "Sap Integration", value: "sap-integration" },
-    { label: "Unblock Finance IMEI", value: "unblock-finance-imei" },
+    { label: "Activation File Received", value: "activation-file-received" },
+    { label: "SAP Integration", value: "sap-integration" },
+    { label: "Demo Conversion", value: "demo-conversion" },
   ];
-
   const templates = [
     {
       name: "Template 1",
@@ -57,7 +55,6 @@ const SAPIntegiration = () => {
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
-
   };
 
   return (
@@ -67,7 +64,7 @@ const SAPIntegiration = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",
@@ -75,7 +72,7 @@ const SAPIntegiration = () => {
           ml: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Others" />
+        <BreadcrumbsHeader pageTitle="Misc" />
       </Grid>
 
       <Grid item xs={12} md={6} lg={12}>

@@ -4,7 +4,7 @@ import { LIGHT_GRAY2, SKELETON_GRAY } from "./colors";
 
 export const FormSkeleton = () => {
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={2} pr={2}>
       {/* First Row */}
       <Grid
         container
@@ -15,7 +15,7 @@ export const FormSkeleton = () => {
           flexDirection: { xs: "column", sm: "row" },
         }}
       >
-        <Grid item xs={12} sm={12} md={12}>
+        <Grid item xs={12} sm={12} md={12} >
           <Skeleton
             animation="wave"
             variant="text"

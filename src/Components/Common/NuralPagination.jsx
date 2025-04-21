@@ -3,7 +3,8 @@ import { Grid, Typography, Button, IconButton } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import { PRIMARY_BLUE2, LIGHT_GRAY2 } from "../Common/colors";
- 
+import { jumpToPageStyle } from "./commonstyles";
+
 const NuralPagination = ({
   totalRecords,
   initialPage = 0,
@@ -13,9 +14,9 @@ const NuralPagination = ({
   const [page, setPage] = useState(initialPage);
   const [rowsPerPage, setRowsPerPage] = useState(initialRowsPerPage);
   const [customPageInput, setCustomPageInput] = useState("");
- 
+
   const totalPages = Math.ceil(totalRecords / rowsPerPage);
- 
+
   // Notify parent of pagination changes
   const notifyParent = (newPage, newRowsPerPage) => {
     if (onPaginationChange) {
@@ -27,14 +28,14 @@ const NuralPagination = ({
       });
     }
   };
- 
+
   const handleChangePage = (event, newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       setPage(newPage);
       notifyParent(newPage, rowsPerPage);
     }
   };
- 
+
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     const newPage = 0; // Reset to first page when changing rows per page
@@ -42,12 +43,12 @@ const NuralPagination = ({
     setPage(newPage);
     notifyParent(newPage, newRowsPerPage);
   };
- 
+
   const handleJumpToFirst = () => {
     setPage(0);
     notifyParent(0, rowsPerPage);
   };
- 
+
   const handleJumpToLast = () => {
     const lastPage = totalPages - 1;
     if (lastPage >= 0) {
@@ -55,17 +56,17 @@ const NuralPagination = ({
       notifyParent(lastPage, rowsPerPage);
     }
   };
- 
+
   const handleCustomPageInputChange = (e) => {
     setCustomPageInput(e.target.value);
   };
- 
+
   const handleCustomPageKeyPress = (e) => {
     if (e.key === "Enter") {
       handlePageSearch();
     }
   };
- 
+
   const handlePageSearch = () => {
     const pageNumber = parseInt(customPageInput, 10);
     if (pageNumber && pageNumber >= 1 && pageNumber <= totalPages) {
@@ -75,7 +76,7 @@ const NuralPagination = ({
       setCustomPageInput("");
     }
   };
- 
+
   return (
     <Grid
       container
@@ -108,7 +109,7 @@ const NuralPagination = ({
           </span>
         </Typography>
       </Grid>
- 
+
       <Grid item>
         <Grid
           container
@@ -158,7 +159,7 @@ const NuralPagination = ({
           ))}
         </Grid>
       </Grid>
- 
+
       <Grid
         item
         sx={{
@@ -189,7 +190,7 @@ const NuralPagination = ({
         >
           <NavigateBeforeIcon />
         </IconButton>
- 
+
         <Typography
           sx={{
             fontSize: "10px",
@@ -198,7 +199,7 @@ const NuralPagination = ({
         >
           PAGE {page + 1}
         </Typography>
- 
+
         <IconButton
           sx={{ cursor: "pointer" }}
           onClick={() => handleChangePage(null, page + 1)}
@@ -206,7 +207,7 @@ const NuralPagination = ({
         >
           <NavigateNextIcon />
         </IconButton>
- 
+
         <Typography
           sx={{
             fontFamily: "Manrope",
@@ -230,18 +231,7 @@ const NuralPagination = ({
           value={customPageInput}
           onChange={handleCustomPageInputChange}
           onKeyPress={handleCustomPageKeyPress}
-          style={{
-            width: "100px",
-            height: "24px",
-            fontSize: "8px",
-            paddingRight: "8px",
-            paddingLeft: "8px",
-            textAlign: "center",
-            borderRadius: "8px",
-            borderWidth: "1px",
-            border: `1px solid ${PRIMARY_BLUE2}`,
-            backgroundColor: LIGHT_GRAY2,
-          }}
+          style={jumpToPageStyle}
         />
         <Grid mt={1} onClick={handlePageSearch}>
           <img
@@ -254,12 +244,5 @@ const NuralPagination = ({
     </Grid>
   );
 };
- 
+
 export default NuralPagination;
- 
-//  <NuralPagination
-//                 totalRecords={totalRecords}
-//                 initialPage={0}
-//                 initialRowsPerPage={10}
-//                 onPaginationChange={handlePaginationChange}
-//               />

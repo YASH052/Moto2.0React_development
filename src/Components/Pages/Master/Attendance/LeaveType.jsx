@@ -40,6 +40,8 @@ const LeaveType = () => {
   const [activeTab, setActiveTab] = React.useState("leave-type");
 
   const tabs = [
+    { label: "Attendance Upload", value: "attendance-upload" },
+
     { label: "Leave Type", value: "leave-type" },
     { label: "Leave Allocation", value: "leave-allocation" },
   ];

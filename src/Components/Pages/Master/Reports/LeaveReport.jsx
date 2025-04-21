@@ -500,7 +500,7 @@ const LeaveReport = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={0}>
-          <BreadcrumbsHeader pageTitle="Report" />
+          <BreadcrumbsHeader pageTitle="Attendance" />
         </Grid>
 
         <Grid item xs={12} ml={0}>

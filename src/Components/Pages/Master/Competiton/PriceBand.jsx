@@ -27,6 +27,10 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import { TableRowSkeleton } from "../../../Common/Skeletons";
 import StatusModel from "../../../Common/StatusModel";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import NuralReports from "../../NuralCustomComponents/NuralReports";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 import {
   Table,
@@ -55,6 +59,7 @@ import { GetPriceBandMasterList,ManagePricebandmaster,} from "../../../Api/Api";
 
 const PriceBand = () => {
   const navigate = useNavigate();
+  const mainRef = React.useRef(null);
   const [activeTab, setActiveTab] = useState("competition-price-band");
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -85,7 +90,7 @@ const PriceBand = () => {
 
   const handleSort = (columnName) => {
     let direction = "asc";
-
+    console.log("columnName",columnName);
     // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
@@ -93,7 +98,7 @@ const PriceBand = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...filteredRows]); // Reset to original order
         return;
       }
     }
@@ -101,11 +106,16 @@ const PriceBand = () => {
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
+      // Handle numeric fields
+      if (columnName === "priceFrom" || columnName === "priceTo") {
+        const aValue = a[columnName] || 0;
+        const bValue = b[columnName] || 0;
+        return direction === "asc" ? aValue - bValue : bValue - aValue;
+      }
+      
+      // Handle string fields
+      const aValue = (a[columnName] || "").toString().toLowerCase();
+      const bValue = (b[columnName] || "").toString().toLowerCase();
 
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
@@ -119,8 +129,8 @@ const PriceBand = () => {
     setFilteredRows(sortedRows);
   };
 
-  const [rows, setRows] = React.useState([]);
-  const [filteredRows, setFilteredRows] = React.useState(rows);
+  // const [rows, setRows] = React.useState([]);
+  const [filteredRows, setFilteredRows] = React.useState([]);
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
@@ -145,7 +155,7 @@ const PriceBand = () => {
 
       const response = await GetPriceBandMasterList(body);
       if (response.statusCode == 200) {
-        setRows(response.pricebandmasterList);
+        // setRows(response.pricebandmasterList);
         setFilteredRows(response.pricebandmasterList);
         setTotalRecords(response.totalRecord);
       } else {
@@ -164,7 +174,7 @@ const PriceBand = () => {
 
   const exportPriceBandMasterList = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       // setError(null);
       let body = {
         selectionMode: 0,
@@ -216,6 +226,12 @@ const PriceBand = () => {
           setTittle(null);
           setStatus(null);
         }, 2000);
+      }else{
+        setTimeout(() => {
+          setTittle(null);
+          setStatus(null);
+        }, 2000);
+        
       }
     } catch (error) {
       setStatus("error");
@@ -231,8 +247,8 @@ const PriceBand = () => {
       // setError(null);
       let body = {
         ...formData,
-        priceStatus: 1,
-        selectionMode: 1,
+        // priceStatus: 1,
+        // selectionMode: 0,
       };
 
       const response = await ManagePricebandmaster(body);
@@ -248,7 +264,17 @@ const PriceBand = () => {
           priceStatus: 1,
           selectionMode: 0,
         });
-        setErrors({});
+        setTimeout(() => {
+          setErrors({});
+          setStatus(null);
+          setTittle(null);
+        }, 2000);
+      }else{
+        setTimeout(() => {
+          setErrors({});
+          setStatus(null);
+          setTittle(null);
+        }, 2000);
       }
     } catch (error) {
       setStatus("error");
@@ -278,7 +304,6 @@ const PriceBand = () => {
         return "";
     }
   };
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -340,7 +365,17 @@ const PriceBand = () => {
           priceStatus: 1,
           selectionMode: 0,
         });
-        setErrors({});
+        setTimeout(() => {
+          setErrors({});
+          setStatus(null);
+          setTittle(null);
+        }, 2000);
+      }else{
+        setTimeout(() => {  
+          setErrors({});
+          setStatus(null);
+          setTittle(null);
+        }, 2000);
       }
     } catch (error) {
       setStatus("error");
@@ -366,7 +401,11 @@ const PriceBand = () => {
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid container spacing={2} id="top-container"
+       sx={{
+        position: "relative",
+        pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+      }}>
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -421,7 +460,7 @@ const PriceBand = () => {
                       </Typography>
                       <NuralTextField
                         width="100%"
-                        placeholder="xxxxx"
+                        placeholder="ENTER PRICE BAND"
                         backgroundColor={LIGHT_BLUE}
                         name="priceBranCode"
                         value={formData.priceBranCode}
@@ -447,7 +486,7 @@ const PriceBand = () => {
                       </Typography>
                       <NuralTextField
                         width="100%"
-                        placeholder="xxxxx"
+                        placeholder="ENTER PRICE FROM"
                         backgroundColor={LIGHT_BLUE}
                         name="priceFrom"
                         value={formData.priceFrom}
@@ -473,7 +512,7 @@ const PriceBand = () => {
                       </Typography>
                       <NuralTextField
                         width="100%"
-                        placeholder="xxxxx"
+                        placeholder="ENTER PRICE TO"
                         backgroundColor={LIGHT_BLUE}
                         name="priceTo"
                         value={formData.priceTo}
@@ -497,10 +536,10 @@ const PriceBand = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={6} lg={6}>
                       <NuralButton
-                        text={formData.selectionMode === 0 ? "SAVE" : "UPDATE"}
+                        text={formData.priceBandID ? "UPDATE" : "SAVE"}
                         backgroundColor={AQUA}
                         variant="contained"
-                        onClick={formData.selectionMode === 0 ? handlePost : updatePriceBandMaster}
+                        onClick={formData.priceBandID  ? updatePriceBandMaster : handlePost}
                         width="99%"
                       />
                     </Grid>                  
@@ -536,6 +575,7 @@ const PriceBand = () => {
                     sx={{
                       p: { xs: 1, sm: 2 },
                       height: "calc(100vh - 180px)",
+                      minHeight: "650px",
                       overflow: "hidden"
                     }}
                   >
@@ -545,6 +585,7 @@ const PriceBand = () => {
                         backgroundColor: LIGHT_GRAY2,
                         color: PRIMARY_BLUE2,
                         maxHeight: "100%",
+                        minHeight: "650px",
                         display: "flex",
                         flexDirection: "column",
                         overflow: "auto",
@@ -599,7 +640,7 @@ const PriceBand = () => {
                                     List
                                   </Typography>
                                 </Grid>
-                                <Grid
+                                {/* <Grid
                                   item
                                   sx={{
                                     cursor: "pointer",
@@ -607,7 +648,7 @@ const PriceBand = () => {
                                   onClick={exportPriceBandMasterList}
                                 >
                                   <img src="./Images/export.svg" alt="export" />
-                                </Grid>
+                                </Grid> */}
                               </Grid>
                             </TableCell>
                           </TableRow>
@@ -706,72 +747,92 @@ const PriceBand = () => {
                                 <TableRowSkeleton key={index} columns={10} />
                               ))
                           ) : filteredRows.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} align="center">No records found</TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredRows.map((row, index) => (
-                              <TableRow
-                                key={row.id}
-                                sx={{
-                                  fontSize: "10px",
-                                  "&:hover": {
-                                    backgroundColor: "#f5f5f5",
-                                  },
-                                  "& td": {
-                                    borderBottom: `1px solid #C6CEED`,
-                                  },
-                                }}
-                              >
-                                <TableCell sx={{ ...rowstyle }}>
-                                  {(page - 1) * rowsPerPage + index + 1}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  {row.priceBandCode || "N/A"}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  ₹ {row.priceFrom.toLocaleString()}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  ₹ {row.priceTo.toLocaleString()}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  <Switch
-                                    checked={row.active}
-                                    onChange={() => updatePriceBandMasterStatus(row.priceBandID, row.active ? 0 : 1)}
-                                    size="small"
-                                    sx={{
-                                      "& .MuiSwitch-switchBase.Mui-checked": {
-                                        color: PRIMARY_BLUE2,
-                                      },
-                                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                      {
-                                        backgroundColor: DARK_PURPLE,
-                                      },
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  <IconButton size="small">
-                                    <EditIcon
-                                      sx={{
-                                        fontSize: 16,
-                                        color: PRIMARY_BLUE2,
-                                      }}
-                                      onClick={() => {
-                                        setFormData({
-                                          priceBranCode: row.priceBandCode,
-                                          priceFrom: row.priceFrom,
-                                          priceTo: row.priceTo,
-                                          priceStatus: row.active ? 1 : 0,
-                                          selectionMode: 1,
-                                        });
-                                      }}
-                                    />
-                                  </IconButton>
+                            Array(10).fill(0).map((_, index) => (
+                              <TableRow key={index}>
+                                <TableCell colSpan={6} align="center" sx={{ height: '48px' }}>
+                                  {index === 0 ? "No records found" : ""}
                                 </TableCell>
                               </TableRow>
                             ))
+                          ) : (
+                            <>
+                              {filteredRows.map((row, index) => (
+                                <TableRow
+                                  key={row.id}
+                                  sx={{
+                                    fontSize: "10px",
+                                    "&:hover": {
+                                      backgroundColor: "#f5f5f5",
+                                    },
+                                    "& td": {
+                                      borderBottom: `1px solid #C6CEED`,
+                                    },
+                                  }}
+                                >
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    {(page - 1) * rowsPerPage + index + 1}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    {row.priceBandCode || "N/A"}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    ₹ {row.priceFrom.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    ₹ {row.priceTo.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    <Switch
+                                      checked={row.active}
+                                      onChange={() => {
+                                        document.getElementById('top-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        updatePriceBandMasterStatus(row.priceBandID, row.active ? 0 : 1)}}
+                                      size="small"
+                                      sx={{
+                                        "& .MuiSwitch-switchBase.Mui-checked": {
+                                          color: PRIMARY_BLUE2,
+                                        },
+                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                        {
+                                          backgroundColor: DARK_PURPLE,
+                                        },
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    <IconButton size="small">
+                                      <EditIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          color: PRIMARY_BLUE2,
+                                        }}
+                                        onClick={() => {
+                                          document.getElementById('top-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                          setFormData({
+                                            priceBranCode: row.priceBandCode,
+                                            priceFrom: row.priceFrom,
+                                            priceTo: row.priceTo,
+                                            priceStatus: row.active ? 1 : 0,
+                                            selectionMode: 0,
+                                            priceBandID: row.priceBandID,
+                                          });
+                                          setAccordionExpanded(true);
+                                        }}
+                                      />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                              {filteredRows.length < 10 && 
+                                Array(10 - filteredRows.length)
+                                  .fill(0)
+                                  .map((_, index) => (
+                                    <TableRow key={`empty-${index}`}>
+                                      <TableCell colSpan={6} sx={{ height: '48px' }}></TableCell>
+                                    </TableRow>
+                                  ))
+                              }
+                            </>
                           )}
 
                           {/* Pagination row */}
@@ -959,6 +1020,61 @@ const PriceBand = () => {
             </Grid>
           </Grid>
         </>
+      </Grid>
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        position={"fixed"}
+        right={{
+          xs: 0,
+          sm: 5,
+          md: 5,
+          lg: 12,
+        }}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            // filter: isDownloadLoading ? "blur(2px)" : "none",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <SelectionPanel columns={""} views={""} />
+          </Grid>
+          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <NuralReports title="Reports" views={""} />
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={exportPriceBandMasterList}
+            //   isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );

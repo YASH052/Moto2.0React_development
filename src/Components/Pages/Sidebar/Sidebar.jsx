@@ -48,36 +48,13 @@ import {
   HOVER_BLUE,
   GREEN_COLOR,
   DARK_PURPLE,
+  PRIMARY_BLUE2,
 } from "../../Common/colors";
 // Make sure to update the path to the actual image location
 
 const collapsedWidth = 90; // Reduced from 80
 const expandedWidth = 280; // Reduced from 300
 
-const SearchWrapper = styled("div")(({ theme }) => ({
-  position: "relative",
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: TRANSPARENT_WHITE_15,
-  "&:hover": {
-    backgroundColor: TRANSPARENT_WHITE_25,
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    width: "80%",
-  },
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
-  width: "100%",
-  "& .MuiInputBase-input": {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: theme.spacing(4),
-    width: "100%",
-  },
-}));
 
 const menuGroups = [
   {
@@ -87,28 +64,28 @@ const menuGroups = [
       {
         text: "Attendance",
         icon: <EventNote />,
-        path: "/view-attendance-report",
+        path: "/attendance-upload",
       },
-      { text: "Tertiary Sale", icon: <SwapHoriz />, path: "/tertiary-sale" },
+      { text: "Transaction", icon: <SwapHoriz />, path: "/transaction" },
       {
         text: "Inventory",
         icon: <LocalOffer />,
-        path: "/stock-adjustment-report",
+        path: "#",
       },
-      { text: "Competition", icon: <FlagIcon />, path: "/competition-brand" },
+      // { text: "Competition", icon: <FlagIcon />, path: "/competition-brand" },
     ],
   },
   {
     title: "Secondary Module",
     items: [
-      { text: "Merchandising", icon: <LocalOffer />, path: "/merchandizing" },
+      { text: "Merchandising", icon: <LocalOffer />, path: "#" },
       {
         text: "Prebooking",
         icon: <EventNote />,
         path: "/prebooking-sku-create",
       },
-      { text: "Learning & Dev.", icon: <School />, path: "/learning" },
-      { text: "Survey", icon: <Poll />, path: "/survey" },
+      // { text: "Learning & Dev.", icon: <School />, path: "/learning" },
+      { text: "Survey", icon: <Poll />, path: "#" },
     ],
   },
 ];
@@ -121,7 +98,7 @@ const bottomMenuItems = [
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [myAppsExpanded, setMyAppsExpanded] = useState(true);
+  const [myAppsExpanded, setMyAppsExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -133,8 +110,23 @@ const Sidebar = () => {
     setIsExpanded(false);
   };
 
+  const handleLogout = () => {
+    // Clear all authentication related data
+    localStorage.removeItem("log");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("authKey");
+    localStorage.removeItem("token");
+
+    // Redirect to login page
+    navigate("/login");
+  };
+
   const handleNavigation = (path) => {
-    navigate(path);
+    if (path === "/logout") {
+      handleLogout();
+    } else {
+      navigate(path);
+    }
   };
 
   const isSelected = (path) => {
@@ -146,7 +138,7 @@ const Sidebar = () => {
       sx={{
         height: "100%",
         display: "flex",
-        p: 1,
+        p: 1.5,
         bgcolor: WHITE,
         flexDirection: "column",
       }}
@@ -164,10 +156,11 @@ const Sidebar = () => {
           margin: "auto",
         }}
       >
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 0 }}>
           {/* Logo section */}
           <Box
             sx={{
+              p: 2,
               display: "flex",
               alignItems: "center",
               justifyContent: collapsed ? "center" : "space-between",
@@ -181,26 +174,35 @@ const Sidebar = () => {
                   width: "100%",
                   bgcolor: LIGHT_GRAY,
                   borderRadius: 1,
+                  p: 0.5,
                   textAlign: "center",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "gray",
+                  color: PRIMARY_BLUE2,
                 }}
               >
                 {" "}
-                Client Logo
+                MOTOROLA
               </Box>
             ) : (
-              <img
-                src={"./Images/ClientLogo.png"}
-                alt="Powered by Nural"
-                style={{
-                  maxWidth: "150%",
-                  padding: "8px",
-                  transform: "scale(1.2)",
+              <Box
+                sx={{
+                  ml: -2,
+                  mt: -1,
                 }}
-              />
+              >
+                <img
+                  src={"./Images/motologo.webp"}
+                  alt="Powered by Nural"
+                  style={{
+                    maxWidth: "100%",
+                    height: "100%",
+                    padding: "8px",
+                    transform: "scale(1.2)",
+                  }}
+                />
+              </Box>
             )}
           </Box>
 
@@ -209,54 +211,54 @@ const Sidebar = () => {
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                p: 0,
                 alignItems: "center",
+                gap: 2,
+                px: 2,
                 mb: 2,
-                ml: -2,
+                mt: -2,
               }}
             >
-              <IconButton color="inherit">
-                <img
-                  width={45}
-                  height={45}
-                  src="./Icons/Notification.png"
-                  alt="notification"
-                />
+              <IconButton
+                sx={{
+                  backgroundColor: NOTIFICATION_BLUE,
+                  width: 45,
+                  height: 45,
+                  borderRadius: "8px",
+                  "&:hover": {
+                    backgroundColor: NOTIFICATION_BLUE,
+                  },
+                }}
+              >
+                <Notifications sx={{ color: WHITE }} />
               </IconButton>
-              <SearchWrapper
+
+              <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid #DFDDDE",
-                  borderRadius: "5px",
-                  height: "45px",
-                  width: "145px",
                   backgroundColor: DARK_PURPLE,
-                 
+                  borderRadius: "8px",
+                  border: "1px solid rgb(244, 240, 242)",
+                  height: 45,
+                  flex: 1,
+                  px: 2,
                 }}
               >
-                <IconButton
-                  sx={{ position: "absolute", p: 1, color: "white", left: 15 }}
-                >
-                  <SearchIcon />
-                </IconButton>
-
-                <StyledInputBase
-                  sx={{
-                    width: "152px",
-                    height: "45px",
-                    marginLeft: "30px",
-                    color: "white",
-                    backgroundColor: 'none',
-                   
-                  }}
+                <SearchIcon sx={{ color: WHITE, mr: 1 }} />
+                <InputBase
                   placeholder="Search"
-
-                  inputProps={{ "aria-label": "search" }}
+                  sx={{
+                    color: WHITE,
+                    flex: 1,
+                    "& .MuiInputBase-input": {
+                      "&::placeholder": {
+                        color: WHITE,
+                        opacity: 1,
+                      },
+                    },
+                  }}
                 />
-              </SearchWrapper>
+              </Box>
             </Box>
           ) : (
             <Box
@@ -265,6 +267,8 @@ const Sidebar = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 2,
+
+                mt: -3,
               }}
             >
               {/* Search Icon */}
@@ -355,23 +359,6 @@ const Sidebar = () => {
                   ))}
                 </Box>
               </Box>
-
-              {/* Edit/Pen Icon */}
-              {/* <Box
-                sx={{
-                  width: 45,
-                  height: 45,
-                  bgcolor: '#',
-                  borderRadius: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: '#1976d2' }
-                }}
-              >
-                <Edit sx={{ color: 'white' }} />
-              </Box> */}
             </Box>
           )}
 
@@ -384,22 +371,20 @@ const Sidebar = () => {
                 outline: "none",
                 bgcolor: "transparent",
                 color: SECONDARY_BLUE,
-
                 boxShadow: "none",
                 "&:before": {
                   display: "none",
                 },
                 "& .MuiAccordionSummary-root": {
                   minHeight: "auto",
-                  pl: 2,
-                  pr: 2,
+                  p: 2,
+                  mt: -2,
                   "&:focus": {
                     outline: "none",
                   },
                 },
                 "& .MuiAccordionSummary-content": {
                   m: 0,
-                  border: "1px solid transparent",
                 },
               }}
             >
@@ -408,8 +393,8 @@ const Sidebar = () => {
                   <KeyboardArrowDown
                     sx={{
                       color: "#fff",
-                      marginRight: "px",
                       fontSize: "1.2rem",
+                      transition: "transform 0.2s ease-in-out",
                     }}
                   />
                 }
@@ -419,18 +404,29 @@ const Sidebar = () => {
                   },
                 }}
               >
-                <Typography variant="body2" sx={{ color: SECONDARY_BLUE }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: SECONDARY_BLUE,
+                    fontFamily: "Manrope",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    lineHeight: "100%",
+                    letterSpacing: "0%",
+                  }}
+                >
                   My Apps
                 </Typography>
               </AccordionSummary>
 
-              <AccordionDetails sx={{ p: 0, pt: 1 }}>
+              <AccordionDetails sx={{ px: 2 }}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {/* Dashboard button */}
                   <Box
                     sx={{
                       borderRadius: 2,
-                      border: "1px solid #DFDDDE",
+                      border: "1px solid rgb(244, 240, 242)",
+
                       p: 1.5,
                       display: "flex",
                       alignItems: "center",
@@ -445,6 +441,7 @@ const Sidebar = () => {
                       sx={{
                         fontWeight: 500,
                         fontSize: "0.875rem",
+
                         "&:hover": { bgcolor: WHITE, color: PRIMARY_BLUE },
                       }}
                     >
@@ -560,114 +557,67 @@ const Sidebar = () => {
 
         {/* Main menu items */}
         {!collapsed ? (
-          <Box sx={{ px: 2 }}>
-            {menuGroups.map((group) => (
-              <Accordion
-                key={group.title}
-                defaultExpanded
-                sx={{
-                  outline: "none",
-                  bgcolor: "transparent",
-                  color: SECONDARY_BLUE,
-                  boxShadow: "none",
-                  "&:before": {
-                    display: "none",
-                  },
-                  "& .MuiAccordionSummary-root": {
-                    minHeight: "auto",
-                    p: 1,
-                    my: 0.5,
-                    pr: 2,
-                    "&:focus": {
-                      outline: "none",
-                    },
-                  },
-                  "& .MuiAccordionSummary-content": {
-                    m: 0,
-                  },
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={
-                    <KeyboardArrowDown
-                      sx={{ color: "#fff", fontSize: "1.2rem" }}
-                    />
-                  }
-                  sx={{
-                    "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-                      transform: "rotate(180deg)",
-                    },
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{ color: SECONDARY_BLUE, px: 1 }}
-                  >
-                    {group.title}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ p: 0 }}>
-                  <List sx={{ p: 0 }}>
-                    {group.items.map((item) => (
-                      <ListItem
-                        button
-                        key={item.text}
-                        onClick={() => handleNavigation(item.path)}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          "&:hover": {
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
-                          },
-                          borderRadius: 1,
-                          pb: 0.5,
-                          pt: 1,
+          <Box sx={{ px: 0 }}>
+            <List sx={{ p: 0 }}>
+              {menuGroups
+                .flatMap((group) => group.items)
+                .map((item) => (
+                  <ListItem
+                    button
+                    key={item.text}
+                    onClick={() => handleNavigation(item.path)}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      },
+                      borderRadius: 1,
+                      // py: 0.5,
+                      position: "relative",
+                      ...(isSelected(item.path) && {
+                        "& .MuiListItemText-root": {
                           position: "relative",
-                          ...(isSelected(item.path) && {
-                            "& .MuiListItemText-root": {
-                              position: "relative",
-                              "& .MuiTypography-root": {
-                                position: "relative",
-                                display: "inline-block",
-                                "&::after": {
-                                  content: '""',
-                                  position: "absolute",
-                                  bottom: -4,
-                                  left: 0,
-                                  width: "100%",
-                                  height: "2px",
-                                  backgroundColor: WHITE,
-                                },
-                              },
+                          "& .MuiTypography-root": {
+                            position: "relative",
+                            display: "inline-block",
+                            "&::after": {
+                              content: '""',
+                              position: "absolute",
+                              bottom: -4,
+                              left: 0,
+                              width: "100%",
+                              height: "2px",
+                              backgroundColor: WHITE,
                             },
-                          }),
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{ 
-                            color: isSelected(item.path) ? WHITE : SECONDARY_BLUE, 
-                            minWidth: 35 
-                          }}
-                        >
-                          <Box sx={{ fontSize: "1.2rem" }}>{item.icon}</Box>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={item.text}
-                          sx={{
-                            mb: 1.5,
-                            "& .MuiTypography-root": {
-                              fontSize: "0.875rem",
-                              color: isSelected(item.path) ? WHITE : SECONDARY_BLUE,
-                            },
-                          }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
-            ))}
+                          },
+                        },
+                      }),
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color: isSelected(item.path) ? WHITE : SECONDARY_BLUE,
+                        minWidth: 35,
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+
+                    <ListItemText
+                      primary={item.text}
+                      sx={{
+                        cursor: "pointer",
+                        "& .MuiTypography-root": {
+                          fontSize: "0.875rem",
+                          color: isSelected(item.path) ? WHITE : SECONDARY_BLUE,
+                        },
+                      }}
+                    />
+                  </ListItem>
+                ))}
+            </List>
           </Box>
         ) : (
           <List>
@@ -689,9 +639,9 @@ const Sidebar = () => {
                   }}
                 >
                   <ListItemIcon
-                    sx={{ 
-                      color: isSelected(item.path) ? WHITE : SECONDARY_BLUE, 
-                      minWidth: "auto" 
+                    sx={{
+                      color: isSelected(item.path) ? WHITE : SECONDARY_BLUE,
+                      minWidth: "auto",
                     }}
                   >
                     {item.icon}
@@ -714,7 +664,7 @@ const Sidebar = () => {
         }}
       >
         {/* Bottom menu items */}
-        <List sx={{ py: 0, px: 2 }}>
+        <List sx={{ py: 0, px: 0 }}>
           {bottomMenuItems.map((item) => (
             <ListItem
               button
@@ -728,6 +678,7 @@ const Sidebar = () => {
                 justifyContent: collapsed ? "center" : "flex-start",
                 minHeight: 35,
                 color: GREEN_COLOR,
+
                 position: "relative",
                 ...(isSelected(item.path) && {
                   "& .MuiListItemText-root": {
@@ -765,6 +716,7 @@ const Sidebar = () => {
                   primary={item.text}
                   sx={{
                     color: PRIMARY_BLUE,
+                    cursor: "pointer",
                     "& .MuiTypography-root": {
                       fontWeight: 550,
                       fontSize: "0.813rem",
@@ -778,24 +730,19 @@ const Sidebar = () => {
         </List>
 
         {/* Powered by section */}
-        <Box
-          sx={
-            collapsed
-              ? { p: 0.5, textAlign: "center" }
-              : { p: 0, textAlign: "center" }
-          }
-        >
+        <Box sx={collapsed ? { p: 0.5 } : { p: 0 }}>
           <img
             src={
               collapsed ? "./Images/Wordmark.png" : "./Images/NuralFootLogo.png"
             }
             alt="Powered by Nural"
             style={{
+              borderRadius: collapsed ? "0px" : "8px",
               marginTop: "1rem",
               marginLeft: "auto",
               marginRight: "auto",
-              maxWidth: collapsed ? "80%" : "15rem",
-              height: collapsed ? "40%" : "5%",
+              width: collapsed ? "100%" : "100%",
+              height: collapsed ? "40%" : "50px",
               objectFit: collapsed ? "contain" : "cover",
             }}
           />

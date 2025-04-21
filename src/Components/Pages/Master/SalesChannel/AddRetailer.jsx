@@ -1,6 +1,5 @@
 import { Grid, Typography, FormHelperText } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -12,9 +11,7 @@ import {
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
-import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
-import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
+
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
@@ -34,29 +31,16 @@ import {
   GetStateListForDropdown,
   GetCityListForDropdown,
   AddRetailerForMoto,
+  getParentRetailerlist,
+  getISPRetailerReferenceDataLink,
+  getRetailer,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
+import { createFilterOptions } from "@mui/material/Autocomplete";
+import { useSelector } from "react-redux";
+import AddSalesChannelSkeleton from "../../../Common/AddSalesChannelSkeleton";
 
-//     name: "Reference Data 1",
-//     onView: () => console.log("Reference Data 1"),
-//     onDownload: () => console.log("Download Reference Data 1"),
-//   },
-//   {
-//     name: "Reference Data 2",
-//     onView: () => console.log("Reference Data 2"),
-//     onDownload: () => console.log("Download Reference Data 2"),
-//   },
-//   {
-//     name: "Reference Data 3",
-//     onView: () => console.log("Reference Data 3"),
-//     onDownload: () => console.log("Download Reference Data 3"),
-//   },
-//   {
-//     name: "Reference Data 4",
-//     onView: () => console.log("Reference Data 4"),
-//     onDownload: () => console.log("Download Reference Data 4"),
-//   },
-// ];
+
 const tabs = [
   { label: "Add Retailer", value: "add-retailer" },
   { label: "Search", value: "view-retailer" },
@@ -75,14 +59,24 @@ const options2 = [
   "Computer Vision",
 ];
 
+const filterOptions = createFilterOptions({
+  matchFrom: "any",
+  limit: 100,
+  stringify: (option) => option.retailerCode + " " + option.retailerName,
+});
+
 const AddRetailer = () => {
+  const retailerID = useSelector((state) => state.retailerID);
+  console.log("retailerID", retailerID);
   const [activeTab, setActiveTab] = React.useState("add-retailer");
   const [selectedFormat, setSelectedFormat] = React.useState("interface");
+  const [isChild, setIsChild] = React.useState(0);
   const [retailerDrop, setRetailerDrop] = React.useState([]);
   const [SCRCategoryListDrop, setSCRCategoryListDrop] = React.useState([]);
   const [reportingHierarchyDrop, setReportingHierarchyDrop] = React.useState(
     []
   );
+  const [loading, setLoading] = React.useState(false);
   const [countryDrop, setCountryDrop] = React.useState([]);
   const [stateDrop, setStateDrop] = React.useState([]);
   const [cityDrop, setCityDrop] = React.useState([]);
@@ -91,6 +85,7 @@ const AddRetailer = () => {
   const [showStatus, setShowStatus] = React.useState(false);
   const [status, setStatus] = React.useState(0);
   const [title, setTitle] = React.useState("");
+  const [parentRetailer, setParentRetailer] = React.useState([]);
   const [formData, setFormData] = useState({
     accountHolder: "",
     accountNumber: "",
@@ -147,7 +142,7 @@ const AddRetailer = () => {
   });
 
   const [errors, setErrors] = useState({});
-
+  const [isParentRetailerLoading, setIsParentRetailerLoading] = useState(false);
   const validateField = (name, value) => {
     switch (name) {
       case "retailerTypeId":
@@ -158,8 +153,6 @@ const AddRetailer = () => {
         return !value ? "Parent Sales Channel is required" : "";
       case "retailerHierarchyLevelID":
         return !value ? "Reporting Hierarchy is required" : "";
-      case "salesmanID":
-        return !value ? "Salesman is required" : "";
       case "contactPerson":
         return !value ? "Contact Person is required" : "";
       case "retailerName":
@@ -190,47 +183,36 @@ const AddRetailer = () => {
           : "";
       case "address1":
         return !value ? "Address Line 1 is required" : "";
+      case "panNo":
+        return !value ? "PAN No. is required" : "";
       case "bankName":
-        return !value ? "Bank Name is required" : "";
+        return "";
       case "accountHolder":
-        return !value ? "Account Holder Name is required" : "";
+        return "";
       case "accountNumber":
         return !value
-          ? "Bank Account Number is required"
+          ? ""
           : !/^[0-9]{9,18}$/.test(value)
-          ? "Invalid Bank Account Number"
+          ? "Invalid Bank Account Number (9-18 digits)"
           : "";
       case "branchLocation":
-        return !value ? "Branch Location is required" : "";
+        return "";
       case "ifscCode":
-        return !value
-          ? "IFSC Code is required"
-          : // : !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)
-            // ? "Invalid IFSC Code"
-            "";
-      // case "panNo":
-      //   return !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
-      //     ? "Invalid PAN Number (Format: ISOPK2565H)"
-      //     : "";
-      // case "gstin_No":
-      //   return !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][1-9A-Z][0-9A-Z]$/.test(
-      //     value
-      //   )
-      //     ? "Invalid GST Number (Format: 29ABCDE1234F1Z5)"
-      //     : "";
+        return "";
       case "counterPotentialValue":
         return !value
           ? "Counter Potential Value is required"
           : isNaN(Number(value))
           ? "Counter Potential Value must be a number"
           : "";
-
       case "counterSize":
         return !value
           ? "Counter Size is required"
           : isNaN(Number(value))
           ? "Counter Size must be a number"
           : "";
+      case "openingStockDate":
+        return !value ? "Opening Stock Date is required" : "";
       default:
         return "";
     }
@@ -256,6 +238,9 @@ const AddRetailer = () => {
       ...prev,
       [field]: error,
     }));
+    if (field === "salesChannelID") {
+      fetchReportingHierarchyDrop(value);
+    }
 
     // Handle special cases for dependent dropdowns
     if (field === "countryID") {
@@ -292,10 +277,11 @@ const AddRetailer = () => {
       processedValue = value.replace(/\s/g, "");
     }
 
-    // Character limit restrictions
+    // Character limit restrictions and alphanumeric validation
     switch (field) {
       case "panNo":
         processedValue = processedValue.slice(0, 10);
+        processedValue = processedValue.replace(/[^a-zA-Z0-9]/g, "");
         break;
       case "pinCode":
         processedValue = processedValue.slice(0, 6);
@@ -325,12 +311,18 @@ const AddRetailer = () => {
       return;
     }
 
+    setLoading(true);
     try {
       let res = await AddRetailerForMoto(formData);
       if (res.statusCode == "200") {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage || "Retailer Added Successfully");
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(false);
+          setTitle("");
+        }, 3000);
         handleCancel(); // Reset form after successful creation
       } else {
         setShowStatus(true);
@@ -342,6 +334,8 @@ const AddRetailer = () => {
       setStatus(error.status);
       setTitle(error.message || "Something went wrong");
       console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -402,6 +396,9 @@ const AddRetailer = () => {
       GstFilePath: "",
     });
 
+    // Reset isChild state
+    setIsChild(0);
+
     // Clear all errors
     setErrors({});
 
@@ -452,14 +449,100 @@ const AddRetailer = () => {
     }
   };
 
+  const getParentRetailer = async () => {
+    const param = {
+      salesChanneType: 0,
+      roleType: 1, //for parent retailer =1, else 0
+      salesChannelID: 0,
+      retailerCode: "",
+      retailerName: "",
+      retailerID: 0,
+    };
+
+    try {
+      setIsParentRetailerLoading(true);
+      const res = await getParentRetailerlist(param);
+      console.log("res.parentRetailerList", res.parentRetailerMasterList);
+      if (res.statusCode == "200") {
+        setParentRetailer(res.parentRetailerMasterList);
+      } else {
+        setParentRetailer([]);
+      }
+    } catch (error) {
+      console.error("Error in getParentRetailer:", error);
+      throw error;
+    } finally {
+      setIsParentRetailerLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchRetailerDrop();
     fetchSCRCategoryDrop();
     fetchSalesChannelDrop();
-    fetchReportingHierarchyDrop();
+
     fetchSalesmanDrop();
     fetchCountryDrop();
   }, []);
+
+  useEffect(() => {
+    if (retailerID) {
+      fetchRetailerData();
+    }
+  }, [retailerID]);
+
+  const fetchRetailerData = async () => {
+    let body = {
+      pageIndex: 1,
+      pageSize: 10,
+      retailerID: retailerID,
+      retailerName: "",
+      salesChannelID: 0,
+      type: 0,
+      salesmanName: "",
+      salesmanID: 0,
+      loggedSalesChannelID: 0,
+      retailerCode: "",
+      status: 2,
+      retailerApproval: 1,
+      displayMode: 0,
+      stateID: 0,
+      salesChannelCode: "",
+      ndID: 0,
+      countryID: 0,
+      leaveTypeID: 0,
+    };
+    try {
+      let res = await getRetailer(body);
+      if (res.statusCode == "200") {
+        console.log("res.getRetailerList", res.getRetailerList[0]);
+        let editData = res.getRetailerList[0];
+
+        // setFormData({
+        //   ...editData,
+        //   retailerID: editData.retailerID,
+        //   retailerName: editData.retailerName,
+        //   retailerCode: editData.retailerCode,
+        //   salesChannelID: editData.salesChannelID,
+        //   stateID: editData.stateID,
+        //   countryID: editData.countryID,
+        //   retailerTypeID: editData.retailerTypeID,
+        //   scrCategoryID: editData.scrCategoryID,
+        //   groupParentID: editData.groupParentID,
+        //   isIsp: editData.isIsp,
+
+        // });
+      } else {
+        setShowStatus(true);
+        setStatus(res.statusCode);
+        setTitle(res.statusMessage || "Error Fetching Retailer Data");
+      }
+    } catch (error) {
+      setShowStatus(true);
+      setStatus(error.status || 500);
+      setTitle(error.message || "Internal Server Error");
+    }
+  };
 
   const fetchCountryDrop = async () => {
     let body = {
@@ -532,9 +615,10 @@ const AddRetailer = () => {
       console.error("Error in fetchSalesmanDrop:", error);
     }
   };
-  const fetchReportingHierarchyDrop = async () => {
+
+  const fetchReportingHierarchyDrop = async (value) => {
     let body = {
-      salesChannelID: 2702, //must be pass saleschannelID
+      salesChannelID: value, //must be pass saleschannelID
     };
 
     try {
@@ -544,6 +628,7 @@ const AddRetailer = () => {
         res.reportingHierarchyList1
       );
       if (res.statusCode == "200") {
+        console.log("res.reportingHierarchyList1", res.reportingHierarchyList1);
         setReportingHierarchyDrop(res.reportingHierarchyList1);
       } else {
         setReportingHierarchyDrop([]);
@@ -640,6 +725,11 @@ const AddRetailer = () => {
       errorMessage: errors.panNo,
     },
   ];
+
+  if (loading) {
+    return <AddSalesChannelSkeleton />;
+  }
+
 
   return (
     <Grid container spacing={0}>
@@ -828,10 +918,12 @@ const AddRetailer = () => {
                       ISD ON COUNTER
                     </Typography>
                     <NuralRadioButton
+                      onChange={(value) => handleChange("isIsp", value)}
                       options={[
-                        { value: "yes", label: "Yes" },
-                        { value: "no", label: "No" },
+                        { value: 1, label: "Yes" },
+                        { value: 0, label: "No" },
                       ]}
+                      value={formData.isIsp}
                       width="100%"
                     />
                   </Grid>
@@ -907,14 +999,134 @@ const AddRetailer = () => {
                     </Typography>
                     <NuralRadioButton
                       options={[
-                        { value: "yes", label: "Yes" },
-                        { value: "no", label: "No" },
+                        { value: 1, label: "Yes" },
+                        { value: 0, label: "No" },
                       ]}
+                      onChange={(value) => {
+                        console.log("Setting isChild to:", value);
+                        setIsChild(value);
+                        getParentRetailer();
+                      }}
+                      value={isChild}
                       margin="0px"
                       width="100%"
                     />
                   </Grid>
+                  {isChild == 1 && (
+                    <>
+                      <Grid item xs={12} md={6} lg={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: PRIMARY_BLUE2,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            mb: 1,
+                          }}
+                        >
+                          PARENT RETAILER NAME
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          placeholder="SELECT"
+                          options={parentRetailer}
+                          getOptionLabel={(option) => option.retailerName || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.retailerID === value?.retailerID
+                          }
+                          onChange={(event, newValue) => {
+                            handleChange(
+                              "groupParentID",
+                              newValue?.retailerID || null
+                            );
+                          }}
+                          value={
+                            parentRetailer.find(
+                              (option) =>
+                                option.retailerID === formData.groupParentID
+                            ) || null
+                          }
+                          loading={isParentRetailerLoading}
+                          error={!!errors.groupParentID}
+                          errorMessage={errors.groupParentID}
+                          filterOptions={filterOptions}
+                        />
+                        {errors.groupParentID && (
+                          <FormHelperText
+                            sx={{
+                              color: ERROR_MSSG,
+                              fontSize: "12px",
+                              marginTop: "4px",
+                              fontFamily: "Manrope, sans-serif",
+                              paddingLeft: "8px",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {errors.groupParentID}
+                          </FormHelperText>
+                        )}
+                      </Grid>
 
+                      <Grid item xs={12} md={6} lg={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            ml: 2,
+                            color: PRIMARY_BLUE2,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            mb: 1,
+                          }}
+                        >
+                          PARENT RETAILER CODE
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          placeholder="SELECT"
+                          options={parentRetailer}
+                          getOptionLabel={(option) => option.retailerCode || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.retailerID === value?.retailerID
+                          }
+                          onChange={(event, newValue) => {
+                            handleChange(
+                              "groupParentID",
+                              newValue?.retailerID || null
+                            );
+                          }}
+                          value={
+                            parentRetailer.find(
+                              (option) =>
+                                option.retailerID === formData.groupParentID
+                            ) || null
+                          }
+                          loading={isParentRetailerLoading}
+                          error={!!errors.groupParentID}
+                          errorMessage={errors.groupParentID}
+                          filterOptions={filterOptions}
+                        />
+                        {errors.groupParentID && (
+                          <FormHelperText
+                            sx={{
+                              color: ERROR_MSSG,
+                              fontSize: "12px",
+                              marginTop: "4px",
+                              fontFamily: "Manrope, sans-serif",
+                              paddingLeft: "8px",
+                            }}
+                          >
+                            {errors.groupParentID}
+                          </FormHelperText>
+                        )}
+                      </Grid>
+                    </>
+                  )}
                   <Grid item xs={12} md={6} lg={6}>
                     <Typography
                       variant="h6"
@@ -1060,288 +1272,6 @@ const AddRetailer = () => {
               </NuralAccordion2>
             </Grid>
 
-            <Grid item>
-              <NuralAccordion2
-                title="Business Details"
-                backgroundColor={LIGHT_GRAY2}
-              >
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={12} lg={12}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      OPENING STOCK DATE
-                    </Typography>
-                    <NuralCalendar
-                      value={formData.openingStockDate}
-                      onChange={(date) =>
-                        handleChange("openingStockDate", date)
-                      }
-                      width="87%"
-                      placeholder="DD/MMM/YYYY"
-                      backgroundColor={LIGHT_BLUE}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      COUNTER POTENTIAL (VALUE)
-                    </Typography>
-                    <NuralTextField
-                      value={formData.counterPotentialValue}
-                      onChange={(e) =>
-                        handleChange("counterPotentialValue", e.target.value)
-                      }
-                      width="100%"
-                      placeholder="ENTER COUNTER POTENTIAL (VALUE)"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.counterPotentialValue}
-                      errorMessage={errors.counterPotentialValue}
-                      onKeyPress={(e) => {
-                        if (!/[0-9.]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      COUNTER POTENTIAL (VOLUME)
-                    </Typography>
-                    <NuralTextField
-                      value={formData.counterSize}
-                      onChange={(e) =>
-                        handleChange("counterSize", e.target.value)
-                      }
-                      width="100%"
-                      placeholder="ENTER COUNTER POTENTIAL"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.counterSize}
-                      errorMessage={errors.counterSize}
-                      onKeyPress={(e) => {
-                        if (!/[0-9.]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-              </NuralAccordion2>
-            </Grid>
-
-            <Grid item>
-              <NuralAccordion2
-                title="Banking Details"
-                backgroundColor={LIGHT_GRAY2}
-              >
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      NAME OF BANK
-                    </Typography>
-                    <NuralTextField
-                      width="100%"
-                      value={formData.bankName}
-                      onChange={(e) => handleChange("bankName", e.target.value)}
-                      placeholder="ENTER NAME OF BANK"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.bankName}
-                      errorMessage={errors.bankName}
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      ACCOUNT HOLDER NAME
-                    </Typography>
-                    <NuralTextField
-                      width="100%"
-                      value={formData.accountHolder}
-                      onChange={(e) =>
-                        handleChange("accountHolder", e.target.value)
-                      }
-                      placeholder="ENTER ACCOUNT HOLDER NAME"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.accountHolder}
-                      errorMessage={errors.accountHolder}
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      BANK ACCOUNT NUMBER
-                    </Typography>
-                    <NuralTextField
-                      width="100%"
-                      value={formData.accountNumber}
-                      onChange={(e) =>
-                        handleChange("accountNumber", e.target.value)
-                      }
-                      placeholder="ENTER BANK ACCOUNT NUMBER"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.accountNumber}
-                      errorMessage={errors.accountNumber}
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.key === " ") {
-                          e.preventDefault();
-                        }
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      BRANCH LOCATION
-                    </Typography>
-                    <NuralTextField
-                      width="100%"
-                      value={formData.branchLocation}
-                      onChange={(e) =>
-                        handleChange("branchLocation", e.target.value)
-                      }
-                      placeholder="ENTER BRANCH LOCATION"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.branchLocation}
-                      errorMessage={errors.branchLocation}
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      IFSC CODE
-                    </Typography>
-                    <NuralTextField
-                      width="100%"
-                      value={formData.ifscCode}
-                      onChange={(e) => handleChange("ifscCode", e.target.value)}
-                      placeholder="ENTER IFSC CODE"
-                      backgroundColor={LIGHT_BLUE}
-                      error={!!errors.ifscCode}
-                      errorMessage={errors.ifscCode}
-                      onKeyPress={(e) => {
-                        if (e.key === " ") {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-              </NuralAccordion2>
-            </Grid>
-          </Grid>
-        </Grid>
-
-        <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
-          <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralAccordion2
                 title="Retailer Details"
@@ -1692,6 +1622,295 @@ const AddRetailer = () => {
                       onChange={(e) => handleChange("address2", e.target.value)}
                       placeholder="ENTER ADDRESS LINE 2"
                       backgroundColor={LIGHT_BLUE}
+                    />
+                  </Grid>
+                </Grid>
+              </NuralAccordion2>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+          <Grid container spacing={2} direction="column">
+            <Grid item>
+              <NuralAccordion2
+                title="Business Details"
+                backgroundColor={LIGHT_GRAY2}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={12} lg={12}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      OPENING STOCK DATE*
+                    </Typography>
+                    <NuralCalendar
+                      value={formData.openingStockDate}
+                      onChange={(date) =>
+                        handleChange("openingStockDate", date)
+                      }
+                      width="100%"
+                      placeholder="DD/MMM/YYYY"
+                      backgroundColor={LIGHT_BLUE}
+                      name="openingStockDate"
+                      error={!!errors.openingStockDate}
+                    />
+                    {errors.openingStockDate && (
+                      <FormHelperText error sx={{ mt: 0.5, ml: 1 }}>
+                        {errors.openingStockDate}
+                      </FormHelperText>
+                    )}
+                  </Grid>
+
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      COUNTER POTENTIAL (VALUE)
+                    </Typography>
+                    <NuralTextField
+                      value={formData.counterPotentialValue}
+                      onChange={(e) =>
+                        handleChange("counterPotentialValue", e.target.value)
+                      }
+                      width="100%"
+                      placeholder="ENTER COUNTER POTENTIAL (VALUE)"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.counterPotentialValue}
+                      errorMessage={errors.counterPotentialValue}
+                      onKeyPress={(e) => {
+                        if (!/[0-9.]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      COUNTER POTENTIAL (VOLUME)
+                    </Typography>
+                    <NuralTextField
+                      value={formData.counterSize}
+                      onChange={(e) =>
+                        handleChange("counterSize", e.target.value)
+                      }
+                      width="100%"
+                      placeholder="ENTER COUNTER POTENTIAL"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.counterSize}
+                      errorMessage={errors.counterSize}
+                      onKeyPress={(e) => {
+                        if (!/[0-9.]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </NuralAccordion2>
+            </Grid>
+
+            <Grid item>
+              <NuralAccordion2
+                title="Banking Details"
+                backgroundColor={LIGHT_GRAY2}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      NAME OF BANK
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      value={formData.bankName}
+                      onChange={(e) => handleChange("bankName", e.target.value)}
+                      placeholder="ENTER NAME OF BANK"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.bankName}
+                      errorMessage={errors.bankName}
+                      maxLength={50}
+                      onKeyPress={(e) => {
+                        if (e.target.value.length >= 50) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      ACCOUNT HOLDER NAME
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      value={formData.accountHolder}
+                      onChange={(e) =>
+                        handleChange("accountHolder", e.target.value)
+                      }
+                      placeholder="ENTER ACCOUNT HOLDER NAME"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.accountHolder}
+                      errorMessage={errors.accountHolder}
+                      maxLength={50}
+                      onKeyPress={(e) => {
+                        if (e.target.value.length >= 50) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      BANK ACCOUNT NUMBER
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      value={formData.accountNumber}
+                      onChange={(e) =>
+                        handleChange("accountNumber", e.target.value)
+                      }
+                      placeholder="ENTER BANK ACCOUNT NUMBER"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.accountNumber}
+                      errorMessage={errors.accountNumber}
+                      maxLength={50}
+                      onKeyPress={(e) => {
+                        if (e.key === " ") {
+                          e.preventDefault();
+                        }
+                        if (e.target.value.length >= 50) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      BRANCH LOCATION
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      value={formData.branchLocation}
+                      onChange={(e) =>
+                        handleChange("branchLocation", e.target.value)
+                      }
+                      placeholder="ENTER BRANCH LOCATION"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.branchLocation}
+                      errorMessage={errors.branchLocation}
+                      maxLength={50}
+                      onKeyPress={(e) => {
+                        if (e.target.value.length >= 50) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={12} lg={12}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      IFSC CODE
+                    </Typography>
+                    <NuralTextField
+                      width="100%"
+                      value={formData.ifscCode}
+                      onChange={(e) => handleChange("ifscCode", e.target.value)}
+                      placeholder="ENTER IFSC CODE"
+                      backgroundColor={LIGHT_BLUE}
+                      error={!!errors.ifscCode}
+                      errorMessage={errors.ifscCode}
+                      onKeyPress={(e) => {
+                        if (e.key === " ") {
+                          e.preventDefault();
+                        }
+                      }}
                     />
                   </Grid>
                 </Grid>

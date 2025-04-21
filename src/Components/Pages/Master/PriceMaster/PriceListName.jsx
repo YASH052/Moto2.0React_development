@@ -28,16 +28,7 @@ import {
 import { templateUrl } from "../../../Common/urls";
 import StatusModel from "../../../Common/StatusModel";
 import { UploadPageSkeleton } from "../../../Common/SkeletonComponents";
-
-// Get the template URL from environment variables
-const templates = [
-  {
-    name: "Template 1",
-    onDownload: () => {
-      window.location.href = `${templateUrl}PriceMaster.xlsx`;
-    },
-  },
-];
+import Required from "../../../Common/Required";
 
 const PriceListName = () => {
   const [priceListDrop, setPriceListDrop] = useState([]);
@@ -55,6 +46,21 @@ const PriceListName = () => {
     mapWithAllState: 0,
     stateidstring: "",
   });
+
+  const templates = [
+    {
+      name: "Price Template Download",
+      onDownload: () => {
+        window.location.href = `${templateUrl}PriceMaster.xlsx`;
+        setShowStatus(true);
+        setStatus(String(200));
+        setTitle("Download Successful");
+        setTimeout(() => {
+          setShowStatus(false);
+        }, 3000);
+      },
+    },
+  ];
 
   useEffect(() => {
     fetchPriceListDropdown();
@@ -104,25 +110,8 @@ const PriceListName = () => {
     }
   };
 
-  const handlePost = async () => {
+  const handleUpload = async () => {
     setIsLoading(true);
-
-    // Validate all fields
-    const newErrors = {};
-    Object.keys(formData).forEach((field) => {
-      const error = validateField(field, formData[field]);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-    setErrors(newErrors);
-
-    // If there are validation errors, return early
-    if (Object.keys(newErrors).length > 0) {
-      setIsLoading(false);
-      return;
-    }
-
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
@@ -149,13 +138,21 @@ const PriceListName = () => {
           mapWithAllState: 0,
           stateidstring: "",
         });
+        setTimeout(() => {
+          setShowStatus(false);
+        }, 3000);
         // Clear errors after successful upload
         setErrors({});
+        // Trigger table refresh by dispatching a custom event
+        window.dispatchEvent(new CustomEvent('priceListUploaded'));
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         window.location.href = res.invalidDataLink;
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setShowStatus(false);
+        }, 3000);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -190,6 +187,9 @@ const PriceListName = () => {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         window.location.href = res.referenceDataLink;
+        setTimeout(() => {
+          setShowStatus(false);
+        }, 3000);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -276,7 +276,7 @@ const PriceListName = () => {
                             mb: 1,
                           }}
                         >
-                          PRICE LIST
+                          PRICE LIST <Required />
                         </Typography>
                         <NuralAutocomplete
                           width="100%"
@@ -321,7 +321,7 @@ const PriceListName = () => {
                             mb: 1,
                           }}
                         >
-                          EFFECTIVE DATE
+                          EFFECTIVE DATE <Required />
                         </Typography>
                         <NuralCalendar
                           width="100%"
@@ -372,6 +372,7 @@ const PriceListName = () => {
                         fileRef={fileInputRef}
                         accept=".xlsx,.xls"
                         onFileSelect={handleFileSelect}
+                        mandatory={true}
                       />
                     </Grid>
                     <Grid item pr={2}>
@@ -401,7 +402,7 @@ const PriceListName = () => {
                             text="PROCEED"
                             backgroundColor={AQUA}
                             variant="contained"
-                            onClick={handlePost}
+                            onClick={handleUpload}
                             width="100%"
                           />
                         </Grid>

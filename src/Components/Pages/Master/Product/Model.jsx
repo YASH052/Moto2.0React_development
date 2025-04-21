@@ -1,5 +1,5 @@
 import { Button, Grid, Typography, Switch } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -31,7 +31,7 @@ const tabs = [
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "preBooking" },
 ];
@@ -72,6 +72,8 @@ import {
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import Required from "../../../Common/Required";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const ModelType = [
   { label: "Saleable", value: 1 },
@@ -81,7 +83,7 @@ const ModelType = [
 const ModelMode = [
   { label: "No Serial", value: 1 },
   { label: "Batch Coded", value: 2 },
-  { label: "Serialized", value: 3 },
+  { label: "Unique Serial Number", value: 3 },
 ];
 
 const Model = () => {
@@ -167,20 +169,41 @@ const Model = () => {
 
   // Add accordion state
   const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
 
   // Add accordion change handlers
   const handleAccordionChange = (event, expanded) => {
-    setAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
-    setSearchAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+    // Use setTimeout to ensure state updates before scrolling
+    setTimeout(() => {
+      scrollToTop(createAccordionRef);
+    }, 100);
+    setSearchAccordionExpanded(false); // Explicitly close search accordion
   };
 
   const handleSort = (columnName) => {
@@ -281,6 +304,7 @@ const Model = () => {
 
   // Add handleExport function
   const handleExport = async () => {
+    setIsDownloadLoading(true); // Start loading
     const params = {
       ...searchParams,
       pageIndex: -1, // -1 indicates export to excel
@@ -289,6 +313,8 @@ const Model = () => {
       await getModelList(params);
     } catch (error) {
       console.error("Error exporting model list:", error);
+    } finally {
+      setIsDownloadLoading(false); // Stop loading
     }
   };
 
@@ -427,12 +453,13 @@ const Model = () => {
     }
   };
 
-  const getModelListForDropdown = async () => {
+  const getModelListForDropdown = async (subCategoryID = 0) => {
     try {
+      console.log("Loading models for subCategoryID:", subCategoryID);
       const params = {
         categoryID: 0,
         modelID: 0,
-        subCategoryID: 0,
+        subCategoryID: subCategoryID,
         brandID: 0,
       };
       const response = await GetModelListForDropdown(params);
@@ -456,6 +483,8 @@ const Model = () => {
       if (field === "brandID") {
         // Clear dependent dropdown options
         setSearchCategoryList([]);
+        setSearchSubCategoryList([]);
+        setModelListForDropdown([]);
 
         // Update search form data
         setSearchFormData((prev) => ({
@@ -463,24 +492,37 @@ const Model = () => {
           brandID: 0,
           categoryID: 0,
           subCategoryID: 0,
+          modelName: "",
+          modelCode: "",
+          selectedModel: null,
         }));
         return;
       } else if (field === "categoryID") {
         // Clear subcategory options
         setSearchSubCategoryList([]);
+        setModelListForDropdown([]);
 
         // Update search form data
         setSearchFormData((prev) => ({
           ...prev,
           categoryID: 0,
           subCategoryID: 0,
+          modelName: "",
+          modelCode: "",
+          selectedModel: null,
         }));
         return;
       } else if (field === "subCategoryID") {
+        // Clear model options
+        setModelListForDropdown([]);
+        
         // Just update form data
         setSearchFormData((prev) => ({
           ...prev,
           subCategoryID: 0,
+          modelName: "",
+          modelCode: "",
+          selectedModel: null,
         }));
         return;
       } else if (field === "modelName" || field === "modelCode") {
@@ -556,10 +598,14 @@ const Model = () => {
         [field]: newValue,
         categoryID: 0,
         subCategoryID: 0,
+        modelName: "",
+        modelCode: "",
+        selectedModel: null,
       }));
 
-      // Clear the subcategory options
+      // Clear the subcategory options and model options
       setSearchSubCategoryList([]);
+      setModelListForDropdown([]);
     } else if (field === "categoryID") {
       // Update subcategory list
       console.log(
@@ -570,43 +616,35 @@ const Model = () => {
       );
       getSearchSubCategoryList(searchFormData.brandID, newValue);
 
-      // Clear subcategory selection
+      // Clear subcategory selection and model options
       setSearchFormData((prev) => ({
         ...prev,
         [field]: newValue,
         subCategoryID: 0,
+        modelName: "",
+        modelCode: "",
+        selectedModel: null,
+      }));
+      
+      // Clear model options when category changes
+      setModelListForDropdown([]);
+    } else if (field === "subCategoryID") {
+      // Load models for the selected subcategory
+      console.log("Loading models for subCategoryID:", newValue);
+      getModelListForDropdown(newValue);
+      
+      // Clear model selection
+      setSearchFormData((prev) => ({
+        ...prev,
+        [field]: newValue,
+        modelName: "",
+        modelCode: "",
+        selectedModel: null,
       }));
     }
   };
 
-  // Update the search function to include model name and code
-  const handleSearch = () => {
-    setTableLoading(true);
-    // First reset pagination state - do this BEFORE updating searchParams
-    setPage(0); // Reset to first page (0-based for UI)
-    setRowsPerPage(10); // Reset to 10 rows per page
-    setSearchStatus(null);
-    setSearchTitle("");
-    // Update search parameters with form data
-    const updatedParams = {
-      ...searchParams,
-      brandID: searchFormData.brandID,
-      categoryID: searchFormData.categoryID,
-      subCategoryID: searchFormData.subCategoryID,
-      modelName: searchFormData.modelName,
-      modelCode: searchFormData.modelCode,
-      pageIndex: 1, // Reset to first page (1-based for API)
-      pageSize: 10, // Set page size to 10
-    };
-
-    // Update search params for API
-    setSearchParams(updatedParams);
-
-    // Fetch data with the updated parameters
-    getModelList(updatedParams);
-  };
-
-  // Update the clear search function to ensure it clears all fields properly
+  // Update handleClearSearch to clear model dropdown data
   const handleClearSearch = () => {
     setSearchFormLoading(true);
     // First reset pagination state
@@ -624,6 +662,9 @@ const Model = () => {
       modelCode: "",
       selectedModel: null,
     });
+
+    // Clear model dropdown data
+    setModelListForDropdown([]);
 
     // Reset search parameters
     const clearedParams = {
@@ -651,7 +692,7 @@ const Model = () => {
     getModelList();
     getBrand();
     getSearchBrandList(); // Load brands for search filter
-    getModelListForDropdown();
+    
     // Load categories if brandID is set
     if (formData.brandID) {
       getCategory(formData.brandID);
@@ -663,7 +704,31 @@ const Model = () => {
     }
   }, []);
 
-  // Updated validateForm function to require all fields
+  // Modified searchSubCategoryList to load models when changed
+  useEffect(() => {
+    if (searchFormData.subCategoryID) {
+      getModelListForDropdown(searchFormData.subCategoryID);
+    } else {
+      // Clear model list if no sub-category selected
+      setModelListForDropdown([]);
+    }
+  }, [searchFormData.subCategoryID]);
+
+  // Add refs for scrolling
+  const createAccordionRef = useRef(null);
+
+  // Helper function for smooth scrolling - now with optional element ref
+  const scrollToTop = (elementRef = null) => {
+    if (elementRef && elementRef.current) {
+      // If element ref is provided, scroll to that element
+      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      // Otherwise scroll to top of page
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Update validateForm to scroll to the form when validation fails
   const validateForm = () => {
     const newErrors = {};
 
@@ -699,14 +764,24 @@ const Model = () => {
 
     if (!formData.modelCode || formData.modelCode.trim() === "") {
       newErrors.modelCode = "Model Code is required";
-    } else if (formData.modelCode.length > 50) {
-      newErrors.modelCode = "Model Code cannot exceed 50 characters";
+    } else if (formData.modelCode.length > 20) {
+      newErrors.modelCode = "Model Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.modelCode)) {
       newErrors.modelCode =
         "Model Code can only contain alphanumeric characters (no spaces)";
     }
 
     setErrors(newErrors);
+    
+    // If there are errors, make sure the accordion is expanded
+    if (Object.keys(newErrors).length > 0) {
+      setAccordionExpanded(true);
+      // Use setTimeout to ensure state updates before scrolling
+      setTimeout(() => {
+        scrollToTop(createAccordionRef);
+      }, 100);
+    }
+    
     return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
@@ -964,12 +1039,7 @@ const Model = () => {
         subCategoryID: row.subCategoryID || 0,
         categoryID: row.categoryID || 0,
         brandID: row.brandID || 0,
-        modelMode:
-          row.modelMode === "Serialized"
-            ? 3
-            : row.modelMode === "Batch Coded"
-            ? 2
-            : 1,
+        modelMode: row.modelModeID || 0,
         modelType: row.modelType === "Saleable" ? 1 : 2,
         callType: 2, // 2 = Update
       });
@@ -989,8 +1059,14 @@ const Model = () => {
       // Clear any existing errors
       setErrors({});
 
-      // Scroll to the form
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Ensure the accordion is expanded
+      setAccordionExpanded(true);
+
+      // Use setTimeout to ensure state updates before scrolling
+      setTimeout(() => {
+        scrollToTop(createAccordionRef);
+      }, 100);
+      setSearchAccordionExpanded(false); // Explicitly close search accordion
     } catch (error) {
       console.error("Error setting up edit form:", error);
     }
@@ -1019,6 +1095,9 @@ const Model = () => {
     // Clear all errors
     setErrors({});
 
+    // Keep accordion expanded for better UX
+    setAccordionExpanded(true);
+
     setTimeout(() => {
       getModelList();
       setFormLoading(false);
@@ -1028,6 +1107,7 @@ const Model = () => {
   const handlePostRequest = async () => {
     // Validate form first
     if (!validateForm()) {
+      // Validation already handles scrolling in validateForm function
       return;
     }
 
@@ -1051,14 +1131,23 @@ const Model = () => {
 
         // Refresh the model list
         getModelList();
+        
+        // Scroll to top to show success message
+        scrollToTop();
       } else {
         setCreateStatus(response.statusCode);
         setCreateTitle(response.statusMessage);
+        
+        // Scroll to form to show error message
+        scrollToTop(createAccordionRef);
       }
     } catch (error) {
       setCreateStatus(error.statusCode);
       setCreateTitle(error.statusMessage);
       console.log(error);
+      
+      // Scroll to form to show error message
+      scrollToTop(createAccordionRef);
     }
   };
 
@@ -1134,9 +1223,48 @@ const Model = () => {
     }
   }, [status, createStatus]);
 
+  // State for export loading
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+
+  // Update the search function to include model name and code
+  const handleSearch = () => {
+    setTableLoading(true);
+    // First reset pagination state - do this BEFORE updating searchParams
+    setPage(0); // Reset to first page (0-based for UI)
+    setRowsPerPage(10); // Reset to 10 rows per page
+    setSearchStatus(null);
+    setSearchTitle("");
+    // Update search parameters with form data
+    const updatedParams = {
+      ...searchParams,
+      brandID: searchFormData.brandID,
+      categoryID: searchFormData.categoryID,
+      subCategoryID: searchFormData.subCategoryID,
+      modelName: searchFormData.modelName,
+      modelCode: searchFormData.modelCode,
+      pageIndex: 1, // Reset to first page (1-based for API)
+      pageSize: 10, // Set page size to 10
+    };
+
+    // Update search params for API
+    setSearchParams(updatedParams);
+
+    // Fetch data with the updated parameters
+    getModelList(updatedParams);
+  };
+
   return (
     <>
-      <Grid container spacing={2}>
+       <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          isolation: "isolate",
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -1144,16 +1272,17 @@ const Model = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 1100,
             backgroundColor: "#fff",
             paddingBottom: 1,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)", // Add shadow for visual separation
           }}
         >
           <Grid item xs={12} mt={1} mb={0} ml={1}>
-            <BreadcrumbsHeader pageTitle="Product" />
+            <BreadcrumbsHeader pageTitle="Model" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={1} overflow={"auto"}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -1164,437 +1293,407 @@ const Model = () => {
         <>
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
-              <Grid item>
+              <Grid item sx={{ zIndex: 1000 }}>
                 {formLoading ? (
                   <FormSkeleton />
                 ) : (
                   <>
-                    <NuralAccordion2
-                      title={isEditMode ? "Update" : "Create"}
-                      backgroundColor={LIGHT_GRAY2}
-                      onChange={handleAccordionChange}
-                      controlled={true}
-                      expanded={accordionExpanded}
-                      defaultExpanded={true}
-                    >
-                      <Grid container spacing={2} sx={{ width: "100%" }}>
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            BRAND <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={brandList}
-                            getOptionLabel={(option) => option.brandName}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.brandID === value?.brandID
-                            }
-                            value={
-                              brandList.find(
-                                (item) => item.brandID == formData.brandID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("brandID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.brandID}
-                            helperText={errors.brandID}
-                            loading={brandLoading}
-                            onBlur={() => {
-                              if (!formData.brandID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  brandID: "Brand is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.brandID && (
+                    <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
+                      <NuralAccordion2
+                        title={isEditMode ? "Update Model" : "Create Model"}
+                        backgroundColor={LIGHT_GRAY2}
+                        onChange={handleAccordionChange}
+                        controlled={true}
+                        expanded={accordionExpanded || isEditMode}
+                      >
+                        <Grid container spacing={2} sx={{ width: "100%" }}>
+                          <Grid item xs={12} sm={4}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.brandID}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            CATEGORY <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={categoryList}
-                            getOptionLabel={(option) => option.categoryName}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.categoryID === value?.categoryID
-                            }
-                            value={
-                              categoryList.find(
-                                (item) => item.categoryID == formData.categoryID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("categoryID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.categoryID}
-                            helperText={errors.categoryID}
-                            loading={categoryLoading}
-                            onBlur={() => {
-                              if (!formData.categoryID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryID: "Category is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.categoryID && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.categoryID}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            SUB-CATEGORY <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={subCategoryList}
-                            getOptionLabel={(option) => option.subCategoryName}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.subCategoryID === value?.subCategoryID
-                            }
-                            value={
-                              subCategoryList.find(
-                                (item) =>
-                                  item.subCategoryID == formData.subCategoryID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("subCategoryID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.subCategoryID}
-                            helperText={errors.subCategoryID}
-                            loading={subCategoryLoading}
-                            onBlur={() => {
-                              if (!formData.subCategoryID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  subCategoryID: "Sub-Category is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.subCategoryID && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.subCategoryID}
-                            </Typography>
-                          )}
-                        </Grid>
-
-                        <Grid item xs={12} sm={6} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            MODEL TYPE <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={ModelType}
-                            getOptionLabel={(option) => option.label}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.value === value?.value
-                            }
-                            value={
-                              ModelType.find(
-                                (item) => item.value == formData.modelType
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("modelType", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.modelType}
-                            helperText={errors.modelType}
-                            loading={false}
-                            onBlur={() => {
-                              if (!formData.modelType) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelType: "Model Type is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.modelType && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.modelType}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            MODEL MODE <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={ModelMode}
-                            getOptionLabel={(option) => option.label}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.value === value?.value
-                            }
-                            value={
-                              ModelMode.find(
-                                (item) => item.value == formData.modelMode
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("modelMode", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.modelMode}
-                            loading={false}
-                            onBlur={() => {
-                              if (!formData.modelMode) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelMode: "Model Mode is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.modelMode && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.modelMode}
-                            </Typography>
-                          )}
-                        </Grid>
-
-                        <Grid item xs={12} sm={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            MODEL NAME <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.modelName || ""}
-                            onChange={(event) => {
-                              handleChange("modelName", event.target.value);
-                            }}
-                            placeholder="ENTER MODEL NAME"
-                            error={!!errors.modelName}
-                            onBlur={() => {
-                              if (
-                                !formData.modelName ||
-                                formData.modelName.trim() === ""
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelName: "Model Name is required",
-                                }));
-                              } else if (formData.modelName.length > 50) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelName:
-                                    "Model Name cannot exceed 50 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  modelName: formData.modelName.substring(
-                                    0,
-                                    50
-                                  ),
-                                }));
-                              } else if (
-                                !/^[a-zA-Z0-9 ]+$/.test(formData.modelName)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelName:
-                                    "Model Name can only contain alphanumeric characters and spaces",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.modelName && (
-                            <Typography
-                              variant="caption"
-                              color="error"
+                              variant="h6"
                               sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
                               }}
                             >
-                              {errors.modelName}
+                              BRAND <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            MODEL CODE <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.modelCode || ""}
-                            onChange={(event) => {
-                              handleChange(
-                                "modelCode",
-                                event.target.value || null
-                              );
-                            }}
-                            placeholder="ENTER MODEL CODE"
-                            error={!!errors.modelCode}
-                            onBlur={() => {
-                              if (
-                                !formData.modelCode ||
-                                formData.modelCode.trim() === ""
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelCode: "Model Code is required",
-                                }));
-                              } else if (formData.modelCode.length > 50) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelCode:
-                                    "Model Code cannot exceed 50 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  modelCode: formData.modelCode.substring(
-                                    0,
-                                    50
-                                  ),
-                                }));
-                              } else if (
-                                !/^[a-zA-Z0-9]+$/.test(formData.modelCode)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelCode:
-                                    "Model Code can only contain alphanumeric characters (no spaces)",
-                                }));
+                            <NuralAutocomplete
+                              options={brandList}
+                              getOptionLabel={(option) => option.brandName}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.brandID === value?.brandID
                               }
-                            }}
-                          />
-                          {errors.modelCode && (
+                              value={
+                                brandList.find(
+                                  (item) => item.brandID == formData.brandID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("brandID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.brandID}
+                              errorMessage={errors.brandID}
+                              loading={brandLoading}
+                            />
+                            {errors.brandID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.brandID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
                             <Typography
-                              variant="caption"
-                              color="error"
+                              variant="h6"
                               sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
                               }}
                             >
-                              {errors.modelCode}
+                              CATEGORY <Required />
                             </Typography>
-                          )}
+                            <NuralAutocomplete
+                              options={categoryList}
+                              getOptionLabel={(option) => option.categoryName}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.categoryID === value?.categoryID
+                              }
+                              value={
+                                categoryList.find(
+                                  (item) => item.categoryID == formData.categoryID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("categoryID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.categoryID}
+                              errorMessage={errors.categoryID}
+                              loading={categoryLoading}
+                              onBlur={() => {
+                                if (!formData.categoryID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryID: "Category is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.categoryID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.categoryID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              SUB-CATEGORY <Required />
+                            </Typography>
+                            <NuralAutocomplete
+                              options={subCategoryList}
+                              getOptionLabel={(option) => option.subCategoryName}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.subCategoryID === value?.subCategoryID
+                              }
+                              value={
+                                subCategoryList.find(
+                                  (item) =>
+                                    item.subCategoryID == formData.subCategoryID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("subCategoryID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.subCategoryID}
+                              errorMessage={errors.subCategoryID}
+                              loading={subCategoryLoading}
+                              onBlur={() => {
+                                if (!formData.subCategoryID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    subCategoryID: "Sub-Category is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.subCategoryID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.subCategoryID}
+                              </Typography>
+                            )}
+                          </Grid>
+
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              MODEL TYPE <Required />
+                            </Typography>
+                            <NuralAutocomplete
+                              options={ModelType}
+                              getOptionLabel={(option) => option.label}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.value === value?.value
+                              }
+                              value={
+                                ModelType.find(
+                                  (item) => item.value == formData.modelType
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("modelType", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.modelType}
+                              errorMessage={errors.modelType}
+                              loading={false}
+                              onBlur={() => {
+                                if (!formData.modelType) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelType: "Model Type is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.modelType && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.modelType}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              MODEL MODE <Required />
+                            </Typography>
+                            <NuralAutocomplete
+                              options={ModelMode}
+                              getOptionLabel={(option) => option.label}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.value === value?.value
+                              }
+                              value={
+                                ModelMode.find(
+                                  (item) => item.value == formData.modelMode
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("modelMode", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.modelMode}
+                              errorMessage={errors.modelMode}
+                              loading={false}
+                              onBlur={() => {
+                                if (!formData.modelMode) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelMode: "Model Mode is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.modelMode && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.modelMode}
+                              </Typography>
+                            )}
+                          </Grid>
+
+                          <Grid item xs={12} sm={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              MODEL NAME <Required />
+                            </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.modelName || ""}
+                              onChange={(event) => {
+                                handleChange("modelName", event.target.value);
+                              }}
+                              placeholder="ENTER MODEL NAME"
+                              error={!!errors.modelName}
+                              errorMessage={errors.modelName}
+                              onBlur={() => {
+                                if (
+                                  !formData.modelName ||
+                                  formData.modelName.trim() === ""
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelName: "Model Name is required",
+                                  }));
+                                } else if (formData.modelName.length > 50) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelName:
+                                      "Model Name cannot exceed 50 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    modelName: formData.modelName.substring(
+                                      0,
+                                      50
+                                    ),
+                                  }));
+                                } else if (
+                                  !/^[a-zA-Z0-9 ]+$/.test(formData.modelName)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelName:
+                                      "Model Name can only contain alphanumeric characters and spaces",
+                                  }));
+                                }
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              MODEL CODE <Required />
+                            </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.modelCode || ""}
+                              onChange={(event) => {
+                                handleChange(
+                                  "modelCode",
+                                  event.target.value || null
+                                );
+                              }}
+                              placeholder="ENTER MODEL CODE"
+                              error={!!errors.modelCode}
+                              errorMessage={errors.modelCode}
+                              onBlur={() => {
+                                if (
+                                  !formData.modelCode ||
+                                  formData.modelCode.trim() === ""
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelCode: "Model Code is required",
+                                  }));
+                                } else if (formData.modelCode.length > 50) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelCode:
+                                      "Model Code cannot exceed 50 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    modelCode: formData.modelCode.substring(
+                                      0,
+                                      50
+                                    ),
+                                  }));
+                                } else if (
+                                  !/^[a-zA-Z0-9]+$/.test(formData.modelCode)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelCode:
+                                      "Model Code can only contain alphanumeric characters (no spaces)",
+                                  }));
+                                }
+                              }}
+                            />
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    </NuralAccordion2>
+                      </NuralAccordion2>
+                    </div>
 
                     {accordionExpanded && (
                       <Grid container spacing={1} pr={1.5}>
@@ -1637,7 +1736,7 @@ const Model = () => {
 
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
-              <Grid item>
+              <Grid item sx={{ zIndex: 990 }}>
                 {searchFormLoading ? (
                   <FormSkeleton />
                 ) : (
@@ -1648,7 +1747,6 @@ const Model = () => {
                       onChange={handleSearchAccordionChange}
                       controlled={true}
                       expanded={searchAccordionExpanded}
-                      defaultExpanded={true}
                     >
                       <Grid container spacing={2} sx={{ width: "100%" }}>
                         <Grid item xs={12} sm={4}>
@@ -1799,7 +1897,8 @@ const Model = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={tableLoading}
+                            loading={searchFormData.subCategoryID && tableLoading}
+                            disabled={!searchFormData.subCategoryID}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -1835,7 +1934,8 @@ const Model = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={tableLoading}
+                            loading={searchFormData.subCategoryID && tableLoading}
+                            disabled={!searchFormData.subCategoryID}
                           />
                         </Grid>
                       </Grid>
@@ -1900,15 +2000,26 @@ const Model = () => {
           )}
         </Grid>
         {(!searchStatus || searchStatus === 200) && (
-          <Grid item xs={12} mt={1} sx={{ p: { xs: 1, sm: 2 } }}>
+          <Grid 
+            item 
+            xs={12} 
+            mt={1} 
+            sx={{ 
+              p: { xs: 1, sm: 2 },
+              position: 'relative',
+              zIndex: 900,
+              overflow: 'hidden'
+            }}
+          >
             <TableContainer
               component={Paper}
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
+                maxHeight: "calc(100vh - 90px)", // Adjusted to account for headers
                 overflow: "auto",
                 position: "relative",
+                zIndex: 900, // Lower than header z-index 
                 "& .MuiTable-root": {
                   borderCollapse: "separate",
                   borderSpacing: 0,
@@ -1924,7 +2035,7 @@ const Model = () => {
                         backgroundColor: LIGHT_GRAY2,
                         position: "sticky",
                         top: 0,
-                        zIndex: 1100,
+                        zIndex: 950,
                         borderBottom: "none",
                         boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
                       }}
@@ -1956,11 +2067,7 @@ const Model = () => {
                             cursor: "pointer",
                           }}
                         >
-                          <img
-                            src="./Images/export.svg"
-                            alt="export"
-                            onClick={handleExport}
-                          />
+                          {/* Remove the old export icon */}
                         </Grid>
                       </Grid>
                     </TableCell>
@@ -1972,7 +2079,7 @@ const Model = () => {
                         position: "sticky",
                         top: "45px", // Adjusted to account for "List" header
                         backgroundColor: LIGHT_GRAY2,
-                        zIndex: 1000,
+                        zIndex: 949,
                         "&::after": {
                           // Add bottom border effect
                           content: '""',
@@ -2003,7 +2110,7 @@ const Model = () => {
                           position: "sticky",
                           top: "45px", // Same as S.NO cell
                           backgroundColor: LIGHT_GRAY2,
-                          zIndex: 1000,
+                          zIndex: 949,
                         }}
                       >
                         <Grid container alignItems="center" spacing={1}>
@@ -2130,7 +2237,7 @@ const Model = () => {
                             minWidth: "60px",
                           }}
                         >
-                          <IconButton
+                            <IconButton
                             size="small"
                             onClick={() => handleEdit(row)}
                             disabled={statusUpdateLoading}
@@ -2165,6 +2272,51 @@ const Model = () => {
             </TableContainer>
           </Grid>
         )}
+      </Grid>
+      {/* Activity Panel for Export */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export Model List"
+              views={""} // Add views if applicable
+              downloadExcel={handleExport}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );

@@ -2,13 +2,9 @@ import React, { useState } from "react";
 import {
   Box,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Select,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   DARK_PURPLE,
   LIGHT_GRAY2,
@@ -21,38 +17,16 @@ import NuralAccordion from "./NuralAccordion";
 import NuralAutocomplete from "./NuralAutocomplete";
 import Required from "../../Common/Required";
 
-const StyledAccordion = styled(Accordion)({
+const StyledBox = styled(Box)({
   backgroundColor: "rgba(235, 238, 245, 0.5)",
-  boxShadow: "none",
-  borderRadius: "8px !important",
-  "&:before": {
-    display: "none",
-  },
-  "&.Mui-expanded": {
-    margin: 0,
-  },
-  "&.MuiAccordion-root": {
-    "&:focus": {
-      outline: "none",
-    },
-  },
-  "& .MuiButtonBase-root": {
-    "&:focus": {
-      outline: "none",
-    },
-  },
+  borderRadius: "8px",
 });
 
-const StyledAccordionSummary = styled(AccordionSummary)({
+const StyledHeader = styled(Box)({
   padding: "0 16px",
-  "& .MuiAccordionSummary-content": {
-    margin: "12px 0",
-  },
-  "&.MuiButtonBase-root": {
-    "&:focus": {
-      outline: "none",
-    },
-  },
+  display: "flex",
+  alignItems: "center",
+  height: "48px",
 });
 
 // const option = [
@@ -94,8 +68,7 @@ const NuralUploadSaleReturn = ({
   // });
 
   return (
-    <StyledAccordion
-      defaultExpanded
+    <StyledBox
       sx={{
         // Size
         width: props.width,
@@ -136,13 +109,7 @@ const NuralUploadSaleReturn = ({
       }}
       {...props}
     >
-      <StyledAccordionSummary
-        expandIcon={
-          <ExpandMoreIcon
-            sx={{ color: props.expandIconColor || DARK_PURPLE }}
-          />
-        }
-      >
+      <StyledHeader>
         <Typography
           sx={{
             fontSize: props.titleFontSize || "14px",
@@ -152,9 +119,9 @@ const NuralUploadSaleReturn = ({
         >
           {title}
         </Typography>
-      </StyledAccordionSummary>
+      </StyledHeader>
 
-      <AccordionDetails sx={{ padding: "0 16px 16px" }}>
+      <Box sx={{ padding: "0 16px 16px" }}>
         <Box display={"flex"} flex={"row"} gap={"1.5rem"}>
           <Box>
             <Box
@@ -170,6 +137,7 @@ const NuralUploadSaleReturn = ({
               placeholder="01/01/25"
               onChange={handleDateChange}
               value={selectedDate}
+             
             />
           </Box>
           <Box>
@@ -225,11 +193,13 @@ const NuralUploadSaleReturn = ({
             value={
               option.find((option) => option.id === selectedUserId) || null
             }
+            fontWeight={"700"}
+            // fontSize="16px"
             placeholder={"SERIAL ONLY"}
           />
         </Box>
-      </AccordionDetails>
-    </StyledAccordion>
+      </Box>
+    </StyledBox>
   );
 };
 

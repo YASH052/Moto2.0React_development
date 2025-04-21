@@ -46,7 +46,7 @@ const SecondarySale = () => {
     { label: "Primary", value: "primary-transaction" },
     { label: "Intermediary", value: "intermediary-sale" },
     { label: "Secondary", value: "secondary-sale" },
-    { label: "Tertiary", value: "tertiary-sale" },
+    // { label: "Tertiary", value: "tertiary-sale" },
   ];
 
   const templates = [
@@ -86,6 +86,10 @@ const SecondarySale = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -115,6 +119,10 @@ const SecondarySale = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -147,11 +155,14 @@ const SecondarySale = () => {
       if (res.statusCode == 200) {
         fileInput.value = "";
         setStatus(String(res.statusCode));
-        setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -191,7 +202,7 @@ const SecondarySale = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",

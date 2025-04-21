@@ -25,6 +25,8 @@ import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import NuralUploadSaleReturn from "../../NuralCustomComponents/NuralUploadSaleReturn";
+import { templateUrl } from "../../../Common/urls";
+import { getTodayDate } from "../../../Common/commonFunction";
 
 // Radio buttons selection by default
 const options = [
@@ -48,11 +50,17 @@ const IntermediarySaleReturn = () => {
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedUserId, setSelectedUserId] = useState(null); // New state for userId
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
   // console.log("selectedUserId", selectedDate);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const handleDateChange = (newDate) => {
-    setSelectedDate(newDate);
+    if (newDate <= today) {
+      setSelectedDate(newDate);
+    }
   };
 
   const handleUserIdChange = (newUserId) => {
@@ -74,21 +82,59 @@ const IntermediarySaleReturn = () => {
     { label: "Secondary", value: "secondary-sale-return" },
     // { label: "Tertiary", value: "tertiary" },
   ];
-
   const templates = [
     {
-      name: "Template 1",
+      name: "Serial Only",
+      onView: () => console.log("View Template 2"),
+      onDownload: () => {
+        setIsLoading(true);
+        setTimeout(() => {
+          window.location.href = `${templateUrl}IntermediarySalesExistInSystem.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
+          setIsLoading(false);
+        }, 1000);
+
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
+      },
+    },
+  ];
+
+  const templates2 = [
+    {
+      name: "Full Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href =
-            "http://moto.nuralsales.com/Excel/Templates/IntermediarySalesSB.xlsx";
+          window.location.href = `${templateUrl}IntermediarySalesReturn.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
           setIsLoading(false);
         }, 1000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
       },
     },
   ];
+  // const templates = [
+  //   {
+  //     name: "Template 1",
+  //     onView: () => console.log("View Template 1"),
+  //     onDownload: () => {
+  //       setIsLoading(true);
+  //       setTimeout(() => {
+  //         window.location.href = `${templateUrl}IntermediarySalesSB.xlsx`;
+  //         setIsLoading(false);
+  //       }, 1000);
+  //     },
+  //   },
+  // ];
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
@@ -115,6 +161,10 @@ const IntermediarySaleReturn = () => {
 
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -131,7 +181,7 @@ const IntermediarySaleReturn = () => {
     setIsLoading(true);
     let body = {
       reqType: 2,
-      entityId: log.entityId /*from login api*/,
+      entityId: 0 /*from login api*/,
       salesChanneLevel: 0,
       brandID: 0,
       targetName: "",
@@ -143,6 +193,10 @@ const IntermediarySaleReturn = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -179,11 +233,15 @@ const IntermediarySaleReturn = () => {
       if (res.statusCode == 200) {
         fileInput.value = "";
         setStatus(String(res.statusCode));
-        setTitle("File uploaded successfully");
+        setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
         setTimeout(handleClearStatus, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -200,8 +258,13 @@ const IntermediarySaleReturn = () => {
   };
 
   const handleClearStatus = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
     setStatus(null);
     setTitle(null);
+    setSelectedDate(getTodayDate());
+    setSelectedUserId(2);
   };
 
   React.useEffect(() => {
@@ -257,6 +320,7 @@ const IntermediarySaleReturn = () => {
                   selectedDate={selectedDate}
                   onDateChange={handleDateChange}
                   option={option}
+                  maxDate={today}
                   onUserIdChange={handleUserIdChange} // Pass callback to update userId
                   selectedUserId={selectedUserId} // Pass selected userId to control the autocomplete
                 />
@@ -273,9 +337,10 @@ const IntermediarySaleReturn = () => {
                   referenceIcon1={"./Icons/downloadIcon.svg"}
                   referenceIcon2={"./Icons/downloadIcon.svg"}
                   title="Templates"
-                  templates={templates}
+                  // templates={templates}
                   buttons={true}
                   eye={false}
+                  templates={selectedUserId == 1 ? templates2 : templates}
                 />
               </Grid>
             </Grid>

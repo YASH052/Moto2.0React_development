@@ -5,14 +5,12 @@ import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
   AQUA,
-  DARK_PURPLE,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
+
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -23,7 +21,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
   IconButton,
 } from "@mui/material";
 
@@ -34,8 +31,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import { useNavigate } from "react-router-dom";
 import { Edit, Try } from "@mui/icons-material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
+
 import {
   fetchChannelName,
   fetchSalesChannelDropdown,
@@ -88,13 +84,6 @@ const SalesChannelView = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);

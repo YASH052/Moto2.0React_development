@@ -28,11 +28,14 @@ import Required from "../../../Common/Required";
 import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 import NuralPagination from "../../../Common/NuralPagination";
+import { useNavigate } from "react-router-dom";
 
 const ActivationFileRecieved = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState("activation-file-received");
   const tabs = [
     { label: "Activation File Received", value: "activation-file-received" },
+    { label: "SAP Integration", value: "sap-integration" },
   ];
 
   const labelStyle = {
@@ -53,6 +56,7 @@ const ActivationFileRecieved = () => {
   ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   // Add these states for pagination
@@ -359,8 +363,8 @@ const ActivationFileRecieved = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Reports" />
+        <Grid item xs={12} mt={0} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Misc" />
         </Grid>
 
         <Grid item xs={12} ml={1}>

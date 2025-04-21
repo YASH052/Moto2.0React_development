@@ -78,14 +78,14 @@ const salesMetrics = [
   },
 ];
 const ChannelsDashBoard = () => {
-  const [activeTab, setActiveTab] = React.useState("channels");
+  const [activeTab, setActiveTab] = React.useState("channels-dashboard");
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
+    { label: "Business", value: "ho-dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
     { label: "Brand", value: "brand" },
-    { label: "Inventory", value: "inventory" },
+    { label: "Inventory", value: "inventory-dashboard" },
   ];
   const navigate = useNavigate();
   const labelStyle = {
@@ -223,16 +223,6 @@ const ChannelsDashBoard = () => {
                   </Grid>
                 </Grid>
 
-                {/* Add Product Sales Chart */}
-                <Grid container spacing={4} mb={2}>
-                  <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <ProductSalesChart />
-                  </Grid>
-                  <Grid item xs={12} md={6} lg={6} xl={6}>
-                    <RetailerSalesChart />
-                  </Grid>
-                </Grid>
-
                 {/* Add Distributor Sales Chart */}
                 <Grid container spacing={2} mb={2} mt={2}>
                   <Grid item xs={12} md={8} lg={8} xl={8}>
@@ -240,6 +230,16 @@ const ChannelsDashBoard = () => {
                   </Grid>
                   <Grid item xs={12} md={4} lg={4} xl={4}>
                     <DistributorInventoryChart />
+                  </Grid>
+                </Grid>
+                
+                {/* Add Product Sales Chart */}
+                <Grid container spacing={4} mb={2}>
+                  <Grid item xs={12} md={6} lg={6} xl={6}>
+                    <ProductSalesChart />
+                  </Grid>
+                  <Grid item xs={12} md={6} lg={6} xl={6}>
+                    <RetailerSalesChart />
                   </Grid>
                 </Grid>
               </Grid>

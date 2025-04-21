@@ -9,7 +9,7 @@ const salesTypes = [
   { title: "PRIMARY SALE", link: "/primary-transaction" },
   { title: "SECONDARY SALE", link: "/secondary-sale" },
   { title: "INTERMEDIARY SALE", link: "/intermediary-sale" },
-  { title: "TERTIARY SALE", link: "/tertiary-sale" },
+ 
 ];
 
 const salesReturnTypes = [

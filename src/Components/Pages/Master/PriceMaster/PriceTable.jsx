@@ -43,7 +43,7 @@ const PriceTable = ({
       sx={{
         backgroundColor: LIGHT_GRAY2,
         color: PRIMARY_BLUE2,
-        maxHeight: "calc(100vh - 320px)",
+        maxHeight: "calc(100vh - 100px)",
         overflow: "auto",
         position: "relative",
         "& .MuiTable-root": {
@@ -61,7 +61,8 @@ const PriceTable = ({
                 backgroundColor: LIGHT_GRAY2,
                 position: "sticky",
                 top: 0,
-                zIndex: 1100,
+                zIndex: 1000,
+
                 borderBottom: "none",
                 boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
               }}
@@ -117,14 +118,14 @@ const PriceTable = ({
               { key: "mrp", label: "MRP" },
               { key: "effectiveDate", label: "Effective Date" },
               { key: "validTill", label: "Valid Till" },
-              { key: "status", label: "Status" },
+              // { key: "status", label: "Status", noSort: true },
             ].map((column) => (
               <TableCell
                 key={column.key}
-                onClick={() => handleSort(column.key)}
+                onClick={column.noSort ? undefined : () => handleSort(column.key)}
                 sx={{
                   ...tableHeaderStyle,
-                  cursor: "pointer",
+                  cursor: column.noSort ? "default" : "pointer",
                   position: "sticky",
                   top: "45px",
                   backgroundColor: LIGHT_GRAY2,
@@ -140,42 +141,44 @@ const PriceTable = ({
                       alignItems: "center",
                     }}
                   >
-                    {sortConfig.key === column.key ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUpwardIcon
-                          sx={{
-                            fontSize: 16,
-                            color: PRIMARY_BLUE2,
-                          }}
-                        />
+                    {!column.noSort && (
+                      sortConfig.key === column.key ? (
+                        sortConfig.direction === "asc" ? (
+                          <ArrowUpwardIcon
+                            sx={{
+                              fontSize: 16,
+                              color: PRIMARY_BLUE2,
+                            }}
+                          />
+                        ) : (
+                          <ArrowDownwardIcon
+                            sx={{
+                              fontSize: 16,
+                              color: PRIMARY_BLUE2,
+                            }}
+                          />
+                        )
                       ) : (
-                        <ArrowDownwardIcon
-                          sx={{
-                            fontSize: 16,
-                            color: PRIMARY_BLUE2,
-                          }}
-                        />
+                        <Grid
+                          container
+                          direction="column"
+                          alignItems="center"
+                          sx={{ height: 16, width: 16 }}
+                        >
+                          <ArrowUpwardIcon
+                            sx={{
+                              fontSize: 12,
+                              color: "grey.400",
+                            }}
+                          />
+                          <ArrowDownwardIcon
+                            sx={{
+                              fontSize: 12,
+                              color: "grey.400",
+                            }}
+                          />
+                        </Grid>
                       )
-                    ) : (
-                      <Grid
-                        container
-                        direction="column"
-                        alignItems="center"
-                        sx={{ height: 16, width: 16 }}
-                      >
-                        <ArrowUpwardIcon
-                          sx={{
-                            fontSize: 12,
-                            color: "grey.400",
-                          }}
-                        />
-                        <ArrowDownwardIcon
-                          sx={{
-                            fontSize: 12,
-                            color: "grey.400",
-                          }}
-                        />
-                      </Grid>
                     )}
                   </Grid>
                 </Grid>
@@ -225,9 +228,7 @@ const PriceTable = ({
                   </TableCell>
                   <TableCell sx={{ ...rowstyle }}>{row.effectiveDate}</TableCell>
                   <TableCell sx={{ ...rowstyle }}>{row.validTill || "-"}</TableCell>
-                  <TableCell sx={{ ...rowstyle }}>
-                    {row.status === 1 ? "Active" : "Inactive"}
-                  </TableCell>
+                  
                 </TableRow>
               ))}
         </TableBody>

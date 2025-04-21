@@ -1,18 +1,14 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import { Grid, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
-  AQUA,
   DARK_PURPLE,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -23,24 +19,27 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
-  IconButton,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import { useNavigate } from "react-router-dom";
+import {
+  GetLocationList,
+  GetOrgnHierarchyMappingReport,
+} from "../../../Api/Api";
+import NuralPagination from "../../../Common/NuralPagination";
+import { FormSkeleton } from "../../../Common/Skeletons";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
 import NuralReports from "../../NuralCustomComponents/NuralReports";
-import NuralExport from "../../NuralCustomComponents/NuralExport";
-import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
-const organisationHierarchyreport = () => {
-  const [activeTab, setActiveTab] = React.useState("org-hierarchy-mapping-report");
+import { Skeleton } from "@mui/material";
+
+const OrganisationHierarchyreport = () => {
+  const [activeTab, setActiveTab] = React.useState(
+    "org-hierarchy-mapping-report"
+  );
 
   const tabs = [
     { label: "User Tracking", value: "user-tracking" },
@@ -62,21 +61,15 @@ const organisationHierarchyreport = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
+  // Add these states for pagination similar to Model.jsx
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [totalRecords, setTotalRecords] = React.useState(0);
 
   // Add these states for sorting
   const [sortConfig, setSortConfig] = React.useState({
@@ -84,40 +77,22 @@ const organisationHierarchyreport = () => {
     direction: null,
   });
 
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const sno = Array.from({ length: 50 }, (_, i) => i + 1);
-    const ho = ["HO Mumbai", "HO Delhi", "HO Bangalore", "HO Chennai", "HO Kolkata"];
-    const nsm = ["NSM North", "NSM South", "NSM East", "NSM West", "NSM Central"];
-    const rsm = ["RSM Delhi", "RSM Mumbai", "RSM Chennai", "RSM Kolkata", "RSM Pune"];
-    const asm = ["ASM Region1", "ASM Region2", "ASM Region3", "ASM Region4", "ASM Region5"];
-    const tsm = ["TSM Area1", "TSM Area2", "TSM Area3", "TSM Area4", "TSM Area5"];
+  const [filteredRows, setFilteredRows] = React.useState([]); // Initialize as empty array
+  const [roleList, setRoleList] = useState([]);
+  const [locationList, setLocationList] = useState([]);
 
-    // Generate 50 rows of realistic data
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: index + 1,
-        sno: sno[index],
-        ho: ho[Math.floor(Math.random() * ho.length)],
-        nsm: nsm[Math.floor(Math.random() * nsm.length)],
-        rsm: rsm[Math.floor(Math.random() * rsm.length)],
-        asm: asm[Math.floor(Math.random() * asm.length)],
-        tsm: tsm[Math.floor(Math.random() * tsm.length)]
-      }));
-  };
+  const [searchParams, setSearchParams] = useState({
+    hierarchyLevelId: 0,
+    orgnHierarchyId: 0,
+    pageIndex: 1,
+    pageSize: 10,
+  });
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  // Add Loading States
+  const [searchFormLoading, setSearchFormLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(true);
+  // Add state for export loading
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
   // Enhanced sorting function
   const handleSort = (columnName) => {
@@ -130,7 +105,7 @@ const organisationHierarchyreport = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...filteredRows]); // Reset to original order
         return;
       }
     }
@@ -156,48 +131,138 @@ const organisationHierarchyreport = () => {
     setFilteredRows(sortedRows);
   };
 
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
-      );
-    });
+  // Add pagination handler similar to Model.jsx
+  const handlePaginationChange = (paginationState) => {
+    const updatedParams = {
+      hierarchyLevelId: searchParams.hierarchyLevelId,
+      orgnHierarchyId: searchParams.orgnHierarchyId,
+      pageIndex: paginationState.page + 1, // API uses 1-based index
+      pageSize: paginationState.rowsPerPage,
+    };
 
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
+    setPage(paginationState.page);
+    setRowsPerPage(paginationState.rowsPerPage);
+    setSearchParams(updatedParams);
+
+    getOrgnHierarchyMappingReport(updatedParams); // Fetch data for the new page
   };
 
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
+  const getRoleList = async () => {
+    try {
+      const params = {
+        hierarchyLevelID: 0, //0= to bind hierarchy list, HierarchyLevelID to get Location List
+      };
+      const response = await GetLocationList(params);
+      if (response.statusCode === "200") {
+        setRoleList(response.hierarchyList || []);
+      } else {
+        console.error("Failed to fetch location list:", response.statusMessage);
+        setRoleList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching location list:", error);
+      setLocationList([]);
+    }
+  };
+  const getLocationList = async (hierarchyLevelID) => {
+    try {
+      const params = {
+        hierarchyLevelID: hierarchyLevelID, //0= to bind hierarchy list, HierarchyLevelID to get Location List
+      };
+      const response = await GetLocationList(params);
+      if (response.statusCode === "200") {
+        setLocationList(response.locationList || []);
+      } else {
+        console.error("Failed to fetch location list:", response.statusMessage);
+        setLocationList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching location list:", error);
+      setLocationList([]);
+    }
+  };
+
+  // Modify API call function to accept params, set totalRecords, and handle export
+  const getOrgnHierarchyMappingReport = async (params = searchParams) => {
+    // Only set table loading true if it's NOT an export request
+    if (params.pageIndex !== -1) {
+      setTableLoading(true);
+    }
+    try {
+      // console.log("Fetching report with params:", params); // Debug log
+      const response = await GetOrgnHierarchyMappingReport(params);
+
+      // Handle export case first
+      if (params.pageIndex === -1 && response.reportLink) {
+        window.location.href = response.reportLink;
+        return; // Stop further processing for export
+      }
+
+      if (response.statusCode === "200") {
+        setFilteredRows(response.reportList || []);
+        setTotalRecords(response.totalRecords || 0); // Update total records
+      } else {
+        console.error(
+          "Failed to fetch organisation hierarchy mapping report:",
+          response.statusMessage
+        );
+        setFilteredRows([]);
+        setTotalRecords(0); // Reset total records on error
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching organisation hierarchy mapping report:",
+        error
+      );
+      setFilteredRows([]);
+      setTotalRecords(0); // Reset total records on error
+    } finally {
+      // Always set table loading false when fetch ends (success or error)
+      setTableLoading(false);
+    }
+  };
+
+  // Add handleExport function similar to Model.jsx
+  const handleExport = async () => {
+    // Set download loading true
+    setIsDownloadLoading(true);
+    const exportParams = {
+      ...searchParams,
+      pageIndex: -1, // Use -1 to indicate export request
     };
-    handleSearch(searchValues);
+    try {
+      // Call the existing data fetching function with export parameters
+      await getOrgnHierarchyMappingReport(exportParams);
+    } catch (error) {
+      console.error("Error exporting organisation hierarchy report:", error);
+      // Optionally show an error message to the user here
+    } finally {
+      // Set download loading false
+      setIsDownloadLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch initial data using default searchParams
+    getOrgnHierarchyMappingReport(searchParams);
+    getRoleList();
+    getLocationList(0); // Call with default 0 initially? Or based on initial searchParams.hierarchyLevelId
+    // Set form loading false after initial fetches are initiated
+    setSearchFormLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Keep dependencies empty for initial load
+
+  const handleSearch = () => {
+    const searchPayload = {
+      hierarchyLevelId: searchParams.hierarchyLevelId,
+      orgnHierarchyId: searchParams.orgnHierarchyId,
+      pageIndex: 1, // Reset page index for new search
+      pageSize: searchParams.pageSize,
+    };
+    // Update state first to reflect the reset page index
+    setSearchParams(searchPayload);
+    setPage(0); // Reset UI page state
+    getOrgnHierarchyMappingReport(searchPayload);
   };
 
   return (
@@ -207,7 +272,10 @@ const organisationHierarchyreport = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1,}, // Add padding to make space for activity panel
+          pl: { xs: 1, sm: 1 }, // Existing padding left
+          // Add right padding to make space for the activity panel
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, 
+          isolation: "isolate",
         }}
       >
         {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
@@ -217,7 +285,7 @@ const organisationHierarchyreport = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 1200,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
@@ -246,94 +314,197 @@ const organisationHierarchyreport = () => {
           <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
             <Grid container spacing={2} direction="column">
               <Grid item>
-                <NuralAccordion2
-                  title="Organisation Hierarchy Mapping Report"
-                  backgroundColor={LIGHT_GRAY2}
-                >
-                  {/* First Row - 3 NuralAutocomplete */}
-                  <Grid
-                    container
-                    spacing={2}
-                    mb={2}
-                    sx={{
-                      gap: { xs: 2, sm: 0, md: 0, lg: 0 },
-                      flexDirection: { xs: "column", sm: "row" },
-                    }}
+                {/* Conditionally render Form Skeleton or Search Form */}
+                {searchFormLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <NuralAccordion2
+                    title="Organisation Hierarchy Mapping Report"
+                    backgroundColor={LIGHT_GRAY2}
+                    defaultExpanded={true} // Keep expanded by default
                   >
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        ROLE
-                      </Typography>
-                      <NuralAutocomplete
-                        width="100%"
-                        label="Role"
-                        options={options}
-                        placeholder="SELECT"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        LOCATION
-                      </Typography>
-                      <NuralAutocomplete
-                        width="100%"
-                        label="Location"
-                        options={options}
-                        placeholder="SELECT"
-                      />
-                    </Grid>
-                  </Grid>
+                    {/* First Row - 3 NuralAutocomplete */}
+                    <Grid
+                      container
+                      spacing={2}
+                      mb={2}
+                      sx={{
+                        gap: { xs: 2, sm: 0, md: 0, lg: 0 },
+                        flexDirection: { xs: "column", sm: "row" },
+                      }}
+                    >
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          ROLE
+                        </Typography>
+                        {/*  {
+            "roleId": 90,
+            "roleName": "AccXchange"
+        }, */}
 
-                  {/* Third Row - Buttons */}
-                  <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                      flexDirection: { xs: "column", sm: "row" },
-                      // gap: { xs: 2, sm: 2 },
-                    }}
-                  >
-                    <Grid item xs={12} sm={3} md={1}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        color={PRIMARY_BLUE2}
-                        fontSize="12px"
-                        height="36px"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="100%"
-                      />
+                        <NuralAutocomplete
+                          options={roleList}
+                          getOptionLabel={(option) => option.hierarchyLevelName}
+                          isOptionEqualToValue={(option, value) =>
+                            option.hierarchyLevelID === value?.hierarchyLevelID
+                          }
+                          value={
+                            searchParams.hierarchyLevelId === 0
+                              ? null
+                              : roleList.find(
+                                  (item) =>
+                                    item.hierarchyLevelID ==
+                                    searchParams.hierarchyLevelId
+                                ) || null
+                          }
+                          onChange={(event, value) => {
+                            getLocationList(value ? value.hierarchyLevelID : 0);
+                            // console.log(value);
+                            // Only update hierarchyLevelId, not roleId
+                            setSearchParams((prevParams) => ({
+                              ...prevParams, // Keep existing orgnHierarchyId, pageSize
+                              hierarchyLevelId: value
+                                ? value.hierarchyLevelID
+                                : 0,
+                              pageIndex: 1, // Reset page index on filter change
+                            }));
+                            // We don't need to call API here, search button will do it
+                          }}
+                          width="100%"
+                          label="Role"
+                          placeholder="SELECT"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          LOCATION
+                        </Typography>
+                        {/*   {
+             {
+              "orgnhierarchyID": 373,
+              "locationCode": "North & East India-Hariom Kumar Mishra"
+          },
+          }, */}
+                        <NuralAutocomplete
+                          options={locationList}
+                          getOptionLabel={(option) => option.locationCode}
+                          isOptionEqualToValue={(option, value) =>
+                            option.orgnhierarchyID === value?.orgnhierarchyID
+                          }
+                          value={
+                            locationList.find(
+                              (item) =>
+                                item.orgnhierarchyID ==
+                                searchParams.orgnHierarchyId
+                            ) || null
+                          }
+                          onChange={(event, value) => {
+                            setSearchParams((prevParams) => ({
+                              ...prevParams,
+                              orgnHierarchyId: value
+                                ? value.orgnhierarchyID
+                                : 0,
+                              pageIndex: 1, // Reset page index on filter change
+                            }));
+                            // We don't need to call API here, search button will do it
+                          }}
+                          width="100%"
+                          label="Location"
+                          placeholder="SELECT"
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={9} md={11}>
-                      <NuralTextButton
-                        icon={"./Icons/searchIcon.svg"}
-                        iconPosition="right"
-                        height="36px"
-                        backgroundColor={PRIMARY_BLUE2}
-                        color="#fff"
-                        width="100%"
-                        fontSize="12px"
-                      >
-                        SEARCH
-                      </NuralTextButton>
+
+                    {/* Third Row - Buttons */}
+                    <Grid
+                      container
+                      spacing={2}
+                      sx={{
+                        flexDirection: { xs: "column", sm: "row" },
+                        // gap: { xs: 2, sm: 2 },
+                      }}
+                    >
+                      <Grid item xs={12} sm={3} md={1}>
+                        <NuralButton
+                          text="CANCEL"
+                          variant="outlined"
+                          color={PRIMARY_BLUE2}
+                          fontSize="12px"
+                          height="36px"
+                          borderColor={PRIMARY_BLUE2}
+                          onClick={async () => {
+                            // Show both skeletons immediately
+                            setSearchFormLoading(true);
+                            setTableLoading(true);
+
+                            // Reset searchParams to default values (0 for IDs)
+                            const resetParams = {
+                              hierarchyLevelId: 0, // Default value
+                              orgnHierarchyId: 0, // Default value
+                              pageIndex: 1,
+                              pageSize: 10,
+                            };
+                            setSearchParams(resetParams);
+                            setPage(0); // Reset UI page
+                            setLocationList([]);
+                            try {
+                              // Call API with reset params to refresh the table and wait for it
+                              await getOrgnHierarchyMappingReport(resetParams);
+                            } catch (error) {
+                              console.error(
+                                "Error during cancel operation:",
+                                error
+                              );
+                              // Ensure loading states are turned off even if API fails
+                              setTableLoading(false);
+                            } finally {
+                              // Hide form skeleton after API call finishes
+                              setSearchFormLoading(false);
+                              // tableLoading is already set to false in getOrgnHierarchyMappingReport's finally block,
+                              // but setting it here again ensures it's off if the API call itself threw an error
+                              // before reaching the finally block (though unlikely with current structure).
+                              // If getOrgnHierarchyMappingReport handles its own errors well, this might be redundant.
+                              // Let's keep it for safety, or remove if getOrgnHierarchyMappingReport guarantees setting it false.
+                              // Re-checking getOrgnHierarchyMappingReport: Yes, it has a finally block.
+                              // So, technically only setSearchFormLoading(false) is needed here.
+                              // However, setting both provides clear intent that both loaders stop after cancel completes.
+                              setTableLoading(false); // Explicitly set false for clarity after await
+                            }
+                          }}
+                          width="100%"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={9} md={11}>
+                        <NuralTextButton
+                          icon={"./Icons/searchIcon.svg"}
+                          iconPosition="right"
+                          height="36px"
+                          backgroundColor={PRIMARY_BLUE2}
+                          color="#fff"
+                          width="100%"
+                          fontSize="12px"
+                          onClick={handleSearch} // Use updated handleSearch
+                        >
+                          SEARCH
+                        </NuralTextButton>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </NuralAccordion2>
+                  </NuralAccordion2>
+                )}
               </Grid>
             </Grid>
           </Grid>
@@ -346,7 +517,7 @@ const organisationHierarchyreport = () => {
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+              maxHeight: "calc(100vh - 90px)", // Add max height for scrolling
               overflow: "auto",
             }}
           >
@@ -359,34 +530,47 @@ const organisationHierarchyreport = () => {
                       backgroundColor: LIGHT_GRAY2,
                       position: "sticky",
                       top: 0,
-                      zIndex: 1100,
+                      zIndex: 1000,
                       borderBottom: "none",
                     }}
                   >
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "19.12px",
-                        letterSpacing: "0%",
-                        color: PRIMARY_BLUE2,
-                        p: 1,
-                      }}
+                    {/* Use Grid container for Title and Export icon */}
+                    <Grid
+                      container
+                      justifyContent="space-between"
+                      alignItems="center"
                     >
-                      List
-                    </Typography>
+                      <Grid item>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "14px",
+                            lineHeight: "19.12px",
+                            letterSpacing: "0%",
+                            color: PRIMARY_BLUE2,
+                            p: 1,
+                          }}
+                        >
+                          List
+                        </Typography>
+                      </Grid>
+                      <Grid item sx={{ cursor: "pointer", pr: 1 }}>
+                        {" "}
+                        {/* Added pr for padding */}
+                      </Grid>
+                    </Grid>
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
                   {[
                     { id: "sno", label: "S NO" },
-                    { id: "ho", label: "HO" },
+                    { id: "hoName", label: "HO" },
                     { id: "nsm", label: "NSM" },
                     { id: "rsm", label: "RSM" },
                     { id: "asm", label: "ASM" },
-                    { id: "tsm", label: "TSM" }
+                    { id: "tsm", label: "TSM" },
                   ].map(({ id, label }) => (
                     <TableCell
                       key={id}
@@ -438,216 +622,73 @@ const organisationHierarchyreport = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => (
-                    <TableRow key={row.id}>
-                      <TableCell sx={{ ...rowstyle }}>{row.sno}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.ho}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.nsm}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.rsm}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.asm}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.tsm}</TableCell>
+                {/* Conditionally render Table Skeleton (MUI approach) or Table Content */}
+                {tableLoading ? (
+                  // Map arrays to create skeleton rows and cells like IspSaleReport
+                  Array.from({ length: 10 }).map((_, rowIndex) => (
+                    <TableRow key={`skeleton-row-${rowIndex}`}>
+                      {Array.from({ length: 6 }).map((_, cellIndex) => (
+                        <TableCell key={`skeleton-cell-${rowIndex}-${cellIndex}`}>
+                          <Skeleton animation="wave" height={20} />
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  ))}
+                  ))
+                ) : filteredRows.length > 0 ? (
+                  filteredRows.map((row, index) => (
+                    <TableRow key={row.id}>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {page * rowsPerPage + index + 1}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.hoName || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.nsmName || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.rsmEmail || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.asmName || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.tsmName || "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No data available
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
 
-            {/* Custom Pagination */}
-            <Grid
-              container
-              sx={{
-                p: 2,
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Grid item>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 400,
-                    fontSize: "10px",
-                    lineHeight: "13.66px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  TOTAL RECORDS:{" "}
-                  <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {filteredRows.length} /{" "}
-                    {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                  </span>
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Grid
-                  container
-                  spacing={1}
-                  sx={{
-                    maxWidth: 300,
-                    ml: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    //   gap: 1,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1,
-                      fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    SHOW :
-                  </Typography>
-                  {[10, 25, 50, 100].map((value) => (
-                    <Grid item key={value}>
-                      <Button
-                        onClick={() =>
-                          handleChangeRowsPerPage({ target: { value } })
-                        }
-                        sx={{
-                          minWidth: "25px",
-                          height: "24px",
-                          padding: "4px",
-                          borderRadius: "50%",
-                          // border: `1px solid ${PRIMARY_BLUE2}`,
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                          fontSize: "12px",
-                          "&:hover": {
-                            backgroundColor:
-                              rowsPerPage === value
-                                ? PRIMARY_BLUE2
-                                : "transparent",
-                          },
-                          mx: 0.5,
-                        }}
-                      >
-                        {value}
-                      </Button>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-
-              <Grid
-                item
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  color: PRIMARY_BLUE2,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                >
-                  JUMP TO FIRST
-                </Typography>
-                <IconButton
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                  }}
-                >
-                  PAGE {page + 1}
-                </Typography>
-
-                <IconButton
-                  onClick={() => setPage(page + 1)}
-                  disabled={
-                    page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                  }
-                >
-                  <NavigateNextIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                >
-                  JUMP TO LAST
-                </Typography>
-                <input
-                  type="number"
-                  placeholder="Jump to page"
-                  min={1}
-                  max={Math.ceil(filteredRows.length / rowsPerPage)}
-                  // value={page + 1}
-                  onChange={(e) => {
-                    const newPage = parseInt(e.target.value, 10) - 1;
-                    if (
-                      newPage >= 0 &&
-                      newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                    ) {
-                      setPage(newPage);
-                    }
-                  }}
-                  style={{
-                    width: "100px",
-                    height: "24px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
-                    borderRadius: "8px",
-                    borderWidth: "1px",
-                    border: `1px solid ${PRIMARY_BLUE2}`,
-                  }}
-                />
-                <Grid mt={1}>
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
-                </Grid>
-              </Grid>
-            </Grid>
+            {/* Custom Pagination - Pass required props */}
+            <NuralPagination
+              key={`pagination-${page}-${rowsPerPage}`} // Add key for re-render on change
+              totalRecords={totalRecords}
+              initialPage={page}
+              initialRowsPerPage={rowsPerPage}
+              onPaginationChange={handlePaginationChange}
+            />
           </TableContainer>
         </Grid>
       </Grid>
-      {/* <Grid
+      <Grid
         item
         xs={12}
         sm={3}
         md={2}
         lg={2}
         mt={1}
+        mr={0} // Remove margin right if any
         position={"fixed"}
-        right={{
-          xs: 0,
-          sm: 5,
-          md: 5,
-          lg: 12,
-        }}
+        // Adjust right positioning
+        right={10}
         sx={{
           zIndex: 10000,
           top: "0px",
@@ -683,14 +724,14 @@ const organisationHierarchyreport = () => {
             <NuralExport
               title="Export"
               views={""}
-              //   downloadExcel={downloadExcel}
-              //   isDownloadLoading={isDownloadLoading}
+              downloadExcel={handleExport}
+              isDownloadLoading={isDownloadLoading}
             />
           </Grid>
         </NuralActivityPanel>
-      </Grid> */}
+      </Grid>
     </>
   );
 };
 
-export default organisationHierarchyreport;
+export default OrganisationHierarchyreport;

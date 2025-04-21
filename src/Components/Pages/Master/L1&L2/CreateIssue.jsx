@@ -1,46 +1,15 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
-import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
-import TabsBar from "../../../Common/TabsBar";
+import { Grid, Typography, FormHelperText } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
-import {
-  AQUA,
-  BLACK,
-  DARK_PURPLE,
-  LIGHT_GRAY2,
-  PRIMARY_BLUE,
-  PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
-  WHITE,
-} from "../../../Common/colors";
+import { AQUA, DARK_PURPLE, PRIMARY_BLUE2 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
-import NuralButton from "../../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
-  IconButton,
-  Checkbox,
-} from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
+import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
-import { useNavigate } from "react-router-dom";
 import StatusModel from "../../../Common/StatusModel";
+import { getIssueCategoryDropdown, manageIssueMaster } from "../../../Api/Api";
+import Required from "../../../Common/Required";
+import { FormSkeleton } from "../../../Common/Skeletons";
 
 const radioOptions = [
   { value: "yes", label: "Interface" },
@@ -48,10 +17,26 @@ const radioOptions = [
 ];
 
 const CreateIssue = () => {
-  const navigate = useNavigate();
+  const [showStatus, setShowStatus] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(false);
+  const [message, setMessage] = useState("");
+  const [accordionExpanded, setAccordionExpanded] = useState(true);
+  const [issueCategoryDrop, setIssueCategoryDrop] = useState([]);
+  const [errors, setErrors] = useState({
+    issueTypeID: "",
+    issueCategoryId: "",
+    issue: "",
+  });
 
-  const [selectedValue, setSelectedValue] = React.useState(null);
-  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
+  const [formData, setFormData] = useState({
+    issueMasterID: 0,
+    issueTypeID: null,
+    issueCategoryId: 6,
+    issue: "",
+    status: 1,
+    callType: 0,
+  });
 
   const labelStyle = {
     fontSize: "10px",
@@ -63,160 +48,112 @@ const CreateIssue = () => {
   };
 
   const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
+    { label: "A", value: 1 },
+    { label: "B", value: 2 },
+    { label: "C", value: 3 },
+    { label: "D", value: 4 },
   ];
 
-  const options2 = [
-    "LOCATION 1",
-    "LOCATION 2",
-    "LOCATION 3",
-    "LOCATION 4",
-    "LOCATION 5",
-  ];
+  useEffect(() => {
+    fetchIssueCategoryDropdown();
+  }, []);
 
-  // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
-  });
-
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const regions = ["North", "South", "East", "West", "Central"];
-    const states = [
-      "Maharashtra",
-      "Gujarat",
-      "Karnataka",
-      "Tamil Nadu",
-      "Delhi",
-    ];
-    const saleTypes = ["Direct", "Distributor", "Online", "Retail"];
-    const serialTypes = ["A123", "B456", "C789", "D012", "E345"];
-
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        column1: saleTypes[Math.floor(Math.random() * saleTypes.length)],
-        column2: regions[Math.floor(Math.random() * regions.length)],
-        column3: states[Math.floor(Math.random() * states.length)],
-        column4: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-        column5: Math.floor(Math.random() * 10000000),
-        column6: serialTypes[Math.floor(Math.random() * serialTypes.length)],
-        column7: `Product-${Math.floor(Math.random() * 100)}`,
-        column8: Math.floor(Math.random() * 100),
-        column9: `Status-${Math.floor(Math.random() * 3)}`,
-      }));
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Enhanced sorting function
-  const handleSort = (columnName) => {
-    let direction = "asc";
-
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
+  const fetchIssueCategoryDropdown = async () => {
+    setLoading(true);
+    try {
+      // Replace with actual API call
+      const res = await getIssueCategoryDropdown();
+      if (res.statusCode == 200) {
+        if (res.issueCategoryList.length > 0) {
+          setIssueCategoryDrop(res.issueCategoryList);
+        } else {
+          setIssueCategoryDrop([]);
+        }
       } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
+        setIssueCategoryDrop([]);
+      }
+
+      // Temporary mock data
+    } catch (error) {
+      console.error("Error fetching issue categories:", error);
+      setIssueCategoryDrop([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      issueTypeID: !formData.issueTypeID ? "Issue Type is required" : "",
+      issueCategoryId: !formData.issueCategoryId
+        ? "Issue Category is required"
+        : "",
+      issue: !formData.issue
+        ? "Issue is required"
+        : formData.issue.length > 50
+        ? "Issue cannot exceed 50 characters"
+        : "",
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when field is updated
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handlePost = async () => {
+    if (validateForm()) {
+      // Implement your submit logic here
+      setLoading(true);
+      try {
+        let res = await manageIssueMaster(formData);
+        if (res.statusCode == 200) {
+          setShowStatus(true);
+          setStatus(res.statusCode);
+          setMessage(res.statusMessage);
+          setTimeout(() => {
+            setShowStatus(false);
+          }, 3000);
+        } else {
+          setShowStatus(true);
+          setStatus(res.statusCode);
+          setMessage(res.statusMessage);
+        }
+      } catch (error) {
+        setShowStatus(true);
+        setStatus(error.status || "500");
+        setMessage(error.message || "Internal Server Error");
+        console.log(error);
+      } finally {
+        setLoading(false);
       }
     }
-
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setFilteredRows(sortedRows);
   };
 
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
-      );
+  const handleCancel = () => {
+    setFormData({
+      issueMasterID: 0,
+      issueTypeID: null,
+      issueCategoryId: null,
+      issue: "",
+      status: 1,
+      callType: 0,
+      mode: "yes",
     });
-
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
-  };
-
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
-    };
-    handleSearch(searchValues);
+    setErrors({
+      issueTypeID: "",
+      issueCategoryId: "",
+      issue: "",
+    });
   };
 
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
-      {/* Rest of the content */}
       <Grid
         container
         spacing={0}
@@ -225,158 +162,231 @@ const CreateIssue = () => {
         sx={{ position: "relative", zIndex: 1 }}
       >
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-          <Grid container spacing={2} direction="column">
-            <Grid item>
-              <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
-                <NuralAccordion2
-                  title="Create Issue"
-                  controlled={true}
-                  expanded={accordionExpanded}
-                  onChange={(event, expanded) => setAccordionExpanded(expanded)}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: "Manrope",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      lineHeight: "100%",
-                      letterSpacing: "0%",
-                      color: DARK_PURPLE,
-                      marginBottom: "10px",
-                      marginTop: "10px",
-                      // marginLeft: "10px",
-                      marginRight: "10px",
-                      mb: 3,
-                    }}
+          {loading ? (
+            <FormSkeleton />
+          ) : (
+            <Grid container spacing={2} direction="column">
+              <Grid item>
+                <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
+                  <NuralAccordion2
+                    title="Create Issue"
+                    controlled={true}
+                    expanded={accordionExpanded}
+                    onChange={(event, expanded) =>
+                      setAccordionExpanded(expanded)
+                    }
                   >
-                    Create
-                  </Typography>
-                  <Grid item xs={12} md={6} lg={6} mb={2}>
                     <Typography
                       variant="h6"
                       sx={{
-                        ml: 0,
-                        color: DARK_PURPLE,
                         fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "100%",
+                        letterSpacing: "0%",
+                        color: DARK_PURPLE,
+                        marginBottom: "10px",
+                        marginTop: "10px",
+                        marginRight: "10px",
+                        mb: 3,
                       }}
                     >
-                      SELECT MODE
+                      Create
                     </Typography>
-                    <NuralRadioButton
-                      label="Store Type"
-                      options={radioOptions}
-                      value={radioOptions[0].value}
-                      width="100%"
-                      fontWeight={400}
-                      fontSize="12px"
-                      onChange={(value) => console.log(value)}
-                    />
-                  </Grid>
-                  <Grid container spacing={4}>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
+                    <Grid item xs={12} md={6} lg={6} mb={2}>
                       <Typography
-                        variant="body1"
+                        variant="h6"
                         sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
+                          ml: 0,
+                          color: DARK_PURPLE,
+                          fontFamily: "Manrope",
+                          fontWeight: 400,
+                          fontSize: "10px",
+                          lineHeight: "13.66px",
+                          letterSpacing: "4%",
                         }}
-                        fontWeight={600}
                       >
-                        ISSUE TYPE
+                        SELECT MODE
                       </Typography>
-                      <NuralAutocomplete
+                      <NuralRadioButton
+                        label="Store Type"
+                        options={radioOptions}
+                        value={formData.mode}
                         width="100%"
-                        placeholder="SELECT"
-                        options={options}
+                        fontWeight={400}
+                        fontSize="12px"
+                        onChange={(value) => handleChange("mode", value)}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        ISSUE CATEGORY
-                      </Typography>
-                      <NuralAutocomplete
-                        width="100%"
-                        placeholder="SELECT"
-                        options={options}
-                      />
+                    <Grid container spacing={4}>
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          ISSUE TYPE <Required />
+                        </Typography>
+                        <NuralAutocomplete
+                          label="Sale Type"
+                          options={options}
+                          placeholder="SELECT"
+                          width="100%"
+                          getOptionLabel={(option) => option.label || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.value === value?.value
+                          }
+                          onChange={(event, newValue) => {
+                            handleChange(
+                              "issueTypeID",
+                              newValue?.value || null
+                            );
+                          }}
+                          value={
+                            options.find(
+                              (option) => option.value === formData.issueTypeID
+                            ) || null
+                          }
+                          error={!!errors.issueTypeID}
+                        />
+                        {errors.issueTypeID && (
+                          <FormHelperText
+                            sx={{
+                              color: "error.main",
+                              marginLeft: 0,
+                              fontSize: "10px",
+                            }}
+                          >
+                            {errors.issueTypeID}
+                          </FormHelperText>
+                        )}
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          ISSUE CATEGORY <Required />
+                        </Typography>
+                        <NuralAutocomplete
+                          label="Issue Category"
+                          options={issueCategoryDrop}
+                          placeholder="SELECT"
+                          width="100%"
+                          getOptionLabel={(option) =>
+                            option.issueCategoryName || ""
+                          }
+                          isOptionEqualToValue={(option, value) =>
+                            option?.issueCategoryID === value?.issueCategoryID
+                          }
+                          onChange={(event, newValue) => {
+                            handleChange(
+                              "issueCategoryId",
+                              newValue?.issueCategoryID || null
+                            );
+                          }}
+                          value={
+                            issueCategoryDrop.find(
+                              (option) =>
+                                option.issueCategoryID ===
+                                formData.issueCategoryId
+                            ) || null
+                          }
+                          error={!!errors.issueCategoryId}
+                        />
+                        {errors.issueCategoryId && (
+                          <FormHelperText
+                            sx={{
+                              color: "error.main",
+                              marginLeft: 0,
+                              fontSize: "10px",
+                            }}
+                          >
+                            {errors.issueCategoryId}
+                          </FormHelperText>
+                        )}
+                      </Grid>
+                      <Grid item xs={12} sm={12} md={12} lg={12} mt={-1}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          ISSUE <Required />
+                        </Typography>
+                        <NuralTextField
+                          width="100%"
+                          placeholder="ENTER ISSUE"
+                          value={formData.issue}
+                          onChange={(e) =>
+                            handleChange("issue", e.target.value)
+                          }
+                          error={!!errors.issue}
+                          errorMessage={errors.issue}
+                          inputProps={{
+                            maxLength: 50,
+                          }}
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={12} md={12} lg={12} mt={-1}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        ISSUE
-                      </Typography>
-                      <NuralTextField width="100%" placeholder="ENTER ISSUE" />
-                    </Grid>
-                  </Grid>
-                </NuralAccordion2>
-              </Grid>
-
-            
-
-              <Grid item xs={12} sm={12} md={12} lg={12} pr={2} mt={0.5}>
-                <StatusModel
-                  width="100%"
-                  status="200"
-                  title="New Issue Created"
-                />
-              </Grid>
-
-              {accordionExpanded && (
-                <Grid
-                  container
-                  spacing={1}
-                  mt={0.5}
-                  sx={{
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: { xs: 2, sm: 0 },
-                  }}
-                >
-                  <Grid item xs={12} sm={6} md={6}>
-                    <NuralButton
-                      text="CANCEL"
-                      variant="outlined"
-                      color={PRIMARY_BLUE2}
-                      fontSize="12px"
-                      height="36px"
-                      borderColor={PRIMARY_BLUE2}
-                      onClick={() => console.log("Upload clicked")}
-                      width="100%"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={6}>
-                    <NuralButton
-                      text="SAVE"
-                      variant="contained"
-                      color={PRIMARY_BLUE2}
-                      fontSize="12px"
-                      height="36px"
-                      backgroundColor={AQUA}
-                      onClick={() => console.log("Upload clicked")}
-                      width="100%"
-                    />
-                  </Grid>
+                  </NuralAccordion2>
                 </Grid>
-              )}
+
+                <Grid item xs={12} sm={12} md={12} lg={12} pr={2} mt={0.5}>
+                  {showStatus && (
+                    <StatusModel width="100%" status={status} title={message} />
+                  )}
+                </Grid>
+
+                {accordionExpanded && (
+                  <Grid
+                    container
+                    spacing={1}
+                    mt={0.5}
+                    sx={{
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: { xs: 2, sm: 0 },
+                    }}
+                  >
+                    <Grid item xs={12} sm={6} md={6}>
+                      <NuralButton
+                        text="CANCEL"
+                        variant="outlined"
+                        color={PRIMARY_BLUE2}
+                        fontSize="12px"
+                        height="36px"
+                        borderColor={PRIMARY_BLUE2}
+                        onClick={handleCancel}
+                        width="100%"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={6}>
+                      <NuralButton
+                        text="SAVE"
+                        variant="contained"
+                        color={PRIMARY_BLUE2}
+                        fontSize="12px"
+                        height="36px"
+                        backgroundColor={AQUA}
+                        onClick={handlePost}
+                        width="100%"
+                      />
+                    </Grid>
+                  </Grid>
+                )}
+              </Grid>
             </Grid>
-          </Grid>
+          )}
         </Grid>
       </Grid>
     </Grid>

@@ -149,7 +149,7 @@ const SalesExcel = () => {
         setTimeout(handleClearStatus, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);

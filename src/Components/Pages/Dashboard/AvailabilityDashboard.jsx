@@ -94,24 +94,17 @@ const productData = [
 ];
 
 const ChannelsDashBoard = () => {
-  const [activeTab, setActiveTab] = React.useState("availability");
+  const [activeTab, setActiveTab] = React.useState("availability-dashboard");
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
+    { label: "Business", value: "ho-dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
     { label: "Brand", value: "brand" },
-    { label: "Inventory", value: "inventory" },
+    { label: "Inventory", value: "inventory-dashboard" },
   ];
   const navigate = useNavigate();
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
+
 
   const options = [
     "Nural Network",

@@ -54,9 +54,21 @@ const moduleTypes = [
   { title: "FINANCE", link: "/unblock-finance" },
   { title: "ATTENDANCE", link: "/view-attendance-report" },
   { title: "MERCHANDIZING", link: "/merchandizing" },
-  { title: "COMPETITION", link: "/competition-sales-report" },
+  { title: "COMPETITION", link: "/competiton-upload" },
   { title: "L & D", link: "/lnd" },
   // { title: "BRAND", link: "/l1l2-issue" },
+];
+
+const reportTypes = [
+  { title: "SALES REPORT", link: "/sales-report" },
+  { title: "ISP SALES REPORT", link: "/isp-sales-report" },
+  { title: "UNIQUE SALES REPORT", link: "/unique-sales-report" },
+  { title: "PRIMARY TO TERTIARY TRACK", link: "/primary-tertiary-track" },
+  { title: "COMPETITION SALES REPORT", link: "/competition-sales-report" },
+  { title: "COUNTER SHARE REPORT", link: "/counter-share-report" },
+ 
+
+
 ];
 
 const MasterSetting = () => {
@@ -99,6 +111,9 @@ const MasterSetting = () => {
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={moduleTypes} title="Module" />
+        </Grid>
+        <Grid item xs={12} md={6} lg={6}>
+          <TransationCard salesTypes={reportTypes} title="Reports" />
         </Grid>
       </Grid>
     </Grid>

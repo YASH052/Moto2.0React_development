@@ -7,7 +7,7 @@ import {
   SECONDARY_BLUE,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../NuralAutocomplete";
-import { title } from "process";
+
 
 const CircularProgressWithLabel = ({ value, mainText, subText, label }) => {
   return (

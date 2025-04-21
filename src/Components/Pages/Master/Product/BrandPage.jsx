@@ -1,5 +1,5 @@
-import { Grid, Switch, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Grid, Switch, Typography, Skeleton } from "@mui/material";
+import React, { useEffect, useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -14,8 +14,8 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
+import { FormSkeleton } from "../../../Common/Skeletons";
 import Required from "../../../Common/Required";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -33,6 +33,8 @@ import NuralPagination from "../../../Common/NuralPagination";
 import { getbrandlist, managebrandMaster } from "../../../Api/Api";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import StatusModel from "../../../Common/StatusModel";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
@@ -42,7 +44,7 @@ const tabs = [
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "prebooking-sku-create" },
 ];
@@ -56,6 +58,9 @@ const BrandPage = () => {
     key: null,
     direction: null,
   });
+
+  // Add ref for the form accordion
+  const formAccordionRef = useRef(null);
 
   const [formData, setFormData] = useState({
     Brand: "",
@@ -85,8 +90,8 @@ const BrandPage = () => {
   const [titleSearch, setTitleSearch] = useState(null);
 
   // Add accordion state
-  const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [accordionExpanded, setAccordionExpanded] = useState(true); // Revert: Keep Create Brand open initially
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false); // Keep View closed initially
   const [formLoading, setFormLoading] = useState(true);
   const [searchFormLoading, setSearchFormLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
@@ -95,6 +100,7 @@ const BrandPage = () => {
   const [isTableUpdating, setIsTableUpdating] = useState(false);
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
   const handleSort = (columnName) => {
     let direction = "asc";
@@ -139,11 +145,27 @@ const BrandPage = () => {
 
   // Add accordion change handlers
   const handleAccordionChange = (event, expanded) => {
-    setAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
-    setSearchAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
   // Add form validation
@@ -153,8 +175,8 @@ const BrandPage = () => {
     // Brand Name validation
     if (!formData.Brand || formData.Brand.trim() === "") {
       newErrors.Brand = "Brand Name is required";
-    } else if (formData.Brand.length > 50) {
-      newErrors.Brand = "Brand Name cannot exceed 50 characters";
+    } else if (formData.Brand.length > 20) {
+      newErrors.Brand = "Brand Name cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.Brand)) {
       newErrors.Brand =
         "Brand Name can only contain alphanumeric characters and spaces";
@@ -163,8 +185,8 @@ const BrandPage = () => {
     // Brand Code validation
     if (!formData.BrandDesc || formData.BrandDesc.trim() === "") {
       newErrors.BrandDesc = "Brand Code is required";
-    } else if (formData.BrandDesc.length > 50) {
-      newErrors.BrandDesc = "Brand Code cannot exceed 50 characters";
+    } else if (formData.BrandDesc.length > 20) {
+      newErrors.BrandDesc = "Brand Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.BrandDesc)) {
       newErrors.BrandDesc =
         "Brand Code can only contain alphanumeric characters (no spaces)";
@@ -250,7 +272,7 @@ const BrandPage = () => {
     setStatusSearch(null);
     setTitleSearch(null);
     setTimeout(() => {
-      Promise.all([getBrandList(), getBrandDropdown()]).finally(() => {
+      Promise.all([getBrandList()]).finally(() => {
         setFormLoading(false);
       });
     }, 500);
@@ -259,20 +281,28 @@ const BrandPage = () => {
   // Add clear search handler
   const handleClearSearch = () => {
     setSearchFormLoading(true);
-    setSearchParams({
+    const resetParams = {
       BrandID: 0,
       PageIndex: 1,
       PageSize: 10,
       CallType: 0,
-    });
-    setTimeout(() => {
-      Promise.all([getBrandList(), getBrandDropdown()]).finally(() => {
-        setSearchFormLoading(false);
-      });
-    }, 500);
+    };
+    setSearchParams(resetParams);
+    setPage(0);
+    setRowsPerPage(10);
+
     setStatusSearch(null);
     setTitleSearch(null);
-  };
+
+    // Fetch updated data after delay
+    setTimeout(() => {
+      // Pass the reset parameters directly to getBrandList
+      // Remove getBrandDropdown as it's not needed when clearing search
+      Promise.all([getBrandList(resetParams)]).finally(() => { // Removed getBrandDropdown()
+        setSearchFormLoading(false);
+      });
+    }, 1000);
+  };  
 
   const getBrandDropdown = async () => {
     try {
@@ -307,6 +337,7 @@ const BrandPage = () => {
     try {
       setTableLoading(true);
       setIsTableUpdating(true);
+      setIsDownloadLoading(true);
       const params = {
         ...searchParams,
         PageIndex: -1,
@@ -338,6 +369,7 @@ const BrandPage = () => {
     } finally {
       setTableLoading(false);
       setIsTableUpdating(false);
+      setIsDownloadLoading(false);
     }
   };
   const getBrandList = async (params = searchParams) => {
@@ -397,7 +429,7 @@ const BrandPage = () => {
     getBrandList(updatedParams);
   };
 
-  const handleStatus = async (row) => {
+  const handleStatus = async (row, newStatus) => {
     try {
       setUpdatingRowId(row.brandID);
       setStatusUpdateLoading(true);
@@ -405,7 +437,7 @@ const BrandPage = () => {
       const updateData = {
         Brand: row.brand,
         BrandDesc: row.brandDesc,
-        Status: row.status === 0 ? 1 : 0,
+        Status: newStatus ? 1 : 0,
         BrandID: row.brandID,
         Action: 3, // Status Update
       };
@@ -420,34 +452,18 @@ const BrandPage = () => {
           setTitleSearch(null);
         }, 5000);
 
-        // Add delay before refreshing the table
+        // Add a very short delay before refreshing the table for backend processing
         setTimeout(() => {
           getBrandList();
-        }, 5000); // Wait for 5 seconds before refreshing
+        }, 100); // Wait 100 milliseconds
       } else {
         setStatusSearch(response.statusCode);
         setTitleSearch(response.statusMessage || "Something went wrong");
-        // Revert the switch state since update failed
-        const newRows = [...filteredRows];
-        const rowIndex = newRows.findIndex((r) => r.brandID === row.brandID);
-        newRows[rowIndex] = {
-          ...newRows[rowIndex],
-          status: row.status, // Revert to original status
-        };
-        setFilteredRows(newRows);
       }
     } catch (error) {
       console.log(error);
       setStatus(error.statusCode);
       setTitle(error.statusMessage || "Something went wrong");
-      // Revert the switch state since update failed
-      const newRows = [...filteredRows];
-      const rowIndex = newRows.findIndex((r) => r.brandID === row.brandID);
-      newRows[rowIndex] = {
-        ...newRows[rowIndex],
-        status: row.status, // Revert to original status
-      };
-      setFilteredRows(newRows);
     } finally {
       setStatusUpdateLoading(false);
       setUpdatingRowId(null);
@@ -465,7 +481,11 @@ const BrandPage = () => {
     });
     setIsEditMode(true);
     setAccordionExpanded(true); // Open the form accordion
-    window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top where form is
+    setSearchAccordionExpanded(false); // Explicitly close search accordion
+    // Use setTimeout and scrollIntoView on the ref, centering the block
+    setTimeout(() => {
+        formAccordionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100); // Keep 100ms delay for now
   };
 
   // Update useEffect to initialize data
@@ -481,9 +501,22 @@ const BrandPage = () => {
     });
   }, []);
 
+  const handleSearchChange = (field, value) => {
+    setSearchParams((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
+          isolation: "isolate",
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -491,7 +524,7 @@ const BrandPage = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 1300,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
@@ -517,172 +550,174 @@ const BrandPage = () => {
                   <FormSkeleton />
                 ) : (
                   <>
-                    <NuralAccordion2
-                      title={isEditMode ? "Edit Brand" : "Create Brand"}
-                      backgroundColor={LIGHT_GRAY2}
-                      expanded={accordionExpanded}
-                      onChange={handleAccordionChange}
-                      controlled={true}
-                      defaultExpanded={true}
-                    >
-                      <Grid container spacing={3} sx={{ width: "100%" }}>
-                        <Grid item xs={12} sm={6} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_PURPLE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            BRAND NAME <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.Brand || ""}
-                            onChange={(event) => {
-                              const newValue = event.target.value;
-                              // Check length first - display error but allow typing to continue
-                              if (newValue.length > 50) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  Brand: newValue.substring(0, 50), // Truncate to 50 chars
-                                }));
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  Brand:
-                                    "Brand Name cannot exceed 50 characters",
-                                }));
-                                return; // Don't continue with normal update
-                              }
-
-                              // If input contains non-alphanumeric-space characters, don't update
-                              if (
-                                newValue &&
-                                !/^[a-zA-Z0-9 ]*$/.test(newValue)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  Brand:
-                                    "Brand Name can only contain alphanumeric characters and spaces",
-                                }));
-                                return; // Don't update the form data
-                              }
-
-                              // Clear errors for valid input
-                              if (newValue.trim() !== "") {
-                                setErrors((prev) => ({ ...prev, Brand: "" }));
-                              } else {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  Brand: "Brand Name is required",
-                                }));
-                              }
-
-                              handleChange("Brand", newValue);
-                            }}
-                            placeholder="ENTER BRAND NAME"
-                            error={!!errors.Brand}
-                          />
-                          {errors.Brand && (
+                    {/* Wrap Accordion in a div with the ref */}
+                    <div ref={formAccordionRef}>
+                      <NuralAccordion2
+                        title={isEditMode ? "Edit Brand" : "Create Brand"}
+                        backgroundColor={LIGHT_GRAY2}
+                        expanded={accordionExpanded}
+                        onChange={handleAccordionChange}
+                        controlled={true}
+                      >
+                        <Grid container spacing={3} sx={{ width: "100%" }}>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
                             <Typography
-                              variant="caption"
-                              color="error"
+                              variant="h6"
                               sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
                               }}
                             >
-                              {errors.Brand}
+                              BRAND NAME <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_PURPLE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            BRAND CODE <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.BrandDesc || ""}
-                            onChange={(event) => {
-                              const newValue = event.target.value;
-                              // Check length first - display error but allow typing to continue
-                              if (newValue.length > 50) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  BrandDesc: newValue.substring(0, 50), // Truncate to 50 chars
-                                }));
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  BrandDesc:
-                                    "Brand Code cannot exceed 50 characters",
-                                }));
-                                return; // Don't continue with normal update
-                              }
+                            <NuralTextField
+                              width="100%"
+                              value={formData.Brand || ""}
+                              onChange={(event) => {
+                                const newValue = event.target.value;
+                                // Check length first - display error but allow typing to continue
+                                if (newValue.length > 20) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    Brand: newValue.substring(0, 20), // Truncate to 20 chars
+                                  }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    Brand:
+                                      "Brand Name cannot exceed 20 characters",
+                                  }));
+                                  return; // Don't continue with normal update
+                                }
 
-                              // If input contains non-alphanumeric characters, don't update
-                              if (
-                                newValue &&
-                                !/^[a-zA-Z0-9]*$/.test(newValue)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  BrandDesc:
-                                    "Brand Code can only contain alphanumeric characters (no spaces)",
-                                }));
-                                return; // Don't update the form data
-                              }
+                                // If input contains non-alphanumeric-space characters, don't update
+                                if (
+                                  newValue &&
+                                  !/^[a-zA-Z0-9 ]*$/.test(newValue)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    Brand:
+                                      "Brand Name can only contain alphanumeric characters and spaces",
+                                  }));
+                                  return; // Don't update the form data
+                                }
 
-                              // Clear errors for valid input
-                              if (newValue.trim() !== "") {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  BrandDesc: "",
-                                }));
-                              } else {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  BrandDesc: "Brand Code is required",
-                                }));
-                              }
+                                // Clear errors for valid input
+                                if (newValue.trim() !== "") {
+                                  setErrors((prev) => ({ ...prev, Brand: "" }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    Brand: "Brand Name is required",
+                                  }));
+                                }
 
-                              handleChange("BrandDesc", newValue);
-                            }}
-                            placeholder="ENTER BRAND CODE"
-                            error={!!errors.BrandDesc}
-                          />
-                          {errors.BrandDesc && (
+                                handleChange("Brand", newValue);
+                              }}
+                              placeholder="ENTER BRAND NAME"
+                              error={!!errors.Brand}
+                            />
+                            {errors.Brand && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  mt: 0.5,
+                                  display: "block",
+                                }}
+                              >
+                                {errors.Brand}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
                             <Typography
-                              variant="caption"
-                              color="error"
+                              variant="h6"
                               sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
                               }}
                             >
-                              {errors.BrandDesc}
+                              BRAND CODE <Required />
                             </Typography>
-                          )}
+                            <NuralTextField
+                              width="100%"
+                              value={formData.BrandDesc || ""}
+                              onChange={(event) => {
+                                const newValue = event.target.value;
+                                // Check length first - display error but allow typing to continue
+                                if (newValue.length > 20) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    BrandDesc: newValue.substring(0, 20), // Truncate to 20 chars
+                                  }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    BrandDesc:
+                                      "Brand Code cannot exceed 20 characters",
+                                  }));
+                                  return; // Don't continue with normal update
+                                }
+
+                                // If input contains non-alphanumeric characters, don't update
+                                if (
+                                  newValue &&
+                                  !/^[a-zA-Z0-9]*$/.test(newValue)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    BrandDesc:
+                                      "Brand Code can only contain alphanumeric characters (no spaces)",
+                                  }));
+                                  return; // Don't update the form data
+                                }
+
+                                // Clear errors for valid input
+                                if (newValue.trim() !== "") {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    BrandDesc: "",
+                                  }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    BrandDesc: "Brand Code is required",
+                                  }));
+                                }
+
+                                handleChange("BrandDesc", newValue);
+                              }}
+                              placeholder="ENTER BRAND CODE"
+                              error={!!errors.BrandDesc}
+                            />
+                            {errors.BrandDesc && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  mt: 0.5,
+                                  display: "block",
+                                }}
+                              >
+                                {errors.BrandDesc}
+                              </Typography>
+                            )}
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    </NuralAccordion2>
+                      </NuralAccordion2>
+                    </div>
 
                     {accordionExpanded && (
                       <Grid container spacing={1} mt={1} pr={1.5}>
@@ -712,7 +747,7 @@ const BrandPage = () => {
                         </Grid>
                         <Grid item xs={12} md={6} lg={6}>
                           <NuralButton
-                            text="SAVE"
+                            text={isEditMode ? "UPDATE" : "SAVE"}
                             backgroundColor={AQUA}
                             variant="contained"
                             onClick={handleSave}
@@ -737,6 +772,7 @@ const BrandPage = () => {
                     title="View"
                     backgroundColor={LIGHT_GRAY2}
                     expanded={searchAccordionExpanded}
+                    controlled={true}
                     onChange={handleSearchAccordionChange}
                   >
                     <Grid container spacing={2} sx={{ width: "100%" }}>
@@ -763,11 +799,11 @@ const BrandPage = () => {
                           }
                           value={
                             brandList.find(
-                              (item) => item.brandID == formData.BrandID
+                              (item) => item.brandID == searchParams.BrandID
                             ) || null
                           }
                           onChange={(event, newValue) => {
-                            handleChange("BrandID", newValue?.brandID || 0);
+                            handleSearchChange("BrandID", newValue?.brandID || 0);
                           }}
                           placeholder="SELECT"
                           width="100%"
@@ -833,7 +869,7 @@ const BrandPage = () => {
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
+                maxHeight: "calc(100vh - 90px)", // Adjusted to account for headers
                 overflow: "auto",
                 position: "relative",
                 "& .MuiTable-root": {
@@ -876,19 +912,6 @@ const BrandPage = () => {
                           >
                             List
                           </Typography>
-                        </Grid>
-                        <Grid
-                          item
-                          sx={{
-                            cursor: "pointer",
-                          }}
-                        >
-                          <img
-                            src="./Images/export.svg"
-                            alt="export"
-                            onClick={downloadExcel}
-                            style={{ cursor: "pointer" }}
-                          />
                         </Grid>
                       </Grid>
                     </TableCell>
@@ -995,15 +1018,18 @@ const BrandPage = () => {
                 </TableHead>
                 <TableBody>
                   {tableLoading || statusUpdateLoading || isTableUpdating ? (
-                    <TableRowSkeleton
-                      columns={5} // 5 columns to match your table
-                      rows={10} // Show 10 skeleton rows
-                      imagePath="./Icons/emptyFile.svg"
-                      sx={{ height: "calc(100vh - 420px)" }}
-                    />
+                    Array.from({ length: rowsPerPage }).map((_, rowIndex) => (
+                      <TableRow key={`skeleton-row-${rowIndex}`}>
+                        {Array.from({ length: 5 }).map((_, cellIndex) => (
+                          <TableCell key={`skeleton-cell-${rowIndex}-${cellIndex}`} sx={{ ...rowstyle }}>
+                            <Skeleton animation="wave" height={20} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
                   ) : Array.isArray(filteredRows) && filteredRows.length > 0 ? (
                     filteredRows.map((row, index) => (
-                      <TableRow key={row.id}>
+                      <TableRow key={row.brandID}>
                         <TableCell
                           sx={{
                             ...rowstyle,
@@ -1021,31 +1047,15 @@ const BrandPage = () => {
                           <Switch
                             checked={row?.status === 1}
                             onChange={(e) => {
-                              const newRows = [...filteredRows];
-                              const rowIndex = newRows.findIndex(
-                                (r) => r.brandID === row.brandID
-                              );
-                              newRows[rowIndex] = {
-                                ...newRows[rowIndex],
-                                status: e.target.checked ? 1 : 0,
-                              };
-                              setFilteredRows(newRows);
-                              handleStatus(newRows[rowIndex]);
+                              const isChecked = e.target.checked;
+                              handleStatus(row, isChecked);
                             }}
                             size="small"
                             disabled={
                               statusUpdateLoading &&
                               updatingRowId === row.brandID
                             }
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: PRIMARY_BLUE2,
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: DARK_PURPLE,
-                                },
-                            }}
+                            sx={toggleSectionStyle}
                           />
                         </TableCell>
                         <TableCell
@@ -1059,7 +1069,6 @@ const BrandPage = () => {
                           <IconButton
                             size="small"
                             onClick={() => handleEdit(row)}
-                            disabled={statusUpdateLoading}
                           >
                             <EditIcon
                               sx={{
@@ -1091,6 +1100,52 @@ const BrandPage = () => {
             </TableContainer>
           </Grid>
         </>
+      </Grid>
+
+      {/* Activity Panel for Export */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={downloadExcel}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );

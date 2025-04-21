@@ -1,46 +1,16 @@
 import { Grid, Typography, Checkbox, Box, Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
-import TabsBar from "../../../Common/TabsBar";
-import {
-  AQUA,
-  DARK_PURPLE,
-  LIGHT_BLUE,
-  LIGHT_GRAY2,
-  PRIMARY_BLUE2,
-  PRIMARY_BLUE,
-  WHITE,
-  BLACK,
-  MEDIUM_BLUE,
-  PRIMARY_LIGHT_GRAY,
-} from "../../../Common/colors";
+
+import { LIGHT_BLUE, LIGHT_GRAY2, PRIMARY_BLUE2 } from "../../../Common/colors";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
-// import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
+
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 // import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
-import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
-import { Search, FileDownload } from "@mui/icons-material";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-} from "@mui/material";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
-import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
+
 import { useNavigate } from "react-router-dom";
 import {
   Countrymasterlist,
@@ -98,6 +68,7 @@ const PriceListView = () => {
   const [title, setTitle] = useState("");
   const [priceListNameDrop, setPriceListNameDrop] = React.useState([]);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
   const [sortConfig, setSortConfig] = React.useState({
     key: null,
     direction: null,
@@ -120,10 +91,49 @@ const PriceListView = () => {
     pageSize: priceListRowsPerPage,
   });
 
+  const refreshTableData = async () => {
+    if (selectedType.value === 0) {
+      // Refresh price list table
+      await fetchPriceListDataWithMapping();
+    } else {
+      // Refresh price table
+      await fetchPriceMasterList();
+    }
+  };
+
   useEffect(() => {
     // fetchPriceListNameApi();
     fetchCountryDrop();
   }, []);
+
+  // Add event listener for price list upload
+  useEffect(() => {
+    const handlePriceListUpload = () => {
+      setPriceListFlag("refresh");
+    };
+
+    window.addEventListener("priceListUploaded", handlePriceListUpload);
+    return () => {
+      window.removeEventListener("priceListUploaded", handlePriceListUpload);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchPriceListName();
+    fetchSkuDrop();
+  }, []);
+
+  useEffect(() => {
+    fetchPriceListDataWithMapping();
+  }, [priceListPage, priceListRowsPerPage, priceListFlag]);
+
+  // Add new useEffect to listen for priceListFlag changes
+  useEffect(() => {
+    if (priceListFlag) {
+      refreshTableData();
+      setPriceListFlag(""); // Reset the flag after refresh
+    }
+  }, [priceListFlag]);
 
   const fetchCountryDrop = async () => {
     let body = {
@@ -226,44 +236,6 @@ const PriceListView = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPriceListName();
-    fetchSkuDrop();
-  }, []);
-
-  useEffect(() => {
-    fetchPriceListDataWithMapping();
-  }, [priceListPage, priceListRowsPerPage, priceListFlag]);
-
-  const fetchPriceListDataWithMapping = async () => {
-    setIsSearchLoading(true);
-    let body = {
-      priceListID: priceListSearchParams.priceListID,
-      countryID: priceListSearchParams.countryID,
-      stateID: priceListSearchParams.stateID,
-      pageIndex: priceListSearchParams.pageIndex,
-      pageSize: priceListSearchParams.pageSize,
-    };
-    try {
-      let res = await GetPriceListDataWithMappingAPI(body);
-      if (res.statusCode == 200) {
-        setPriceListData(res.priceListData);
-        setPriceListTotalRecords(res.totalRecords);
-      } else {
-        setShow(true);
-        setStatus(res.statusCode);
-        setTitle(res.statusMessage);
-      }
-    } catch (error) {
-      console.log(error);
-      setShow(true);
-      setStatus(error.statusCode || 500);
-      setTitle(error.statusMessage || "Something went wrong");
-    } finally {
-      setIsSearchLoading(false);
-    }
-  };
-
   const fetchSkuDrop = async () => {
     let body = {
       skuID: 0,
@@ -308,6 +280,19 @@ const PriceListView = () => {
   const handleSearchClickPrice = () => {
     setPriceJumpToPage(1);
     setShow(false);
+
+    // Add validation for To Date when From Date is selected
+    if (searchParams.dateFrom && !searchParams.dateTo) {
+      setDateError("Please select To Date");
+      return;
+    }
+
+    // Add validation for From Date when To Date is selected
+    if (!searchParams.dateFrom && searchParams.dateTo) {
+      setDateError("Please select From Date");
+      return;
+    }
+
     if (dateError) {
       return;
     }
@@ -378,9 +363,11 @@ const PriceListView = () => {
       } else {
         setPriceListSearchParams({
           ...priceListSearchParams,
-          stateID: 0,
+          stateID: "0",
+          countryID: "0",
         });
         setStateDropdown([]);
+        return;
       }
     }
     setPriceListSearchParams({
@@ -404,6 +391,28 @@ const PriceListView = () => {
       console.log(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPriceListDataWithMapping = async () => {
+    setIsSearchLoading(true);
+    try {
+      let res = await GetPriceListDataWithMappingAPI(priceListSearchParams);
+      if (res.statusCode == 200) {
+        setPriceListData(res.priceListData);
+        setPriceListTotalRecords(res.totalRecords);
+      } else {
+        setShow(true);
+        setStatus(res.statusCode);
+        setTitle(res.statusMessage);
+      }
+    } catch (error) {
+      setShow(true);
+      setStatus(error.statusCode || 500);
+      setTitle(error.statusMessage || "Something went wrong");
+      console.log(error);
+    } finally {
+      setIsSearchLoading(false);
     }
   };
 
@@ -468,7 +477,7 @@ const PriceListView = () => {
 
     // Reset SKU dropdowns to original state
     setFilteredSkuDropDown(skuDropDown);
-    
+
     // Force a re-fetch of SKU dropdown data
     await fetchSkuDrop();
 
@@ -514,8 +523,8 @@ const PriceListView = () => {
     // Reset price list search parameters
     setPriceListSearchParams({
       priceListName: "",
-      countryID: "0",
-      stateID: "0",
+      countryID: 0,
+      stateID: 0,
       pageIndex: 1,
       pageSize: 10,
     });
@@ -660,18 +669,24 @@ const PriceListView = () => {
       ...priceListSearchParams,
       pageIndex: newPage || 1,
     });
-    setPriceListJumpToPage(newPage||1);
+    setPriceListJumpToPage(newPage || 1);
   };
 
   return (
     <Grid container spacing={2} mt={0}>
-      <Grid item xs={12} sx={{ pr: 2 }} ml={2}>
+      <Grid item xs={12} sx={{ pr: 2 }} ml={2} mb={2}>
         <Grid container spacing={2} direction="column">
           <Grid item>
             {isLoading ? (
               <FormSkeleton />
             ) : (
-              <NuralAccordion2 title="Search" backgroundColor={LIGHT_GRAY2}>
+              <NuralAccordion2
+                title="Search"
+                controlled={true}
+                expanded={accordionExpanded}
+                onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                backgroundColor={LIGHT_GRAY2}
+              >
                 <Grid container spacing={2} sx={{ width: "100%" }}>
                   {/* First Row - Always 3 Fields */}
                   <Grid item xs={12} md={4} sm={6}>
@@ -868,7 +883,7 @@ const PriceListView = () => {
                           onChange={(event, newValue) => {
                             handleSearchChangePriceList(
                               "countryID",
-                              newValue?.countryID || null
+                              newValue?.countryID || 0
                             );
                           }}
                           value={
@@ -876,7 +891,7 @@ const PriceListView = () => {
                               (option) =>
                                 option.countryID ===
                                 priceListSearchParams.countryID
-                            ) || null
+                            ) || 0
                           }
                           placeholder="SELECT"
                         />
@@ -905,14 +920,14 @@ const PriceListView = () => {
                           onChange={(event, newValue) => {
                             handleSearchChangePriceList(
                               "stateID",
-                              newValue?.stateID || null
+                              newValue?.stateID || 0
                             );
                           }}
                           value={
                             stateDropdown.find(
                               (option) =>
                                 option.stateID === priceListSearchParams.stateID
-                            ) || null
+                            ) || 0
                           }
                           placeholder="SELECT"
                         />
@@ -1017,7 +1032,7 @@ const PriceListView = () => {
                     />
                   </Grid>
                 )}
-                {selectedType.value == 0 && (
+                {selectedType.value == 0 && accordionExpanded && (
                   <Grid item xs={12} mt={3}>
                     <PriceListTable
                       priceListData={priceListData}

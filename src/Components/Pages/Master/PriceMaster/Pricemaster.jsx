@@ -37,6 +37,7 @@ import {
   ManagePriceListWithMappingAPI,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
+import Required from "../../../Common/Required";
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
@@ -76,6 +77,8 @@ const Pricemaster = () => {
   const [showStatus, setShowStatus] = useState(false);
   const [status, setStatus] = useState(false);
   const [title, setTitle] = useState("");
+  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
+
   const [errors, setErrors] = useState({
     priceListType: "",
     country: "",
@@ -108,8 +111,7 @@ const Pricemaster = () => {
       priceListType: null,
       priceListID: 0,
       priceListName: "",
-      country: null,
-      state: null,
+
       priceMappingList: [
         {
           mappingID: "",
@@ -135,8 +137,7 @@ const Pricemaster = () => {
       // Reset country and state when price list type changes
       setFormData((prev) => ({
         ...prev,
-        country: null,
-        state: null,
+     
         priceMappingList: [],
       }));
     }
@@ -275,7 +276,15 @@ const Pricemaster = () => {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(()=>{
+          setShowStatus(false);
+        },3000)
         resetForm();
+      } else if (res.statusCode == 400 && res.invalidDataLink) {
+        window.location.href = res.invalidDataLink;
+        setShowStatus(true);
+        setStatus(res.statusCode);
+        setTitle(res.statusMessage);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -299,13 +308,13 @@ const Pricemaster = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 10000,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
         >
           <Grid item xs={12} mt={3} mb={0} ml={1}>
-            <BreadcrumbsHeader pageTitle="Price Master" />
+            <BreadcrumbsHeader pageTitle="Product" />
           </Grid>
 
           <Grid item xs={12} ml={1}>
@@ -323,6 +332,9 @@ const Pricemaster = () => {
                 <NuralAccordion2
                   title="Create Price List Name"
                   backgroundColor={LIGHT_GRAY2}
+                  controlled={true}
+                  expanded={accordionExpanded}
+                  onChange={(event, expanded) => setAccordionExpanded(expanded)}
                 >
                   <Grid container spacing={2} sx={{ width: "100%" }}>
                     {/* First Dropdown */}
@@ -339,7 +351,7 @@ const Pricemaster = () => {
                           mb: 1,
                         }}
                       >
-                        PRICE LIST TYPE
+                        PRICE LIST TYPE <Required />
                       </Typography>
                       <NuralAutocomplete
                         options={ListItem}
@@ -384,7 +396,7 @@ const Pricemaster = () => {
                             mb: 1,
                           }}
                         >
-                          COUNTRY
+                          COUNTRY <Required />
                         </Typography>
                         <NuralAutocomplete
                           options={countryDrop}
@@ -430,7 +442,7 @@ const Pricemaster = () => {
                             mb: 1,
                           }}
                         >
-                          PRICE LIST NAME
+                          PRICE LIST NAME <Required />
                         </Typography>
                         <NuralTextField
                           width="100%"
@@ -463,7 +475,7 @@ const Pricemaster = () => {
                             mb: 1,
                           }}
                         >
-                          PRICE LIST NAME
+                          PRICE LIST NAME <Required />
                         </Typography>
                         <NuralTextField
                           width="100%"
@@ -510,7 +522,8 @@ const Pricemaster = () => {
                         >
                           {selectedValue === "STATE"
                             ? "STATE MAPPING"
-                            : "COUNTRY MAPPING"}
+                            : "COUNTRY MAPPING"}{" "}
+                          <Required />
                         </Typography>
 
                         <Typography
@@ -641,29 +654,31 @@ const Pricemaster = () => {
           </Grid>
 
           {/* Action Buttons */}
-          <Grid container spacing={1} sx={{ margin: 2, mt: 0 }}>
-            <Grid item xs={12} md={6} sm={6} lg={6}>
-              <NuralButton
-                text="CANCEL"
-                variant="outlined"
-                borderColor={PRIMARY_BLUE2}
-                onClick={() => {
-                  resetForm();
-                  setShowStatus(false);
-                }}
-                width="100%"
-              />
+          {accordionExpanded && (
+            <Grid container spacing={1} sx={{ margin: 2, mt: 0 }}>
+              <Grid item xs={12} md={6} sm={6} lg={6}>
+                <NuralButton
+                  text="CANCEL"
+                  variant="outlined"
+                  borderColor={PRIMARY_BLUE2}
+                  onClick={() => {
+                    resetForm();
+                    setShowStatus(false);
+                  }}
+                  width="100%"
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={6}>
+                <NuralButton
+                  text="SAVE"
+                  backgroundColor={AQUA}
+                  variant="contained"
+                  onClick={handlePost}
+                  width="100%"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6} lg={6}>
-              <NuralButton
-                text="SAVE"
-                backgroundColor={AQUA}
-                variant="contained"
-                onClick={handlePost}
-                width="100%"
-              />
-            </Grid>
-          </Grid>
+          )}
           <PriceListName />
           <PriceListView />
         </Grid>

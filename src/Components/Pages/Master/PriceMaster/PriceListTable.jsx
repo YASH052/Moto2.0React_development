@@ -44,7 +44,7 @@ const PriceListTable = ({
       sx={{
         backgroundColor: LIGHT_GRAY2,
         color: PRIMARY_BLUE2,
-        maxHeight: "calc(100vh - 320px)",
+        maxHeight: "calc(320vh - 100px)",
         overflow: "auto",
         position: "relative",
         "& .MuiTable-root": {
@@ -113,7 +113,7 @@ const PriceListTable = ({
               { key: "priceListName", label: "Price List" },
               { key: "country", label: "Country" },
               { key: "state", label: "State" },
-              { key: "status", label: "Status" },
+              { key: "status", label: "Status",noSort: true  },
               { key: "edit", label: "Edit", noSort: true },
             ].map((column) => (
               <TableCell

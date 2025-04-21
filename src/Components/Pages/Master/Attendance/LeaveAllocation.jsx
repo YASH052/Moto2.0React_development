@@ -48,13 +48,6 @@ import { TableRowSkeleton } from "../../../Common/Skeletons";
 
 const LeaveAllocation = () => {
   // Define table columns
-  const tableColumns = [
-    { id: "sno", label: "S.NO" },
-    { id: "roleName", label: "ROLE" },
-    { id: "leaveTypeName", label: "LEAVE TYPE" },
-    { id: "noOfLeave", label: "NO OF LEAVES" },
-    { id: "actions", label: "EDIT" },
-  ];
 
   const [activeTab, setActiveTab] = React.useState("leave-allocation");
   const [roleDrop, setRoleDrop] = React.useState([]);
@@ -85,10 +78,11 @@ const LeaveAllocation = () => {
     }
   };
   const tabs = [
+    { label: "Attendance Upload", value: "attendance-upload" },
+
     { label: "Leave Type", value: "leave-type" },
     { label: "Leave Allocation", value: "leave-allocation" },
   ];
-
   const [searchParams, setSearchParams] = useState({
     roleId: 0,
     pageIndex: 1,

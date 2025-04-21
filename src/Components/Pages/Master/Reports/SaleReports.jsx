@@ -29,12 +29,13 @@ import {
 } from "../../../Common/commonFunction";
 import { FormSkeleton } from "../../../Common/Skeletons";
 import StatusModel from "../../../Common/StatusModel";
+import { useNavigate } from "react-router-dom";
 const tabs = [
   { label: "Sale Report", value: "sale-report" },
-  // { label: "ISR Sales Report", value: "isr-sales-report" },
-  // { label: "Unique Sales Report", value: "unique-sales-report" },
-  // { label: "Primary to Tertiary Track", value: "primary-to-tertiary-track" },
-  // { label: "Competition Sales Report", value: "competition-sales-report" },
+  { label: "ISP Sales Report", value: "isp-sales-report" },
+  { label: "Unique Sales Report", value: "unique-sales-report" },
+  { label: "Primary to Tertiary Track", value: "primary-to-tertiary" },
+  { label: "Competition Sales Report", value: "competition-sales-report" },
 ];
 
 const labelStyle = {
@@ -46,15 +47,10 @@ const labelStyle = {
   fontWeight: 400,
 };
 
-const options = [
-  "Nural Network",
-  "Deep Learning",
-  "Machine Learning",
-  "Artificial Intelligence",
-  "Computer Vision",
-];
+
 
 const SaleReports = () => {
+  const navigate = useNavigate();
   const generateDummyData = () => {
     const regions = ["North", "South", "East", "West", "Central"];
     const states = [
@@ -320,6 +316,7 @@ const SaleReports = () => {
   };
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   return (

@@ -2,70 +2,68 @@ import { Divider, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
-import { DARK_PURPLE } from "../../../Common/colors";
-import TabsBar from "../../../Common/TabsBar";
+
 import TransationCard from "../Transaction/TransationCard";
 
 const salesReports = [
   { title: "SALES REPORT", link: "/sales-report" },
-  { title: "ISP SALES REPORT", link: "/isr-sales-report" },
+  { title: "ISP SALES REPORT", link: "/isp-sales-report" },
   { title: "UNIQUE SALES REPORT", link: "/unique-sales-report" },
-  { title: "PRIMARY TO TERTIARY TRACK", link: "/primary-tertiary-track" },
-  { title: "COMPETITION SALES REPORT", link: "/competition-sales-report" },
-  { title: "COUNTER SHARE REPORT", link: "/counter-share-report" },
+  { title: "PRIMARY TO TERTIARY TRACK", link: "/primary-to-tertiary" },
+  { title: "FOCUS MODEL REPORT", link: "/focus-model-report" },
 ];
 
 const stockReports = [
   { title: "STOCK REPORT", link: "/stock-report" },
   { title: "SALESCHANNEL STOCK SB", link: "/saleschannel-stock-sb" },
   { title: "STOCK ADJUSTMENT REPORT", link: "/stock-adjustment-report" },
-  { title: "SERIAL NO. MOVEMENT", link: "/serial-no-movement" },
+  { title: "SERIAL NO. MOVEMENT", link: "/serial-no-moment" },
 ];
 
 const appReports = [
-  { title: "L&D ASSESSMENT REPORT", link: "/ld-assessment-report" },
-  { title: "FEEDBACK REPORT", link: "/feedback-report" },
-  { title: "MERCHANDIZING REPORT", link: "/merchandizing-report" },
-  { title: "SURVEY REPORT", link: "/survey-report" },
-  { title: "PRE BOOKING REPORT", link: "/pre-booking-report" },
+  { title: "L&D ASSESSMENT REPORT", link: "#" },
+  { title: "FEEDBACK REPORT", link: "#" },
+  { title: "MERCHANDIZING REPORT", link: "merchandizing-report" },
+  { title: "SURVEY REPORT", link: "#" },
+  { title: "PRE BOOKING REPORT", link: "prebooking-report" },
+  { title: "RANKING REPORT", link: "/ranking-report" },
 ];
 
 const retailReports = [
   { title: "DEMO AUDIT REPORT", link: "/demo-audit-report" },
-  { title: "FIXTURE AUDIT REPORT", link: "/fixture-audit-report" },
-  { title: "VISIBILITY AUDIT REPORT", link: "/visibility-audit-report" },
-  { title: "COMPETITION ASSET REPORT", link: "/competition-asset-report" },
   { title: "DEMO PRODUCTIVITY REPORT", link: "/demo-productivity-report" },
+  { title: "L1 L2 ISSUE REPORT", link: "/l1l2-issue-report" },
+  { title: "AUDIT REPORT", link: "/audit-report" },
 ];
 
 const targetIncentiveReports = [
-  { title: "TARGET VS ACHIEVEMENT REPORT", link: "/target-achievement-report" },
-  { title: "SCHEME REPORT", link: "/scheme-report" },
+  { title: "TARGET VS ACHIEVEMENT REPORT", link: "#" },
+  { title: "SCHEME REPORT", link: "/#" },
 ];
 
 const miscReports = [
   { title: "ACTIVATION FILE RECEIVED", link: "/activation-file-received" },
-  { title: "SAP INTEGRATION FILE", link: "/sap-integration-file" },
+  { title: "SAP INTEGRATION FILE", link: "/sap-integration" },
+  { title: "RELIANCE API STATUS", link: "/reliance-api-status" },
+  { title: "LOG REPORT", link: "/log-report" },
 ];
 
 const attendanceReports = [
   { title: "ATTENDANCE REPORT", link: "/view-attendance-report" },
   { title: "LEAVE REPORT", link: "/leave-report" },
+  { title: "OUT OF FENCE REPORT", link: "/out-of-fence-report" },
+];
+
+const userReports = [
+  { title: "ORG HIERARCHY MAPPING REPORT", link: "/organization-hierarchy-report" },
+  { title: "LAST LOGIN REPORT", link: "/last-login-report" },
+  { title: "USER LAGGARD REPORT", link: "/user-laggards" },
+  { title: "USER TRACK", link: "/user-track" },
+  { title: "REPORT QUEUE", link: "/report-queue" },
 ];
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = React.useState("primary");
 
-  const tabs = [
-    { label: "Primary", value: "primary" },
-    { label: "Intermediary", value: "intermediary" },
-    { label: "Secondary", value: "secondary" },
-    { label: "Tertiary", value: "tertiary" },
-  ];
-
-  const handleTabChange = (newValue) => {
-    setActiveTab(newValue);
-  };
 
   return (
     <Grid
@@ -109,16 +107,16 @@ const Reports = () => {
           <TransationCard salesTypes={retailReports} title="Retail" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard
-            salesTypes={targetIncentiveReports}
-            title="Target & Incentive"
-          />
+          <TransationCard salesTypes={targetIncentiveReports} title="Target & Incentive" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={miscReports} title="Misc" />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={attendanceReports} title="Attendance" />
+        </Grid>
+        <Grid item xs={12} md={6} lg={6}>
+          <TransationCard salesTypes={userReports} title="User Reports" />
         </Grid>
       </Grid>
     </Grid>

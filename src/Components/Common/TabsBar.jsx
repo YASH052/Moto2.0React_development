@@ -13,6 +13,9 @@ const TabsBar = ({ tabs, activeTab, onTabChange }) => {
         <Tabs
           value={activeTab}
           onChange={handleChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
           "& .MuiTab-root": {
             

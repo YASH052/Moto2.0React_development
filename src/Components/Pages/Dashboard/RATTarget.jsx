@@ -119,34 +119,34 @@ const RATTarget = () => {
     { label: "Target", value: "target" },
     { label: "Incentive", value: "incentive" },
   ];
-   const tabRoutes = {
-     business: "/business-dashboard",
-     channels: "/channel-performance",
-     availability: "/availability-overview",
-     attendance: "/rat-attendance",
-     inventory: "/rat-inventory-dashboard",
-     brand: "/brand-monitor",
-     target: "/rat-target",
-     incentive: "/rat-incentive",
-   };
-   const handleTabChange = (newValue) => {
-     setActiveTab(newValue);
-     const route = tabRoutes[newValue];
-     if (route) {
-       navigate(route);
-     }
-   };
-   {
-     tabs.map((tab) => (
-       <Button
-         key={tab.value}
-         variant={activeTab === tab.value ? "contained" : "outlined"}
-         onClick={() => handleTabChange(tab.value)}
-       >
-         {tab.label}
-       </Button>
-     ));
-   }
+  const tabRoutes = {
+    business: "/business-dashboard",
+    channels: "/channel-performance",
+    availability: "/availability-overview",
+    attendance: "/rat-attendance",
+    inventory: "/rat-inventory-dashboard",
+    brand: "/brand-monitor",
+    target: "/rat-target",
+    incentive: "/rat-incentive",
+  };
+  const handleTabChange = (newValue) => {
+    setActiveTab(newValue);
+    const route = tabRoutes[newValue];
+    if (route) {
+      navigate(route);
+    }
+  };
+  {
+    tabs.map((tab) => (
+      <Button
+        key={tab.value}
+        variant={activeTab === tab.value ? "contained" : "outlined"}
+        onClick={() => handleTabChange(tab.value)}
+      >
+        {tab.label}
+      </Button>
+    ));
+  }
   const dataCards = [
     {
       title: "Total Volume",
@@ -191,7 +191,7 @@ const RATTarget = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
- 
+
   const CenterText = styled("div")({
     position: "absolute",
     top: "50%",
@@ -332,7 +332,6 @@ const RATTarget = () => {
                     display: "flex",
                     justifyContent: "flex-end",
                     width: "100%",
-                    
                   }}
                 >
                   <img src="/Images/Frame7.png" alt="Frame 7" />
@@ -344,232 +343,72 @@ const RATTarget = () => {
             </Grid>
           </Grid>
 
-          <Grid container spacing={0} ml={2} p={0}>
-            {" "}
-            <Grid container spacing={2} md={4} lg={4} xl={4} sx={{ p: 1 }}>
+          <Grid container ml={1}>
+            <Grid container spacing={3} md={6} lg={6} xl={6} sx={{ p: 1 }}>
               {dataCards.map((card, index) => (
                 <Grid item xs={12} sm={6} key={index}>
                   <Box
                     sx={{
                       p: 1,
                       borderRadius: 2,
-                      backgroundColor: "#e8edfb",
+                      backgroundColor: LIGHT_GRAY2,
                       height: "90%",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
                     }}
                   >
-                    <Typography
-                      variant="subtitle2"
-                      color={PRIMARY_BLUE2}
-                      gutterBottom
-                    >
-                      {card.title}
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      color={DARK_PURPLE}
-                      fontWeight={600}
-                    >
-                      {card.value}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color={AQUA_DARK2}
-                      fontWeight={500}
-                    >
-                      {card.subText}
+                    <Typography variant="subtitle2" marginTop={2}>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: PRIMARY_BLUE2,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {card.title}
+                      </span>
+                      <br />
+                      <span
+                        style={{
+                          fontSize: "24px",
+                          color: DARK_PURPLE,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {card.value}
+                      </span>
+                      <br />
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: AQUA_DARK2,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {card.subText}
+                      </span>
                     </Typography>
                   </Box>
                 </Grid>
               ))}
             </Grid>
-            <Grid item xs={12} md={4} lg={4} xl={4} marginLeft={5}>
+            <Grid item xs={12} md={6} lg={5} xl={6} marginLeft={1} mt={1}>
               <SalesTrendGraph
+                height="255px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={data}
-                title="Sales Trend"
+                data={monthlyData}
+                title="Sales Trend [Month]"
+                subtitle="LAST 3 MONTHS TENDS"
+                period="month"
                 showLegend={false}
               />
             </Grid>
-            <Grid item xs={3} md={3} lg={3} xl={2}>
-              <Grid
-                sx={{
-                  borderRadius: 2,
-                  marginLeft: 6,
-
-                  backgroundColor: LIGHT_GRAY2,
-                  p: 3,
-
-                  width: "165%", // Adjust based on your layout
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  color={PRIMARY_BLUE2}
-                  fontWeight="bold"
-                >
-                  Category Target
-                </Typography>
-                <NuralAutocomplete
-                  options={autocompleteOptions}
-                  getOptionLabel={(option) => option.label}
-                  placeholder="Select an option"
-                  marginBottom="2px"
-                  sx={{
-                    // "& .MuiInputBase-root": {
-                    //   fontSize: "14px",
-                    //   fontWeight: 700,
-                    //   color: PRIMARY_BLUE2,
-                    // },
-                    // "& .MuiInputLabel-root": {
-                    //   fontSize: "12px",
-                    //   fontWeight: 700,
-                    //   color: PRIMARY_BLUE2,
-                    // },
-                    "& .MuiAutocomplete-input": {
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: PRIMARY_BLUE2,
-                    },
-                  }}
-                />
-                <Grid
-                  container
-                  spacing={2}
-                  justifyContent="space-between"
-                  alignItems="center"
-                  marginTop={3}
-                >
-                  {/* Top Row */}
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      marginLeft={5}
-                      fontWeight={400}
-                      fontSize={8}
-                    >
-                      Target Vol
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      1000 Units
-                    </Typography>
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      align="center"
-                      fontWeight={400}
-                      marginLeft={5}
-                      fontSize={8}
-                    >
-                      Volume Achieved
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      459 Units
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      fontWeight={400}
-                      marginLeft={5}
-                      fontSize={8}
-                    >
-                      volume %
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      48%
-                    </Typography>
-                  </Grid>
-
-                  {/* Bottom Row */}
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      marginLeft={5}
-                      fontWeight={400}
-                      fontSize={8}
-                    >
-                      Target Value
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      72k
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      marginLeft={5}
-                      fontWeight={400}
-                      fontSize={8}
-                    >
-                      Value Ach.
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      {"\u20B9"}25K
-                    </Typography>
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color={BORDER_BOTTOM}
-                      marginLeft={5}
-                      fontWeight={400}
-                      fontSize={8}
-                    >
-                      Value ACH %
-                    </Typography>
-                    <Typography
-                      marginLeft={5}
-                      color={DARK_PURPLE}
-                      fontWeight={700}
-                      fontSize={14}
-                    >
-                      31%
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
           </Grid>
 
-          <Grid container sx={{ marginTop: 3 }}>
+          {/* <Grid container sx={{ marginTop: 3 }}>
             <Grid
               item
               xs={12}
@@ -627,7 +466,7 @@ const RATTarget = () => {
             >
               <TargetChart title="Yearly Target" />
             </Grid>
-          </Grid>
+          </Grid> */}
 
           <Grid container spacing={0} ml={2} mt={2} pr={2} mb={2}>
             <Grid item xs={12}>

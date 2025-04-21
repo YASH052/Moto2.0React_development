@@ -13,27 +13,27 @@ import ISPZeroSaleTable from "../../Dashboard/ISPZeroSaleTable";
 
 const data = [
   { period: "P1", value: 35000, secondValue: 25000, thirdValue: 25000 },
-  { period: "P2", value: 58000, secondValue: 35000, thirdValue: 25000  },
-  { period: "P3", value: 48000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P2", value: 58000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P3", value: 48000, secondValue: 35000, thirdValue: 25000 },
   {
     period: "P4",
     value: 35000,
-    secondValue: 35000, thirdValue: 25000 ,
+    secondValue: 35000,
+    thirdValue: 25000,
     special: true,
     tooltipData: { tertiary: 25, lmtd: 40, activation: 60 },
   },
-  { period: "P5", value: 45000, secondValue: 35000 , thirdValue: 25000 },
-  { period: "P6", value: 55000, secondValue: 35000, thirdValue: 25000  },
-  { period: "P7", value: 55000, secondValue: 35000 , thirdValue: 25000 },
-  { period: "P8", value: 55000, secondValue: 35000 , thirdValue: 25000 },
-  { period: "P9", value: 58000, secondValue: 35000 , thirdValue: 25000 },
-  { period: "P10", value: 58000, secondValue: 35000 , thirdValue: 25000 },
+  { period: "P5", value: 45000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P6", value: 55000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P7", value: 55000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P8", value: 55000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P9", value: 58000, secondValue: 35000, thirdValue: 25000 },
+  { period: "P10", value: 58000, secondValue: 35000, thirdValue: 25000 },
 ];
 
 const brandData = [
   { id: 1, name: "PRIMARY", value: "140.15K" },
   { id: 2, name: "SECONDARY", value: "169K" },
-
 ];
 
 const databar = {
@@ -172,7 +172,7 @@ const options = {
   },
 };
 
-const RetailerSalesChart = () => {
+const RetailerSalesChart = ({ height }) => {
   const [selectedRetailer, setSelectedRetailer] = useState("RETAILER 4");
   const [viewMode, setViewMode] = useState("group");
   const [selectedBar, setSelectedBar] = useState(3);
@@ -181,22 +181,22 @@ const RetailerSalesChart = () => {
     group: true,
     individual: false,
     top: true,
-    bottom: false
+    bottom: false,
   });
 
   const handleButtonClick = (buttonType) => {
-    if (buttonType === 'group' || buttonType === 'individual') {
+    if (buttonType === "group" || buttonType === "individual") {
       setActiveButtons({
         ...activeButtons,
-        group: buttonType === 'group',
-        individual: buttonType === 'individual'
+        group: buttonType === "group",
+        individual: buttonType === "individual",
       });
       setViewMode(buttonType);
     } else {
       setActiveButtons({
         ...activeButtons,
-        top: buttonType === 'top',
-        bottom: buttonType === 'bottom'
+        top: buttonType === "top",
+        bottom: buttonType === "bottom",
       });
     }
   };
@@ -397,7 +397,8 @@ const RetailerSalesChart = () => {
           <Grid item xs={12} md={12} lg={12} xl={12} p={2}>
             <Box
               sx={{
-                height: "566px",
+                height: height,
+
                 width: "100%",
                 "& canvas": {
                   borderLeft: "1px solid #E0E0E0",
@@ -405,7 +406,7 @@ const RetailerSalesChart = () => {
                 },
               }}
             >
-              <Bar options={options} data={databar}/>
+              <Bar options={options} data={databar} height={height} />
             </Box>
           </Grid>
         </Grid>
@@ -418,7 +419,7 @@ const RetailerSalesChart = () => {
             backgroundColor: MEDIUM_BLUE,
             borderRadius: 2,
             justifyContent: "center",
-            height: "70px",
+            // height: "70px",
           }}
         >
           <Grid item xs={12} md={12} lg={12} xl={12}>
@@ -434,7 +435,7 @@ const RetailerSalesChart = () => {
                 textAlign: "start",
               }}
             >
-                RETAILER 4.
+              RETAILER 4.
             </Typography>
           </Grid>
           <Grid item xs={12} md={10} lg={10} xl={10}>

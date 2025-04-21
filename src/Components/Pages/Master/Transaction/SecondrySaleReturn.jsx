@@ -25,6 +25,11 @@ import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import NuralUploadSaleReturn from "../../NuralCustomComponents/NuralUploadSaleReturn";
+import { templateUrl } from "../../../Common/urls";
+import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
+import ReturnRequest from "./ReturnRequest";
+import ApproveSaleReturn from "./ApproveSaleReturn";
+import { getTodayDate } from "../../../Common/commonFunction";
 
 // Radio buttons selection by default
 const options = [
@@ -48,13 +53,18 @@ const SecondarySaleReturn = () => {
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedUserId, setSelectedUserId] = useState(null); // New state for userId
-  console.log("selectedUserId", selectedDate);
-  const handleDateChange = (newDate) => {
-    setSelectedDate(newDate);
-  };
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
+  // console.log("selectedUserId", selectedDate);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const handleDateChange = (newDate) => {
+    if (newDate <= today) {
+      setSelectedDate(newDate);
+    }
+  };
   const handleUserIdChange = (newUserId) => {
     setSelectedUserId(newUserId); // Update userId in parent
     console.log("Selected userId:", newUserId);
@@ -77,29 +87,43 @@ const SecondarySaleReturn = () => {
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Serial Only",
+      onView: () => console.log("View Template 2"),
+      onDownload: () => {
+        setIsLoading(true);
+        setTimeout(() => {
+          window.location.href = `${templateUrl}SecondarySalesReturnExistInSystem.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
+          setIsLoading(false);
+        }, 1000);
+
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
+      },
+    },
+  ];
+
+  const templates2 = [
+    {
+      name: "Full Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href =
-            "http://moto.nuralsales.com/Excel/Templates/SecondarySalesReturn.xlsx";
+          window.location.href = `${templateUrl}SecondarySalesReturn.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
           setIsLoading(false);
         }, 1000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
       },
     },
-    // {
-    //   name: "Template 2",
-    //   onView: () => console.log("View Template 1"),
-    //   onDownload: () => {
-    //     setIsLoading(true);
-    //     setTimeout(() => {
-    //       window.location.href =
-    //         "http://moto.nuralsales.com/Excel/Templates/SecondarySalesReturn.xlsx";
-    //       setIsLoading(false);
-    //     }, 1000);
-    //   },
-    // }
   ];
 
   const handleTabChange = (newValue) => {
@@ -127,6 +151,10 @@ const SecondarySaleReturn = () => {
 
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -143,7 +171,7 @@ const SecondarySaleReturn = () => {
     setIsLoading(true);
     let body = {
       reqType: 3,
-      entityId: log.entityId /*from login api*/,
+      entityId: 0 /*from login api*/,
       salesChanneLevel: 0,
       brandID: 0,
       targetName: "",
@@ -155,6 +183,10 @@ const SecondarySaleReturn = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -191,11 +223,14 @@ const SecondarySaleReturn = () => {
       if (res.statusCode == 200) {
         fileInput.value = "";
         setStatus(String(res.statusCode));
-        setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -214,6 +249,9 @@ const SecondarySaleReturn = () => {
   const handleClearStatus = () => {
     setStatus(null);
     setTitle(null);
+   
+    setSelectedDate(getTodayDate());
+    setSelectedUserId(2);
   };
 
   React.useEffect(() => {
@@ -228,117 +266,131 @@ const SecondarySaleReturn = () => {
   // }
 
   return (
-    <Grid container spacing={0}>
+    <Grid container spacing={0} position="relative">
       <Grid
         item
         xs={12}
-        md={6}
-        lg={12}
-        mt={1}
-        mb={0}
         sx={{
           position: "sticky",
           top: 0,
-          ml: 1,
+          zIndex: 1000,
+          backgroundColor: "#fff",
+          paddingBottom: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Sales Return" />
-      </Grid>
+        <Grid item xs={12} mt={3} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Sales Return" />
+        </Grid>
 
-      <Grid item xs={12} md={6} lg={12}>
-        <TabsBar
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
+        <Grid item xs={12} ml={1}>
+          <TabsBar
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </Grid>
       </Grid>
 
       {isLoading ? (
         <UploadContentSkeleton />
       ) : (
-        <Grid container spacing={0} lg={12} mt={1}>
-          <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
-            <Grid container spacing={2} direction="column">
+        <>
+          <Grid item xs={12} pr={2} mb={2}>
+            <Grid container spacing={0} direction="column">
               <Grid item>
-                <NuralUploadSaleReturn
-                  title="Upload Format"
-                  onChange={handleFormatChange}
-                  backgroundColor={LIGHT_GRAY2}
-                  options={options}
-                  value={selectedFormat}
-                  selectedDate={selectedDate}
-                  onDateChange={handleDateChange}
-                  option={option}
-                  onUserIdChange={handleUserIdChange} // Pass callback to update userId
-                  selectedUserId={selectedUserId} // Pass selected userId to control the autocomplete
-                />
-              </Grid>
-              <Grid item>
-                <NuralAccordion
-                  titleColor={DARK_PURPLE}
-                  buttonColor={PRIMARY_BLUE2}
-                  buttonBg={MEDIUM_BLUE}
-                  backgroundColor={LIGHT_GRAY2}
-                  width="100%"
-                  onClickBin={handleBinCodeClick}
-                  onClickReference={handleReferenceClick}
-                  referenceIcon1={"./Icons/downloadIcon.svg"}
-                  referenceIcon2={"./Icons/downloadIcon.svg"}
-                  title="Templates"
-                  templates={templates}
-                  buttons={true}
-                  eye={false}
-                />
-              </Grid>
-            </Grid>
-          </Grid>
+                <NuralAccordion2 title="Upload Return" backgroundColor={"#fff"}>
+                  <Grid container spacing={0} lg={12} mt={1}>
+                    <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+                      <Grid container spacing={2} direction="column">
+                        <Grid item>
+                          <NuralUploadSaleReturn
+                            title="Upload Format"
+                            onChange={handleFormatChange}
+                            backgroundColor={LIGHT_GRAY2}
+                            options={options}
+                            value={selectedFormat}
+                            selectedDate={selectedDate}
+                            onDateChange={handleDateChange}
+                            option={option}
+                            onUserIdChange={handleUserIdChange} // Pass callback to update userId
+                            selectedUserId={selectedUserId} // Pass selected userId to control the autocomplete
+                          />
+                        </Grid>
+                        <Grid item>
+                          <NuralAccordion
+                            titleColor={DARK_PURPLE}
+                            buttonColor={PRIMARY_BLUE2}
+                            buttonBg={MEDIUM_BLUE}
+                            backgroundColor={LIGHT_GRAY2}
+                            width="100%"
+                            onClickBin={handleBinCodeClick}
+                            onClickReference={handleReferenceClick}
+                            referenceIcon1={"./Icons/downloadIcon.svg"}
+                            referenceIcon2={"./Icons/downloadIcon.svg"}
+                            title="Templates"
+                            templates={
+                              selectedUserId == 1 ? templates2 : templates
+                            }
+                            buttons={true}
+                            eye={false}
+                          />
+                        </Grid>
+                      </Grid>
+                    </Grid>
 
-          <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
-            <Grid container spacing={2} direction="column">
-              <Grid item>
-                <NuralFileUpload
-                  backgroundColor={LIGHT_GRAY2}
-                  fileRef={fileInputRef}
-                  accept=".xlsx,.xls,.csv"
-                />
-              </Grid>
-              <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
-                  <StatusModel
-                    width="100%"
-                    status={status}
-                    title={title}
-                    onClose={handleClearStatus}
-                  />
-                )}
-              </Grid>
-              <Grid item>
-                <Grid container spacing={1}>
-                  <Grid item xs={12} md={6} lg={6}>
-                    <NuralButton
-                      text="CANCEL"
-                      variant="outlined"
-                      borderColor={PRIMARY_BLUE2}
-                      onClick={handleClearStatus}
-                      width="100%"
-                      disabled={isUploading}
-                    />
+                    <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
+                      <Grid container spacing={2} direction="column">
+                        <Grid item>
+                          <NuralFileUpload
+                            backgroundColor={LIGHT_GRAY2}
+                            fileRef={fileInputRef}
+                            accept=".xlsx,.xls,.csv"
+                          />
+                        </Grid>
+                        <Grid item md={6} lg={6} pr={2}>
+                          {status && title && (
+                            <StatusModel
+                              width="100%"
+                              status={status}
+                              title={title}
+                              onClose={handleClearStatus}
+                            />
+                          )}
+                        </Grid>
+                        <Grid item>
+                          <Grid container spacing={1}>
+                            <Grid item xs={12} md={6} lg={6}>
+                              <NuralButton
+                                text="CANCEL"
+                                variant="outlined"
+                                borderColor={PRIMARY_BLUE2}
+                                onClick={handleClearStatus}
+                                width="100%"
+                                disabled={isUploading}
+                              />
+                            </Grid>
+                            <Grid item xs={12} md={6} lg={6}>
+                              <NuralButton
+                                text={isUploading ? "UPLOADING..." : "SAVE"}
+                                backgroundColor={AQUA}
+                                variant="contained"
+                                onClick={handleUploadClick}
+                                width="100%"
+                                disabled={isUploading}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
-                    <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
-                      backgroundColor={AQUA}
-                      variant="contained"
-                      onClick={handleUploadClick}
-                      width="100%"
-                      disabled={isUploading}
-                    />
-                  </Grid>
-                </Grid>
+                </NuralAccordion2>
               </Grid>
             </Grid>
           </Grid>
-        </Grid>
+          <ReturnRequest />
+          <ApproveSaleReturn />
+        </>
       )}
     </Grid>
   );

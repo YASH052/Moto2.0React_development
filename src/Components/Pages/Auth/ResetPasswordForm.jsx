@@ -35,11 +35,12 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { baseUrl } from "../../Common/urls";
+import Slider from "../../Common/Slider";
 const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
-
 const ResetPasswordForm = () => {
   let log = JSON.parse(localStorage.getItem("log"));
   let email = localStorage.getItem("resetPasswordEmail");
+  const images = [pdcard, one, two, five, four, three];
 
   const [newPassword, setNewPassword] = useState(false);
   const [password, setPassword] = useState("");
@@ -48,7 +49,7 @@ const ResetPasswordForm = () => {
     password: "",
     confirmPassword: "",
   });
-  const images = [pdcard, one, two, five, four, three];
+
   const [loginStatus, setLoginStatus] = useState(null);
   const isLargeScreen = useMediaQuery("(min-width:512px)");
   const [loading, setLoading] = useState(false);
@@ -127,14 +128,18 @@ const ResetPasswordForm = () => {
       confirmPassword: confirmError,
     });
 
-    console.log(log.userName);
+    if (passwordError || confirmError) {
+      return;
+    }
+
+   
     let body = {
       clientKey: "motoISP",
       userLoginName: log.userName,
       emailID: email,
       newPassword: password,
     };
-    console.log(body);
+   
 
     setLoading(true);
 
@@ -155,7 +160,7 @@ const ResetPasswordForm = () => {
       console.error("Error changing password:", error);
       setLoginStatus("error");
       toast.error(
-        error.message ||
+        error.response.data ||
           "Error in sending mail. Please contact to administrator."
       );
     } finally {
@@ -223,17 +228,11 @@ const ResetPasswordForm = () => {
                 backgroundColor: WHITE,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  fontWeight: 600,
-                  textAlign: "center",
-                  bgcolor: PRIMARY_BLUE,
-                  padding: "50px",
-                }}
-              >
-                Client Logo
-              </Typography>
+              <img
+                src="/Images/innerlogo.gif"
+                alt="logo"
+                style={{ width: "50%" }}
+              />
             </Box>
           )}
 
@@ -258,7 +257,7 @@ const ResetPasswordForm = () => {
               <Typography
                 sx={{
                   textAlign: "center",
-                  marginBottom: "32px",
+                  marginBottom: "15px",
                   fontSize: "14px",
                   color: PRIMARY_LIGHT_PURPLE2,
                 }}
@@ -268,7 +267,7 @@ const ResetPasswordForm = () => {
                 re-enter the new password to confirm.
               </Typography>
               <Box sx={{ width: "100%", maxWidth: "320px" }}>
-                <Box sx={{ position: "relative", marginBottom: "24px" }}>
+                <Box sx={{ position: "relative", marginBottom: "20px" }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Enter New Password"
@@ -294,7 +293,7 @@ const ResetPasswordForm = () => {
                   )}
                 </Box>
 
-                <Box sx={{ position: "relative", marginBottom: "24px" }}>
+                <Box sx={{ position: "relative", marginBottom: "20px" }}>
                   <NuralLoginTextField
                     type="password"
                     placeholder="Re Enter New Password"
@@ -328,7 +327,7 @@ const ResetPasswordForm = () => {
                     margin: "auto",
                     fontWeight: "bold",
                     textAlign: "center",
-                    marginTop: "20px",
+                    marginTop: "10px",
                   }}
                 >
                   Password requirements:
@@ -406,7 +405,7 @@ const ResetPasswordForm = () => {
                       variant="outlined"
                       onClick={handleCancel}
                       color={"white"}
-                      width="60%"
+                      width="50%"
                       fontSize="14px"
                       borderColor="white"
                       fontWeight="400"
@@ -525,46 +524,7 @@ const ResetPasswordForm = () => {
             alignItems: "center",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 2,
-              overflowX: "auto",
-              width: "100%",
-              height: "100%",
-              whiteSpace: "nowrap",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": {
-                display: "none",
-              },
-            }}
-          >
-            {images.map((img, index) => (
-              <Box
-                key={index}
-                sx={{
-                  flexShrink: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: "10px",
-                  marginBottom: "10px",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`Slide ${index}`}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    borderRadius: "10px",
-                  }}
-                />
-              </Box>
-            ))}
-          </Box>
+          <Slider />
         </Box>
 
         {/* Footer (15% of 30vh) */}

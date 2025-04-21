@@ -30,14 +30,8 @@ import {
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import { LoadingSkeleton } from "../../../Common/SkeletonComponents";
+import { useNavigate } from "react-router-dom";
 
-const templates = [
-  {
-    name: "Template 1",
-    onView: () => console.log("View Template 1"),
-    onDownload: () => console.log("Download Template 1"),
-  },
-];
 const FileItem = styled(Box)({
   display: "flex",
   alignItems: "center",
@@ -75,6 +69,7 @@ const HiddenInput = styled("input")({
 });
 
 const PrimaryToTertiary = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState("primary-to-tertiary");
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedFile, setSelectedFile] = React.useState(null);
@@ -94,8 +89,8 @@ const PrimaryToTertiary = () => {
   });
   const actualFileRef = React.useRef(null);
   const tabs = [
-    { label: "Counter Share Report", value: "counter-share-report" },
-    { label: "ISR Sales Report", value: "isr-sales-report" },
+    { label: "Sale Report", value: "sales-report" },
+    { label: "ISP Sales Report", value: "isp-sales-report" },
     { label: "Unique Sales Report", value: "unique-sales-report" },
     { label: "Primary to Tertiary Track", value: "primary-to-tertiary" },
     { label: "Competition Sales Report", value: "competition-sales-report" },
@@ -162,7 +157,8 @@ const PrimaryToTertiary = () => {
   };
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-  };
+    navigate(`/${newValue}`);
+  };    
 
   const handleSearchClick = async () => {
     setShowModal(false);
@@ -302,7 +298,7 @@ const PrimaryToTertiary = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Report" />
+          <BreadcrumbsHeader pageTitle="Sales" />
         </Grid>
 
         <Grid item xs={12} ml={1}>

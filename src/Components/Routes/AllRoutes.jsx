@@ -124,24 +124,42 @@ import Relations from "../Pages/Master/Organization/Hierarchy/Relations";
 import View from "../Pages/Master/Organization/Hierarchy/View";
 import QCategory from "../Pages/Master/Organization/Query/QCategory";
 import QMapping from "../Pages/Master/Organization/Query/QMapping";
+
 import HoDashboard from "../Pages/Dashboard/HoDashboard";
 import RATDashboard from "../Pages/Dashboard/RATDashboard.jsx";
 import ChannelsDashBoard from "../Pages/Dashboard/ChannelsDashBoard.jsx";
 import RATChannelDashBoard from "../Pages/Dashboard/RATChannelDasboard.jsx";
 import AvailabilityDashboard from "../Pages/Dashboard/AvailabilityDashboard.jsx";
 import RATAvailability from "../Pages/Dashboard/RATAvailability.jsx";
+
 import InventoryDashBoard from "../Pages/Dashboard/InventoryDashboard.jsx";
 import RATInventory from "../Pages/Dashboard/RATInventory.jsx";
 import RATAttendance from "../Pages/Dashboard/RATAttendance.jsx";
+
 import RATTarget from "../Pages/Dashboard/RATTarget.jsx";
 import RATIncentive from "../Pages/Dashboard/RATIncentive.jsx";
-import TaskType from "../Pages/Master/Module/Merchandizing/TaskType/TaskType.jsx";
-import TaskSearch from "../Pages/Master/Module/Merchandizing/Search/TaskSearch.jsx";
-import ManageTask from "../Pages/Master/Module/Merchandizing/ManageTask/ManageTask.jsx";
-import LnDSearch from "../Pages/Master/Module/L&D/LnDSearch.jsx";
-import LnDContent from "../Pages/Master/Module/L&D/LnDContent.jsx";
-import LnDAssesment from "../Pages/Master/Module/L&D/LnDAssesment.jsx";
 // import RATInventory from "../Pages/NuralCustomComponents/DashboardWidgets/RATInventory.jsx";
+
+import AttendanceUpload from "../Pages/Master/Attendance/AttendanceUpload.jsx";
+import BalanceLeaveBulk from "../Pages/Master/Attendance/BalanceLeaveBulk.jsx";
+import AuditReport from "../Pages/Master/Retail/AuditReport.jsx";
+import WebMenuMapping from "../Pages/Master/AppsSetting/WebMenuMapping.jsx";
+import MobileMenuMapping from "../Pages/Master/AppsSetting/MobileMenuMapping.jsx";
+
+import ReddingtonUpload from "../Pages/Master/Reddington/ReddingtonUpload.jsx";
+
+import ReportQueue from "../Pages/Master/Reports/ReportQueue.jsx";
+import DemoConversion from "../Pages/Master/Others/DemoConversion.jsx";
+import StoreReports from "../Pages/Master/Reports/StoreReports.jsx";
+import IspApproval from "../Pages/Master/Isp/IspApproval.jsx";
+import PreBookingReport from "../Pages/Master/Reports/PreBookingReport.jsx";
+import MerchandizingReport from "../Pages/Master/Reports/MerchandizingReport.jsx";
+import RankingReport from "../Pages/Master/Reports/RankingReport.jsx";
+import ManageAudit from "../Pages/Master/Module/Brand/ManageAudit.jsx";
+import FocusModel from "../Pages/Master/Product/FocusModel.jsx";
+import RIAuditScore from "../Pages/Master/Module/Brand/RIAuditScore.jsx";
+import DemoConversionList from "../Pages/Master/Others/DemoConversionList.jsx";
+
 const AllRoutes = () => {
   return (
     <Routes>
@@ -153,6 +171,12 @@ const AllRoutes = () => {
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
         <Route path="/change-password" element={<ChangePassword />} />
+      </Route>
+
+      {/* Private Routes */}
+      <Route element={<PrivateRoute />}>
+        <Route path="/" element={<Dashboard />} />
+
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/ho-dashboard" element={<HoDashboard />} />
         <Route path="/rat-dashboard" element={<RATDashboard />} />
@@ -170,11 +194,11 @@ const AllRoutes = () => {
           path="/availability-dashboard"
           element={<AvailabilityDashboard />}
         />
-        {/* </Route> */}
-        <Route path="/rat-availability" element={<RATAvailability />} />
+      </Route>
+      <Route path="/rat-availability" element={<RATAvailability />} />
 
-        {/* Private Routes */}
-        {/* <Route element={<PrivateRoute />}> */}
+      {/* Private Routes */}
+      <Route element={<PrivateRoute />}>
         <Route path="/settings" element={<MasterSetting />} />
         <Route path="/transaction" element={<Transactions />} />
         <Route
@@ -194,6 +218,8 @@ const AllRoutes = () => {
         <Route path="/search-agancy" element={<ViewAgency />} />
         <Route path="/isp-upload" element={<IspUpload />} />
         <Route path="/add-isp" element={<AddIsp />} />
+
+        <Route path="/isp-approval" element={<IspApproval />} />
         <Route path="/view-retailer" element={<RetailerView />} />
         <Route path="/sales-bulk-upload" element={<SalesBulkUpload />} />
         <Route path="/reports" element={<Reports />} />
@@ -205,9 +231,6 @@ const AllRoutes = () => {
         <Route path="/add-retailer" element={<AddRetailer />} />
         <Route path="/add-sales-channel" element={<AddSalesChannel />} />
         <Route path="/sales-excel" element={<SalesExcel />} />
-        <Route path="/task-type" element={<TaskType />} />
-        <Route path="/task-search" element={<TaskSearch />} />
-        <Route path="/manage-task" element={<ManageTask />} />
         <Route path="/isp-sales-report" element={<IspSaleReport />} />
         <Route path="/counter-share-report" element={<CounterShareReport />} />
         <Route
@@ -227,6 +250,12 @@ const AllRoutes = () => {
           path="/stock-adjustment-report"
           element={<StockAdjustmentReport />}
         />
+        <Route path="/pre-booking-report" element={<PreBookingReport />} />
+        <Route path="/merchandizing-report" element={<MerchandizingReport />} />
+        <Route path="/ranking-report" element={<RankingReport />} />
+
+        <Route path="/attendance-upload" element={<AttendanceUpload />} />
+        <Route path="/balance-leave-bulk" element={<BalanceLeaveBulk />} />
         <Route
           path="/activation-file-received"
           element={<ActivationFileRecieved />}
@@ -248,6 +277,7 @@ const AllRoutes = () => {
         <Route path="/view-scheme" element={<ViewScheme />} />
         <Route path="/sku" element={<SKU />} />
         <Route path="/model" element={<Model />} />
+        <Route path="/focus-model" element={<FocusModel />} />
         <Route path="/city" element={<City />} />
         <Route path="/state" element={<State />} />
         <Route path="/country" element={<Country />} />
@@ -257,6 +287,7 @@ const AllRoutes = () => {
           path="/geography-bulk-upload"
           element={<GeographyBulkUpload />}
         />
+        <Route path="/reddington-bulk-upload" element={<ReddingtonUpload />} />
         <Route path="/competition-brand" element={<Brand />} />
         <Route path="/competition-category" element={<Category />} />
         <Route path="/competition-model" element={<CompModel />} />
@@ -278,6 +309,9 @@ const AllRoutes = () => {
         <Route path="/manage" element={<Manage />} />
         <Route path="/create-salesman" element={<SalesMan />} />
         <Route path="/redington-file" element={<RedingtonFile />} />
+        <Route path="/demo-conversion" element={<DemoConversion />} />
+        <Route path="/demo-conversion-list" element={<DemoConversionList />} />
+
         <Route path="/secondary-sale" element={<SecondarySale />} />
         <Route path="/sales-channel-stock" element={<SalesChannelStockSB />} />
         <Route path="/user-laggards" element={<UserLaggards />} />
@@ -292,8 +326,11 @@ const AllRoutes = () => {
           path="/download-stock-report"
           element={<DownloadStockReport />}
         />
+        <Route path="/rel-store-reports" element={<StoreReports />} />
         <Route path="/banner" element={<Banner />} />
         <Route path="/l1l2-issue-report" element={<L1L2IssueReport />} />
+        <Route path="/audit-report" element={<AuditReport />} />
+        <Route path="/manage-audit" element={<ManageAudit />} />
 
         <Route path="/ai-norms" element={<AInorms />} />
         <Route
@@ -302,14 +339,11 @@ const AllRoutes = () => {
         />
         <Route path="/grn" element={<Grn />} />
 
+        <Route path="/report-queue" element={<ReportQueue />} />
         <Route path="/finance-api-block" element={<FinanceApiBlock />} />
         <Route path="/servify-offer" element={<ServifyOffer />} />
 
         <Route path="/lnd-category" element={<LnDCategory />} />
-        <Route path="/lnd-search" element={<LnDSearch />} />
-        <Route path="/lnd-content" element={<LnDContent />} />
-        <Route path="/lnd-assesment" element={<LnDAssesment />} />
-
 
         <Route path="/demo-categorization" element={<DemoCat />} />
 
@@ -317,6 +351,7 @@ const AllRoutes = () => {
         <Route path="/isp-audit" element={<IspAudit />} />
         <Route path="/visibility-audit" element={<VisibilityAudit />} />
         <Route path="/store-ops" element={<StoreOps />} />
+        <Route path="/riaudit-score" element={<RIAuditScore />} />
 
         <Route path="/organization" element={<Organization />} />
 
@@ -335,6 +370,8 @@ const AllRoutes = () => {
 
         <Route path="/q-category" element={<QCategory />} />
         <Route path="/q-mapping" element={<QMapping />} />
+        <Route path="/web-menu-setting" element={<WebMenuMapping />} />
+        <Route path="/mobile-menu-setting" element={<MobileMenuMapping />} />
       </Route>
 
       {/* Default and Not Found Routes */}

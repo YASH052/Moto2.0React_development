@@ -1,4 +1,4 @@
-import { Divider, Grid, Stack, Typography, Skeleton } from "@mui/material";
+import { Grid } from "@mui/material";
 import React from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import {
@@ -12,7 +12,6 @@ import TabsBar from "../../../Common/TabsBar";
 import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,7 +20,6 @@ import {
   UploadIntermediarySales,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
-import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import { templateUrl } from "../../../Common/urls";
@@ -46,19 +44,25 @@ const IntermediarySale = () => {
     { label: "Primary", value: "primary-transaction" },
     { label: "Intermediary", value: "intermediary-sale" },
     { label: "Secondary", value: "secondary-sale" },
-    { label: "Tertiary", value: "tertiary" },
   ];
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Intermediary sale template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href = `${templateUrl}IntermediarySalesSB.xlsx`;
+          window.location.href = `${templateUrl}IntermediarySales.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
           setIsLoading(false);
         }, 1000);
+
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
       },
     },
   ];
@@ -86,6 +90,10 @@ const IntermediarySale = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -115,6 +123,10 @@ const IntermediarySale = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -148,10 +160,13 @@ const IntermediarySale = () => {
         fileInput.value = "";
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -170,6 +185,7 @@ const IntermediarySale = () => {
   const handleClearStatus = () => {
     setStatus(null);
     setTitle(null);
+    
   };
 
   React.useEffect(() => {
@@ -191,7 +207,7 @@ const IntermediarySale = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",
@@ -278,7 +294,7 @@ const IntermediarySale = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
+                      text={isUploading ? "UPLOADING..." : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handleUploadClick}

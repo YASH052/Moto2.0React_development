@@ -31,7 +31,13 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  jumpToPageStyle,
+  rowstyle,
+  tableHeaderStyle,
+  tablePaginationStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import { useNavigate } from "react-router-dom";
 import { Edit } from "@mui/icons-material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -47,8 +53,10 @@ import {
 import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 import { createFilterOptions } from "@mui/material/Autocomplete";
-
+import { setRetailerID } from "../../../Redux/action";
+import { useDispatch } from "react-redux";
 const RetailerView = () => {
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = React.useState("view-retailer");
   const [stateDropDownData, setStateDropDownData] = React.useState([]);
   const log = JSON.parse(localStorage.getItem("log"));
@@ -74,28 +82,28 @@ const RetailerView = () => {
     { label: "InActive", value: 0 },
   ];
 
-  const leaveTypeOptions = [
-    {
-      leaveTypeID: 1,
-      leaveTypeName: "Casual Leave",
-      leaveTypeCode: "CL",
-    },
-    {
-      leaveTypeID: 2,
-      leaveTypeName: "Leave Without Pay",
-      leaveTypeCode: "LWP",
-    },
-    {
-      leaveTypeID: 3,
-      leaveTypeName: "Paid Leave",
-      leaveTypeCode: "PL",
-    },
-    {
-      leaveTypeID: 4,
-      leaveTypeName: "Sick Leave",
-      leaveTypeCode: "SL",
-    },
-  ];
+  // const leaveTypeOptions = [
+  //   {
+  //     leaveTypeID: 1,
+  //     leaveTypeName: "Casual Leave",
+  //     leaveTypeCode: "CL",
+  //   },
+  //   {
+  //     leaveTypeID: 2,
+  //     leaveTypeName: "Leave Without Pay",
+  //     leaveTypeCode: "LWP",
+  //   },
+  //   {
+  //     leaveTypeID: 3,
+  //     leaveTypeName: "Paid Leave",
+  //     leaveTypeCode: "PL",
+  //   },
+  //   {
+  //     leaveTypeID: 4,
+  //     leaveTypeName: "Sick Leave",
+  //     leaveTypeCode: "SL",
+  //   },
+  // ];
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
@@ -524,6 +532,9 @@ const RetailerView = () => {
     setPage(0);
     setRowsPerPage(10);
     setHasSearched(false);
+    setShowStatus(false);
+    setStatus(false);
+    setTitle("");
   };
 
   const handleStatusChange = async (retailerID) => {
@@ -583,6 +594,10 @@ const RetailerView = () => {
       }, 3000);
     }
   };
+  const handleEdit = (retailerID) => {
+    dispatch(setRetailerID(retailerID));
+    navigate("/add-retailer");
+  };
 
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
@@ -598,7 +613,7 @@ const RetailerView = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={1}>
           <BreadcrumbsHeader pageTitle="Retailer" />
         </Grid>
 
@@ -776,7 +791,7 @@ const RetailerView = () => {
                           onChange={(event, newValue) => {
                             handleSearchChange(
                               "retailerCode",
-                              newValue?.retailerCode || 0,
+                              newValue?.retailerCode || "",
                               newValue
                             );
                           }}
@@ -813,7 +828,7 @@ const RetailerView = () => {
                           onChange={(event, newValue) => {
                             handleSearchChange(
                               "retailerName",
-                              newValue?.retailerName || 0,
+                              newValue?.retailerName || "",
                               newValue
                             );
                           }}
@@ -859,7 +874,7 @@ const RetailerView = () => {
                           }
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
+                      {/* <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
                         <Typography
                           variant="body1"
                           sx={{
@@ -901,7 +916,7 @@ const RetailerView = () => {
                               `${option.leaveTypeCode} ${option.leaveTypeName}`,
                           })}
                         />
-                      </Grid>
+                      </Grid> */}
                     </Grid>
 
                     {/* Second Row - Buttons */}
@@ -951,7 +966,7 @@ const RetailerView = () => {
             )}
           </Grid>
           {filteredRows.length && (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: -3 }}>
+            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: 1 }}>
               <TableContainer
                 component={Paper}
                 sx={{
@@ -1123,17 +1138,24 @@ const RetailerView = () => {
                                     </div>
                                   ) : column.id === "status" ? (
                                     <Switch
-                                      size="small"
-                                      checked={row.status == 1}
+                                      checked={row.status}
                                       onChange={() =>
                                         handleStatusChange(row.id)
                                       }
-                                      disabled={isTableLoading}
+                                      sx={{
+                                        ...toggleSectionStyle,
+                                        "& .MuiSwitch-thumb": {
+                                          backgroundColor: row.status
+                                            ? PRIMARY_BLUE2
+                                            : DARK_PURPLE,
+                                        },
+                                      }}
                                     />
                                   ) : column.id === "edit" ? (
                                     <Edit
                                       sx={{ color: DARK_PURPLE }}
                                       fontSize="small"
+                                      onClick={() => handleEdit(row.id)}
                                     />
                                   ) : (
                                     row[column.id]
@@ -1146,21 +1168,7 @@ const RetailerView = () => {
                   </Table>
                 </Box>
                 {/* Custom Pagination */}
-                <Grid
-                  container
-                  sx={{
-                    padding: " 8px",
-
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    position: "sticky",
-                    bottom: 0,
-                    backgroundColor: LIGHT_GRAY2,
-                    borderTop: `1px solid ${PRIMARY_LIGHT_GRAY}`,
-                    zIndex: 1200,
-                    boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.05)",
-                  }}
-                >
+                <Grid container sx={tablePaginationStyle}>
                   <Grid item>
                     <Typography
                       sx={{
@@ -1326,19 +1334,7 @@ const RetailerView = () => {
                         const pageNumber = parseInt(e.target.value, 10);
                         setJumpToPageNumber(pageNumber);
                       }}
-                      style={{
-                        width: "100px",
-                        height: "24px",
-                        paddingRight: "8px",
-                        paddingLeft: "8px",
-                        borderRadius: "8px",
-                        fontSize: "10px",
-                        borderWidth: "1px",
-                        textAlign: "center",
-                        border: `1px solid ${LIGHT_GRAY2}`,
-                        borderColor: PRIMARY_BLUE2,
-                        outline: "none",
-                      }}
+                      style={jumpToPageStyle}
                     />
                     <IconButton
                       onClick={() => {

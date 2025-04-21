@@ -1,5 +1,4 @@
-
-import { Divider, Grid, Stack, Typography, Skeleton } from "@mui/material";
+import { Grid } from "@mui/material";
 import React, { useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import {
@@ -10,10 +9,8 @@ import {
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
 import TabsBar from "../../../Common/TabsBar";
-import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,10 +19,11 @@ import {
   UploadPrimarySalesReturn,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
-import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import NuralUploadSaleReturn from "../../NuralCustomComponents/NuralUploadSaleReturn";
+import { templateUrl } from "../../../Common/urls";
+import { getTodayDate } from "../../../Common/commonFunction";
 
 // Radio buttons selection by default
 const options = [
@@ -49,16 +47,22 @@ const PrimarySaleReturn = () => {
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedUserId, setSelectedUserId] = useState(null); // New state for userId
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
 
-  console.log("selectedUserId", selectedDate);
+  // console.log("selectedUserId", selectedDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const handleDateChange = (newDate) => {
-    setSelectedDate(newDate);
+    if (newDate <= today) {
+      setSelectedDate(newDate);
+    }
+    // setSelectedDate(newDate);
   };
   const handleUserIdChange = (newUserId) => {
     setSelectedUserId(newUserId); // Update userId in parent
-    console.log("Selected userId:", newUserId);
+    // console.log("Selected userId:", newUserId);
   };
   // Format the selectedDate to YYYY-MM-DD
   let formattedDate = null;
@@ -78,29 +82,41 @@ const PrimarySaleReturn = () => {
 
   const templates = [
     {
-      name: "Download Template",
+      name: "Serial Only",
+      onView: () => console.log("View Template 2"),
+      onDownload: () => {
+        setIsLoading(true);
+        setTimeout(() => {
+          window.location.href = `${templateUrl}PrimarySalesReturnExistInSystem.xlsx`;
+          setStatus(200);
+          setTitle("Template downloaded successfully.");
+          setIsLoading(false);
+        }, 1000);
+
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
+      },
+    },
+  ];
+
+  const templates2 = [
+    {
+      name: "Full Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href =
-            "http://moto.nuralsales.com/Excel/Templates/PrimarySalesReturn.xlsx";
+          window.location.href = `${templateUrl}PrimarySalesReturn.xlsx`;
           setIsLoading(false);
         }, 1000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, [3000]);
       },
     },
-    // {
-    //   name: "Template 2",
-    //   onView: () => console.log("View Template 1"),
-    //   onDownload: () => {
-    //     setIsLoading(true);
-    //     setTimeout(() => {
-    //       window.location.href =
-    //         "http://moto.nuralsales.com/Excel/Templates/SecondarySalesReturn.xlsx";
-    //       setIsLoading(false);
-    //     }, 1000);
-    //   },
-    // }
   ];
 
   const handleTabChange = (newValue) => {
@@ -128,6 +144,10 @@ const PrimarySaleReturn = () => {
 
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -156,6 +176,10 @@ const PrimarySaleReturn = () => {
         window.location.href = res.referenceDataLink;
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
@@ -193,10 +217,13 @@ const PrimarySaleReturn = () => {
         fileInput.value = "";
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
-        setTitle("Error in all records. Please check the invalid data file.");
+        setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
         setStatus(res.statusCode);
@@ -213,8 +240,15 @@ const PrimarySaleReturn = () => {
   };
 
   const handleClearStatus = () => {
+    // console.log(fileInputRef, "===========");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
     setStatus(null);
     setTitle(null);
+    setSelectedDate(getTodayDate());
+    setSelectedUserId(2);
   };
 
   React.useEffect(() => {
@@ -229,7 +263,8 @@ const PrimarySaleReturn = () => {
   // }
 
   return (
-    <Grid container spacing={0}>
+    <Grid container spacing={0} >
+   
       <Grid
         item
         xs={12}
@@ -241,6 +276,7 @@ const PrimarySaleReturn = () => {
           position: "sticky",
           top: 0,
           ml: 1,
+        
         }}
       >
         <BreadcrumbsHeader pageTitle="Sales Return" />
@@ -260,7 +296,7 @@ const PrimarySaleReturn = () => {
         <Grid container spacing={0} lg={12} mt={1}>
           <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
             <Grid container spacing={2} direction="column">
-              <Grid item>
+              <Grid item >
                 <NuralUploadSaleReturn
                   title="Upload Format"
                   onChange={handleFormatChange}
@@ -271,6 +307,7 @@ const PrimarySaleReturn = () => {
                   onDateChange={handleDateChange}
                   option={option}
                   onUserIdChange={handleUserIdChange} // Pass callback to update userId
+                  maxDate={today}
                   selectedUserId={selectedUserId} // Pass selected userId to control the autocomplete
                 />
               </Grid>
@@ -286,7 +323,7 @@ const PrimarySaleReturn = () => {
                   referenceIcon1={"./Icons/downloadIcon.svg"}
                   referenceIcon2={"./Icons/downloadIcon.svg"}
                   title="Templates"
-                  templates={templates}
+                  templates={selectedUserId == 1 ? templates2 : templates}
                   buttons={true}
                   eye={false}
                 />
@@ -327,7 +364,7 @@ const PrimarySaleReturn = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
+                      text={isUploading ? "UPLOADING..." : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handleUploadClick}

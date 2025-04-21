@@ -78,14 +78,14 @@ const salesMetrics = [
   },
 ];
 const RATChannelDashBoard = () => {
-  const [activeTab, setActiveTab] = React.useState("channels");
+  const [activeTab, setActiveTab] = React.useState("channels-dashboard");
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
+    { label: "Business", value: "ho-dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
     { label: "Brand", value: "brand" },
-    { label: "Inventory", value: "inventory" },
+    { label: "Inventory", value: "inventory-dashboard" },
   ];
   const navigate = useNavigate();
   const labelStyle = {

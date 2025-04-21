@@ -1,30 +1,52 @@
-import { Box, Button, Checkbox, Grid, Typography, Switch } from "@mui/material";
-import React, { useState } from "react";
+import {
+  Box,
+  Checkbox,
+  Grid,
+  Typography,
+  Switch,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
-  DARK_PURPLE,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
   AQUA,
   WHITE,
-  PRIMARY_LIGHT_GRAY,
   LIGHT_BLUE,
   PRIMARY_BLUE,
   BLACK,
+  DARK_BLUE,
 } from "../../../Common/colors";
 import EditIcon from "@mui/icons-material/Edit";
-
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-import { Search } from "@mui/icons-material";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
+import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+import { useNavigate } from "react-router-dom";
+import {
+  GetCompetitionBrand,
+  GetCompetitionCategoryListMoto,
+  ManageCompetitionCategory,
+} from "../../../Api/Api";
+import Required from "../../../Common/Required";
+import StatusModel from "./../../../Common/StatusModel";
+import NuralPagination from "./../../../Common/Pagination";
+import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const tabs = [
   { label: "Upload", value: "competiton-upload" },
@@ -33,19 +55,7 @@ const tabs = [
   { label: "Model", value: "competition-model" },
   { label: "Price Band", value: "competition-price-band" },
 ];
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  // TablePagination,
-  IconButton,
-} from "@mui/material";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
-import { useNavigate } from "react-router-dom";
+
 const Category = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("competition-category");
@@ -55,112 +65,541 @@ const Category = () => {
     key: null,
     direction: null,
   });
+  const [searchStatus, setSearchStatus] = useState(null);
+  const [searchTitle, setSearchTitle] = useState("");
+  const [status, setStatus] = useState(null);
+  const [title, setTitle] = useState("");
+  const [filteredRows, setFilteredRows] = React.useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [updatingRowId, setUpdatingRowId] = useState(null);
+  const [accordionExpanded, setAccordionExpanded] = useState(true);
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
+  const [formLoading, setFormLoading] = useState(true);
+  const [searchFormLoading, setSearchFormLoading] = useState(true);
+  const [brandLoading, setBrandLoading] = useState(false);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const [searchParams, setSearchParams] = useState({
+    competitionBrandID: 0,
+    competitionCategoryID: 0,
+    competitionCategoryName: "",
+    status: 1,
+    callType: 0,
+    pageIndex: 1,
+    pageSize: 10,
+  });
+  const [formData, setFormData] = useState({
+    competitionCategoryID: 0,
+    competitionCategoryName: "",
+    status: 1,
+    callType: 0,
+    brandMappingList: [],
+  });
+  const [brandList, setBrandList] = useState([]);
+  const [brandCheckList, setBrandCheckList] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+
+  const createAccordionRef = React.useRef(null);
+
+  const scrollToTop = (elementRef = null) => {
+    if (elementRef && elementRef.current) {
+      elementRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleAccordionChange = (event, expanded) => {
+    if (!expanded) {
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
+  };
+
+  const handleSearchAccordionChange = (event, expanded) => {
+    if (!expanded) {
+      setSearchAccordionExpanded(false);
+      setAccordionExpanded(false);
+    } else {
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
   const handleSort = (columnName) => {
     let direction = "asc";
+    let sortKey = columnName;
 
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
+    if (sortConfig.key === sortKey) {
       if (sortConfig.direction === "asc") {
         direction = "desc";
       } else {
-        // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        getCategoryList({ ...searchParams, pageIndex: 1 });
         return;
       }
     }
 
-    setSortConfig({ key: columnName, direction });
+    setSortConfig({ key: sortKey, direction });
 
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
+    const sortedData = [...filteredRows].sort((a, b) => {
+      const aValue = a[sortKey]?.toString().toLowerCase() || "";
+      const bValue = b[sortKey]?.toString().toLowerCase() || "";
 
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
+      if (aValue < bValue) return direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return direction === "asc" ? 1 : -1;
       return 0;
     });
 
-    setFilteredRows(sortedRows);
+    setFilteredRows(sortedData);
   };
 
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const brands = [
-      "Samsung",
-      "LG",
-      "Sony",
-      "Apple",
-      "Xiaomi",
-      "OnePlus",
-      "Lenovo",
-      "HP",
-      "Dell",
-    ];
-    const categories = [
-      { name: "Smartphones", code: "SMART" },
-      { name: "Laptops", code: "LAP" },
-      { name: "Televisions", code: "TV" },
-      { name: "Audio Devices", code: "AUD" },
-      { name: "Home Appliances", code: "HOME" },
-      { name: "Tablets", code: "TAB" },
-      { name: "Accessories", code: "ACC" },
-    ];
-
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        brandName: brands[Math.floor(Math.random() * brands.length)],
-        categoryName:
-          categories[Math.floor(Math.random() * categories.length)].name,
-        categoryCode: `${
-          categories[Math.floor(Math.random() * categories.length)].code
-        }-${String(Math.floor(1000 + Math.random() * 9000))}`,
-        status: Math.random() > 0.5,
-      }));
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
-  const [selectedValue, setSelectedValue] = useState("Brand 1");
 
-  const options = [
-    { label: "Option 1", value: "option1" },
-    { label: "Option 2", value: "option2" },
-    { label: "Option 3", value: "option3" },
-  ];
+  const getBrandDropdown = async () => {
+    try {
+      setBrandLoading(true);
+      setFormLoading(true);
 
-  const options2 = ["Brand 1", "Brand 2", "Brand 3"];
+      const params = {
+        mode: 2,
+        status: 0,
+        pageIndex: 1,
+        pageSize: 0,
+        brandId: 0,
+        brandName: "",
+      };
+      const response = await GetCompetitionBrand(params);
+      if (response.statusCode === "200") {
+        const activeBrands = response.competitionBrandList || [];
+        setBrandList(activeBrands);
+        setBrandCheckList(activeBrands);
+      } else {
+        console.error(
+          "Failed to fetch brand dropdown:",
+          response.statusMessage
+        );
+        setBrandList([]);
+        setBrandCheckList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching brand dropdown:", error);
+      setBrandList([]);
+      setBrandCheckList([]);
+    } finally {
+      setBrandLoading(false);
+      setFormLoading(false);
+    }
+  };
+
+  const getCategoryList = async (params = searchParams) => {
+    setTableLoading(true);
+    setSearchStatus(null);
+    setSearchTitle("");
+
+    try {
+      const response = await GetCompetitionCategoryListMoto(params);
+
+      if (response.statusCode === "200") {
+        const data = response.competitionCategoryDataList || [];
+        console.log(data);
+        setFilteredRows(data);
+        setTotalRecords(response.totalRecords || data.length);
+      } else {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(
+          response.statusMessage || "Failed to load category list"
+        );
+        setFilteredRows([]);
+        setTotalRecords(0);
+      }
+    } catch (error) {
+      console.error("Error fetching category list:", error);
+      setSearchStatus(error.statusCode || "500");
+      setSearchTitle(
+        error.statusMessage || "An error occurred while fetching categories"
+      );
+      setFilteredRows([]);
+      setTotalRecords(0);
+    } finally {
+      setTableLoading(false);
+      setSearchFormLoading(false);
+    }
+  };
+
+  
+  const getMappedBrandList = async (categoryID) => {
+    const params = {
+      ...searchParams,
+      competitionCategoryID: categoryID,
+      callType: 1,
+      pageSize: 0,
+      pageIndex: 1,
+    };
+
+    try {
+      const response = await GetCompetitionCategoryListMoto(params);
+
+      if (response.statusCode === "200") {
+        const data = response.mappedBrandList[0].mappingList || [];
+        console.log("Fetched Mapped Brands:", data);
+        return data;
+      } else {
+        console.error("Failed to fetch mapped brands:", response.statusMessage);
+        setSearchStatus(response.statusCode);
+        setSearchTitle(
+          response.statusMessage || "Failed to load mapped brand list"
+        );
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching mapped brands:", error);
+      setSearchStatus(error.statusCode || "500");
+      setSearchTitle(
+        error.statusMessage || "An error occurred while fetching mapped brands"
+      );
+      return [];
+    }
+  };
+
+  const handleBrandSelection = (brand) => {
+    setSelectedBrands((prev) => {
+      const isSelected = prev.some(
+        (b) => b.competitionBrandID === brand.competitionBrandID
+      );
+      if (isSelected) {
+        return prev.filter(
+          (b) => b.competitionBrandID !== brand.competitionBrandID
+        );
+      } else {
+        return [...prev, { competitionBrandID: brand.competitionBrandID }];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedBrands.length === brandCheckList.length) {
+      setSelectedBrands([]);
+    } else {
+      setSelectedBrands(
+        brandCheckList.map((brand) => ({
+          competitionBrandID: brand.competitionBrandID,
+        }))
+      );
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (
+      !formData.competitionCategoryName ||
+      formData.competitionCategoryName.trim() === ""
+    ) {
+      newErrors.competitionCategoryName = "Category Name is required";
+    } else if (formData.competitionCategoryName.length > 100) {
+      newErrors.competitionCategoryName =
+        "Category Name cannot exceed 100 characters";
+    }
+    if (selectedBrands.length === 0) {
+      newErrors.brandMapping = "At least one brand must be mapped";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePostRequest = async () => {
+    if (!validateForm()) {
+      console.log("Validation Errors:", errors);
+      return;
+    }
+
+    setStatus(null);
+    setTitle("");
+
+    try {
+      const brandMappingList = selectedBrands.map((brand) => ({
+        competitionBrandID: brand.competitionBrandID,
+        mappingStatus: 1,
+      }));
+
+      const payload = {
+        ...formData,
+        brandMappingList: brandMappingList,
+        callType: isEditMode ? 1 : 0,
+        status: formData.status,
+      };
+
+      console.log("Sending Payload:", payload);
+      const response = await ManageCompetitionCategory(payload);
+      console.log("API Response:", response);
+
+      setStatus(response.statusCode);
+      setTitle(
+        response.statusMessage ||
+          (response.statusCode === "200"
+            ? "Operation successful"
+            : "An error occurred")
+      );
+
+      if (response.statusCode === "200") {
+        handleCancel();
+        getCategoryList({ ...searchParams, pageIndex: 1 });
+        setPage(0);
+      } else {
+        console.error("API Error:", response.statusMessage);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setStatus(error.statusCode || "500");
+      setTitle(error.message || "An unexpected error occurred.");
+    }
+  };
+
+  const handleEdit = async (row) => {
+    console.log("Editing Row:", row);
+    setStatus(null);
+    setTitle("");
+    setErrors({});
+
+    setFormData({
+      competitionCategoryID: row.competitionCategoryID,
+      competitionCategoryName: row.competitionCategoryName,
+      status: row.status === "Active" ? 1 : 0,
+      callType: 1,
+      brandMappingList: [],
+    });
+    setIsEditMode(true);
+    setAccordionExpanded(true);
+    setSearchAccordionExpanded(false);
+
+    setTimeout(() => {
+      scrollToTop(createAccordionRef);
+    }, 100);
+
+    try {
+      const mappedBrandsData = await getMappedBrandList(row.competitionCategoryID);
+
+      if (mappedBrandsData && Array.isArray(mappedBrandsData)) {
+        const mappedBrandIds = new Set(
+          mappedBrandsData.map((brand) => brand.competitionBrandID)
+        );
+
+        const commonBrands = brandList.filter((brand) =>
+          mappedBrandIds.has(brand.competitionBrandID)
+        );
+
+        const brandsToSelect = commonBrands.map((brand) => ({
+          competitionBrandID: brand.competitionBrandID,
+        }));
+
+        setSelectedBrands(brandsToSelect);
+        console.log("Selected brands set based on mapped data:", brandsToSelect);
+      } else {
+        console.error("Failed to get valid mapped brands data.");
+        setSelectedBrands([]);
+        setStatus("Error");
+        setTitle("Could not load associated brands.");
+      }
+    } catch (error) {
+      console.error("Error processing mapped brands:", error);
+      setSelectedBrands([]);
+      setStatus("Error");
+      setTitle("Error fetching or processing associated brands.");
+    }
+  };
+
+  const handleStatus = async (row, newStatusChecked) => {
+    setStatusUpdateLoading(true);
+    setUpdatingRowId(row.competitionCategoryID);
+    setSearchStatus(null);
+    setSearchTitle("");
+
+    const payload = {
+      competitionCategoryID: row.competitionCategoryID,
+      competitionCategoryName: row.competitionCategoryName,
+      status: newStatusChecked ? 1 : 0,
+      callType: 2,
+      brandMappingList: [],
+    };
+
+    console.log("Toggling status with payload:", payload);
+
+    try {
+      const response = await ManageCompetitionCategory(payload);
+      setSearchStatus(response.statusCode);
+      setSearchTitle(response.statusMessage);
+
+      if (response.statusCode === "200") {
+        getCategoryList(searchParams);
+      } else {
+        console.error("Failed to toggle status:", response.statusMessage);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setSearchStatus(error.statusCode || "500");
+      setSearchTitle(
+        error.statusMessage || "An error occurred during status update"
+      );
+    } finally {
+      setStatusUpdateLoading(false);
+      setUpdatingRowId(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormLoading(true);
+
+    setFormData({
+      competitionCategoryID: 0,
+      competitionCategoryName: "",
+      status: 1,
+      callType: 0,
+      brandMappingList: [],
+    });
+    setSelectedBrands([]);
+    setIsEditMode(false);
+    setErrors({});
+    setStatus(null);
+    setTitle("");
+    setAccordionExpanded(true);
+    setSearchAccordionExpanded(false);
+
+    setTimeout(() => {
+      setFormLoading(false);
+    }, 500);
+  };
+
+  const handleSearch = () => {
+    setPage(0);
+    setTableLoading(true);
+    setSearchFormLoading(true);
+
+    const updatedParams = {
+      ...searchParams,
+      competitionCategoryName: searchParams.competitionCategoryName || "",
+      pageIndex: 1,
+      pageSize: rowsPerPage,
+      callType: 0,
+      status: 1,
+    };
+    setSearchParams(updatedParams);
+    getCategoryList(updatedParams);
+    setSearchAccordionExpanded(true);
+    setAccordionExpanded(false);
+  };
+
+  const handleSearchCancel = () => {
+    setPage(0);
+    setTableLoading(true);
+    setSearchFormLoading(true);
+
+    const clearedParams = {
+      ...searchParams,
+      competitionBrandID: 0,
+      competitionCategoryID: 0,
+      competitionCategoryName: "",
+      pageIndex: 1,
+      pageSize: rowsPerPage,
+      callType: 0,
+      status: 1,
+    };
+    setSearchParams(clearedParams);
+    getCategoryList(clearedParams);
+    setSearchAccordionExpanded(true);
+    setAccordionExpanded(false);
+    setSearchStatus(null);
+    setSearchTitle("");
+  };
+
+  const handlePaginationChange = (paginationState) => {
+    const updatedParams = {
+      ...searchParams,
+      pageIndex: paginationState.page + 1,
+      pageSize: paginationState.rowsPerPage,
+      callType: 0,
+    };
+    setPage(paginationState.page);
+    setRowsPerPage(paginationState.rowsPerPage);
+    setSearchParams(updatedParams);
+    getCategoryList(updatedParams);
+  };
+
+  const handleExport = async () => {
+    setIsDownloadLoading(true);
+    setSearchStatus(null);
+    setSearchTitle("");
+    try {
+      const params = {
+        ...searchParams,
+        calltype: 1,
+        pageIndex: 1,
+        pageSize: 0,
+        mode: 1,
+      };
+      const response = await GetCompetitionCategoryListMoto(params);
+      if (response.statusCode === "200") {
+        if (response?.reportLink) {
+          window.location.href = response.reportLink;
+          setSearchStatus(response.statusCode);
+          setSearchTitle(response.statusMessage || "Export successful");
+        } else {
+          setSearchStatus("404");
+          setSearchTitle("Export link not found.");
+        }
+      } else {
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Export failed");
+        console.error("Failed to export data:", response.statusMessage);
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      setSearchStatus(error.statusCode || "500");
+      setSearchTitle(error.statusMessage || "An error occurred during export");
+    } finally {
+      setIsDownloadLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getBrandDropdown();
+    getCategoryList();
+  }, []);
+
+  useEffect(() => {
+    if (status === "200" && title) {
+      const timer = setTimeout(() => {
+        setStatus(null);
+        setTitle("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, title]);
 
   return (
     <>
-      <Grid container spacing={2}>
-        {/* Breadcrumbs Header */}
+      <Grid container spacing={2} sx={{
+        position: "relative",
+        pl: { xs: 1, sm: 1 },
+        pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
+        isolation: "isolate",
+       }}>
         <Grid
           item
           xs={12}
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 1300,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
@@ -178,266 +617,376 @@ const Category = () => {
           </Grid>
         </Grid>
 
-        <>
-          <Grid item xs={12} pr={1.5}>
-            <Grid container spacing={2} direction="column">
-              <Grid item>
-                <NuralAccordion2
-                  title="Create"
-                  backgroundColor={LIGHT_GRAY2}
-                >
-                  <Grid container spacing={2} sx={{ width: "100%" }}>
-                    <Grid item xs={12} sm={12} md={12} lg={12}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        CATEGORY NAME
-                      </Typography>
-                      <NuralTextField
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
-                    </Grid>
-                    <Grid
-                      container
-                      spacing={2}
-                      sx={{ width: "100%", marginLeft: "0%" }}
-                    >
-                      {/* First Dropdown */}
-                      <Grid item xs={12} md={12} lg={12}>
+        <Grid item xs={12} pr={1.5} id="create-category-form">
+          <Grid container spacing={2} direction="column">
+            <Grid item>
+              <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
+              {formLoading ? (
+                <FormSkeleton />
+              ) : (
+                <>
+                  <NuralAccordion2
+                    title={isEditMode ? "Update Category" : "Create Category"}
+                    backgroundColor={LIGHT_GRAY2}
+                    expanded={accordionExpanded}
+                    onChange={handleAccordionChange}
+                    controlled={true}
+                  >
+                    <Grid container spacing={2} sx={{ width: "100%" }}>
+                      <Grid item xs={12}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_BLUE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            mb: 1,
+                          }}
+                        >
+                          CATEGORY NAME <Required />
+                        </Typography>
+                        <NuralTextField
+                          value={formData.competitionCategoryName}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              competitionCategoryName: e.target.value,
+                            });
+                            if (errors.competitionCategoryName) {
+                              setErrors({
+                                ...errors,
+                                competitionCategoryName: "",
+                              });
+                            }
+                          }}
+                          width="100%"
+                          placeholder="Enter Category Name"
+                          backgroundColor={LIGHT_BLUE}
+                          error={!!errors.competitionCategoryName}
+                        />
+                        {errors.competitionCategoryName && (
+                          <Typography
+                            color="error"
+                            variant="caption"
+                            sx={{ mt: 0.5, display: "block" }}
+                          >
+                            {errors.competitionCategoryName}
+                          </Typography>
+                        )}
+                      </Grid>
+
+                      <Grid item xs={12}>
                         <Box
                           sx={{
                             width: "100%",
                             display: "flex",
-                            justifyContent: "space-between", // 🔹 Space between both texts
-                            alignItems: "center", // 🔹 Align vertically in center
-                            marginTop: 2, // 🔹 Space from top
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: 2,
                           }}
                         >
-                          {/* Left Side - COUNTRY MAPPING */}
                           <Typography
                             variant="h6"
                             sx={{
                               color: PRIMARY_BLUE2,
-                              fontFamily: "Manrope",
                               fontWeight: 700,
                               fontSize: "10px",
-                              lineHeight: "13.66px",
                               letterSpacing: "4%",
-                              textAlign: "center",
-                              ml: 2,
+                              ml: 0,
                             }}
                           >
-                            BRAND MAPPING
+                            BRAND MAPPING <Required />
                           </Typography>
-
-                          {/* Right Side - SELECT ALL */}
                           <Typography
                             variant="h6"
+                            onClick={handleSelectAll}
                             sx={{
                               color: PRIMARY_BLUE2,
-                              fontFamily: "Manrope",
                               fontWeight: 700,
                               fontSize: "10px",
-                              lineHeight: "13.66px",
                               letterSpacing: "4%",
-                              textAlign: "center",
                               cursor: "pointer",
+                              mr: 2,
                             }}
                           >
-                            SELECT ALL
+                            {selectedBrands.length === brandCheckList.length
+                              ? "DESELECT ALL"
+                              : "SELECT ALL"}
                           </Typography>
                         </Box>
+                        {errors.brandMapping && (
+                          <Typography
+                            color="error"
+                            variant="caption"
+                            sx={{ mt: 0.5, mb: 1, display: "block" }}
+                          >
+                            {errors.brandMapping}
+                          </Typography>
+                        )}
 
                         <Grid
                           container
-                          spacing={2}
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                            // ml: "2px",
-                          }}
+                          spacing={1}
+                          sx={{ maxHeight: "200px", overflowY: "auto", pr: 1 }}
                         >
-                          {options2.map((option, index) => (
+                          {brandCheckList.map((brand) => (
                             <Grid
                               item
-                              mt={1}
                               xs={12}
-                              md={3}
+                              sm={6}
+                              md={4}
                               lg={3}
-                              key={index}
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                // gap: 1,
-                              }}
+                              key={brand.competitionBrandID}
+                              sx={{ display: "flex", alignItems: "center" }}
                             >
-                              {/* Checkbox */}
                               <Checkbox
-                                checked={selectedValue === option}
-                                onChange={() => setSelectedValue(option)}
-                                sx={{
-                                  "&.Mui-checked": {},
-                                  borderRadius: "8px",
-                                }}
+                                checked={selectedBrands.some(
+                                  (b) =>
+                                    b.competitionBrandID ===
+                                    brand.competitionBrandID
+                                )}
+                                onChange={() => handleBrandSelection(brand)}
+                                sx={{ p: 0.5, mr: 0.5 }}
                               />
-
-                              {/* Country Name with Blue Background When Selected */}
                               <Typography
                                 sx={{
-                                  color:
-                                    selectedValue === option ? WHITE : BLACK,
-                                  backgroundColor:
-                                    selectedValue === option
-                                      ? PRIMARY_BLUE
-                                      : "transparent",
-                                  padding: "8px",
-                                  paddingLeft: "10px",
-                                  borderRadius: "8px",
+                                  color: selectedBrands.some(
+                                    (b) =>
+                                      b.competitionBrandID ===
+                                      brand.competitionBrandID
+                                  )
+                                    ? WHITE
+                                    : BLACK,
+                                  backgroundColor: selectedBrands.some(
+                                    (b) =>
+                                      b.competitionBrandID ===
+                                      brand.competitionBrandID
+                                  )
+                                    ? PRIMARY_BLUE
+                                    : "transparent",
+                                  padding: "6px 10px",
+                                  borderRadius: "6px",
                                   fontSize: "12px",
                                   fontWeight: 500,
-                                  width: {
-                                    xs: "100%",
-                                    md: "220px",
-                                  },
-                                  // height: "30px",
+                                  width: "100%",
                                   textAlign: "left",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
                                 }}
                               >
-                                {option}
+                                {brand.competitionBrandName}
                               </Typography>
                             </Grid>
                           ))}
                         </Grid>
                       </Grid>
                     </Grid>
-                  </Grid>
-                  <Grid container spacing={1} mt={1} pr={1}>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="97%"
-                      />
+                  </NuralAccordion2>
+                  {accordionExpanded && (
+                    <Grid container spacing={1} mt={1} pr={1}>
+                      {status && (
+                        <Grid item xs={12}>
+                          <StatusModel
+                            width="100%"
+                            status={status}
+                            title={title}
+                            onClose={() => {
+                              setStatus(null);
+                              setTitle("");
+                            }}
+                          />
+                        </Grid>
+                      )}
+                      <Grid item xs={12} sm={6}>
+                        <NuralButton
+                          text="CANCEL"
+                          variant="outlined"
+                          borderColor={PRIMARY_BLUE2}
+                          onClick={handleCancel}
+                          width="100%"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <NuralButton
+                          text={isEditMode ? "UPDATE" : "SAVE"}
+                          backgroundColor={AQUA}
+                          variant="contained"
+                          onClick={handlePostRequest}
+                          width="100%"
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <NuralButton
-                        text="SAVE"
-                        backgroundColor={AQUA}
-                        variant="contained"
-                        onClick={() => console.log("Upload clicked")}
-                        width="99%"
-                      />
-                    </Grid>
-                  </Grid>
-                </NuralAccordion2>
-              </Grid>
+                  )}
+                </>
+              )}
+              </div>
             </Grid>
           </Grid>
+        </Grid>
 
-          <Grid item xs={12} pr={1.5}>
-            <Grid container spacing={2} direction="column">
-              <Grid item>
-                <NuralAccordion2 title="View" backgroundColor={LIGHT_GRAY2}>
-                  <Grid container spacing={2} sx={{ width: "100%" }}>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        BRAND
-                      </Typography>
-                      <NuralAutocomplete
-                        options={options}
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
+        <Grid item xs={12} pr={1.5}>
+          <Grid container spacing={2} direction="column">
+            <Grid item>
+              {searchFormLoading ? (
+                <FormSkeleton />
+              ) : (
+                <>
+                  <NuralAccordion2
+                    title="View "
+                    backgroundColor={LIGHT_GRAY2}
+                    expanded={searchAccordionExpanded}
+                    onChange={handleSearchAccordionChange}
+                    controlled={true}
+                  >
+                    <Grid container spacing={2} sx={{ width: "100%" }}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_BLUE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            mb: 1,
+                          }}
+                        >
+                          BRAND
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          placeholder="SELECT"
+                          backgroundColor={LIGHT_BLUE}
+                          options={brandList}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.competitionBrandID ===
+                            value?.competitionBrandID
+                          }
+                          getOptionLabel={(option) =>
+                            option?.competitionBrandName || ""
+                          }
+                          onChange={(event, value) => {
+                            setSearchParams({
+                              ...searchParams,
+                              competitionBrandID: value
+                                ? value.competitionBrandID
+                                : 0,
+                            });
+                          }}
+                          value={
+                            brandList.find(
+                              (brand) =>
+                                brand.competitionBrandID ===
+                                searchParams.competitionBrandID
+                            ) || null
+                          }
+                          loading={brandLoading}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: DARK_BLUE,
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            mb: 1,
+                          }}
+                        >
+                          CATEGORY NAME
+                        </Typography>
+                        <NuralAutocomplete
+                          width="100%"
+                          placeholder="SELECT"
+                          backgroundColor={LIGHT_BLUE}
+                          options={brandList}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.competitionBrandID ===
+                            value?.competitionBrandID
+                          }
+                          getOptionLabel={(option) =>
+                            option?.competitionBrandName || ""
+                          }
+                          onChange={(event, value) => {
+                            setSearchParams({
+                              ...searchParams,
+                              competitionBrandID: value
+                                ? value.competitionBrandID
+                                : 0,
+                            });
+                          }}
+                          value={
+                            brandList.find(
+                              (brand) =>
+                                brand.competitionBrandID ===
+                                searchParams.competitionBrandID
+                            ) || null
+                          }
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: DARK_PURPLE,
-                          fontFamily: "Manrope",
-                          fontWeight: 400,
-                          fontSize: "10px",
-                          lineHeight: "13.66px",
-                          letterSpacing: "4%",
-                          mb: 1,
-                        }}
-                      >
-                        CATEGORY NAME
-                      </Typography>
-                      <NuralTextField
-                        width="100%"
-                        placeholder="xxxxx"
-                        backgroundColor={LIGHT_BLUE}
-                      />
-                    </Grid>
-                  </Grid>
 
-                  <Grid container spacing={1} mt={1}>
-                    <Grid item spacing={1} xs={6} sm={2} md={1}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        color={PRIMARY_BLUE2}
-                        fontSize="12px"
-                        height="36px"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="100%"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={10} md={11} pr={1.5}>
-                      <NuralTextButton
-                        icon={"./Icons/searchIcon.svg"}
-                        iconPosition="right"
-                        height="36px"
-                        backgroundColor={PRIMARY_BLUE2}
-                        color="#fff"
-                        width="100%"
-                        fontSize="12px"
-                      >
-                        SEARCH
-                      </NuralTextButton>
-                    </Grid>
-                  </Grid>
-                </NuralAccordion2>
-              </Grid>
+                    {searchAccordionExpanded && (
+                      <Grid container spacing={1} mt={1}>
+                        <Grid item xs={6} sm={2} md={1.5}>
+                          <NuralButton
+                            text="CANCEL"
+                            variant="outlined"
+                            color={PRIMARY_BLUE2}
+                            fontSize="12px"
+                            height="36px"
+                            borderColor={PRIMARY_BLUE2}
+                            onClick={handleSearchCancel}
+                            width="100%"
+                          />
+                        </Grid>
+                        <Grid item xs={6} sm={10} md={10.5} pr={1.5}>
+                          <NuralTextButton
+                            icon={"./Icons/searchIcon.svg"}
+                            iconPosition="right"
+                            height="36px"
+                            backgroundColor={PRIMARY_BLUE2}
+                            color="#fff"
+                            width="100%"
+                            fontSize="12px"
+                            onClick={handleSearch}
+                          >
+                            SEARCH
+                          </NuralTextButton>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </NuralAccordion2>
+                </>
+              )}
             </Grid>
+            {searchStatus && searchStatus !== "200" && (
+              <Grid item xs={12} mt={1} pr={1.5}>
+                <StatusModel
+                  width="100%"
+                  status={searchStatus}
+                  title={searchTitle}
+                  onClose={() => {
+                    setSearchStatus(null);
+                    setSearchTitle("");
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
-        </>
+        </Grid>
+
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <TableContainer
             component={Paper}
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(120vh - 180px)", // Adjusted to account for headers
+              maxHeight: "calc(100vh - 90px)",
               overflow: "auto",
               position: "relative",
               "& .MuiTable-root": {
@@ -450,14 +999,12 @@ const Category = () => {
               <TableHead>
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     sx={{
                       backgroundColor: LIGHT_GRAY2,
                       position: "sticky",
                       top: 0,
-                      zIndex: 100,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
+                      zIndex: 1050,
                     }}
                   >
                     <Grid
@@ -472,23 +1019,14 @@ const Category = () => {
                             fontFamily: "Manrope",
                             fontWeight: 700,
                             fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
                             color: PRIMARY_BLUE2,
                             p: 1,
                           }}
                         >
-                          List
+                          Category List
                         </Typography>
                       </Grid>
-                      <Grid
-                        item
-                        sx={{
-                          cursor: "pointer",
-                        }}
-                      >
-                        <img src="./Images/export.svg" alt="export" />
-                      </Grid>
+                      
                     </Grid>
                   </TableCell>
                 </TableRow>
@@ -498,56 +1036,51 @@ const Category = () => {
                       ...tableHeaderStyle,
                       position: "sticky",
                       top: "45px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 100,
+                      zIndex: 1000,
                       width: "50px",
-                      padding: "8px 16px",
                     }}
                   >
                     S.NO
                   </TableCell>
                   {[
-                    { label: "BRAND NAME", key: "brandName" },
-                    { label: "CATEGORY NAME", key: "categoryName" },
-                    // { label: "CATEGORY CODE", key: "categoryCode" },
-                    { label: "STATUS", sortable: false },
-                    { label: "EDIT", sortable: false },
+                    { 
+                      label: "BRAND NAME",
+                      key: "competitionBrandName",
+                      sortable: true,
+                    },
+                    {
+                      label: "CATEGORY NAME",
+                      key: "competitionCategoryName",
+                      sortable: true,
+                    },
+                    { label: "STATUS", key: "status", sortable: false },
+                    { label: "EDIT", key: "edit", sortable: false },
                   ].map((header) => (
                     <TableCell
                       key={header.label}
-                      onClick={() =>
-                        header.sortable !== false && handleSort(header.key)
-                      }
+                      onClick={() => header.sortable && handleSort(header.key)}
                       sx={{
                         ...tableHeaderStyle,
-                        cursor:
-                          header.sortable !== false ? "pointer" : "default",
+                        cursor: header.sortable ? "pointer" : "default",
                         position: "sticky",
                         top: "45px",
                         backgroundColor: LIGHT_GRAY2,
-                        zIndex: 100,
-                        padding: "8px 16px",
-                        minWidth: header.label === "EDIT" ? "60px" : "100px",
+                        zIndex: 1000,
+                        minWidth: header.label === "EDIT" ? "60px" : "150px",
                       }}
                     >
                       <Grid container alignItems="center" spacing={1}>
                         <Grid item>{header.label}</Grid>
-                        {header.sortable !== false && (
+                        {header.sortable && (
                           <Grid item>
                             {sortConfig.key === header.key ? (
                               sortConfig.direction === "asc" ? (
                                 <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
+                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
                                 />
                               ) : (
                                 <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
+                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
                                 />
                               )
                             ) : (
@@ -558,16 +1091,10 @@ const Category = () => {
                                 sx={{ height: 16, width: 16 }}
                               >
                                 <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
+                                  sx={{ fontSize: 12, color: "grey.400" }}
                                 />
                                 <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
+                                  sx={{ fontSize: 12, color: "grey.400" }}
                                 />
                               </Grid>
                             )}
@@ -579,55 +1106,42 @@ const Category = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => (
+                {tableLoading || statusUpdateLoading ? (
+                  <TableRowSkeleton
+                    columns={5}
+                    rows={10}
+                    imagePath="./Icons/emptyFile.svg"
+                    sx={{ height: "calc(100vh - 420px)" }}
+                  />
+                ) : Array.isArray(filteredRows) && filteredRows.length > 0 ? (
+                  filteredRows.map((row, index) => (
                     <TableRow
-                      key={row.id}
+                      key={row.competitionCategoryID}
                       sx={{
                         fontSize: "10px",
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
-                        },
-                        "& td": {
-                          borderBottom: `1px solid #C6CEED`,
-                        },
+
+                        "& td": { borderBottom: `1px solid #C6CEED` },
                       }}
                     >
                       <TableCell sx={{ ...rowstyle }}>
                         {page * rowsPerPage + index + 1}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.brandName}
+                        {row.competitionBrandName || '-'}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.categoryName}
+                        {row.competitionCategoryName || '-'}
                       </TableCell>
-
                       <TableCell sx={{ ...rowstyle }}>
                         <Switch
                           checked={row.status}
-                          onChange={(e) => {
-                            const newRows = [...filteredRows];
-                            const rowIndex = newRows.findIndex(
-                              (r) => r.id === row.id
-                            );
-                            newRows[rowIndex] = {
-                              ...newRows[rowIndex],
-                              status: e.target.checked,
-                            };
-                            setFilteredRows(newRows);
-                          }}
+                          onChange={(e) => handleStatus(row, e.target.checked)}
                           size="small"
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: PRIMARY_BLUE2,
-                            },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: DARK_PURPLE,
-                              },
-                          }}
+                          disabled={
+                            statusUpdateLoading &&
+                            updatingRowId === row.competitionCategoryID
+                          }
+                          sx={toggleSectionStyle}
                         />
                       </TableCell>
                       <TableCell
@@ -638,7 +1152,11 @@ const Category = () => {
                           minWidth: "60px",
                         }}
                       >
-                        <IconButton size="small">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEdit(row)}
+                          disabled={statusUpdateLoading}
+                        >
                           <EditIcon
                             sx={{
                               fontSize: 16,
@@ -648,195 +1166,70 @@ const Category = () => {
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                      <Typography>
+                        No categories found matching your criteria.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
-
-            {/* Custom Pagination */}
-            <Grid
-              container
-              sx={{
-                p: 2,
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Grid item>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 400,
-                    fontSize: "10px",
-                    lineHeight: "13.66px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  TOTAL RECORDS:{" "}
-                  <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {filteredRows.length} /{" "}
-                    {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                  </span>
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Grid
-                  container
-                  spacing={1}
-                  sx={{
-                    maxWidth: 300,
-                    ml: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    //   gap: 1,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1.5,
-                      fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
-                    }}
-                  >
-                    SHOW :
-                  </Typography>
-                  {[10, 25, 50, 100].map((value) => (
-                    <Grid item key={value}>
-                      <Button
-                        onClick={() =>
-                          handleChangeRowsPerPage({
-                            target: { value },
-                          })
-                        }
-                        sx={{
-                          minWidth: "25px",
-                          height: "24px",
-                          padding: "4px",
-                          borderRadius: "50%",
-                          // border: `1px solid ${PRIMARY_BLUE2}`,
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                          fontSize: "12px",
-                          "&:hover": {
-                            backgroundColor:
-                              rowsPerPage === value
-                                ? PRIMARY_BLUE2
-                                : "transparent",
-                          },
-                          mx: 0.5,
-                        }}
-                      >
-                        {value}
-                      </Button>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-
-              <Grid
-                item
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  color: PRIMARY_BLUE2,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                >
-                  JUMP TO FIRST
-                </Typography>
-                <IconButton
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                  }}
-                >
-                  PAGE {page + 1}
-                </Typography>
-
-                <IconButton
-                  onClick={() => setPage(page + 1)}
-                  disabled={
-                    page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                  }
-                >
-                  <NavigateNextIcon />
-                </IconButton>
-
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                >
-                  JUMP TO LAST
-                </Typography>
-                <input
-                  type="number"
-                  placeholder="Jump to page"
-                  min={1}
-                  max={Math.ceil(filteredRows.length / rowsPerPage)}
-                  // value={page + 1}
-                  onChange={(e) => {
-                    const newPage = parseInt(e.target.value, 10) - 1;
-                    if (
-                      newPage >= 0 &&
-                      newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                    ) {
-                      setPage(newPage);
-                    }
-                  }}
-                  style={{
-                    width: "100px",
-                    height: "24px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
-                    borderRadius: "8px",
-                    borderWidth: "1px",
-                    border: `1px solid ${PRIMARY_BLUE2}`,
-                  }}
-                />
-                <Grid mt={1}>
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
-                </Grid>
-              </Grid>
-            </Grid>
+            <NuralPagination
+              key={`pagination-${page}-${rowsPerPage}-${totalRecords}`}
+              totalRecords={totalRecords}
+              initialPage={page}
+              initialRowsPerPage={rowsPerPage}
+              onPaginationChange={handlePaginationChange}
+            />
           </TableContainer>
         </Grid>
+      </Grid>
+       <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "70px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+          >
+            <NuralExport
+              title="Export Categories"
+              views={""}
+              downloadExcel={handleExport}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );
 };
 
 export default Category;
+

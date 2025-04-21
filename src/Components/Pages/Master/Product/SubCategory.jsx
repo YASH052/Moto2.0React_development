@@ -1,5 +1,5 @@
 import { Box, Button, Checkbox, Grid, Typography, Switch } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -47,6 +47,8 @@ import { FormSkeleton } from "../../../Common/Skeletons";
 import { TableRowSkeleton } from "../../../Common/Skeletons";
 import NuralPagination from "../../../Common/NuralPagination";
 import StatusModel from "../../../Common/StatusModel";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
@@ -56,7 +58,7 @@ const tabs = [
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "preBooking" },
 ];
@@ -116,16 +118,22 @@ const SubCategory = () => {
 
   // Accordion states
   const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
 
   // Add state for edit mode
   const [isEditMode, setIsEditMode] = useState(false);
   const [createStatus, setCreateStatus] = useState(null);
   const [createTitle, setCreateTitle] = useState("");
 
+  // Add ref for the form accordion
+  const formAccordionRef = useRef(null);
+
   // Add state for status update messages
   const [status, setStatus] = useState(null);
   const [statusTitle, setStatusTitle] = useState("");
+
+  // State for export loading
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
   // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
@@ -562,11 +570,27 @@ const SubCategory = () => {
 
   // Handle accordion changes
   const handleAccordionChange = (event, expanded) => {
-    setAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
-    setSearchAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
   // Initialize data
@@ -666,7 +690,11 @@ const SubCategory = () => {
       setAccordionExpanded(true);
       setIsEditMode(true);
       setErrors({});
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Use setTimeout and scrollIntoView on the ref
+      setTimeout(() => {
+        formAccordionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      setSearchAccordionExpanded(false); // Explicitly close search accordion
     } catch (error) {
       console.error("Error setting up edit form:", error);
     }
@@ -753,7 +781,16 @@ const SubCategory = () => {
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          isolation: "isolate",
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -787,190 +824,193 @@ const SubCategory = () => {
                 <FormSkeleton />
               ) : (
                 <>
-                  <NuralAccordion2
-                    title="Create Sub Category"
-                    backgroundColor={LIGHT_GRAY2}
-                    onChange={handleAccordionChange}
-                    controlled={true}
-                    expanded={accordionExpanded}
-                    defaultExpanded={true}
-                  >
-                    <Grid container spacing={2} sx={{ width: "100%" }}>
-                      <Grid item xs={12} sm={4}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: DARK_BLUE,
-                            fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
-                          }}
-                        >
-                          CATEGORY <Required />
-                        </Typography>
+                  {/* Wrap Accordion in a div with the ref */}
+                  <div ref={formAccordionRef}>
+                    <NuralAccordion2
+                      title="Create Sub Category"
+                      backgroundColor={LIGHT_GRAY2}
+                      onChange={handleAccordionChange}
+                      controlled={true}
+                      expanded={accordionExpanded}
+                      defaultExpanded={true}
+                    >
+                      <Grid container spacing={2} sx={{ width: "100%" }}>
+                        <Grid item xs={12} sm={4}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              color: DARK_BLUE,
+                              fontFamily: "Manrope",
+                              fontWeight: 400,
+                              fontSize: "10px",
+                              lineHeight: "13.66px",
+                              letterSpacing: "4%",
+                              mb: 1,
+                            }}
+                          >
+                            CATEGORY <Required />
+                          </Typography>
 
-                        {/*  {
+                          {/*  {
             "categoryID": 65,
             "categoryCode": "Accessories",
             "categoryName": "Accessories"
         }, */}
-                        <NuralAutocomplete
-                          options={categoryList}
-                          getOptionLabel={(option) => option.categoryName || ""}
-                          isOptionEqualToValue={(option, value) =>
-                            option?.categoryID === value?.categoryID
-                          }
-                          value={
-                            categoryList.find(
-                              (item) => item.categoryID === formData.CategoryID
-                            ) || null
-                          }
-                          onChange={(event, newValue) => {
-                            handleChange("CategoryID", newValue);
-                          }}
-                          placeholder="SELECT"
-                          width="100%"
-                          backgroundColor={LIGHT_GRAY2}
-                          error={!!errors.CategoryID}
-                          helperText={errors.CategoryID}
-                          loading={categoryLoading}
-                          onBlur={() => {
-                            if (!formData.CategoryID) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                CategoryID: "Category is required",
-                              }));
+                          <NuralAutocomplete
+                            options={categoryList}
+                            getOptionLabel={(option) => option.categoryName || ""}
+                            isOptionEqualToValue={(option, value) =>
+                              option?.categoryID === value?.categoryID
                             }
-                          }}
-                        />
-                        {errors.CategoryID && (
-                          <Typography
-                            variant="caption"
-                            color="error"
-                            sx={{ fontSize: "0.75rem" }}
-                          >
-                            {errors.CategoryID}
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: DARK_BLUE,
-                            fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
-                          }}
-                        >
-                          SUBCATEGORY NAME <Required />
-                        </Typography>
-                        <NuralTextField
-                          width="100%"
-                          placeholder="Enter Sub-Category Name"
-                          backgroundColor={LIGHT_BLUE}
-                          value={formData.SubCategoryName}
-                          onChange={(e) =>
-                            handleChange("SubCategoryName", e.target.value)
-                          }
-                          error={!!errors.SubCategoryName}
-                          helperText={errors.SubCategoryName}
-                          onBlur={() => {
-                            if (
-                              !formData.SubCategoryName ||
-                              formData.SubCategoryName.trim() === ""
-                            ) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                SubCategoryName:
-                                  "Sub-Category Name is required",
-                              }));
-                            } else if (
-                              !/^[a-zA-Z0-9 ]*$/.test(formData.SubCategoryName)
-                            ) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                SubCategoryName:
-                                  "Sub-Category Name can only contain alphanumeric characters and spaces",
-                              }));
+                            value={
+                              categoryList.find(
+                                (item) => item.categoryID === formData.CategoryID
+                              ) || null
                             }
-                          }}
-                        />
-                        {errors.SubCategoryName && (
+                            onChange={(event, newValue) => {
+                              handleChange("CategoryID", newValue);
+                            }}
+                            placeholder="SELECT"
+                            width="100%"
+                            backgroundColor={LIGHT_GRAY2}
+                            error={!!errors.CategoryID}
+                            helperText={errors.CategoryID}
+                            loading={categoryLoading}
+                            onBlur={() => {
+                              if (!formData.CategoryID) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  CategoryID: "Category is required",
+                                }));
+                              }
+                            }}
+                          />
+                          {errors.CategoryID && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{ fontSize: "0.75rem" }}
+                            >
+                              {errors.CategoryID}
+                            </Typography>
+                          )}
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
                           <Typography
-                            variant="caption"
-                            color="error"
-                            sx={{ fontSize: "0.75rem" }}
+                            variant="h6"
+                            sx={{
+                              color: DARK_BLUE,
+                              fontFamily: "Manrope",
+                              fontWeight: 400,
+                              fontSize: "10px",
+                              lineHeight: "13.66px",
+                              letterSpacing: "4%",
+                              mb: 1,
+                            }}
                           >
-                            {errors.SubCategoryName}
+                            SUBCATEGORY NAME <Required />
                           </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: DARK_BLUE,
-                            fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
-                          }}
-                        >
-                          SUBCATEGORY CODE <Required />
-                        </Typography>
-                        <NuralTextField
-                          width="100%"
-                          placeholder="Enter Sub-Category Code"
-                          backgroundColor={LIGHT_BLUE}
-                          value={formData.SubCategoryDesc}
-                          onChange={(e) =>
-                            handleChange("SubCategoryDesc", e.target.value)
-                          }
-                          error={!!errors.SubCategoryDesc}
-                          helperText={errors.SubCategoryDesc}
-                          onBlur={() => {
-                            if (
-                              !formData.SubCategoryDesc ||
-                              formData.SubCategoryDesc.trim() === ""
-                            ) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                SubCategoryDesc:
-                                  "Sub-Category Code is required",
-                              }));
-                            } else if (
-                              !/^[a-zA-Z0-9]*$/.test(formData.SubCategoryDesc)
-                            ) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                SubCategoryDesc:
-                                  "Sub-Category Code can only contain alphanumeric characters (no spaces)",
-                              }));
+                          <NuralTextField
+                            width="100%"
+                            placeholder="Enter Sub-Category Name"
+                            backgroundColor={LIGHT_BLUE}
+                            value={formData.SubCategoryName}
+                            onChange={(e) =>
+                              handleChange("SubCategoryName", e.target.value)
                             }
-                          }}
-                        />
-                        {errors.SubCategoryDesc && (
+                            error={!!errors.SubCategoryName}
+                            helperText={errors.SubCategoryName}
+                            onBlur={() => {
+                              if (
+                                !formData.SubCategoryName ||
+                                formData.SubCategoryName.trim() === ""
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  SubCategoryName:
+                                    "Sub-Category Name is required",
+                                }));
+                              } else if (
+                                !/^[a-zA-Z0-9 ]*$/.test(formData.SubCategoryName)
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  SubCategoryName:
+                                    "Sub-Category Name can only contain alphanumeric characters and spaces",
+                                }));
+                              }
+                            }}
+                          />
+                          {errors.SubCategoryName && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{ fontSize: "0.75rem" }}
+                            >
+                              {errors.SubCategoryName}
+                            </Typography>
+                          )}
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
                           <Typography
-                            variant="caption"
-                            color="error"
-                            sx={{ fontSize: "0.75rem" }}
+                            variant="h6"
+                            sx={{
+                              color: DARK_BLUE,
+                              fontFamily: "Manrope",
+                              fontWeight: 400,
+                              fontSize: "10px",
+                              lineHeight: "13.66px",
+                              letterSpacing: "4%",
+                              mb: 1,
+                            }}
                           >
-                            {errors.SubCategoryDesc}
+                            SUBCATEGORY CODE <Required />
                           </Typography>
-                        )}
+                          <NuralTextField
+                            width="100%"
+                            placeholder="Enter Sub-Category Code"
+                            backgroundColor={LIGHT_BLUE}
+                            value={formData.SubCategoryDesc}
+                            onChange={(e) =>
+                              handleChange("SubCategoryDesc", e.target.value)
+                            }
+                            error={!!errors.SubCategoryDesc}
+                            helperText={errors.SubCategoryDesc}
+                            onBlur={() => {
+                              if (
+                                !formData.SubCategoryDesc ||
+                                formData.SubCategoryDesc.trim() === ""
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  SubCategoryDesc:
+                                    "Sub-Category Code is required",
+                                }));
+                              } else if (
+                                !/^[a-zA-Z0-9]*$/.test(formData.SubCategoryDesc)
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  SubCategoryDesc:
+                                    "Sub-Category Code can only contain alphanumeric characters (no spaces)",
+                                }));
+                              }
+                            }}
+                          />
+                          {errors.SubCategoryDesc && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{ fontSize: "0.75rem" }}
+                            >
+                              {errors.SubCategoryDesc}
+                            </Typography>
+                          )}
+                        </Grid>
                       </Grid>
-                    </Grid>
-                    <Grid container spacing={1} mt={1} pr={2}></Grid>
-                  </NuralAccordion2>
+                      <Grid container spacing={1} mt={1} pr={2}></Grid>
+                    </NuralAccordion2>
+                  </div>
                   <Grid
                     container
                     sx={{ width: "100%", mt: "16px", mb: "16px" }}
@@ -1210,11 +1250,7 @@ const SubCategory = () => {
                           cursor: "pointer",
                         }}
                       >
-                        <img
-                          src="./Images/export.svg"
-                          alt="export"
-                          onClick={handleExport}
-                        />
+                        {/* Remove the old export icon */}
                       </Grid>
                     </Grid>
                   </TableCell>
@@ -1395,6 +1431,51 @@ const SubCategory = () => {
             />
           </TableContainer>
         </Grid>
+      </Grid>
+      {/* Activity Panel for Export */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export SubCategory List"
+              views={""} // Add views if applicable
+              downloadExcel={handleExport}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );

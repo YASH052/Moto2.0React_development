@@ -10,7 +10,13 @@ import {
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { DARK_PURPLE, LIGHT_GRAY2, PRIMARY_BLUE, PRIMARY_BLUE2, ERROR_RED } from "../../Common/colors";
+import {
+  DARK_PURPLE,
+  LIGHT_GRAY2,
+  PRIMARY_BLUE,
+  PRIMARY_BLUE2,
+  ERROR_RED,
+} from "../../Common/colors";
 import NuralTextField from "./NuralTextField";
 
 const StyledAccordion = styled(Accordion)({
@@ -93,14 +99,6 @@ const HiddenInput = styled("input")({
   display: "none",
 });
 
-const ErrorText = styled(Typography)({
-  color: ERROR_RED,
-  fontSize: "12px",
-  marginTop: "4px",
-  fontFamily: "Manrope, sans-serif",
-  paddingLeft: "8px",
-});
-
 const NuralKYCAccordion = ({
   title = "KYC",
   color = DARK_PURPLE,
@@ -126,7 +124,7 @@ const NuralKYCAccordion = ({
       const fileData = {
         file: file,
         name: file.name,
-        path: URL.createObjectURL(file)
+        path: URL.createObjectURL(file),
       };
       fields[index].onFileSelect(fileData);
     }
@@ -231,6 +229,7 @@ const NuralKYCAccordion = ({
         sx={{
           padding: props.detailsPadding || "16px",
           ...props.detailsStyle,
+          mt: 1,
         }}
       >
         {fields.map((field, index) => (
@@ -257,6 +256,7 @@ const NuralKYCAccordion = ({
                   value={field.value}
                   onChange={field.onChange}
                   error={field.error}
+                  width="100%"
                   errorMessage={field.errorMessage}
                   {...field.inputProps}
                 />

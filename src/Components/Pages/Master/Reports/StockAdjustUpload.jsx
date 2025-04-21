@@ -1,4 +1,4 @@
-import { Divider, Grid, Stack, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import React from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import {
@@ -9,7 +9,7 @@ import {
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
 import TabsBar from "../../../Common/TabsBar";
-import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
+
 import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
@@ -32,10 +32,7 @@ const StockAdjustUpload = () => {
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const navigate = useNavigate();
 
-  const options = [
-    { value: "interface", label: "Interface" },
-    { value: "batch", label: "Batch" },
-  ];
+
   const tabs = [
     { label: "Stock Adjustment Upload", value: "stock-adjust-upload" },
   ];
@@ -68,23 +65,8 @@ const StockAdjustUpload = () => {
     navigate(`/${newValue}`);
   };
 
-  const handleFormatChange = (value) => {
-    console.log("Selected value:", value);
-    setSelectedFormat(value);
-    if (value === "interface") {
-      navigate("/add-retailer");
-    } else if (value === "batch") {
-      navigate("/retailer-excelUpload");
-    }
-  };
-
   return (
-    <Grid
-      container
-      spacing={0}
-      position="relative"
-     
-    >
+    <Grid container spacing={0} position="relative">
       <Grid
         item
         xs={12}
@@ -192,7 +174,7 @@ const StockAdjustUpload = () => {
                 </Grid>
               </NuralAccordion2>
             </Grid>
-            <Grid item >
+            <Grid item>
               <NuralAccordion
                 titleColor={DARK_PURPLE}
                 buttonColor={PRIMARY_BLUE2}
@@ -210,7 +192,13 @@ const StockAdjustUpload = () => {
           </Grid>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={6} sx={{ pr: 2, mt: { xs: 2, sm: 2 ,md:0,lg:0 } }}>
+        <Grid
+          item
+          xs={12}
+          md={6}
+          lg={6}
+          sx={{ pr: 2, mt: { xs: 2, sm: 2, md: 0, lg: 0 } }}
+        >
           <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralFileUpload backgroundColor={LIGHT_GRAY2} />

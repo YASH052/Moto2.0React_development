@@ -1,5 +1,5 @@
-import { Box, Button, Checkbox, Grid, Typography, Switch } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { Box, /*Button,*/ Checkbox, Grid, Typography, Switch, Skeleton } from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -8,36 +8,39 @@ import {
   PRIMARY_BLUE2,
   AQUA,
   WHITE,
-  PRIMARY_LIGHT_GRAY,
+  // PRIMARY_LIGHT_GRAY, // Unused
   LIGHT_BLUE,
   PRIMARY_BLUE,
   BLACK,
 } from "../../../Common/colors";
 import EditIcon from "@mui/icons-material/Edit";
 import Required from "../../../Common/Required";
-import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import { FormSkeleton } from "../../../Common/Skeletons";
 
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-import { Search } from "@mui/icons-material";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+// import { Search } from "@mui/icons-material"; // Unused
+// import NavigateNextIcon from "@mui/icons-material/NavigateNext"; // Unused
+// import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"; // Unused
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
 import { getbrandlist, GetCategoryList, ManageProductCategory } from "../../../Api/Api";
+// Add imports for activity panel and export
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
   { label: "Category", value: "category" },
-  { label: "Sub Category", value: "sub-category" },
+  { label: "Sub Category", value: "sub-category" },   
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "preBooking" },
 ];
@@ -142,7 +145,6 @@ const CategoryPage = () => {
 
   // Add new state for selected brands
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [tableData, setTableData] = useState([]); 
   const [tableLoading, setTableLoading] = useState(false);
   const [status,setStatus] = useState(null);
   const [title,setTitle] = useState(null);
@@ -156,11 +158,15 @@ const CategoryPage = () => {
   const [isTableUpdating, setIsTableUpdating] = useState(false);
 
   // Add accordion state
-  const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [accordionExpanded, setAccordionExpanded] = useState(true); // Keep Create open initially
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false); // Keep View closed initially
   const [formLoading, setFormLoading] = useState(true);
   const [searchFormLoading, setSearchFormLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Add ref for the form accordion
+  const formAccordionRef = useRef(null);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false); // State for export loading
 
   // Update handleBrandSelection to clear error
   const handleBrandSelection = (brand) => {
@@ -253,13 +259,11 @@ const CategoryPage = () => {
       setTableLoading(true);
       const response = await GetCategoryList(params);
       if (response.statusCode === "200") {
-        setTableData(response.categoryMasterList || []);
         setFilteredRows(response.categoryMasterList || []);
         setTotalRecords(response.totalRecords || 0);
       } else {
         setSearchStatus(response.status);
         setSearchTitle(response.title);
-        setTableData([]);
         setFilteredRows([]);
         setTotalRecords(0);
       }
@@ -267,7 +271,6 @@ const CategoryPage = () => {
       console.log(error);
       setSearchStatus(error.status);
       setSearchTitle(error.title);
-      setTableData([]);
       setFilteredRows([]);
       setTotalRecords(0);
     } finally {
@@ -287,15 +290,8 @@ const CategoryPage = () => {
         callType: 0,
       };
 
-      if (searchParams.brandID === 0 && searchParams.categoryID === 0) {
-        setSearchStatus("400");
-        setSearchTitle("Please select at least one filter");
-        return;
-      }
-
       const response = await GetCategoryList(updatedParams);
       if (response.statusCode === "200") {
-        setTableData(response.categoryMasterList || []);
         setFilteredRows(response.categoryMasterList || []);
         setTotalRecords(response.totalRecords || 0);
         setTimeout(() => {
@@ -303,7 +299,6 @@ const CategoryPage = () => {
           setSearchTitle(null);
         }, 5000);
       } else {
-        setTableData([]);
         setFilteredRows([]);
         setTotalRecords(0);
         setSearchStatus(response.statusCode);
@@ -311,7 +306,6 @@ const CategoryPage = () => {
       }
     } catch (error) {
       console.log(error);
-      setTableData([]);
       setFilteredRows([]);
       setTotalRecords(0);
       setSearchStatus(error.statusCode || "500");
@@ -333,18 +327,24 @@ const CategoryPage = () => {
       pageIndex: 1,
       pageSize: 10,
     });
-    setTableData([]);
     setFilteredRows([]);
     setTotalRecords(0);
     setSearchStatus(null);
     setSearchTitle(null);
     setPage(0);
     setRowsPerPage(10);
-    setTimeout(() => {
-      Promise.all([getCategoryList(), getBrandDropdown()]).finally(() => {
-        setSearchFormLoading(false);
-      });
-    }, 500);
+
+    // Fetch immediately after state updates
+    const defaultParams = {
+      brandID: 0,
+      categoryID: 0,
+      callType: 0,
+      pageIndex: 1,
+      pageSize: 10,
+    };
+    Promise.all([getCategoryList(defaultParams), getBrandDropdown()]).finally(() => {
+      setSearchFormLoading(false);
+    });
   };
 
   // Update useEffect to initialize data
@@ -381,11 +381,6 @@ const CategoryPage = () => {
     }));
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -396,7 +391,7 @@ const CategoryPage = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...tableData]); // Reset to original order
+        getCategoryList(searchParams);
         return;
       }
     }
@@ -422,45 +417,15 @@ const CategoryPage = () => {
     setFilteredRows(sortedRows);
   };
 
-  // Replace the existing dummy data with this more realistic data
+  // Remove the dummy data generation function and its initial call
+  /*
   const generateDummyData = () => {
-    const brands = [
-      "Samsung",
-      "LG",
-      "Sony",
-      "Apple",
-      "Xiaomi",
-      "OnePlus",
-      "Lenovo",
-      "HP",
-      "Dell",
-    ];
-    const categories = [
-      { name: "Smartphones", code: "SMART" },
-      { name: "Laptops", code: "LAP" },
-      { name: "Televisions", code: "TV" },
-      { name: "Audio Devices", code: "AUD" },
-      { name: "Home Appliances", code: "HOME" },
-      { name: "Tablets", code: "TAB" },
-      { name: "Accessories", code: "ACC" },
-    ];
-
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        brandName: brands[Math.floor(Math.random() * brands.length)],
-        categoryName:
-          categories[Math.floor(Math.random() * categories.length)].name,
-        categoryCode: `${
-          categories[Math.floor(Math.random() * categories.length)].code
-        }-${String(Math.floor(1000 + Math.random() * 9000))}`,
-        status: Math.random() > 0.5,
-      }));
+    // ... (removed function content)
   };
+  */
+  // const [filteredRows, setFilteredRows] = React.useState(generateDummyData()); // Remove this line
+  const [filteredRows, setFilteredRows] = React.useState([]); // Initialize as empty array
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
@@ -499,6 +464,7 @@ const CategoryPage = () => {
     } finally {
       setTableLoading(false);
       setIsTableUpdating(false);
+      setIsDownloadLoading(false); // Stop loading
     }
   };
 
@@ -530,8 +496,9 @@ const CategoryPage = () => {
           }, 5000);
           
           handleClearForm();
-          getCategoryList();
-          getBrandDropdown();
+          // Use handleClearSearch to reset parameters and fetch the list
+          handleClearSearch(); 
+
         } else {
           setStatus(response.statusCode);
           setTitle(response.statusMessage || (formData.callType === 1 ? "Failed to update category" : "Failed to create category"));
@@ -548,7 +515,7 @@ const CategoryPage = () => {
     }
   };
 
-  // Update handleClearForm to not close accordion
+  // Restore handleClearForm function
   const handleClearForm = () => {
     setFormLoading(true);
     setFormData({
@@ -562,11 +529,20 @@ const CategoryPage = () => {
     setSelectedBrands([]);
     setErrors({});
     setIsEditMode(false);
+    // Clear API status messages for the form
+    setStatus(null);
+    setTitle(null);
+    // Clear API status messages for the search/table section
+    setSearchStatus(null);
+    setSearchTitle(null);
+    // Optional: Close accordion on clear if desired, otherwise keep it open
+    // setAccordionExpanded(false); 
     setTimeout(() => {
-      Promise.all([getCategoryList(), getBrandDropdown()]).finally(() => {
+      // Fetch brand dropdown again if needed after form clear
+      Promise.all([getBrandDropdown()]).finally(() => {
         setFormLoading(false);
       });
-    }, 500);
+    }, 500); 
   };
 
   // Update handleStatus to show loading state
@@ -595,7 +571,8 @@ const CategoryPage = () => {
         }, 5000);
 
         setTimeout(() => {
-          getCategoryList();
+          // Pass current searchParams to ensure we get the correct filtered data
+          getCategoryList(searchParams);
         }, 500);
       } else {
         setSearchStatus(response.statusCode);
@@ -647,22 +624,51 @@ const CategoryPage = () => {
     );
     setSelectedBrands(selectedBrandObjects);
     setIsEditMode(true);
-    setAccordionExpanded(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setAccordionExpanded(true); // Open the form accordion
+    setSearchAccordionExpanded(false); // Explicitly close search accordion
+    // Use setTimeout and scrollIntoView on the ref
+    setTimeout(() => {
+        formAccordionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
   };
 
   // Add accordion change handlers
   const handleAccordionChange = (event, expanded) => {
-    setAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
-    setSearchAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          isolation: "isolate",
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -696,291 +702,293 @@ const CategoryPage = () => {
                   <FormSkeleton />
                 ) : (
                   <>
-                    <NuralAccordion2
-                      title={isEditMode ? "Edit Category" : "Create Category"}
-                      backgroundColor={LIGHT_GRAY2}
-                      expanded={accordionExpanded}
-                      onChange={handleAccordionChange}
-                      controlled={true}
-                      defaultExpanded={true}
-                    >
-                      <Grid container spacing={4} sx={{ width: "100%" }}>
-                        <Grid item xs={12} sm={12} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_PURPLE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            CATEGORY NAME <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.categoryName || ""}
-                            onChange={(event) => {
-                              const newValue = event.target.value;
-                              // Check length first - display error but allow typing to continue
-                              if (newValue.length > 50) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  categoryName: newValue.substring(0, 50), // Truncate to 50 chars
-                                }));
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryName: "Category Name cannot exceed 50 characters",
-                                }));
-                                return; // Don't continue with normal update
-                              }
-
-                              // If input contains non-alphanumeric-space characters, don't update
-                              if (newValue && !/^[a-zA-Z0-9 ]*$/.test(newValue)) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryName: "Category Name can only contain alphanumeric characters and spaces",
-                                }));
-                                return; // Don't update the form data
-                              }
-
-                              // Clear errors for valid input
-                              if (newValue.trim() !== "") {
-                                setErrors((prev) => ({ ...prev, categoryName: "" }));
-                              } else {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryName: "Category Name is required",
-                                }));
-                              }
-
-                              handleChange("categoryName", newValue);
-                            }}
-                            placeholder="Enter Category Name"
-                            backgroundColor={LIGHT_BLUE}
-                            error={!!errors.categoryName}
-                          />
-                          {errors.categoryName && (
+                    {/* Wrap Accordion in a div with the ref */}
+                    <div ref={formAccordionRef}>
+                      <NuralAccordion2
+                        title={isEditMode ? "Edit Category" : "Create Category"}
+                        backgroundColor={LIGHT_GRAY2}
+                        expanded={accordionExpanded}
+                        onChange={handleAccordionChange}
+                        controlled={true}
+                      >
+                        <Grid container spacing={4} sx={{ width: "100%" }}>
+                          <Grid item xs={12} sm={12} md={6} lg={6}>
                             <Typography
-                              variant="caption"
-                              color="error"
+                              variant="h6"
                               sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
                               }}
                             >
-                              {errors.categoryName}
+                              CATEGORY NAME <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={12} md={6} lg={6}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_PURPLE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            CATEGORY CODE <Required />  
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.categoryDesc || ""}
-                            onChange={(event) => {
-                              const newValue = event.target.value;
-                              // Check length first - display error but allow typing to continue
-                              if (newValue.length > 50) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  categoryDesc: newValue.substring(0, 50), // Truncate to 50 chars
-                                }));
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryDesc: "Category Code cannot exceed 50 characters",
-                                }));
-                                return; // Don't continue with normal update
-                              }
+                            <NuralTextField
+                              width="100%"
+                              value={formData.categoryName || ""}
+                              onChange={(event) => {
+                                const newValue = event.target.value;
+                                // Check length first - update to 20 characters
+                                if (newValue.length > 20) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    categoryName: newValue.substring(0, 20), // Truncate to 20 chars
+                                  }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryName: "Category Name cannot exceed 20 characters",
+                                  }));
+                                  return; // Don't continue with normal update
+                                }
 
-                              // If input contains non-alphanumeric characters, don't update
-                              if (newValue && !/^[a-zA-Z0-9]*$/.test(newValue)) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryDesc: "Category Code can only contain alphanumeric characters (no spaces)",
-                                }));
-                                return; // Don't update the form data
-                              }
+                                // If input contains non-alphanumeric-space characters, don't update
+                                if (newValue && !/^[a-zA-Z0-9 ]*$/.test(newValue)) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryName: "Category Name can only contain alphanumeric characters and spaces",
+                                  }));
+                                  return; // Don't update the form data
+                                }
 
-                              // Clear errors for valid input
-                              if (newValue.trim() !== "") {
-                                setErrors((prev) => ({ ...prev, categoryDesc: "" }));
-                              } else {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryDesc: "Category Code is required",
-                                }));
-                              }
+                                // Clear errors for valid input
+                                if (newValue.trim() !== "") {
+                                  setErrors((prev) => ({ ...prev, categoryName: "" }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryName: "Category Name is required",
+                                  }));
+                                }
 
-                              handleChange("categoryDesc", newValue);
-                            }}
-                            placeholder="Enter Category Code"
-                            backgroundColor={LIGHT_BLUE}
-                            error={!!errors.categoryDesc}
-                          />
-                          {errors.categoryDesc && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
+                                handleChange("categoryName", newValue);
                               }}
-                            >
-                              {errors.categoryDesc}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid
-                          container
-                          spacing={2}
-                          sx={{ width: "100%", marginLeft: "0%" }}
-                        >
-                          {/* First Dropdown */}
-                          <Grid item xs={12} md={12} lg={12}>
-                            <Box
-                              sx={{
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                marginTop: 2,
-                              }}
-                            >
+                              placeholder="Enter Category Name"
+                              backgroundColor={LIGHT_BLUE}
+                              error={!!errors.categoryName}
+                            />
+                            {errors.categoryName && (
                               <Typography
-                                variant="h6"
+                                variant="caption"
+                                color="error"
                                 sx={{
-                                  color: PRIMARY_BLUE2,
-                                  fontFamily: "Manrope",
-                                  fontWeight: 700,
-                                  fontSize: "10px",
-                                  lineHeight: "13.66px",
-                                  letterSpacing: "4%",
-                                  textAlign: "center",
+                                  fontSize: "0.75rem",
+                                  mt: 0.5,
+                                  display: "block",
+                                }}
+                              >
+                                {errors.categoryName}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={12} md={6} lg={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              CATEGORY CODE <Required />  
+                            </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.categoryDesc || ""}
+                              onChange={(event) => {
+                                const newValue = event.target.value;
+                                // Check length first - update to 20 characters
+                                if (newValue.length > 20) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    categoryDesc: newValue.substring(0, 20), // Truncate to 20 chars
+                                  }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryDesc: "Category Code cannot exceed 20 characters",
+                                  }));
+                                  return; // Don't continue with normal update
+                                }
+
+                                // If input contains non-alphanumeric characters, don't update
+                                if (newValue && !/^[a-zA-Z0-9]*$/.test(newValue)) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryDesc: "Category Code can only contain alphanumeric characters (no spaces)",
+                                  }));
+                                  return; // Don't update the form data
+                                }
+
+                                // Clear errors for valid input
+                                if (newValue.trim() !== "") {
+                                  setErrors((prev) => ({ ...prev, categoryDesc: "" }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryDesc: "Category Code is required",
+                                  }));
+                                }
+
+                                handleChange("categoryDesc", newValue);
+                              }}
+                              placeholder="Enter Category Code"
+                              backgroundColor={LIGHT_BLUE}
+                              error={!!errors.categoryDesc}
+                            />
+                            {errors.categoryDesc && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  mt: 0.5,
+                                  display: "block",
+                                }}
+                              >
+                                {errors.categoryDesc}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid
+                            container
+                            spacing={2}
+                            sx={{ width: "100%", marginLeft: "0%" }}
+                          >
+                            {/* First Dropdown */}
+                            <Grid item xs={12} md={12} lg={12}>
+                              <Box
+                                sx={{
+                                  width: "100%",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  marginTop: 2,
+                                }}
+                              >
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    color: PRIMARY_BLUE2,
+                                    fontFamily: "Manrope",
+                                    fontWeight: 700,
+                                    fontSize: "10px",
+                                    lineHeight: "13.66px",
+                                    letterSpacing: "4%",
+                                    textAlign: "center",
+                                    ml: 2,
+                                  }}
+                                >
+                                  BRAND MAPPING <Required />
+                                </Typography>
+
+                                <Typography
+                                  variant="h6"
+                                  onClick={handleSelectAll}
+                                  sx={{
+                                    color: PRIMARY_BLUE2,
+                                    fontFamily: "Manrope",
+                                    fontWeight: 700,
+                                    fontSize: "10px",
+                                    lineHeight: "13.66px",
+                                    letterSpacing: "4%",
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {selectedBrands.length === brandList.length ? "DESELECT ALL" : "SELECT ALL"}
+                                </Typography>
+                              </Box>
+
+                              <Grid
+                                container
+                                spacing={2}
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  gap: 2,
+                                  ml: "2px",
+                                }}
+                              >
+                                {brandList.map((brand) => (
+                                  <Grid
+                                    item
+                                    xs={12}
+                                    md={3}
+                                    lg={3}
+                                    key={brand.brandID}
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Checkbox
+                                      checked={selectedBrands.some(
+                                        (b) => b.brandID === brand.brandID
+                                      )}
+                                      onChange={() => handleBrandSelection(brand)}
+                                      sx={{
+                                        "&.Mui-checked": {},
+                                        borderRadius: "8px",
+                                      }}
+                                    />
+
+                                    <Typography
+                                      sx={{
+                                        color: selectedBrands.some(
+                                          (b) => b.brandID === brand.brandID
+                                        )
+                                          ? WHITE
+                                          : BLACK,
+                                        backgroundColor: selectedBrands.some(
+                                          (b) => b.brandID === brand.brandID
+                                        )
+                                          ? PRIMARY_BLUE
+                                          : "transparent",
+                                        padding: "8px",
+                                        paddingLeft: "10px",
+                                        borderRadius: "8px",
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        width: {
+                                          xs: "100%",
+                                          md: "220px",
+                                        },
+                                        textAlign: "left",
+                                      }}
+                                    >
+                                      {brand.brand}
+                                    </Typography>
+                                  </Grid>
+                                ))}
+                              </Grid>
+                            </Grid>
+                            {errors.brands && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  mt: 0.5,
+                                  display: "block",
                                   ml: 2,
                                 }}
                               >
-                                BRAND MAPPING <Required />
+                                {errors.brands}
                               </Typography>
-
-                              <Typography
-                                variant="h6"
-                                onClick={handleSelectAll}
-                                sx={{
-                                  color: PRIMARY_BLUE2,
-                                  fontFamily: "Manrope",
-                                  fontWeight: 700,
-                                  fontSize: "10px",
-                                  lineHeight: "13.66px",
-                                  letterSpacing: "4%",
-                                  textAlign: "center",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {selectedBrands.length === brandList.length ? "DESELECT ALL" : "SELECT ALL"}
-                              </Typography>
-                            </Box>
-
-                            <Grid
-                              container
-                              spacing={2}
-                              sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 2,
-                                ml: "2px",
-                              }}
-                            >
-                              {brandList.map((brand) => (
-                                <Grid
-                                  item
-                                  xs={12}
-                                  md={3}
-                                  lg={3}
-                                  key={brand.brandID}
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Checkbox
-                                    checked={selectedBrands.some(
-                                      (b) => b.brandID === brand.brandID
-                                    )}
-                                    onChange={() => handleBrandSelection(brand)}
-                                    sx={{
-                                      "&.Mui-checked": {},
-                                      borderRadius: "8px",
-                                    }}
-                                  />
-
-                                  <Typography
-                                    sx={{
-                                      color: selectedBrands.some(
-                                        (b) => b.brandID === brand.brandID
-                                      )
-                                        ? WHITE
-                                        : BLACK,
-                                      backgroundColor: selectedBrands.some(
-                                        (b) => b.brandID === brand.brandID
-                                      )
-                                        ? PRIMARY_BLUE
-                                        : "transparent",
-                                      padding: "8px",
-                                      paddingLeft: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "12px",
-                                      fontWeight: 500,
-                                      width: {
-                                        xs: "100%",
-                                        md: "220px",
-                                      },
-                                      textAlign: "left",
-                                    }}
-                                  >
-                                    {brand.brand}
-                                  </Typography>
-                                </Grid>
-                              ))}
-                            </Grid>
+                            )}
                           </Grid>
-                          {errors.brands && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{
-                                fontSize: "0.75rem",
-                                mt: 0.5,
-                                display: "block",
-                                ml: 2,
-                              }}
-                            >
-                              {errors.brands}
-                            </Typography>
-                          )}
                         </Grid>
-                      </Grid>
-                     
-                    </NuralAccordion2>
+                       
+                      </NuralAccordion2>
+                    </div>
 
                     {/* Always show buttons when accordion is expanded */}
                     {accordionExpanded && (
@@ -1008,7 +1016,7 @@ const CategoryPage = () => {
                         </Grid>
                         <Grid item xs={12} md={6} lg={6}>
                           <NuralButton
-                            text="SAVE"
+                            text={isEditMode ? "UPDATE" : "SAVE"}
                             backgroundColor={AQUA}
                             variant="contained"
                             onClick={handlePost}
@@ -1034,6 +1042,7 @@ const CategoryPage = () => {
                     backgroundColor={LIGHT_GRAY2}
                     expanded={searchAccordionExpanded}
                     onChange={handleSearchAccordionChange}
+                    controlled={true}
                   >
                     <Grid container spacing={2} sx={{ width: "100%" }}>
                       <Grid item xs={12} sm={12} md={6} lg={6}>
@@ -1217,12 +1226,7 @@ const CategoryPage = () => {
                           cursor: "pointer",
                         }}
                       >
-                        <img 
-                          src="./Images/export.svg" 
-                          alt="export" 
-                          onClick={downloadExcel}
-                          style={{ cursor: "pointer" }}
-                        />
+                        {/* Remove the old export icon */}
                       </Grid>
                     </Grid>
                   </TableCell>
@@ -1315,13 +1319,19 @@ const CategoryPage = () => {
               </TableHead>
               <TableBody>
                 {tableLoading || statusUpdateLoading || isTableUpdating ? (
-                  <TableRowSkeleton
-                  columns={10}
-                  />
+                    Array.from({ length: rowsPerPage }).map((_, rowIndex) => (
+                      <TableRow key={`skeleton-row-${rowIndex}`}>
+                        {Array.from({ length: 5 }).map((_, cellIndex) => (
+                          <TableCell key={`skeleton-cell-${rowIndex}-${cellIndex}`} sx={{ ...rowstyle }}>
+                            <Skeleton animation="wave" height={20} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
                 ) : filteredRows.length > 0 ? (
-                  filteredRows.map((row, index) => (
+                  filteredRows.map((row) => (
                     <TableRow
-                      key={row.productCategoryID}
+                      key={row.sNo}
                       sx={{
                         fontSize: "10px",
                        
@@ -1331,7 +1341,7 @@ const CategoryPage = () => {
                       }}
                     >
                       <TableCell sx={{ ...rowstyle }}>
-                        {page * rowsPerPage + index + 1}
+                        {row.sNo}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
                         {row.brandName}
@@ -1361,14 +1371,7 @@ const CategoryPage = () => {
                           }}
                           size="small"
                           disabled={statusUpdateLoading && updatingRowId === row.productCategoryID}
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: PRIMARY_BLUE2,
-                            },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                              backgroundColor: DARK_PURPLE,
-                            },
-                          }}
+                          sx={toggleSectionStyle}
                         />
                       </TableCell>
                       <TableCell
@@ -1415,8 +1418,51 @@ const CategoryPage = () => {
         </Grid>
       </Grid>
 
-      {/* Add status model for showing export messages */}
-      
+      {/* Activity Panel for Export */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export Category List" // Specific title
+              views={""} // Add views if applicable
+              downloadExcel={downloadExcel} // Pass the function
+              isDownloadLoading={isDownloadLoading} // Pass the loading state
+            />
+          </Grid>
+        </NuralActivityPanel>
+      </Grid>
     </>
   );
 };

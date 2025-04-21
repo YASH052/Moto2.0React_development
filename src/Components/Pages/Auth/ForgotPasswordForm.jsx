@@ -1,47 +1,38 @@
 import React, { useState } from "react";
 import {
   Box,
+  CircularProgress,
   Grid,
   Typography,
   useMediaQuery,
-  MenuItem,
-  Select,
 } from "@mui/material";
 import {
   AQUA,
-  DARK_PURPLE,
   GREEN_COLOR,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
   PRIMARY_BLUE,
-  PRIMARY_LIGHT_PURPLE,
   PRIMARY_LIGHT_PURPLE2,
-  SECONDARY_BLUE,
   WHITE,
 } from "../../Common/colors";
 import NuralLoginTextField from "../NuralCustomComponents/NuralLoginTextField";
 import NuralButton from "../NuralCustomComponents/NuralButton";
-import one from "../../../assets/carousel/one.png";
-import two from "../../../assets/carousel/two.png";
-import three from "../../../assets/carousel/three.png";
-import four from "../../../assets/carousel/Four.png";
-import five from "../../../assets/carousel/five.png";
-import pdcard from "../../../assets/carousel/pdcard.png";
-import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
+
 import { useNavigate } from "react-router-dom";
-import { isValidEmail, isValidPhone } from "../../Common/validations";
+import { isValidEmail } from "../../Common/validations";
 import axios from "axios";
-const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 import Loader from "../../Common/Loader";
 import toast, { Toaster } from "react-hot-toast";
 import { baseUrl } from "../../Common/urls";
+import Slider from "../../Common/Slider";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 
 const ForgotPasswordForm = () => {
   // const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const log = JSON.parse(localStorage.getItem("log"));
   console.log("log", log);
-  const [selectedCountry, setSelectedCountry] = useState("IND +91");
-  const [phoneNumber, setPhoneNumber] = useState("");
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [sendOtp, setSendOtp] = useState(false);
@@ -50,7 +41,7 @@ const ForgotPasswordForm = () => {
   const isLargeScreen = useMediaQuery("(min-width:512px)");
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
-  const images = [pdcard, one, two, five, four, three];
+  const [loginStatus, setLoginStatus] = useState(null); // 'success', 'error', or null
   const navigate = useNavigate();
   const [errors, setErrors] = useState({
     username: "",
@@ -107,7 +98,7 @@ const ForgotPasswordForm = () => {
       email: "",
       otp: "",
     });
-
+    setLoginStatus(null);
     // Validate fields
     const usernameError = username ? validateUsername(username) : "";
     const emailError = email ? validateEmail(email) : "";
@@ -150,12 +141,14 @@ const ForgotPasswordForm = () => {
         toast.success(res.data.statusMessage);
         setOtpResponse(res.data.otp);
         setSendOtp(true);
+        setLoginStatus("success");
       } else {
         toast.error(res.data.message);
+        setLoginStatus("error");
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message || error.response.data.message);
+      toast.error(error.response.data || error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -248,17 +241,11 @@ const ForgotPasswordForm = () => {
                 backgroundColor: WHITE,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  fontWeight: 600,
-                  textAlign: "center",
-                  bgcolor: PRIMARY_BLUE,
-                  padding: "50px",
-                }}
-              >
-                Client Logo
-              </Typography>
+              <img
+                src="/Images/innerlogo.gif"
+                alt="logo"
+                style={{ width: "50%" }}
+              />
             </Box>
           )}
 
@@ -374,7 +361,22 @@ const ForgotPasswordForm = () => {
                   }}
                 >
                   <NuralButton
-                    text="SEND OTP"
+                    text={
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        {loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : loginStatus === "success" ? (
+                          <CheckIcon />
+                        ) : loginStatus === "error" ? (
+                          <CloseIcon sx={{ color: ERROR_RED2 }} />
+                        ) : (
+                          "SEND OTP"
+                        )}
+                        {/* LOGIN */}
+                      </Box>
+                    }
                     backgroundColor={AQUA}
                     color={GREEN_COLOR}
                     onClick={handleSendOtp}
@@ -500,56 +502,7 @@ const ForgotPasswordForm = () => {
         }}
       >
         {/* Image Slider Section (85% of 30vh) */}
-        <Box
-          sx={{
-            width: "100%",
-            height: "85%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 2,
-              overflowX: "auto",
-              width: "100%",
-              height: "100%",
-              whiteSpace: "nowrap",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": {
-                display: "none",
-              },
-            }}
-          >
-            {images.map((img, index) => (
-              <Box
-                key={index}
-                sx={{
-                  flexShrink: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: "10px",
-                  marginBottom: "10px",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`Slide ${index}`}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    borderRadius: "10px",
-                  }}
-                />
-              </Box>
-            ))}
-          </Box>
-        </Box>
+        <Slider />
 
         {/* Footer (15% of 30vh) */}
         <Box
@@ -582,7 +535,7 @@ const ForgotPasswordForm = () => {
           </Grid>
         </Box>
       </Box>
-      {loading && <Loader />}
+
       <Toaster />
     </Box>
   );

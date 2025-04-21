@@ -1,5 +1,5 @@
 import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -34,7 +34,14 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
+import { GetStockReport, GetSalesChannelType, GetStateListForDropdown, GetEntityData, fetchCategoryList, GetModelListForDropdown, GetSKUListForDropdown,GetStockRetailerReportV2 } from "../../../Api/Api"
+import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import Required from "../../../Common/Required";
+import StatusModel from "../../../Common/StatusModel";
+// import { findPositionOfBar } from "recharts/types/util/ChartUtils";
 
+const storeData = JSON.parse(localStorage.getItem("log"))
+const baseEntityTypeID=storeData?.baseEntityTypeID
 const DownloadStockReport = () => {
   const [activeTab, setActiveTab] = React.useState("download-stock-report");
   const tabs = [
@@ -55,18 +62,26 @@ const DownloadStockReport = () => {
   };
 
   const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
+    "Yes",
+    "No"
   ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
   };
 
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Get today's date (toDate)
+  const today = new Date();
+
+
   // Add these states for pagination
-  const [page, setPage] = React.useState(0);
+  const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   // Add these states for sorting
@@ -76,118 +91,56 @@ const DownloadStockReport = () => {
   });
 
   // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const types = [
-      "Distributor",
-      "Retailer",
-      "Dealer",
-      "Wholesaler",
-      "Direct Dealer",
-      "Sub Dealer",
-    ];
 
-    const names = [
-      "Sharma Electronics",
-      "Metro Distributors",
-      "City Mobile Hub",
-      "Galaxy Communications",
-      "Tech Zone",
-      "Digital World",
-      "Mobile Planet",
-      "Smart Store",
-      "Phone Gallery",
-      "Gadget World",
-    ];
+  const [filteredRows, setFilteredRows] = React.useState([]);
+  const [totalRecords, setTotalRecords] = React.useState(0);
+  const [salesChannelTypes, setSalesChannelTypes] = React.useState([]);
+  const [salesChannelID, setSalesChannelID] = useState([])
+  const [categories, setCategories] = React.useState([]);
+  const [models, setModels] = React.useState([]);
+  const [skus, setSKUs] = React.useState([]);
+  const [states, setStates] = React.useState([]);
 
-    const codes = [
-      "DST-001",
-      "RTL-002",
-      "DLR-003",
-      "WHS-004",
-      "DD-005",
-      "SD-006",
-    ];
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isTableLoading, setIsTableLoading] = React.useState(false);
+  const [isSearchLoading, setIsSearchLoading] = React.useState(false);
+  const [isSearchInProgress, setIsSearchInProgress] = React.useState(false);
+  const [errors, setErrors] = React.useState({});
+  const SKELETON_ROWS = 10;
+  const [status, setStatus] = useState(null);
+  const [tittle, setTittle] = useState(null);
 
-    const parentChannels = [
-      "Main Distributor",
-      "Regional Distributor",
-      "Zone Distributor",
-      "Area Distributor",
-      "City Distributor",
-    ];
+  const [searchParams, setSearchParams] = useState({
+    dateTo: formatDate(today),//Mandatory Filter
+    salesChannelTypeID: 0,//Mandatory Filter
+    filePath: "",//StockReport7f5cf4d19151433a9f33db0f59674641.csv
+    comingFrom: 0,//Non Mandatory Filter will be zero
+    modelID: 0,//Non Mandatory
+    skuID: 0,//Non Mandatory
+    stateID: 0,//Non Mandatory
+    wantZeroQuantity: 0,//1=zero values will come, 0 = exclude zero value data by default will be 0
+    salesChannelID: 0,//Non Mandatory Saleschannel filter
+    pageIndex: 1,//1-UI, -1-Excel to export
+    pageSize: 10,
+    productCategtoryID: 0,//Non Mandatory
+  //Non Mandatory
+  })
 
-    const regions = [
-      "North",
-      "South",
-      "East",
-      "West",
-      "Central",
-      "North-East",
-    ];
+  // Add a new state for channel loading
+  const [isChannelLoading, setIsChannelLoading] = useState(false);
 
-    const states = [
-      "Maharashtra",
-      "Gujarat",
-      "Karnataka",
-      "Tamil Nadu",
-      "Delhi",
-      "Uttar Pradesh",
-    ];
+  // Add new state variables for MODEL and SKU loading
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isSkuLoading, setIsSkuLoading] = useState(false);
 
-    const models = [
-      "Model A",
-      "Model B",
-      "Model C",
-      "Model D",
-      "Model E",
-      "Model F",
-    ];
-
-    const skus = [
-      "SKU-001",
-      "SKU-002",
-      "SKU-003",
-      "SKU-004",
-      "SKU-005",
-      "SKU-006",
-    ];
-
-    const bins = [
-      "BIN-A1",
-      "BIN-B1",
-      "BIN-C1",
-      "BIN-D1",
-      "BIN-E1",
-      "BIN-F1",
-    ];
-
-    return Array(100)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        type: types[Math.floor(Math.random() * types.length)],
-        name: names[Math.floor(Math.random() * names.length)],
-        code: codes[Math.floor(Math.random() * codes.length)],
-        parentChannel: parentChannels[Math.floor(Math.random() * parentChannels.length)],
-        region: regions[Math.floor(Math.random() * regions.length)],
-        state: states[Math.floor(Math.random() * states.length)],
-        model: models[Math.floor(Math.random() * models.length)],
-        sku: skus[Math.floor(Math.random() * skus.length)],
-        bin: bins[Math.floor(Math.random() * bins.length)],
-        quantity: Math.floor(Math.random() * 1000) + 1,
-      }));
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
+
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(1);
   };
 
   // Update the handleSort function
@@ -227,64 +180,386 @@ const DownloadStockReport = () => {
     setFilteredRows(sortedRows);
   };
 
-  // Update the handleSearch function
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.isp ||
-          row.column1.toLowerCase().includes(searchValues.isp.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.city ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.city.toLowerCase())) &&
-        (!searchValues.product ||
-          row.column7
-            .toLowerCase()
-            .includes(searchValues.product.toLowerCase()))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0);
-  };
-
   // Update the handleSearchClick function
   const handleSearchClick = () => {
+    if (!searchParams.salesChannelTypeID) {
+      console.log("errror",searchParams.salesChannelTypeID)
+      setErrors((prev) => ({
+        ...prev,
+        salesChannelTypeID: "Sales Channel Type is required",
+      }));
+      return;
+    }
     const searchValues = {
-      isp: document.querySelector('[placeholder="Select"]')?.value || "",
-      fromDate: document.querySelector('[placeholder="Select"]')?.value || "",
-      toDate: document.querySelector('[placeholder="DD/MM/YY"]')?.value || "",
-      state: document.querySelector('[label="State"]')?.value || "",
-      city: document.querySelector('[label="City"]')?.value || "",
-      product:
-        document.querySelector('[placeholder="Select"]')?.lastValue || "",
+      ...searchParams,
     };
-    handleSearch(searchValues);
+
+    setPage(1);
+    setIsSearchLoading(true);
+    setIsSearchInProgress(true);
+    fetchData(searchValues);
+    setStatus(null);
+    setTittle(null);
+    
   };
 
   // Update the handleReset function to also reset sorting
   const handleReset = () => {
-    // Reset all filters
-    const inputs = document.querySelectorAll("input");
-    inputs.forEach((input) => {
-      input.value = "";
-    });
-
-    // Reset sorting
+    setSearchParams({
+      ...searchParams,
+      dateTo: formatDate(today),
+      filePath: "",
+      comingFrom: 0,
+      modelID: 0,
+      skuID: 0,
+      stateID: 0,
+      salesChannelTypeID: 0,
+      salesChannelID: 0,
+      productCategtoryID: 0,
+      orgnHierarchyID: 0,
+      wantZeroQuantity: 0,
+      otherEntityType: baseEntityTypeID
+    })
     setSortConfig({ key: null, direction: null });
-
-    // Reset the table to show all rows in original order
-    setFilteredRows([...rows]);
-    setPage(0);
+    setErrors({});
+    setStatus(null);
+    setTittle(null);
+    setPage(1);
+    setFilteredRows([]);
+    setTotalRecords(0);
   };
+
+  const fetchData = async () => {
+    setIsTableLoading(true)
+
+    try {
+      let response 
+      if(searchParams.salesChannelTypeID == 6){
+        const body = {
+          ...searchParams,
+          otherEntityType: baseEntityTypeID,
+          pageIndex: page,
+          pageSize: rowsPerPage
+        }
+        response = await GetStockRetailerReportV2(body);
+      }else{
+        const body = {
+          ...searchParams,
+          orgnHierarchyID: 0,
+          pageIndex: page,
+          pageSize: rowsPerPage
+        }
+        response = await GetStockReport(body);
+      }
+
+      if (response.statusCode == "200") {
+        setFilteredRows(response.stockReportList || response.stockRetailerReportList || []);
+        setTotalRecords(response.totalRecords || 0);
+      } else if (response.statusCode === "404") {
+        setFilteredRows([]);
+        setTotalRecords(0);
+        setStatus(response.statusCode);
+        setTittle(response.statusMessage);
+      }
+    } catch (error) {
+      console.error("Error fetching stockReportList:", error);
+      setStatus(error.response.data.statusCode);
+      setTittle(error.response.data.statusMessage);
+    }
+    finally{
+       setIsTableLoading(false);
+      setIsSearchLoading(false);
+      setIsSearchInProgress(false);
+    }
+  }
+
+
+  const fetchSalesChannelTypes = async () => {
+    setIsLoading(true)
+    const body = {
+      salesChannelTypeid: 0,
+      forApproval: 0,
+      loadRetailer: 1
+    }
+    try {
+      const response = await GetSalesChannelType(body);
+      if (response.statusCode === "200") {
+        setSalesChannelTypes(response.salesChannelTypeList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching sales channel types:", error);
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  const fetchSalesChannelID = async (value) => {
+    setIsChannelLoading(true); // Set loading to true when starting the fetch
+    const body = {
+      entityTypeID: value,
+    } 
+    console.log("body",body)
+    try {
+      const response = await GetEntityData(body);
+      if (response.statusCode == "200") {
+        console.log("response.entityTypeWithEntityTypeIDList", response.entityTypeWithEntityTypeIDList)
+        setSalesChannelID(response.entityTypeWithEntityTypeIDList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching sales channel ID:", error);
+    } finally {
+      setIsChannelLoading(false); // Set loading to false when fetch completes
+    }
+  }
+
+  const fetchCategories = async () => {
+    setIsLoading(true)
+    const body = {
+      brandID: 0,
+      categoryID: 0
+    }
+    try {
+      const response = await fetchCategoryList(body);
+      if (response.statusCode === "200") {
+        setCategories(response.productCategoryDropdownList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  const fetchModels = async (value) => {
+    setIsModelLoading(true); // Set loading to true when starting
+    const body = {
+      categoryID: value,
+      modelID: 0,
+      subCategoryID: 0,
+      brandID: 0
+    }
+    try {
+      const response = await GetModelListForDropdown(body);
+      if (response.statusCode == "200") {
+        setModels(response.modelDropdownList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching models:", error);
+    } finally {
+      setIsModelLoading(false); // Set loading to false when complete
+    }
+  }
+
+  const fetchSKUs = async (value) => {
+    setIsSkuLoading(true); // Set loading to true when starting
+    const body = {
+      skuID: 0,
+      categoryID: 0,
+      modelID: value,
+      subCategoryID: 0,
+      brandID: 0
+    }
+    try {
+      const response = await GetSKUListForDropdown(body);
+      if (response.statusCode == "200") {
+        setSKUs(response.skuDropdownList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching SKUs:", error);
+    } finally {
+      setIsSkuLoading(false); // Set loading to false when complete
+    }
+  }
+
+  const fetchStates = async () => {
+    setIsLoading(true)
+    const body = {
+      countryID: 1,
+      regionID: 0,
+      stateID: 0
+    }
+    try {
+      const response = await GetStateListForDropdown(body);
+      if (response.statusCode == "200") {
+        setStates(response.stateDropdownList || []);
+      }
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  const handleSearchChange = async (field, value) => {
+    console.log("field", field, "value", value)
+    if (field == "salesChannelTypeID") {
+      if (value != 0) {
+        setSearchParams({
+          ...searchParams,
+          salesChannelTypeID: value
+        })
+        await fetchSalesChannelID(value)
+      } else {
+        setSalesChannelID([])
+        setSearchParams({
+          ...searchParams,
+          salesChannelTypeID: 0,
+          salesChannelID: 0
+        })
+      }
+    }
+    if (field == "salesChannelID") {
+      if (value != 0) {
+        console.log("value", value)
+        setSearchParams({
+          ...searchParams,
+          salesChannelID: value
+        })
+      } else {
+        setSearchParams({
+          ...searchParams,
+          salesChannelID: 0
+        })
+      }
+    }
+    if (field == "stateID") {
+      if (value != 0) {
+        console.log("satteValue",value)
+        setSearchParams({
+          ...searchParams,
+          stateID: value
+        })
+      } else {
+        setSearchParams({
+          ...searchParams,
+          stateID: 0
+        })
+      }
+    }
+    if (field == "productCategtoryID") {
+      if (value != 0) {    
+        setSearchParams({
+          ...searchParams,
+          productCategtoryID: value,
+          modelID: 0,
+          skuID: 0
+        })
+        setModels([])
+        setSKUs([])
+        await fetchModels(value)
+      } else {
+        setModels([])
+        setSKUs([])
+        setSearchParams({
+          ...searchParams,
+          productCategtoryID: 0,
+          modelID: 0,
+          skuID: 0
+        })
+      }
+    }
+    if (field == "modelID") {
+      if (value != 0) {
+        setSearchParams({
+          ...searchParams,
+          modelID: value,
+          skuID: 0
+        })
+        setSKUs([])
+        await fetchSKUs(value)
+      } else {
+        setSKUs([])
+        setSearchParams({
+          ...searchParams,
+          modelID: 0,
+          skuID: 0
+        })
+      }
+    }
+    if (field == "skuID") {
+      if (value != 0) {
+        setSearchParams({
+          ...searchParams,
+          skuID: value
+        })
+      } else {
+        setSearchParams({
+          ...searchParams,
+          skuID: 0
+        })
+      }
+    }
+    if (field == "wantZeroQuantity") {
+      setSearchParams({
+        ...searchParams,
+        wantZeroQuantity: value == "Yes" ? 1 : 0
+      })
+    }
+
+  }
+
+  const handleFirstPage = () => {
+    setPage(1);
+    setSearchData(prev => ({
+      ...prev,
+      pageIndex: 1
+    }));
+  };
+
+  const handleLastPage = () => {
+    setPage(Math.ceil(totalRecords / rowsPerPage));
+    setSearchData(prev => ({
+      ...prev,
+      pageIndex: Math.ceil(totalRecords / rowsPerPage)
+    }));
+  };
+
+ useEffect(() => {
+  if(filteredRows.length>0){
+  fetchData()}
+ }, [page, rowsPerPage])
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsSearchLoading(true);
+      try {
+        const results = await Promise.allSettled([
+          fetchSalesChannelTypes(),
+          fetchCategories(),
+          fetchStates()
+        ]);
+        const [SalesChannelTypes, CategoriesList,StatesList] = results;
+    
+        if (SalesChannelTypes.status === "fulfilled") {
+          console.log("Sales channel types fetched successfully");
+        } else {
+          console.error("Failed to fetch sales channel types:", SalesChannelTypes.reason);
+        }
+    
+        if (CategoriesList.status === "fulfilled") {
+          console.log("CategoriesList fetched successfully");
+        } else {
+          console.error("Failed to fetch CategoriesList:", CategoriesList.reason);
+        }
+
+        if (StatesList.status === "fulfilled") {
+          console.log("StatesList fetched successfully");
+        } else {
+          console.error("Failed to fetch StatesList:", StatesList.reason);
+        }
+    
+      } catch (error) {
+        console.error("Unexpected error during fetch:", error);
+      } finally {
+        setIsSearchLoading(false);
+      }
+    };
+    fetchInitialData();
+  
+  }, []);
 
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
@@ -314,7 +589,10 @@ const DownloadStockReport = () => {
       </Grid>
 
       {/* Rest of the content */}
-      <Grid
+     {isSearchLoading && filteredRows.length === 0 ? (
+          <FormSkeleton />
+        ) 
+       : ( <Grid
         container
         spacing={0}
         lg={12}
@@ -347,14 +625,53 @@ const DownloadStockReport = () => {
                       }}
                       fontWeight={600}
                     >
-                      CHANNEL TYPE
+                      CHANNEL TYPE <Required/>
                     </Typography>
                     <NuralAutocomplete
                       label="Channel Type"
-                      options={options}
+                      options={salesChannelTypes}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.salesChannelTypeName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.salesChannelTypeID === value?.salesChannelTypeID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "salesChannelTypeID",
+                          newValue?.salesChannelTypeID || 0,
+                          newValue
+                        );
+                        if (errors.salesChannelTypeID) {
+                          setErrors(prev => ({
+                            ...prev,
+                            salesChannelTypeID: ""
+                          }));
+                        }
+                      }}
+                      value={
+                        salesChannelTypes.find(
+                          (option) =>
+                            option.salesChannelTypeID === searchParams.salesChannelTypeID
+                        ) || 0
+                      }
+                      error={!!errors.salesChannelTypeID}
+                      // helperText={errors.salesChannelTypeID}
                     />
+                     {errors.salesChannelTypeID && (
+                          <Typography
+                            sx={{
+                              color: 'error.main',
+                              fontSize: '12px',
+                              mt: 0.5,
+                              ml: 1
+                            }}
+                          >
+                            {errors.salesChannelTypeID}
+                          </Typography>
+                        )}
                   </Grid>
                   <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
@@ -369,12 +686,33 @@ const DownloadStockReport = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="Channel Name"
-                      options={options}
+                      options={salesChannelID}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.salesChannelName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.salesChannelID === value?.salesChannelID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "salesChannelID",
+                          newValue?.salesChannelID || 0,
+                          newValue
+                        );
+                      }}
+                      value={
+                        salesChannelID.find(
+                          (option) =>
+                            option.salesChannelID === searchParams.salesChannelID
+                        ) || 0
+                      }
+                      loading={isChannelLoading}
+                      disabled={isChannelLoading}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4} lg={4}>
+                  {/* <Grid item xs={12} sm={6} md={4} lg={4}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -391,7 +729,7 @@ const DownloadStockReport = () => {
                       placeholder="SELECT"
                       width="100%"
                     />
-                  </Grid>
+                  </Grid> */}
 
                   <Grid item xs={12} sm={6} md={4} lg={4}>
                     <Typography
@@ -406,9 +744,28 @@ const DownloadStockReport = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="State"
-                      options={options}
+                      options={states}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.stateName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.stateID === value?.stateID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "stateID",
+                          newValue?.stateID || 0,
+                          newValue
+                        );
+                      }}
+                      value={
+                        states.find(
+                          (option) =>
+                            option.stateID === searchParams.stateID
+                        ) || 0
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={4} lg={4}>
@@ -422,7 +779,18 @@ const DownloadStockReport = () => {
                     >
                       CLOSING AS ON DATE
                     </Typography>
-                    <NuralCalendar width="100%" placeholder="01/01/24" />
+                    <NuralCalendar width="100%"
+                          placeholder="DD/MMM/YYYY"
+                          onChange={(date) => {
+                            if (date) {
+                              setSearchParams(prev => ({
+                                ...prev,
+                                dateTo: formatDate(date)
+                              }));
+                            }
+                          }}
+                          value={searchParams.dateTo ? new Date(searchParams.dateTo) : null}
+                        />
                   </Grid>
                 </Grid>
 
@@ -449,9 +817,28 @@ const DownloadStockReport = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="Category"
-                      options={options}
+                      options={categories}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.categoryName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.categoryID === value?.categoryID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "productCategtoryID",
+                          newValue?.categoryID || 0,
+                          newValue
+                        );
+                      }}
+                      value={
+                        categories.find(
+                          (option) =>
+                            option.categoryID === searchParams.productCategtoryID
+                        ) || 0
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
@@ -467,9 +854,30 @@ const DownloadStockReport = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="Model"
-                      options={options}
+                      options={models}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.modelName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.modelID === value?.modelID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "modelID",
+                          newValue?.modelID || 0,
+                          newValue
+                        );
+                      }}
+                      value={
+                        models.find(
+                          (option) =>
+                            option.modelID === searchParams.modelID
+                        ) || 0
+                      }
+                      loading={isModelLoading}
+                      disabled={isModelLoading}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
@@ -485,9 +893,30 @@ const DownloadStockReport = () => {
                     </Typography>
                     <NuralAutocomplete
                       label="SKU"
-                      options={options}
+                      options={skus}
                       placeholder="SELECT"
                       width="100%"
+                      getOptionLabel={(option) =>
+                        option.skuName || ""
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option?.skuID === value?.skuID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "skuID",
+                          newValue?.skuID || 0,
+                          newValue
+                        );
+                      }}
+                      value={
+                        skus.find(
+                          (option) =>
+                            option.skuID === searchParams.skuID
+                        ) || 0
+                      }
+                      loading={isSkuLoading}
+                      disabled={isSkuLoading}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
@@ -499,13 +928,22 @@ const DownloadStockReport = () => {
                       }}
                       fontWeight={600}
                     >
-                      SHOW ZERO CITY STOCK
+                      SHOW ZERO QTY RECORDS
                     </Typography>
                     <NuralAutocomplete
-                      label="Show Zero City Stock"
+                      label="Show Zero Qty Records"
                       options={options}
                       placeholder="SELECT"
                       width="100%"
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "wantZeroQuantity",
+                          newValue|| 0,
+                          newValue
+                        );
+                      }}
+                      value={searchParams.wantZeroQuantity === 1 ? "Yes" : "No"}
+  
                     />
                   </Grid>
                 </Grid>
@@ -553,9 +991,29 @@ const DownloadStockReport = () => {
           </Grid>
         </Grid>
       </Grid>
+       )}
 
       {/* Add this after the NuralAccordion2 component */}
-      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+      
+      <Grid container > {status != null ? (
+          <Grid item xs={12} md={12} sx={{ px: 2}}>
+            <StatusModel
+              width='99%'
+              status={status}
+              title={tittle}
+              open={status !== null}
+              onClose={() => {
+                if (!isSearchInProgress) {
+                  setStatus(null);
+                  setTittle(null);
+                }
+              }}
+              disabled={isSearchInProgress}
+            />
+          </Grid>
+        ) :(
+          filteredRows.length > 0 && (
+             <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
         <TableContainer
           component={Paper}
           sx={{
@@ -648,7 +1106,7 @@ const DownloadStockReport = () => {
                   { header: "NAME", key: "name" },
                   { header: "CODE", key: "code" },
                   { header: "PARENT CHANNEL", key: "parentChannel" },
-                  { header: "REGION", key: "region" },
+                  // { header: "REGION", key: "region" },
                   { header: "STATE", key: "state" },
                   { header: "MODEL", key: "model" },
                   { header: "SKU", key: "sku" },
@@ -702,208 +1160,247 @@ const DownloadStockReport = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              
+              {isTableLoading ? (
+                  Array(SKELETON_ROWS)
+                    .fill(0)
+                    .map((_, index) => (
+                    
+                    <TableRowSkeleton  key={index} columns={10} />
+                    
+                    ))
+                ) 
+             :(filteredRows
                 .map((row, index) => (
                   <TableRow
                     key={row.id}
                   >
-                    <TableCell sx={{ ...rowstyle }}>{row.type}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.name}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.code}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.parentChannel}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.region}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.salesChannelTypeName}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.salesChannelName}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.salesChannelCode}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.parentSalesChannel}</TableCell>
+                    {/* <TableCell sx={{ ...rowstyle }}>{row.region}</TableCell> */}
                     <TableCell sx={{ ...rowstyle }}>{row.state}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.model}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.sku}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.bin}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.modelName}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.skuName}</TableCell>
+                    <TableCell sx={{ ...rowstyle }}>{row.stockBinTypeDesc}</TableCell>
                     <TableCell sx={{ ...rowstyle }}>{row.quantity}</TableCell>
                   </TableRow>
-                ))}
+                )))}
+
             </TableBody>
           </Table>
 
           {/* Custom Pagination */}
           <Grid
-            container
-            sx={{
-              p: 2,
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Grid item>
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 400,
-                  fontSize: "10px",
-                  lineHeight: "13.66px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-                color="text.secondary"
-              >
-                TOTAL RECORDS:{" "}
-                <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                  {filteredRows.length} /{" "}
-                  {Math.ceil(filteredRows.length / rowsPerPage)} PAGES
-                </span>
-              </Typography>
-            </Grid>
-
-            <Grid item>
-              <Grid
-                container
-                spacing={1}
-                sx={{
-                  maxWidth: 300,
-                  ml: 1,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  //   gap: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
+                  container
                   sx={{
-                    mt: 1,
-                    fontSize: "10px",
-                    color: PRIMARY_BLUE2,
-                    fontWeight: 600,
+                    p: 2,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    position: "sticky",
+                    bottom: 0,
+                    backgroundColor: LIGHT_GRAY2,
                   }}
                 >
-                  SHOW :
-                </Typography>
-                {[10, 25, 50, 100].map((value) => (
-                  <Grid item key={value}>
-                    <Button
-                      onClick={() =>
-                        handleChangeRowsPerPage({ target: { value } })
-                      }
+                  <Grid item>
+                    <Typography
                       sx={{
-                        minWidth: "25px",
-                        height: "24px",
-                        padding: "4px",
-                        borderRadius: "50%",
-                        // border: `1px solid ${PRIMARY_BLUE2}`,
-                        backgroundColor:
-                          rowsPerPage === value ? PRIMARY_BLUE2 : "transparent",
-                        color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                        fontSize: "12px",
-                        "&:hover": {
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                        },
-                        mx: 0.5,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                      }}
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      TOTAL RECORDS:{" "}
+                      <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
+                        {totalRecords} /{" "}
+                        {Math.ceil(totalRecords / rowsPerPage)} PAGES
+                      </span>
+                    </Typography>
+                  </Grid>
+  
+                  <Grid item>
+                    <Grid
+                      container
+                      spacing={1}
+                      sx={{
+                        maxWidth: 300,
+                        ml: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        //   gap: 1,
                       }}
                     >
-                      {value}
-                    </Button>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          mt: 1,
+                          fontSize: "10px",
+                          color: PRIMARY_BLUE2,
+                          fontWeight: 600,
+                        }}
+                      >
+                        SHOW :
+                      </Typography>
+                      {[10, 25, 50, 100].map((value) => (
+                        <Grid item key={value}>
+                          <Button
+                            onClick={() =>
+                              handleChangeRowsPerPage({ target: { value } })
+                            }
+                            sx={{
+                              minWidth: "25px",
+                              height: "24px",
+                              padding: "4px",
+                              borderRadius: "50%",
+                              // border: `1px solid ${PRIMARY_BLUE2}`,
+                              backgroundColor:
+                                rowsPerPage === value
+                                  ? PRIMARY_BLUE2
+                                  : "transparent",
+                              color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
+                              fontSize: "12px",
+                              "&:hover": {
+                                backgroundColor:
+                                  rowsPerPage === value
+                                    ? PRIMARY_BLUE2
+                                    : "transparent",
+                              },
+                              mx: 0.5,
+                            }}
+                          >
+                            {value}
+                          </Button>
+                        </Grid>
+                      ))}
+                    </Grid>
                   </Grid>
-                ))}
-              </Grid>
-            </Grid>
-
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                color: PRIMARY_BLUE2,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 700,
-                  fontSize: "8px",
-                  lineHeight: "10.93px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-              >
-                JUMP TO FIRST
-              </Typography>
-              <IconButton
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
-                <NavigateBeforeIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                }}
-              >
-                PAGE {page + 1}
-              </Typography>
-
-              <IconButton
-                onClick={() => setPage(page + 1)}
-                disabled={
-                  page >= Math.ceil(filteredRows.length / rowsPerPage) - 1
-                }
-              >
-                <NavigateNextIcon />
-              </IconButton>
-
-              <Typography
-                sx={{
-                  fontFamily: "Manrope",
-                  fontWeight: 700,
-                  fontSize: "8px",
-                  lineHeight: "10.93px",
-                  letterSpacing: "4%",
-                  textAlign: "center",
-                }}
-                variant="body2"
-              >
-                JUMP TO LAST
-              </Typography>
-              <input
-                type="number"
-                placeholder="Jump to page"
-                min={1}
-                max={Math.ceil(filteredRows.length / rowsPerPage)}
-                // value={page + 1}
-                onChange={(e) => {
-                  const newPage = parseInt(e.target.value, 10) - 1;
-                  if (
-                    newPage >= 0 &&
-                    newPage < Math.ceil(filteredRows.length / rowsPerPage)
-                  ) {
-                    setPage(newPage);
-                  }
-                }}
-                style={{
-                  width: "100px",
-                  height: "24px",
-                  paddingRight: "8px",
-                  paddingLeft: "8px",
-                  borderRadius: "8px",
-                  borderWidth: "1px",
-                  border: `1px solid ${PRIMARY_BLUE2}`,
-                  backgroundColor: LIGHT_GRAY2,
-                }}
-              />
-              <Grid mt={1}>
-                <img src="./Icons/footerSearch.svg" alt="arrow" />
-              </Grid>
-            </Grid>
-          </Grid>
+  
+                  <Grid
+                    item
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      color: PRIMARY_BLUE2,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "8px",
+                        lineHeight: "10.93px",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        color: page === 1 ? "grey.400" : PRIMARY_BLUE2,
+                      }}
+                      onClick={handleFirstPage}
+                    >
+                      JUMP TO FIRST
+                    </Typography>
+                    <IconButton
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                    >
+                      <NavigateBeforeIcon />
+                    </IconButton>
+  
+                    <Typography
+                      sx={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      PAGE {page}
+                    </Typography>
+  
+                    <IconButton
+                      onClick={() => setPage(page + 1)}
+                      disabled={
+                        page >= Math.ceil(totalRecords / rowsPerPage)
+                      }
+                    >
+                      <NavigateNextIcon />
+                    </IconButton>
+  
+                    <Typography
+                      sx={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "8px",
+                        lineHeight: "10.93px",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        color: page === Math.ceil(totalRecords / rowsPerPage) ? "grey.400" : PRIMARY_BLUE2,
+                      }}
+                      onClick={handleLastPage}
+  
+                      variant="body2"
+                    >
+                      JUMP TO LAST
+                    </Typography>
+                    <input
+                      type="number"
+                      placeholder="Jump to page"
+                      min={1}
+                      max={Math.ceil(totalRecords / rowsPerPage)}
+                      // value={page}
+                      style={{
+                        width: "100px",
+                        height: "24px",
+                        paddingRight: "8px",
+                        paddingLeft: "8px",
+                        borderRadius: "8px",
+                        borderWidth: "1px",
+                        border: `1px solid ${PRIMARY_BLUE2}`,
+                      }}
+                    />
+                    <Grid mt={1}
+                      sx={{ cursor: 'pointer', }}
+                      onClick={(e) => {
+                        const input = e.currentTarget.previousSibling;
+                        const pageValue = parseInt(input.value, 10);
+                        if (
+                          pageValue >= 1 &&
+                          pageValue <= Math.ceil(totalRecords / rowsPerPage)
+                        ) {
+                          handleChangePage(pageValue);
+                          // input.value = ''; 
+                          
+                        }
+                        else {
+                          setPage(1);
+                          setSearchData(prev => ({
+                            ...prev,
+                            pageIndex: 1
+                          }));
+  
+                        }
+                      }}>
+                      <img src="./Icons/footerSearch.svg" alt="arrow"
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
         </TableContainer>
-      </Grid>
+             </Grid>
+          )
+          
+       )
+    }  </Grid>
+
     </Grid>
-  );
+     );
 };
 
 export default DownloadStockReport;

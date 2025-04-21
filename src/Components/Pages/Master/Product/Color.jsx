@@ -1,20 +1,15 @@
 import { Grid, Typography, Button, Switch } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
   AQUA,
-  BLACK,
   DARK_PURPLE,
   LIGHT_GRAY2,
-  PRIMARY_BLUE,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
-  WHITE,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -25,48 +20,90 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
   IconButton,
-  Checkbox,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  jumpToPageStyle,
+  rowstyle,
+  tableHeaderStyle,
+  tablePaginationStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
-import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
 import { useNavigate } from "react-router-dom";
 import StatusModel from "../../../Common/StatusModel";
 import { Edit } from "@mui/icons-material";
-
-const radioOptions = [
-  { value: "yes", label: "Interface" },
-  { value: "no", label: "Batch" },
-];
+import {
+  GetColorDropdownList,
+  GetColorList,
+  ManageColorAPI,
+} from "../../../Api/Api";
+import { FormSkeleton } from "../../../Common/Skeletons";
+import { TableRowSkeleton } from "../../../Common/Skeletons";
+import {
+  scrollToTableMiddle,
+  scrollToTop,
+} from "../../../Common/commonFunction";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
+import NuralReports from "../../NuralCustomComponents/NuralReports";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import Loader from "../../../Common/Loader";
 
 const Color = () => {
   const navigate = useNavigate();
+  const tableContainerRef = useRef(null);
   const [activeTab, setActiveTab] = React.useState("color");
-  const [selectedValue, setSelectedValue] = React.useState(null);
   const [accordionExpanded, setAccordionExpanded] = React.useState(true);
-  const [accordionExpanded2, setAccordionExpanded2] = React.useState(true);
+  const [accordionExpanded2, setAccordionExpanded2] = React.useState(false);
+  const [showStatus, setShowStatus] = React.useState(false);
+  const [status, setStatus] = React.useState(false);
+  const [message, setMessage] = React.useState("");
+  const [toggleStates, setToggleStates] = React.useState({});
+  const [page, setPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [colorDrop, setColorDrop] = useState([]);
+  const [tableData, setTableData] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [jumpToPage, setJumpToPage] = useState("");
+  const [displayPage, setDisplayPage] = useState("");
+  const [rows, setRows] = React.useState([]);
+  const [filteredRows, setFilteredRows] = React.useState(rows);
+  const [flag, setFlag] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [isTableLoading, setIsTableLoading] = useState(false);
+  const [showCreateStatus, setShowCreateStatus] = useState(false);
+  const [showSearchStatus, setShowSearchStatus] = useState(false);
+  const [createStatus, setCreateStatus] = useState("");
+  const [createMessage, setCreateMessage] = useState("");
+  const [searchStatus, setSearchStatus] = useState("");
+  const [searchMessage, setSearchMessage] = useState("");
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({
+    colorName: "",
+    colorID: 0,
+    colorCode: "",
+    selectionMode: 2,
+    pageIndex: page,
+    pageSize: rowsPerPage,
+  });
+  const [formData, setFormData] = useState({
+    colorName: "", //Mandatory
+    status: 0, //0=Deactive, 1=Active //Mandatory
+    colorID: 0, //for update
+    colorCode: "", //Mandatory
+    callType: 0 /*0=Save, 1=Update, 2=Status Update*/,
+  });
 
-  const tabs = [
-    { label: "Upload", value: "product-bulk-upload" },
-    { label: "Brand", value: "brand" },
-    { label: "Category", value: "category" },
-    { label: "Sub Category", value: "sub-category" },
-    { label: "Model", value: "model" },
-    { label: "Color", value: "color" },
-    { label: "SKU", value: "sku" },
-    { label: "Focus Model", value: "focusModel" },
-    { label: "Price", value: "price" },
-    { label: "Pre Booking", value: "preBooking" },
-  ];
+  const [formErrors, setFormErrors] = useState({
+    colorName: "",
+    colorCode: "",
+  });
 
   const labelStyle = {
     fontSize: "10px",
@@ -77,59 +114,25 @@ const Color = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
+  const tabs = [
+    { label: "Upload", value: "product-bulk-upload" },
+    { label: "Brand", value: "brand" },
+    { label: "Category", value: "category" },
+    { label: "Sub Category", value: "sub-category" },
+    { label: "Model", value: "model" },
+    { label: "Color", value: "color" },
+    { label: "SKU", value: "sku" },
+    { label: "Focus Model", value: "focus-model" },
+    { label: "Price", value: "price" },
+    { label: "Pre Booking", value: "preBooking" },
   ];
-
-  const options2 = [
-    "LOCATION 1",
-    "LOCATION 2",
-    "LOCATION 3",
-    "LOCATION 4",
-    "LOCATION 5",
-  ];
-
   // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   // Add these states for sorting
   const [sortConfig, setSortConfig] = React.useState({
     key: null,
     direction: null,
   });
-
-  // Replace the existing dummy data with color-specific data
-  const generateDummyData = () => {
-    const colors = [
-      { name: "Red", code: "#FF0000" },
-      { name: "Blue", code: "#0000FF" },
-      { name: "Green", code: "#00FF00" },
-      { name: "Yellow", code: "#FFFF00" },
-      { name: "Black", code: "#000000" },
-      { name: "White", code: "#FFFFFF" },
-      { name: "Purple", code: "#800080" },
-      { name: "Orange", code: "#FFA500" },
-      { name: "Pink", code: "#FFC0CB" },
-      { name: "Gray", code: "#808080" },
-    ];
-
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        colorName: colors[Math.floor(Math.random() * colors.length)].name,
-        colorCode: colors[Math.floor(Math.random() * colors.length)].code,
-        status: Math.random() > 0.5,
-      }));
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
 
   // Define table columns
   const tableColumns = [
@@ -139,13 +142,102 @@ const Color = () => {
     { id: "edit", label: "EDIT", sortable: false },
   ];
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  useEffect(() => {
+    fetchColorList();
+  }, [page, rowsPerPage, flag]);
+
+  useEffect(() => {
+    fetchColorListDrop();
+  }, []);
+
+  const fetchColorListDrop = async () => {
+    let body = {
+      colorID: 0,
+    };
+    setSearchLoading(true);
+    setIsLoading(true);
+    try {
+      const res = await GetColorDropdownList(body);
+      if (res.statusCode == 200) {
+        setColorDrop(res.colorDropdownList);
+      } else {
+        setColorDrop([]);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSearchLoading(false);
+      setIsLoading(false);
+    }
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const fetchColorList = async () => {
+    setIsTableLoading(true);
+    setIsLoading(true);
+    let body = {
+      colorName: searchParams.colorName,
+      colorID: searchParams.colorID,
+      colorCode: searchParams.colorCode,
+      selectionMode: searchParams.selectionMode,
+      pageIndex: searchParams.pageIndex || page,
+      pageSize: searchParams.pageSize || rowsPerPage,
+    };
+    try {
+      const res = await GetColorList(body);
+      if (res.statusCode == 200) {
+        setTableData(res.colorMasterList);
+        setTotalRecords(res.totalRecords);
+        setFilteredRows(res.colorMasterList);
+      } else {
+        setTableData([]);
+        setFilteredRows([]);
+        setShowStatus(true);
+        setStatus(res.statusCode);
+        setMessage(res.statusMessage);
+      }
+    } catch (error) {
+      setTableData([]);
+      setFilteredRows([]);
+      setShowStatus(true);
+      setStatus(error.statusCode || 500);
+      setMessage(error.statusMessage || "Internal Server Error");
+      console.log(error);
+    } finally {
+      setIsTableLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    setSearchParams((prev) => ({
+      ...prev,
+      pageIndex: newPage,
+    }));
+    fetchColorList();
+  };
+
+  const handleRowsPerPageChange = (value) => {
+    const newRowsPerPage = parseInt(value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
+    setSearchParams((prev) => ({
+      ...prev,
+      pageSize: newRowsPerPage,
+      pageIndex: 1,
+    }));
+    // Call fetchColorList directly after state updates
+  };
+
+  const handleJumpToPage = (pageNumber) => {
+    if (
+      pageNumber >= 1 &&
+      pageNumber <= Math.ceil(totalRecords / rowsPerPage)
+    ) {
+      handlePageChange(pageNumber);
+      setJumpToPage("");
+      setDisplayPage(pageNumber.toString());
+    }
   };
 
   // Enhanced sorting function
@@ -186,87 +278,319 @@ const Color = () => {
   };
 
   // Update the search functionality for colors
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.colorName ||
-          row.colorName
-            .toLowerCase()
-            .includes(searchValues.colorName.toLowerCase())) &&
-        (!searchValues.colorCode ||
-          row.colorCode
-            .toLowerCase()
-            .includes(searchValues.colorCode.toLowerCase()))
-      );
+  const handleSearch = async () => {
+    setPage(1);
+    setRowsPerPage(10);
+    setSearchParams({
+      colorName: searchParams.colorName,
+      colorID: searchParams.colorID,
+      colorCode: searchParams.colorCode,
+      selectionMode: 2,
+      pageIndex: 1,
+      pageSize: 10,
     });
-
-    setFilteredRows(filtered);
-    setPage(0);
+    setFlag(!flag);
+    setDisplayPage(page.toString());
   };
 
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      colorName: document.querySelector('[name="colorName"]')?.value || "",
-      colorCode: document.querySelector('[name="colorCode"]')?.value || "",
+  const handleChange = (field, value) => {
+    // Remove spaces from color code as they are typed
+    if (field === "colorCode") {
+      value = value.replace(/\s/g, "");
+    }
+
+    const error = validateField(field, value);
+    setFormErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSearchChange = (field, value) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const validateField = (field, value) => {
+    let error = "";
+    switch (field) {
+      case "colorName":
+        if (!value.trim()) {
+          error = "Color name is required";
+        } else if (value.length > 50) {
+          error = "Color name cannot exceed 50 characters";
+        }
+        break;
+      case "colorCode":
+        if (!value.trim()) {
+          error = "Color code is required";
+        } else if (value.includes(" ")) {
+          error = "Color code cannot contain spaces";
+        } else if (value.length > 50) {
+          error = "Color code cannot exceed 50 characters";
+        }
+        break;
+      default:
+        break;
+    }
+    return error;
+  };
+
+  const validateForm = () => {
+    const errors = {
+      colorName: validateField("colorName", formData.colorName),
+      colorCode: validateField("colorCode", formData.colorCode),
     };
-    handleSearch(searchValues);
+    setFormErrors(errors);
+    return !Object.values(errors).some((error) => error);
+  };
+
+  const handleCancelSearch = () => {
+    setPage(1);
+    setRowsPerPage(10);
+    setSearchParams({
+      colorName: "",
+      colorID: 0,
+      colorCode: "",
+      selectionMode: 2,
+      pageIndex: 1,
+      pageSize: 10,
+    });
+    setFlag(!flag);
+    setDisplayPage("1");
+    // Keep create accordion open and view closed
+    setAccordionExpanded(true);
+    setAccordionExpanded2(false);
+  };
+
+  const handlePost = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await ManageColorAPI(formData);
+      if (res.statusCode == 200) {
+        setShowCreateStatus(true);
+        setCreateStatus(res.statusCode);
+        setCreateMessage(res.statusMessage);
+
+        if (formData.callType === 1) {
+          // Update case
+          // Reset form after successful update
+          setFormData({
+            colorName: "",
+            status: 0,
+            colorID: 0,
+            colorCode: "",
+            callType: 0,
+          });
+          setFormErrors({});
+          // Close the create accordion after update
+          setAccordionExpanded(false);
+        } else {
+          // Create case
+          // Reset form but keep accordion open
+          setFormData({
+            colorName: "",
+            status: 0,
+            colorID: 0,
+            colorCode: "",
+            callType: 0,
+          });
+          setFormErrors({});
+          // Open view accordion and focus on table
+          setAccordionExpanded2(true);
+        }
+        requestAnimationFrame(() => {
+          scrollToTableMiddle();
+        });
+        setTimeout(() => {
+          setShowCreateStatus(false);
+          setCreateStatus("");
+          setCreateMessage("");
+        }, 1500);
+
+        // Refresh the list and scroll immediately
+        await fetchColorList();
+      } else {
+        setShowCreateStatus(true);
+        setCreateStatus(res.statusCode);
+        setCreateMessage(res.statusMessage);
+      }
+    } catch (error) {
+      setShowCreateStatus(true);
+      setCreateStatus(error.statusCode || 500);
+      setCreateMessage(error.statusMessage || "Internal Server Error");
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (colorID, currentStatus) => {
+    const newStatus = currentStatus === 1 ? 0 : 1;
+    let body = {
+      colorID: colorID,
+      status: newStatus,
+      callType: 2, // Status Update
+    };
+
+    setIsLoading(true);
+    try {
+      const res = await ManageColorAPI(body);
+      if (res.statusCode == 200) {
+        setShowSearchStatus(true);
+        setSearchStatus(res.statusCode);
+        setSearchMessage(res.statusMessage);
+        // Update the local state to reflect the change
+        setTableData((prevData) =>
+          prevData.map((item) =>
+            item.colorID === colorID ? { ...item, status: newStatus } : item
+          )
+        );
+        setFilteredRows((prevData) =>
+          prevData.map((item) =>
+            item.colorID === colorID ? { ...item, status: newStatus } : item
+          )
+        );
+        setTimeout(() => {
+          setShowSearchStatus(false);
+          setSearchStatus("");
+          setSearchMessage("");
+        }, 3000);
+      } else {
+        setShowSearchStatus(true);
+        setSearchStatus(res.statusCode);
+        setSearchMessage(res.statusMessage);
+      }
+    } catch (error) {
+      setShowSearchStatus(true);
+      setSearchStatus(error.statusCode || 500);
+      setSearchMessage(error.statusMessage || "Internal Server Error");
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    switch (newValue) {
-      case "add-location":
-        navigate("/add-location");
-        break;
-      case "view-location":
-        navigate("/view-location");
-        break;
-      case "add-user":
-        navigate("/add-user");
-        break;
-      case "view-user":
-        navigate("/view-user");
-        break;
-      case "upload":
-        navigate("/upload");
-        break;
-      case "brand":
-        navigate("/brand");
-        break;
-      case "category":
-        navigate("/category");
-        break;
-      case "sub-category":
-        navigate("/sub-category");
-        break;
-      case "model":
-        navigate("/model");
-        break;
-      case "color":
-        navigate("/color");
-        break;
-      case "sku":
-        navigate("/sku");
-        break;
-      case "focusModel":
-        navigate("/focusModel");
-        break;
-      case "price":
-        navigate("/price");
-        break;
-      case "preBooking":
-        navigate("/preBooking");
-        break;
+    navigate(`${newValue}`);
+  };
 
-      default:
-        break;
+  const handleCancel = () => {
+    setFormData({
+      colorName: "",
+      status: 0,
+      colorID: 0,
+      colorCode: "",
+      callType: 0,
+    });
+    setFormErrors({});
+    setShowCreateStatus(false);
+    setCreateStatus("");
+    setCreateMessage("");
+    // Keep create accordion open and view closed
+    setAccordionExpanded(true);
+    setAccordionExpanded2(false);
+  };
+
+  const handleJumpToFirst = () => {
+    handlePageChange(1);
+  };
+
+  const handleJumpToLast = () => {
+    const lastPage = Math.ceil(totalRecords / rowsPerPage) - 1;
+    handlePageChange(lastPage);
+  };
+
+  const handleEdit = async (row) => {
+    // Set form data for editing
+    setFormData({
+      colorName: row.colorName,
+      status: row.status,
+      colorID: row.colorID,
+      colorCode: row.colorCode,
+      callType: 1, // 1 for update
+    });
+
+    // Expand the create accordion to show the edit form
+    setAccordionExpanded(true);
+
+    // Clear any existing form errors
+    setFormErrors({});
+
+    // Scroll to top after a small delay to ensure the form is rendered
+    scrollToTop();
+  };
+
+  const handleAccordionChange = (expanded) => {
+    setAccordionExpanded(expanded);
+    if (expanded) {
+      setAccordionExpanded2(false);
+    }
+  };
+
+  const handleAccordionChange2 = (expanded) => {
+    setAccordionExpanded2(expanded);
+    if (expanded) {
+      setAccordionExpanded(false);
+    }
+  };
+
+  const downloadExcel = async () => {
+    setIsDownloadLoading(true);
+    setIsLoading(true);
+    let body = {
+      ...searchParams,
+      pageIndex: -1,
+    };
+    try {
+      const res = await GetColorList(body);
+      if (res.statusCode == 200) {
+        window.location.href = res.filepathlink;
+        setShowSearchStatus(true);
+        setSearchStatus(res.statusCode);
+        setSearchMessage(res.statusMessage);
+        setTimeout(() => {
+          setShowSearchStatus(false);
+          setSearchStatus("");
+          setSearchMessage("");
+        }, 3000);
+      } else {
+        setShowSearchStatus(true);
+        setSearchStatus(res.statusCode);
+        setSearchMessage(res.statusMessage);
+      }
+    } catch (error) {
+      setShowSearchStatus(true);
+      setSearchStatus(error.statusCode || 500);
+      setSearchMessage(error.statusMessage || "Internal Server Error");
+      console.log(error);
+    } finally {
+      setIsDownloadLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
-      {/* Rest of the content */}
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        position: "relative",
+        pr: { xs: 0, sm: 0, md: "180px", lg: "260px" },
+        cursor: isLoading ? "wait" : "default",
+      }}
+    >
       <Grid
         item
         xs={12}
@@ -278,7 +602,7 @@ const Color = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={1} pr={2}>
           <BreadcrumbsHeader pageTitle="Product" />
         </Grid>
 
@@ -302,10 +626,13 @@ const Color = () => {
             <Grid item>
               <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
                 <NuralAccordion2
+                  id="create-accordion"
                   title="Create"
                   controlled={true}
                   expanded={accordionExpanded}
-                  onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                  onChange={(event, expanded) =>
+                    handleAccordionChange(expanded)
+                  }
                 >
                   <Typography
                     variant="h6"
@@ -338,8 +665,14 @@ const Color = () => {
                         COLOR NAME
                       </Typography>
                       <NuralTextField
+                        value={formData.colorName}
+                        onChange={(e) =>
+                          handleChange("colorName", e.target.value)
+                        }
                         width="100%"
                         placeholder="ENTER COLOR NAME"
+                        error={!!formErrors.colorName}
+                        errorMessage={formErrors.colorName}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={6} lg={6}>
@@ -354,21 +687,29 @@ const Color = () => {
                         COLOR CODE
                       </Typography>
                       <NuralTextField
+                        value={formData.colorCode}
+                        onChange={(e) =>
+                          handleChange("colorCode", e.target.value)
+                        }
                         width="100%"
                         placeholder="ENTER COLOR CODE"
+                        error={!!formErrors.colorCode}
+                        errorMessage={formErrors.colorCode}
                       />
                     </Grid>
                   </Grid>
                 </NuralAccordion2>
               </Grid>
 
-              <Grid item xs={12} sm={12} md={12} lg={12} pr={2} mt={0.5}>
-                <StatusModel
-                  width="100%"
-                  status="200"
-                  title="New Color Created"
-                />
-              </Grid>
+              {showCreateStatus && (
+                <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
+                  <StatusModel
+                    width="100%"
+                    status={createStatus}
+                    title={createMessage}
+                  />
+                </Grid>
+              )}
 
               {accordionExpanded && (
                 <Grid
@@ -388,7 +729,7 @@ const Color = () => {
                       fontSize="12px"
                       height="36px"
                       borderColor={PRIMARY_BLUE2}
-                      onClick={() => console.log("Upload clicked")}
+                      onClick={handleCancel}
                       width="100%"
                     />
                   </Grid>
@@ -400,8 +741,9 @@ const Color = () => {
                       fontSize="12px"
                       height="36px"
                       backgroundColor={AQUA}
-                      onClick={() => console.log("Upload clicked")}
+                      onClick={handlePost}
                       width="100%"
+                      disabled={!formData.colorName || !formData.colorCode}
                     />
                   </Grid>
                 </Grid>
@@ -412,111 +754,154 @@ const Color = () => {
           <Grid container spacing={2} direction="column">
             <Grid item>
               <Grid item xs={12} sm={12} md={12} lg={12} mt={2}>
-                <NuralAccordion2
-                  title="View"
-                  controlled={true}
-                  expanded={accordionExpanded2}
-                  onChange={(event, expanded) =>
-                    setAccordionExpanded2(expanded)
-                  }
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: "Manrope",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      lineHeight: "100%",
-                      letterSpacing: "0%",
-                      color: DARK_PURPLE,
-                      marginBottom: "10px",
-                      marginTop: "10px",
-                      // marginLeft: "10px",
-                      marginRight: "10px",
-                      mb: 3,
-                    }}
+                {searchLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <NuralAccordion2
+                    title="View"
+                    controlled={true}
+                    expanded={accordionExpanded2}
+                    onChange={(event, expanded) =>
+                      handleAccordionChange2(expanded)
+                    }
                   >
-                    Search
-                  </Typography>
-                  <Grid container spacing={4}>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        COLOR NAME
-                      </Typography>
-                      <NuralAutocomplete
-                        width="100%"
-                        label="COLOR NAME"
-                        options={["RED", "GREEN", "BLUE", "YELLOW", "ORANGE"]}
-                        placeholder="SELECT"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ...labelStyle,
-                          fontSize: { xs: "12px", sm: "10px" },
-                        }}
-                        fontWeight={600}
-                      >
-                        COLOR CODE
-                      </Typography>
-                      <NuralAutocomplete
-                        width="100%"
-                        label="COLOR CODE"
-                        options={[
-                          "#FF0000",
-                          "#00FF00",
-                          "#0000FF",
-                          "#FFFF00",
-                          "#FFA500",
-                        ]}
-                        placeholder="SELECT"
-                      />
-                    </Grid>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "100%",
+                        letterSpacing: "0%",
+                        color: DARK_PURPLE,
+                        marginBottom: "10px",
+                        marginTop: "10px",
+                        // marginLeft: "10px",
+                        marginRight: "10px",
+                        mb: 3,
+                      }}
+                    >
+                      Search
+                    </Typography>
+                    <Grid container spacing={4}>
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          COLOR NAME
+                        </Typography>
+                        <NuralAutocomplete
+                          label="COLOR NAME"
+                          options={colorDrop}
+                          placeholder="SELECT"
+                          width="100%"
+                          getOptionLabel={(option) => option.colorName || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.colorName === value?.colorName
+                          }
+                          onChange={(event, newValue) => {
+                            handleSearchChange(
+                              "colorName",
+                              newValue?.colorName || null
+                            );
+                          }}
+                          value={
+                            colorDrop.find(
+                              (option) =>
+                                option.colorName === searchParams.colorName
+                            ) || null
+                          }
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={6} lg={6}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            ...labelStyle,
+                            fontSize: { xs: "12px", sm: "10px" },
+                          }}
+                          fontWeight={600}
+                        >
+                          COLOR CODE
+                        </Typography>
+                        <NuralAutocomplete
+                          label="COLOR CODE"
+                          options={colorDrop}
+                          placeholder="SELECT"
+                          width="100%"
+                          getOptionLabel={(option) => option.colorCode || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.colorCode === value?.colorCode
+                          }
+                          onChange={(event, newValue) => {
+                            handleSearchChange(
+                              "colorCode",
+                              newValue?.colorCode || null
+                            );
+                          }}
+                          value={
+                            colorDrop.find(
+                              (option) =>
+                                option.colorCode === searchParams.colorCode
+                            ) || null
+                          }
+                        />
+                      </Grid>
 
-                    <Grid item spacing={1} xs={11} sm={2} md={1}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        color={PRIMARY_BLUE2}
-                        fontSize="12px"
-                        height="36px"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={() => console.log("Upload clicked")}
-                        width="100%"
-                      />
+                      <Grid item spacing={0} xs={11} sm={2} md={1}>
+                        <NuralButton
+                          text="CANCEL"
+                          variant="outlined"
+                          color={PRIMARY_BLUE2}
+                          fontSize="12px"
+                          height="36px"
+                          borderColor={PRIMARY_BLUE2}
+                          onClick={handleCancelSearch}
+                          width="100%"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={10} md={11}>
+                        <NuralTextButton
+                          icon={"./Icons/searchIcon.svg"}
+                          iconPosition="right"
+                          height="36px"
+                          backgroundColor={PRIMARY_BLUE2}
+                          color="#fff"
+                          width="100%"
+                          onClick={handleSearch}
+                          fontSize="12px"
+                        >
+                          SEARCH
+                        </NuralTextButton>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={10} md={11}>
-                      <NuralTextButton
-                        icon={"./Icons/searchIcon.svg"}
-                        iconPosition="right"
-                        height="36px"
-                        backgroundColor={PRIMARY_BLUE2}
-                        color="#fff"
-                        width="100%"
-                        fontSize="12px"
-                      >
-                        SEARCH
-                      </NuralTextButton>
-                    </Grid>
+                  </NuralAccordion2>
+                )}
+
+                {showSearchStatus && (
+                  <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5} pr={2}>
+                    <StatusModel
+                      width="100%"
+                      status={searchStatus}
+                      title={searchMessage}
+                    />
                   </Grid>
-                </NuralAccordion2>
+                )}
+
                 {accordionExpanded2 && (
-                  <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, md: 0 }, mt: 2 }}>
+                  <Grid item xs={12} sx={{ mt: 2 }}>
                     <TableContainer
+                      ref={tableContainerRef}
                       component={Paper}
                       sx={{
                         backgroundColor: LIGHT_GRAY2,
                         color: PRIMARY_BLUE2,
-                        maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+                        maxHeight: "calc(100vh - 100px)",
                         overflow: "auto",
                       }}
                     >
@@ -622,42 +1007,61 @@ const Color = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {filteredRows
-                            .slice(
-                              page * rowsPerPage,
-                              page * rowsPerPage + rowsPerPage
-                            )
-                            .map((row, index) => (
-                              <TableRow key={row.id}>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  {row.colorName}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  {row.colorCode}
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  <Switch checked={row.status} size="small" />
-                                </TableCell>
-                                <TableCell sx={{ ...rowstyle }}>
-                                  <Edit
-                                    sx={{ color: DARK_PURPLE }}
-                                    fontSize="small"
+                          {isTableLoading
+                            ? // Show skeleton rows while loading
+                              Array(rowsPerPage)
+                                .fill(0)
+                                .map((_, index) => (
+                                  <TableRowSkeleton
+                                    key={index}
+                                    columns={tableColumns.length + 1} // +1 for edit column
                                   />
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                                ))
+                            : filteredRows.map((row) => (
+                                <TableRow key={row.colorID}>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    {row.colorName}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    {row.colorCode}
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    <Switch
+                                      checked={row.status == 1}
+                                      onChange={() =>
+                                        handleStatusChange(
+                                          row.colorID,
+                                          row.status
+                                        )
+                                      }
+                                      sx={{
+                                        ...toggleSectionStyle,
+                                        "& .MuiSwitch-thumb": {
+                                          backgroundColor:
+                                            row.status == 1
+                                              ? PRIMARY_BLUE2
+                                              : DARK_PURPLE,
+                                        },
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell sx={{ ...rowstyle }}>
+                                    <Edit
+                                      sx={{
+                                        color: DARK_PURPLE,
+                                        cursor: "pointer",
+                                      }}
+                                      fontSize="small"
+                                      onClick={() => handleEdit(row)}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))}
                         </TableBody>
                       </Table>
 
                       {/* Custom Pagination */}
-                      <Grid
-                        container
-                        sx={{
-                          p: 2,
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
+                      <Grid container sx={tablePaginationStyle}>
                         <Grid item>
                           <Typography
                             sx={{
@@ -675,9 +1079,8 @@ const Color = () => {
                             <span
                               style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}
                             >
-                              {filteredRows.length} /{" "}
-                              {Math.ceil(filteredRows.length / rowsPerPage)}{" "}
-                              PAGES
+                              {totalRecords} /{" "}
+                              {Math.ceil(totalRecords / rowsPerPage)} PAGES
                             </span>
                           </Typography>
                         </Grid>
@@ -692,7 +1095,6 @@ const Color = () => {
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center",
-                              //   gap: 1,
                             }}
                           >
                             <Typography
@@ -709,17 +1111,12 @@ const Color = () => {
                             {[10, 25, 50, 100].map((value) => (
                               <Grid item key={value}>
                                 <Button
-                                  onClick={() =>
-                                    handleChangeRowsPerPage({
-                                      target: { value },
-                                    })
-                                  }
+                                  onClick={() => handleRowsPerPageChange(value)}
                                   sx={{
                                     minWidth: "25px",
                                     height: "24px",
                                     padding: "4px",
                                     borderRadius: "50%",
-                                    // border: `1px solid ${PRIMARY_BLUE2}`,
                                     backgroundColor:
                                       rowsPerPage === value
                                         ? PRIMARY_BLUE2
@@ -763,13 +1160,16 @@ const Color = () => {
                               lineHeight: "10.93px",
                               letterSpacing: "4%",
                               textAlign: "center",
+                              cursor: "pointer",
                             }}
+                            onClick={handleJumpToFirst}
                           >
                             JUMP TO FIRST
                           </Typography>
                           <IconButton
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 0}
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            sx={{ cursor: "pointer" }}
                           >
                             <NavigateBeforeIcon />
                           </IconButton>
@@ -780,15 +1180,15 @@ const Color = () => {
                               fontWeight: 700,
                             }}
                           >
-                            PAGE {page + 1}
+                            PAGE {page}
                           </Typography>
 
                           <IconButton
-                            onClick={() => setPage(page + 1)}
+                            onClick={() => handlePageChange(page + 1)}
                             disabled={
-                              page >=
-                              Math.ceil(filteredRows.length / rowsPerPage) - 1
+                              page >= Math.ceil(totalRecords / rowsPerPage)
                             }
+                            sx={{ cursor: "pointer" }}
                           >
                             <NavigateNextIcon />
                           </IconButton>
@@ -801,8 +1201,10 @@ const Color = () => {
                               lineHeight: "10.93px",
                               letterSpacing: "4%",
                               textAlign: "center",
+                              cursor: "pointer",
                             }}
                             variant="body2"
+                            onClick={handleJumpToLast}
                           >
                             JUMP TO LAST
                           </Typography>
@@ -810,30 +1212,25 @@ const Color = () => {
                             type="number"
                             placeholder="Jump to page"
                             min={1}
-                            max={Math.ceil(filteredRows.length / rowsPerPage)}
-                            // value={page + 1}
+                            max={Math.ceil(totalRecords / rowsPerPage)}
+                            value={displayPage}
                             onChange={(e) => {
-                              const newPage = parseInt(e.target.value, 10) - 1;
-                              if (
-                                newPage >= 0 &&
-                                newPage <
-                                  Math.ceil(filteredRows.length / rowsPerPage)
-                              ) {
-                                setPage(newPage);
-                              }
+                              setJumpToPage(e.target.value);
+                              setDisplayPage(e.target.value);
                             }}
-                            style={{
-                              width: "100px",
-                              height: "24px",
-                              paddingRight: "8px",
-                              paddingLeft: "8px",
-                              borderRadius: "8px",
-                              borderWidth: "1px",
-                              border: `1px solid ${PRIMARY_BLUE2}`,
-                            }}
+                            style={jumpToPageStyle}
                           />
                           <Grid mt={1}>
-                            <img src="./Icons/footerSearch.svg" alt="arrow" />
+                            <img
+                              src="./Icons/footerSearch.svg"
+                              alt="arrow"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => {
+                                if (jumpToPage) {
+                                  handleJumpToPage(parseInt(jumpToPage, 10));
+                                }
+                              }}
+                            />
                           </Grid>
                         </Grid>
                       </Grid>
@@ -842,6 +1239,56 @@ const Color = () => {
                 )}
               </Grid>
             </Grid>
+          </Grid>
+
+          <Grid
+            item
+            xs={12}
+            sm={3}
+            md={2}
+            lg={2}
+            mt={1}
+            position={"fixed"}
+            right={{
+              xs: 0,
+              sm: 5,
+              md: 5,
+              lg: 10,
+            }}
+            sx={{
+              zIndex: 10000,
+              top: "0px",
+              overflowY: "auto",
+              paddingBottom: "20px",
+              "& > *": {
+                marginBottom: "16px",
+                // filter: isDownloadLoading ? "blur(2px)" : "none",
+                transition: "filter 0.3s ease",
+              },
+              "& .export-button": {
+                filter: "none !important",
+              },
+            }}
+          >
+            <NuralActivityPanel>
+              <Grid
+                item
+                xs={12}
+                md={12}
+                lg={12}
+                xl={12}
+                mt={2}
+                mb={2}
+                className="export-button"
+              >
+                <NuralExport
+                  title="Export"
+                  views={""}
+                  downloadExcel={downloadExcel}
+                  isDownloadLoading={isDownloadLoading}
+                />
+              </Grid>
+            </NuralActivityPanel>
           </Grid>
         </Grid>
       </Grid>

@@ -1,5 +1,5 @@
-import { Button, Grid, Switch, Typography } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { Grid, Switch, Typography } from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import EditIcon from "@mui/icons-material/Edit";
 import TabsBar from "../../../Common/TabsBar";
@@ -13,13 +13,9 @@ import {
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import Required from "../../../Common/Required";
-import NuralLoginTextField from "../../NuralCustomComponents/NuralLoginTextField";
+import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import {
   fetchBrandList,
   fetchCategoryList,
@@ -45,9 +41,11 @@ import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import { useNavigate } from "react-router-dom";
 import NuralPagination from "../../../Common/NuralPagination";
 import StatusModel from "../../../Common/StatusModel";
-// Add this import at the top with other imports
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward"; // Keep for sorting
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward"; // Keep for sorting
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 // Column definitions for the table
 const columnDefinitions = [
@@ -71,7 +69,7 @@ const tabs = [
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
-  { label: "Focus Model", value: "focusModel" },
+  { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "preBooking" },
 ];
@@ -80,26 +78,38 @@ const SKU = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("sku");
   const [page, setPage] = React.useState(0);
-  const [colorLoading, setColorLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [sortConfig, setSortConfig] = React.useState({
     key: null,
     direction: null,
   });
-  // Add state to track accordion open/closed state
-  const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(true);
+  const [accordionExpanded, setAccordionExpanded] = useState(true); // Keep Create open initially
+  const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false); // Keep View closed initially
 
-  // Add accordion change handlers
   const handleAccordionChange = (event, expanded) => {
-    setAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setAccordionExpanded(true);
+      setSearchAccordionExpanded(false);
+    }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
-    setSearchAccordionExpanded(expanded);
+    if (!expanded) {
+      // Closing this accordion closes both
+      setAccordionExpanded(false);
+      setSearchAccordionExpanded(false);
+    } else {
+      // Opening this accordion closes the other
+      setSearchAccordionExpanded(true);
+      setAccordionExpanded(false);
+    }
   };
 
-  // Add form state variables
   const [formData, setFormData] = useState({
     skuID: 0,
     skuname: "",
@@ -124,12 +134,10 @@ const SKU = () => {
     hsnCode: "",
     hsnDesc: "",
     attribute1: "",
-    attribute2: ""
+    attribute2: "",
   });
 
-  // State for validation errors
   const [errors, setErrors] = useState({});
-  // State variables for loading states
   const [brandList, setBrandList] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
   const [subCategoryList, setSubCategoryList] = useState([]);
@@ -139,8 +147,8 @@ const SKU = () => {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [subCategoryLoading, setSubCategoryLoading] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
+  const [colorLoading, setColorLoading] = useState(false); // Keep colorLoading for create form
 
-  // Search form loading states
   const [searchBrandList, setSearchBrandList] = useState([]);
   const [searchCategoryList, setSearchCategoryList] = useState([]);
   const [searchSubCategoryList, setSearchSubCategoryList] = useState([]);
@@ -168,7 +176,6 @@ const SKU = () => {
     pageSize: 10,
   });
 
-  // Table state and pagination
   const [totalRecords, setTotalRecords] = useState(0);
   const [tableData, setTableData] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
@@ -178,33 +185,33 @@ const SKU = () => {
   const [searchTitle, setSearchTitle] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Add at the top with other state declarations
   const [loadingRows, setLoadingRows] = useState(new Set());
 
-  // Add these state variables with other state declarations
   const [formLoading, setFormLoading] = useState(true);
   const [searchFormLoading, setSearchFormLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(true);
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-    getSKUList({
-      ...searchParams,
-      pageIndex: 1,
-      pageSize: parseInt(event.target.value, 10),
-    });
+  // Add ref for scrolling
+  const createAccordionRef = useRef(null);
+
+  // Helper function for smooth scrolling
+  const scrollToTop = (elementRef = null) => {
+    if (elementRef && elementRef.current) {
+      // If element ref is provided, scroll to that element
+      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      // Otherwise scroll to top of page
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleSort = (columnName) => {
     let direction = "asc";
 
-    // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
         direction = "desc";
       } else {
-        // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
         setFilteredRows([...tableData]); // Reset to original order
         return;
@@ -214,11 +221,10 @@ const SKU = () => {
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
-      // Handle field name variations for certain columns
       let valueA, valueB;
-      
+
       if (columnName === "categoryName") {
-        // Handle both possible field names for category
+
         valueA = (a.categoryName !== undefined && a.categoryName !== null) ? a.categoryName : 
                  (a.category !== undefined && a.category !== null) ? a.category : '';
         
@@ -226,7 +232,6 @@ const SKU = () => {
                  (b.category !== undefined && b.category !== null) ? b.category : '';
       }
       else if (columnName === "subCategoryName") {
-        // Handle both possible field names for subcategory
         valueA = (a.subCategoryName !== undefined && a.subCategoryName !== null) ? a.subCategoryName : 
                  (a.subCategory !== undefined && a.subCategory !== null) ? a.subCategory : '';
         
@@ -234,7 +239,6 @@ const SKU = () => {
                  (b.subCategory !== undefined && b.subCategory !== null) ? b.subCategory : '';
       }
       else if (columnName === "modelName") {
-        // Handle both possible field names for model
         valueA = (a.modelName !== undefined && a.modelName !== null) ? a.modelName : 
                  (a.model !== undefined && a.model !== null) ? a.model : '';
         
@@ -242,14 +246,13 @@ const SKU = () => {
                  (b.model !== undefined && b.model !== null) ? b.model : '';
       }
       else {
-        // For other fields, use the standard approach
         valueA = (a[columnName] !== undefined && a[columnName] !== null) ? a[columnName] : '';
         valueB = (b[columnName] !== undefined && b[columnName] !== null) ? b[columnName] : '';
       }
       
-      // Convert to lowercase strings for comparison
       const aValue = typeof valueA === 'string' ? valueA.toLowerCase() : valueA.toString().toLowerCase();
       const bValue = typeof valueB === 'string' ? valueB.toLowerCase() : valueB.toString().toLowerCase();
+
 
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
@@ -262,13 +265,6 @@ const SKU = () => {
 
     setFilteredRows(sortedRows);
   };
-
-  // Generate dummy data function is no longer needed since we're using real data
-  const generateDummyData = () => {
-    return [];
-  };
-
-  const [rows, setRows] = React.useState(generateDummyData());
 
   const [skuDropdownList, setSkuDropdownList] = React.useState([]);
   const [hsnList, setHsnList] = React.useState([]);
@@ -313,16 +309,15 @@ const SKU = () => {
     } catch (error) {
       console.error("Error fetching HSN list:", error);
       setHsnList([]);
+    } finally {
+      setHsnLoading(false); // Keep this, it updates loading state
     }
   };
-  // Initialize data
   useEffect(() => {
-    // Set initial loading states
     setFormLoading(true);
     setSearchFormLoading(true);
     setTableLoading(true);
 
-    // Load data
     getBrandList();
     getSearchBrandList();
     getSearchColorList();
@@ -332,7 +327,6 @@ const SKU = () => {
     getSKUList();
   }, []);
 
-  // Add useEffect to handle auto-dismiss
   useEffect(() => {
     let timeoutId;
     if (createStatus) {
@@ -342,7 +336,6 @@ const SKU = () => {
       }, 5000); // 5 seconds
     }
 
-    // Cleanup function to clear timeout if component unmounts or status changes
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -350,34 +343,50 @@ const SKU = () => {
     };
   }, [createStatus]); // Only run when createStatus changes
 
-  // Get SKU list data with search parameters
   const getSKUList = async (params = searchParams) => {
     try {
       setTableLoading(true);
+
+      setTableData([]); // Clear previous data immediately
+      setFilteredRows([]);
+      setTotalRecords(0);
+      // Clear previous errors only if a new search is initiated
+      // setSearchStatus(null); 
+      // setSearchTitle("");
       
-      // Record start time to ensure minimum loading duration
+
       const startTime = Date.now();
-      
+
       const response = await GetSKUListForMoto(params);
+
       if (response.statusCode == 200) {
         const data = response.skuMasterList || [];
         setTableData(data);
         setFilteredRows(data);
         setTotalRecords(response.totalRecords || data.length);
+        setSearchStatus(null); // Clear errors on success
+        setSearchTitle("");
+
+        // Ensure minimum loading time of 800ms for skeleton to be visible
+        const loadingTime = Date.now() - startTime;
+        if (loadingTime < 800) {
+          await new Promise(resolve => setTimeout(resolve, 800 - loadingTime));
+        }
       } else {
-        console.error("Error fetching SKU list:", response.message);
-        setTableData([]);
+        // Error case (including 404)
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "An error occurred");
+        setTableData([]); // Ensure table data is empty on error
         setFilteredRows([]);
         setTotalRecords(0);
-      }
-      
-      // Ensure minimum loading time of 800ms for skeleton to be visible
-      const loadingTime = Date.now() - startTime;
-      if (loadingTime < 800) {
-        await new Promise(resolve => setTimeout(resolve, 800 - loadingTime));
+
+        // No minimum loading time needed if error occurs quickly
+
       }
     } catch (error) {
       console.error("Error in getSKUList:", error);
+      setSearchStatus(500); // Generic error status
+      setSearchTitle("Failed to fetch data. Please try again.");
       setTableData([]);
       setFilteredRows([]);
       setTotalRecords(0);
@@ -386,7 +395,6 @@ const SKU = () => {
     }
   };
 
-  // Get brand list for creation form
   const getBrandList = async () => {
     try {
       setFormLoading(true);
@@ -409,7 +417,6 @@ const SKU = () => {
     }
   };
 
-  // Get category list for creation form based on selected brand
   const getCategoryList = async (brandID = 0) => {
     try {
       setCategoryLoading(true);
@@ -431,7 +438,6 @@ const SKU = () => {
     }
   };
 
-  // Get sub-category list for creation form based on selected brand and category
   const getSubCategoryList = async (brandID = 0, categoryID = 0) => {
     try {
       setSubCategoryLoading(true);
@@ -454,7 +460,6 @@ const SKU = () => {
     }
   };
 
-  // Get model list for creation form based on selected brand, category, and subcategory
   const getModelList = async (
     brandID = 0,
     categoryID = 0,
@@ -510,8 +515,8 @@ const SKU = () => {
     // Text field validations
     if (!formData.skuCode || formData.skuCode.trim() === "") {
       newErrors.skuCode = "SKU Code is required";
-    } else if (formData.skuCode.length > 50) {
-      newErrors.skuCode = "SKU Code cannot exceed 50 characters";
+    } else if (formData.skuCode.length > 20) { // Update limit to 20
+      newErrors.skuCode = "SKU Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.skuCode)) {
       newErrors.skuCode =
         "SKU Code can only contain alphanumeric characters (no spaces)";
@@ -528,8 +533,8 @@ const SKU = () => {
 
     if (!formData.skuDescription || formData.skuDescription.trim() === "") {
       newErrors.skuDescription = "SKU Description is required";
-    } else if (formData.skuDescription.length > 100) {
-      newErrors.skuDescription = "SKU Description cannot exceed 100 characters";
+    } else if (formData.skuDescription.length > 50) { // Update limit to 50
+      newErrors.skuDescription = "SKU Description cannot exceed 50 characters";
     }
 
     if (formData.hsnCode && formData.hsnCode.length > 20) {
@@ -721,14 +726,14 @@ const SKU = () => {
       // Text field validations
       if (field === "skuCode") {
         // Check length first
-        if (newValue.length > 50) {
+        if (newValue.length > 20) { // Update limit to 20
           setFormData((prev) => ({
             ...prev,
-            [field]: newValue.substring(0, 50), // Truncate to 50 chars
+            [field]: newValue.substring(0, 20), // Truncate to 20 chars
           }));
           setErrors((prev) => ({
             ...prev,
-            skuCode: "SKU Code cannot exceed 50 characters",
+            skuCode: "SKU Code cannot exceed 20 characters", // Update error message
           }));
           return;
         }
@@ -787,14 +792,14 @@ const SKU = () => {
         }
       } else if (field === "skuDescription") {
         // Check length only
-        if (newValue.length > 100) {
+        if (newValue.length > 50) { // Update limit to 50
           setFormData((prev) => ({
             ...prev,
-            [field]: newValue.substring(0, 100), // Truncate to 100 chars
+            [field]: newValue.substring(0, 50), // Truncate to 50 chars
           }));
           setErrors((prev) => ({
             ...prev,
-            skuDescription: "SKU Description cannot exceed 100 characters",
+            skuDescription: "SKU Description cannot exceed 50 characters", // Update error message
           }));
           return;
         } else if (newValue.trim() === "") {
@@ -1049,7 +1054,7 @@ const SKU = () => {
   // Get color list for search filter
   const getColorList = async () => {
     try {
-      setSearchColorLoading(true);
+      setColorLoading(true); // Use setColorLoading for create form
       const params = {
         colorID: 0,
       };
@@ -1063,7 +1068,7 @@ const SKU = () => {
       setColorList([]);
       console.log(error);
     } finally {
-      setSearchColorLoading(false);
+      setColorLoading(false); // Use setColorLoading for create form
     }
   };
   const getSearchColorList = async () => {
@@ -1273,17 +1278,49 @@ const SKU = () => {
 
   // Functions for search
   const handleSearch = () => {
-    setTableLoading(true);
-    // Search logic
+    setTableLoading(true); // Keep loading indicator while fetching
+    setPage(0); // Reset page to 1 for new search
+    const updatedParams = { ...searchParams, pageIndex: 1 }; // Ensure pageIndex is reset
+    setSearchParams(updatedParams); // Update state before fetching
+    getSKUList(updatedParams); // Call API with updated params
   };
 
   const handleClearSearch = () => {
     setSearchFormLoading(true);
-    // Reset search logic
-    setTimeout(() => {
-      // Refresh data
+    setSearchStatus(null); // Clear persistent error status explicitly
+    setSearchTitle("");
+    // Reset search params to default/initial state
+    const defaultParams = {
+      skuname: "",
+      skuID: 0,
+      skucode: "",
+      brandID: 0,
+      categoryID: 0,
+      subCategoryID: 0,
+      colorID: 0,
+      modelID: 0,
+      selectionMode: 2,
+      status: 2,
+      pageIndex: 1,
+      pageSize: rowsPerPage, // Use current rowsPerPage
+    };
+    setSearchParams(defaultParams);
+
+    // Clear dependent dropdown lists for search
+    setSearchCategoryList([]);
+    setSearchSubCategoryList([]);
+    setSearchModelList([]);
+
+    // Reset page for table
+    setPage(0);
+
+    // Refresh data with default params and reset loading state
+    getSKUList(defaultParams).finally(() => {
       setSearchFormLoading(false);
-    }, 500);
+    });
+
+    // Base dropdowns (Brand, Color, SKU) are usually loaded once initially
+    // and don't need to be re-fetched on clear unless specifically required.
   };
 
   // Handle form submission
@@ -1353,7 +1390,7 @@ const SKU = () => {
       hsnCode: "",
       hsnDesc: "",
       attribute1: "",
-      attribute2: ""
+      attribute2: "",
     });
 
     // Clear all errors
@@ -1397,6 +1434,8 @@ const SKU = () => {
   };
 
   const handleEdit = (row) => {
+    setAccordionExpanded(true); // Ensure create/update accordion is open
+    setSearchAccordionExpanded(false); // Explicitly close search accordion
     setIsEditMode(true);
     setFormData({
       skuID: row.skuID,
@@ -1422,10 +1461,20 @@ const SKU = () => {
     });
 
     // Load dependent dropdowns
+    getBrandList(); // Ensure brand list is loaded
     getCategoryList(row.brandID);
     getSubCategoryList(row.brandID, row.categoryID);
     getModelList(row.brandID, row.categoryID, row.subCategoryID);
-    getColorList(row.brandID, row.modelID);
+    getColorList(); // Ensure color list is loaded for the create form
+    getHSNList(); // Ensure HSN list is available
+
+    // Use setTimeout with a longer delay to ensure all state updates and re-renders complete
+    setTimeout(() => {
+      // Temporarily use window.scrollTo for testing
+      // window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Original code: scrollToTop(createAccordionRef); 
+      scrollToTop(createAccordionRef); // Use the intended scroll function
+    }, 300);
   };
 
   // Update handleStatus to use row-specific loading
@@ -1482,9 +1531,42 @@ const SKU = () => {
     };
   }, [searchStatus]); // Only run when searchStatus changes
 
+  // Update handleExport function
+  const handleExport = async () => {
+    setIsDownloadLoading(true); // Start loading
+    const params = {
+      ...searchParams,
+      pageIndex: -1, // -1 indicates export to excel
+    };
+    try {
+      const response = await getSKUList(params);
+      if (response.statusCode === "200") {
+        window.location.href = response?.reportLink;
+      } else {
+        console.error("Error exporting SKU list:", response.message);
+      }
+    } catch (error) {
+      console.error("Error exporting SKU list:", error);
+    } finally {
+      setIsDownloadLoading(false); // Stop loading
+    }
+  };
+
+  // State for export loading
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          isolation: "isolate",
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -1492,7 +1574,7 @@ const SKU = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 1300,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
@@ -1518,639 +1600,645 @@ const SKU = () => {
                   <FormSkeleton />
                 ) : (
                   <>
-                    <NuralAccordion2
-                      title={isEditMode ? "Update" : "Create"}
-                      backgroundColor={LIGHT_GRAY2}
-                      onChange={handleAccordionChange}
-                      controlled={true}
-                      expanded={accordionExpanded}
-                      defaultExpanded={true}
-                    >
-                      <Grid container spacing={2} sx={{ width: "100%" }}>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            BRAND <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={brandList}
-                            getOptionLabel={(option) => option.brandName || ""}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.brandID === value?.brandID
-                            }
-                            value={
-                              brandList.find(
-                                (item) => item.brandID == formData.brandID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("brandID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.brandID}
-                            loading={brandLoading}
-                            onBlur={() => {
-                              if (!formData.brandID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  brandID: "Brand is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.brandID && (
+                    <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
+                      <NuralAccordion2
+                        title={isEditMode ? "Update" : "Create"}
+                        backgroundColor={LIGHT_GRAY2}
+                        onChange={handleAccordionChange}
+                        controlled={true}
+                        expanded={accordionExpanded}
+                        defaultExpanded={true}
+                      >
+                        <Grid container spacing={2} sx={{ width: "100%" }}>
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.brandID}
+                              BRAND <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            CATEGORY <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={categoryList}
-                            getOptionLabel={(option) =>
-                              option.categoryName || ""
-                            }
-                            isOptionEqualToValue={(option, value) =>
-                              option?.categoryID === value?.categoryID
-                            }
-                            value={
-                              categoryList.find(
-                                (item) => item.categoryID == formData.categoryID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("categoryID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.categoryID}
-                            loading={categoryLoading}
-                            onBlur={() => {
-                              if (!formData.categoryID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  categoryID: "Category is required",
-                                }));
+                            <NuralAutocomplete
+                              options={brandList}
+                              getOptionLabel={(option) => option.brandName || ""}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.brandID === value?.brandID
                               }
-                            }}
-                          />
-                          {errors.categoryID && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.categoryID}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            SUB-CATEGORY <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={subCategoryList}
-                            getOptionLabel={(option) =>
-                              option.subCategoryName || ""
-                            }
-                            isOptionEqualToValue={(option, value) =>
-                              option?.subCategoryID === value?.subCategoryID
-                            }
-                            value={
-                              subCategoryList.find(
-                                (item) =>
-                                  item.subCategoryID == formData.subCategoryID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("subCategoryID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.subCategoryID}
-                            loading={subCategoryLoading}
-                            onBlur={() => {
-                              if (!formData.subCategoryID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  subCategoryID: "Sub-Category is required",
-                                }));
+                              value={
+                                brandList.find(
+                                  (item) => item.brandID == formData.brandID
+                                ) || null
                               }
-                            }}
-                          />
-                          {errors.subCategoryID && (
+                              onChange={(event, newValue) => {
+                                handleChange("brandID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.brandID}
+                              loading={brandLoading}
+                              onBlur={() => {
+                                if (!formData.brandID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    brandID: "Brand is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.brandID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.brandID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.subCategoryID}
+                              CATEGORY <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            MODEL <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={modelList}
-                            getOptionLabel={(option) => option.modelName || ""}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.modelID === value?.modelID
-                            }
-                            value={
-                              modelList.find(
-                                (item) => item.modelID == formData.modelID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("modelID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.modelID}
-                            loading={modelLoading}
-                            onBlur={() => {
-                              if (!formData.modelID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  modelID: "Model is required",
-                                }));
+                            <NuralAutocomplete
+                              options={categoryList}
+                              getOptionLabel={(option) =>
+                                option.categoryName || ""
                               }
-                            }}
-                          />
-                          {errors.modelID && (
+                              isOptionEqualToValue={(option, value) =>
+                                option?.categoryID === value?.categoryID
+                              }
+                              value={
+                                categoryList.find(
+                                  (item) => item.categoryID == formData.categoryID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("categoryID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.categoryID}
+                              loading={categoryLoading}
+                              onBlur={() => {
+                                if (!formData.categoryID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryID: "Category is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.categoryID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.categoryID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.modelID}
+                              SUB-CATEGORY <Required />
                             </Typography>
-                          )}
-                        </Grid>
+                            <NuralAutocomplete
+                              options={subCategoryList}
+                              getOptionLabel={(option) =>
+                                option.subCategoryName || ""
+                              }
+                              isOptionEqualToValue={(option, value) =>
+                                option?.subCategoryID === value?.subCategoryID
+                              }
+                              value={
+                                subCategoryList.find(
+                                  (item) =>
+                                    item.subCategoryID == formData.subCategoryID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("subCategoryID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.subCategoryID}
+                              loading={subCategoryLoading}
+                              onBlur={() => {
+                                if (!formData.subCategoryID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    subCategoryID: "Sub-Category is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.subCategoryID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.subCategoryID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              MODEL <Required />
+                            </Typography>
+                            <NuralAutocomplete
+                              options={modelList}
+                              getOptionLabel={(option) => option.modelName || ""}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.modelID === value?.modelID
+                              }
+                              value={
+                                modelList.find(
+                                  (item) => item.modelID == formData.modelID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("modelID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.modelID}
+                              loading={modelLoading}
+                              onBlur={() => {
+                                if (!formData.modelID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    modelID: "Model is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.modelID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.modelID}
+                              </Typography>
+                            )}
+                          </Grid>
 
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            COLOR <Required />
-                          </Typography>
-                          <NuralAutocomplete
-                            options={colorList}
-                            getOptionLabel={(option) => option.colorName || ""}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.colorID === value?.colorID
-                            }
-                            value={
-                              colorList.find(
-                                (item) => item.colorID == formData.colorID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("colorID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            error={!!errors.colorID}
-                            loading={colorLoading}
-                            onBlur={() => {
-                              if (!formData.colorID) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  colorID: "Color is required",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.colorID && (
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.colorID}
+                              COLOR <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            SKU CODE <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.skuCode || ""}
-                            onChange={(event) => {
-                              handleChange("skuCode", event.target.value);
-                            }}
-                            placeholder="ENTER SKU CODE"
-                            error={!!errors.skuCode}
-                            onBlur={() => {
-                              if (
-                                !formData.skuCode ||
-                                formData.skuCode.trim() === ""
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuCode: "SKU Code is required",
-                                }));
-                              } else if (formData.skuCode.length > 50) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuCode:
-                                    "SKU Code cannot exceed 50 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  skuCode: formData.skuCode.substring(0, 50),
-                                }));
-                              } else if (
-                                !/^[a-zA-Z0-9]+$/.test(formData.skuCode)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuCode:
-                                    "SKU Code can only contain alphanumeric characters (no spaces)",
-                                }));
+                            <NuralAutocomplete
+                              options={colorList}
+                              getOptionLabel={(option) => option.colorName || ""}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.colorID === value?.colorID
                               }
-                            }}
-                          />
-                          {errors.skuCode && (
-                            <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
-                            >
-                              {errors.skuCode}
-                            </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            SKU NAME <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.skuName || ""}
-                            onChange={(event) => {
-                              handleChange("skuName", event.target.value);
-                            }}
-                            placeholder="ENTER SKU NAME"
-                            error={!!errors.skuName}
-                            onBlur={() => {
-                              if (
-                                !formData.skuName ||
-                                formData.skuName.trim() === ""
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuName: "SKU Name is required",
-                                }));
-                              } else if (formData.skuName.length > 50) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuName:
-                                    "SKU Name cannot exceed 50 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  skuName: formData.skuName.substring(0, 50),
-                                }));
-                              } else if (
-                                !/^[a-zA-Z0-9 ]+$/.test(formData.skuName)
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuName:
-                                    "SKU Name can only contain alphanumeric characters and spaces",
-                                }));
+                              value={
+                                colorList.find(
+                                  (item) => item.colorID == formData.colorID
+                                ) || null
                               }
-                            }}
-                          />
-                          {errors.skuName && (
+                              onChange={(event, newValue) => {
+                                handleChange("colorID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              error={!!errors.colorID}
+                              loading={colorLoading}
+                              onBlur={() => {
+                                if (!formData.colorID) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    colorID: "Color is required",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.colorID && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.colorID}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.skuName}
+                              SKU CODE <Required />
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            SKU DESCRIPTION <Required />
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.skuDescription || ""}
-                            onChange={(event) => {
-                              handleChange(
-                                "skuDescription",
-                                event.target.value
-                              );
-                            }}
-                            placeholder="ENTER DESCRIPTION"
-                            error={!!errors.skuDescription}
-                            onBlur={() => {
-                              if (
-                                !formData.skuDescription ||
-                                formData.skuDescription.trim() === ""
-                              ) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuDescription: "SKU Description is required",
-                                }));
-                              } else if (formData.skuDescription.length > 100) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuDescription:
-                                    "SKU Description cannot exceed 100 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  skuDescription:
-                                    formData.skuDescription.substring(0, 100),
-                                }));
-                              } else {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  skuDescription: "",
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.skuDescription && (
+                            <NuralTextField
+                              width="100%"
+                              value={formData.skuCode || ""}
+                              onChange={(event) => {
+                                handleChange("skuCode", event.target.value);
+                              }}
+                              placeholder="ENTER SKU CODE"
+                              error={!!errors.skuCode}
+                              onBlur={() => {
+                                if (
+                                  !formData.skuCode ||
+                                  formData.skuCode.trim() === ""
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuCode: "SKU Code is required",
+                                  }));
+                                } else if (formData.skuCode.length > 20) { // Update limit to 20
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuCode:
+                                      "SKU Code cannot exceed 20 characters", // Update error message
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    skuCode: formData.skuCode.substring(0, 20), // Truncate to 20
+                                  }));
+                                } else if (
+                                  !/^[a-zA-Z0-9]+$/.test(formData.skuCode)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuCode:
+                                      "SKU Code can only contain alphanumeric characters (no spaces)",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.skuCode && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.skuCode}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.skuDescription}
+                              SKU NAME <Required />
                             </Typography>
-                          )}
-                        </Grid>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.skuName || ""}
+                              onChange={(event) => {
+                                handleChange("skuName", event.target.value);
+                              }}
+                              placeholder="ENTER SKU NAME"
+                              error={!!errors.skuName}
+                              onBlur={() => {
+                                if (
+                                  !formData.skuName ||
+                                  formData.skuName.trim() === ""
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuName: "SKU Name is required",
+                                  }));
+                                } else if (formData.skuName.length > 50) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuName:
+                                      "SKU Name cannot exceed 50 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    skuName: formData.skuName.substring(0, 50),
+                                  }));
+                                } else if (
+                                  !/^[a-zA-Z0-9 ]+$/.test(formData.skuName)
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuName:
+                                      "SKU Name can only contain alphanumeric characters and spaces",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.skuName && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.skuName}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              SKU DESCRIPTION <Required />
+                            </Typography>
 
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            HSN CODE
-                          </Typography>
-                          <NuralAutocomplete
-                            options={hsnList}
-                            getOptionLabel={(option) => option.hsnCode || ""}
-                            isOptionEqualToValue={(option, value) =>
-                              option?.hsnID === value?.hsnID
-                            }
-                            value={
-                              hsnList.find(
-                                (item) => item.hsnID == formData.hsnID
-                              ) || null
-                            }
-                            onChange={(event, newValue) => {
-                              handleChange("hsnID", newValue || null);
-                            }}
-                            placeholder="SELECT"
-                            width="100%"
-                            backgroundColor={LIGHT_GRAY2}
-                            loading={hsnLoading}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            ATTRIBUTE 1
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.attribute1 || ""}
-                            onChange={(event) => {
-                              handleChange("attribute1", event.target.value);
-                            }}
-                            placeholder="ENTER ATTRIBUTE 1"
-                            error={!!errors.attribute1}
-                            onBlur={() => {
-                              if (formData.attribute1 && formData.attribute1.length > 100) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  attribute1: "Attribute 1 cannot exceed 100 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  attribute1: formData.attribute1.substring(0, 100),
-                                }));
-                              }
-                            }}
-                          />
-                          {errors.attribute1 && (
+                            <NuralTextField
+                              width="100%"
+                              value={formData.skuDescription || ""}
+                              onChange={(event) => {
+                                handleChange(
+                                  "skuDescription",
+                                  event.target.value
+                                );
+                              }}
+                              placeholder="ENTER DESCRIPTION"
+                              error={!!errors.skuDescription}
+                              onBlur={() => {
+                                if (
+                                  !formData.skuDescription ||
+                                  formData.skuDescription.trim() === ""
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuDescription: "SKU Description is required",
+                                  }));
+                                } else if (formData.skuDescription.length > 50) { // Update limit to 50
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuDescription:
+                                      "SKU Description cannot exceed 50 characters", // Update error message
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    skuDescription:
+                                      formData.skuDescription.substring(0, 50), // Truncate to 50
+                                  }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    skuDescription: "",
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.skuDescription && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.skuDescription}
+                              </Typography>
+                            )}
+                          </Grid>
+
+                          <Grid item xs={12} sm={4}>
+
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.attribute1}
+                              HSN CODE
                             </Typography>
-                          )}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: DARK_BLUE,
-                              fontFamily: "Manrope",
-                              fontWeight: 400,
-                              fontSize: "10px",
-                              lineHeight: "13.66px",
-                              letterSpacing: "4%",
-                              mb: 1,
-                            }}
-                          >
-                            ATTRIBUTE 2
-                          </Typography>
-                          <NuralTextField
-                            width="100%"
-                            value={formData.attribute2 || ""}
-                            onChange={(event) => {
-                              handleChange("attribute2", event.target.value);
-                            }}
-                            placeholder="ENTER ATTRIBUTE 2"
-                            error={!!errors.attribute2}
-                            onBlur={() => {
-                              if (formData.attribute2 && formData.attribute2.length > 100) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  attribute2: "Attribute 2 cannot exceed 100 characters",
-                                }));
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  attribute2: formData.attribute2.substring(0, 100),
-                                }));
+
+                            <NuralAutocomplete
+                              options={hsnList}
+                              getOptionLabel={(option) => option.hsnCode || ""}
+                              isOptionEqualToValue={(option, value) =>
+                                option?.hsnID === value?.hsnID
+
                               }
-                            }}
-                          />
-                          {errors.attribute2 && (
+                              value={
+                                hsnList.find(
+                                  (item) => item.hsnID == formData.hsnID
+                                ) || null
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange("hsnID", newValue || null);
+                              }}
+                              placeholder="SELECT"
+                              width="100%"
+                              backgroundColor={LIGHT_GRAY2}
+                              loading={hsnLoading}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
                             <Typography
-                              variant="caption"
-                              color="error"
-                              sx={{ fontSize: "0.75rem" }}
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
                             >
-                              {errors.attribute2}
+                              ATTRIBUTE 1
                             </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.attribute1 || ""}
+                              onChange={(event) => {
+                                handleChange("attribute1", event.target.value);
+                              }}
+                              placeholder="ENTER ATTRIBUTE 1"
+                              error={!!errors.attribute1}
+                              onBlur={() => {
+                                if (formData.attribute1 && formData.attribute1.length > 100) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    attribute1: "Attribute 1 cannot exceed 100 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    attribute1: formData.attribute1.substring(0, 100),
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.attribute1 && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.attribute1}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              ATTRIBUTE 2
+                            </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.attribute2 || ""}
+                              onChange={(event) => {
+                                handleChange("attribute2", event.target.value);
+                              }}
+                              placeholder="ENTER ATTRIBUTE 2"
+                              error={!!errors.attribute2}
+                              onBlur={() => {
+                                if (formData.attribute2 && formData.attribute2.length > 100) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    attribute2: "Attribute 2 cannot exceed 100 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    attribute2: formData.attribute2.substring(0, 100),
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.attribute2 && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.attribute2}
+                              </Typography>
+                            )}
+                          </Grid>
+                        </Grid>
+                      </NuralAccordion2>
+                      {accordionExpanded && (
+                        <Grid container spacing={1} mt={1} px={1}>
+                          {createStatus && (
+                            <StatusModel
+                              width="100%"
+                              status={createStatus}
+                              title={createTitle}
+                              onClose={() => {
+                                setCreateStatus(null);
+                                setCreateTitle("");
+                              }}
+                            />
                           )}
+                          <Grid item xs={12} md={6} lg={6}>
+                            <NuralButton
+                              text="CANCEL"
+                              variant="outlined"
+                              borderColor={PRIMARY_BLUE2}
+                              onClick={handleCancel}
+                              width="100%"
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6} lg={6}>
+                            <NuralButton
+                              text={isEditMode ? "UPDATE" : "SAVE"}
+                              backgroundColor={AQUA}
+                              variant="contained"
+                              onClick={handleSave}
+                              width="100%"
+                            />
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    </NuralAccordion2>
-                    {accordionExpanded && (
-                      <Grid container spacing={1} mt={1} px={1}>
-                        {createStatus && (
-                          <StatusModel
-                            width="100%"
-                            status={createStatus}
-                            title={createTitle}
-                            onClose={() => {
-                              setCreateStatus(null);
-                              setCreateTitle("");
-                            }}
-                          />
-                        )}
-                        <Grid item xs={12} md={6} lg={6}>
-                          <NuralButton
-                            text="CANCEL"
-                            variant="outlined"
-                            borderColor={PRIMARY_BLUE2}
-                            onClick={handleCancel}
-                            width="100%"
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6} lg={6}>
-                          <NuralButton
-                            text={isEditMode ? "UPDATE" : "SAVE"}
-                            backgroundColor={AQUA}
-                            variant="contained"
-                            onClick={handleSave}
-                            width="100%"
-                          />
-                        </Grid>
-                      </Grid>
-                    )}
+                      )}
+                    </div>
                   </>
                 )}
               </Grid>
@@ -2434,9 +2522,7 @@ const SKU = () => {
                       </Grid>
                     </NuralAccordion2>
                     {searchAccordionExpanded && (
-                      <Grid container spacing={1} mt={1}>
-                        <Grid item spacing={1} xs={11} sm={2} md={1}>
-                          <NuralButton
+                      <Grid container spacing={1} mt={1} px={1}> {/* Added padding */}                        <Grid item xs={12} sm={6} md={1}> {/* Adjusted grid sizing */}                          <NuralButton
                             text="CANCEL"
                             variant="outlined"
                             color={PRIMARY_BLUE2}
@@ -2447,8 +2533,7 @@ const SKU = () => {
                             width="100%"
                           />
                         </Grid>
-                        <Grid item xs={12} sm={10} md={11} pr={1.5}>
-                          <NuralTextButton
+                        <Grid item xs={12} sm={6} md={11}> {/* Adjusted grid sizing */}                          <NuralTextButton
                             icon={"./Icons/searchIcon.svg"}
                             iconPosition="right"
                             height="36px"
@@ -2479,18 +2564,19 @@ const SKU = () => {
                 setSearchStatus(null);
                 setSearchTitle("");
               }}
-                          />
-                        )}
+            />
+          )}
         </Grid>
-        <Grid item xs={12} mt={2} sx={{ p: { xs: 1, sm: 2 } }}>
+     {!searchStatus &&   <Grid item xs={12} mt={2} sx={{ p: { xs: 1, sm: 2 } }}>
           <TableContainer
             component={Paper}
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 320px)", // Adjusted to account for headers
+              maxHeight: "calc(100vh - 45px)", // Adjusted to account for headers
               overflow: "auto",
               position: "relative",
+              zIndex: 900, // Lower than header z-index 
               "& .MuiTable-root": {
                 borderCollapse: "separate",
                 borderSpacing: 0,
@@ -2511,7 +2597,11 @@ const SKU = () => {
                       boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
                     }}
                   >
-                    <Grid container alignItems="center" justifyContent="space-between">
+                    <Grid
+                      container
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
                       <Grid item>
                         <Typography
                           variant="body1"
@@ -2529,31 +2619,7 @@ const SKU = () => {
                         </Typography>
                       </Grid>
                       <Grid item>
-                        <Grid
-                          item
-                          sx={{
-                            cursor: "pointer",
-                            mr: 2,
-                          }}
-                          onClick={() => {
-                            console.log("Export to Excel clicked");
-                            // Add your export to Excel functionality here
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontFamily: "Manrope",
-                              fontWeight: 600,
-                              fontSize: "12px",
-                              color: PRIMARY_BLUE2,
-                              display: "flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            Export Excel
-                          </Typography>
-                        </Grid>
+                        {/* Remove the old export icon */}
                       </Grid>
                     </Grid>
                   </TableCell>
@@ -2605,14 +2671,14 @@ const SKU = () => {
                         >
                           {sortConfig.key === column.field ? (
                             sortConfig.direction === "asc" ? (
-                              <ArrowUpwardIcon
+                              <ArrowUpwardIcon // Use correct icon
                                 sx={{
                                   fontSize: 16,
                                   color: PRIMARY_BLUE2,
                                 }}
                               />
                             ) : (
-                              <ArrowDownwardIcon
+                              <ArrowDownwardIcon // Use correct icon
                                 sx={{
                                   fontSize: 16,
                                   color: PRIMARY_BLUE2,
@@ -2626,13 +2692,13 @@ const SKU = () => {
                               alignItems="center"
                               sx={{ height: 16, width: 16 }}
                             >
-                              <ArrowUpwardIcon
+                              <ArrowUpwardIcon // Use correct icon
                                 sx={{
                                   fontSize: 12,
                                   color: "grey.400",
                                 }}
                               />
-                              <ArrowDownwardIcon
+                              <ArrowDownwardIcon // Use correct icon
                                 sx={{
                                   fontSize: 12,
                                   color: "grey.400",
@@ -2654,6 +2720,18 @@ const SKU = () => {
                     imagePath="./Icons/emptyFile.svg"
                     sx={{ height: "calc(100vh - 420px)" }}
                   />
+                ) : searchStatus ? ( // Check for persistent search error FIRST
+                  <TableRow>
+                    <TableCell 
+                      colSpan={columnDefinitions.length + 1} // Span all columns
+                      align="center" 
+                      sx={{ py: 3, color: 'error.main' }} // Style error message
+                    >
+                      <Typography variant="body1"> 
+                        {searchTitle} {/* Display the error message */}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
                 ) : tableData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
@@ -2751,7 +2829,52 @@ const SKU = () => {
               onPaginationChange={handlePaginationChange}
             />
           </TableContainer>
-        </Grid>
+        </Grid>}
+      </Grid>
+      {/* Activity Panel for Export */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        mr={0}
+        position={"fixed"}
+        right={10}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export SKU List"
+              views={""} // Add views if applicable
+              downloadExcel={handleExport}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );
