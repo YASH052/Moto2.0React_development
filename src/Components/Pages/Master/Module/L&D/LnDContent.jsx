@@ -12,9 +12,8 @@ import {
   TableHead,
   TableRow,
   TableBody,
-  MenuItem,
-  Select,
-  InputBase,
+  Checkbox,
+  FormControlLabel,
   Switch,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -25,13 +24,9 @@ import {
   AQUA_DARK,
   BLACK,
   BLUE_COLOR,
-  BORDER_BOTTOM,
   DARK_PURPLE,
-  GREEN_COLOR,
-  LIGHT_GRAY,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
-  PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
 import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
@@ -54,16 +49,30 @@ import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus"
 import { AddIcCallOutlined } from "@mui/icons-material";
 import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
 import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
-import { styled } from "@mui/system";
-import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
 
-const ServifyOffer = () => {
+const LnDCont = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [showStatus, setShowStatus] = React.useState(false);
-  const [selected, setSelected] = React.useState("");
-  const views = ["Role 1", "Role 2", "Role 3", "Role 4"];
+  const views = ["Role 1", "Role 2", "Role 3", "Role 4"]; // example list
+  const [selectedViews, setSelectedViews] = useState([]);
+
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedViews(views); // Select all
+    } else {
+      setSelectedViews([]); // Deselect all
+    }
+  };
+
+  const handleSelect = (view) => {
+    if (selectedViews.includes(view)) {
+      setSelectedViews(selectedViews.filter((v) => v !== view));
+    } else {
+      setSelectedViews([...selectedViews, view]);
+    }
+  };
 
   const templates = [
     {
@@ -103,67 +112,18 @@ const ServifyOffer = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
-  const [activeTab, setActiveTab] = React.useState("servify-offer");
+  const options2 = ["Yes", "No"];
+  const [activeTab, setActiveTab] = React.useState("lnd-content");
   const navigate = useNavigate();
 
-  const StyledInput = styled(InputBase)(({ theme }) => ({
-    marginLeft: "25px",
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    borderRadius: "8px",
-    maxHeight: "40px",
-    padding: "4px 12px",
-    fontSize: "14px",
-    width: "60px",
-    textAlign: "center",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-  }));
-
-  const StyledSelect = styled(Select)(({ theme }) => ({
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    maxHeight: "40px",
-    borderRadius: "8px",
-    paddingLeft: "12px",
-    fontSize: "14px",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-    ".MuiSelect-icon": {
-      color: "#5f74be",
-    },
-  }));
-
- const tabs = [
-   { label: "Finance Api Block", value: "finance-api-block" },
-   { label: "Servity Amount", value: "servify-offer" },
-   { label: "GTN", value: "gtn" },
- ];
+  const tabs = [
+    { label: "Content", value: "lnd-content" },
+    { label: "Assesment", value: "lnd-assesment" },
+  ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-  const handleDateSelect = (date) => {
-    console.log("Selected Date:", date);
-    // You can store it in state if needed
-    // setSelectedDate(date);
-  };
 
-  const handleMonthChange = (month) => {
-    console.log("Changed Month:", month);
-    // You can update state if needed
-    // setCurrentMonth(month);
-  };
-
-  const handleYearChange = (year) => {
-    console.log("Changed Year:", year);
-    // You can update state if needed
-    // setCurrentYear(year);
-  };
-
-  const handleNavigate = ({ month, year }) => {
-    console.log("Navigated to:", month, year);
-    // Useful if you want to do something when the calendar is navigated
-  };
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -208,9 +168,6 @@ const ServifyOffer = () => {
 
   const [rows, setRows] = React.useState(generateDummyData());
   const [filteredRows, setFilteredRows] = React.useState(rows);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -241,7 +198,7 @@ const ServifyOffer = () => {
         }}
       >
         <Box mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Finance" />
+          <BreadcrumbsHeader pageTitle="L&D" />
         </Box>
 
         <Box ml={1}>
@@ -276,10 +233,19 @@ const ServifyOffer = () => {
                 marginBottom: "1rem",
               }}
             >
-              Manage Entity Type
+              CREATE L& D CONTENT
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={3} md={3}>
+
+            <Grid
+              container
+              spacing={2}
+              mb={2}
+              sx={{
+                gap: { xs: 0, sm: 0, md: 0 },
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
+              <Grid item xs={12} sm={4} md={4}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -288,7 +254,20 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
+                  content name
+                </Typography>
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
+              </Grid>
+              <Grid item xs={12} sm={4} md={4}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    ...labelStyle,
+                    fontSize: { xs: "12px", sm: "10px" },
+                  }}
+                  fontWeight={600}
+                >
+                  Training category
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -296,6 +275,50 @@ const ServifyOffer = () => {
                   placeholder="SELECT"
                   width="100%"
                 />
+              </Grid>
+
+              <Grid item xs={12} sm={4} md={4}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    ...labelStyle,
+                    fontSize: { xs: "12px", sm: "10px" },
+                  }}
+                  fontWeight={600}
+                >
+                  Oprn to all
+                </Typography>
+                <NuralAutocomplete
+                  label="SKU"
+                  options={options2}
+                  placeholder="SELECT"
+                  width="100%"
+                />
+              </Grid>
+              <Grid container justifyContent="flex-end" alignItems="center">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={selectedViews.length === views.length}
+                      onChange={handleSelectAll}
+                      color="primary"
+                    />
+                  }
+                  label="Select All"
+                />
+              </Grid>
+
+              {/* Views list */}
+              <Grid container spacing={2} marginLeft={3}>
+                {views.map((view) => (
+                  <Grid item xs={12} sm={3} md={3} key={view}>
+                    <SelectionCheckboxItem
+                      label={view}
+                      selected={selectedViews.includes(view)}
+                      onSelect={() => handleSelect(view)}
+                    />
+                  </Grid>
+                ))}
               </Grid>
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
@@ -306,15 +329,12 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
+                  content durantion(min)
                 </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
+
+              {/* <SelectionPanel /> */}
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
                   variant="body1"
@@ -328,7 +348,7 @@ const ServifyOffer = () => {
                 </Typography>
                 <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
-              <Grid item xs={12} sm={3} md={3}>
+              <Grid item xs={12} sm={3} md={3} lg={3}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -337,21 +357,96 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Description
+                  FROM DATE
+                </Typography>
+                <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
+              </Grid>
+              <Grid item xs={12} sm={3} md={3} lg={3}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    ...labelStyle,
+                    fontSize: { xs: "12px", sm: "10px" },
+                  }}
+                  fontWeight={600}
+                >
+                  To DATE
+                </Typography>
+                <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
+              </Grid>
+              <Grid item xs={12} sm={6} md={6}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    ...labelStyle,
+                    fontSize: { xs: "12px", sm: "10px" },
+                  }}
+                  fontWeight={600}
+                >
+                  Search tags
                 </Typography>
                 <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
+              </Grid>
+              <Grid item xs={6}>
+                <NuralFileUpload backgroundColor={LIGHT_GRAY2} />
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={6}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    ...labelStyle,
+                    fontSize: { xs: "12px", sm: "10px" },
+                  }}
+                  fontWeight={600}
+                >
+                  content type
+                </Typography>
+                <NuralAutocomplete
+                  label="SKU"
+                  options={options}
+                  placeholder="SELECT"
+                  width="100%"
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <NuralFileUpload backgroundColor={LIGHT_GRAY2} />
               </Grid>
             </Grid>
+
+            <NuralTextButton
+              icon={"/public/Icons/plus.svg"}
+              iconPosition="right"
+              fontSize="16px"
+              backgroundColor={DARK_PURPLE}
+              color="#fff"
+              width="100%"
+            >
+              ADD CONTENT
+            </NuralTextButton>
           </Grid>
-          <Grid container spacing={2} marginTop={1}>
+          <Grid
+            container
+            spacing={2}
+            mb={2}
+            mt={2}
+            sx={{
+              gap: { xs: 0, sm: 0, md: 0 },
+              flexDirection: { xs: "column", sm: "row" },
+            }}
+          >
             <Grid item xs={12} sm={6} md={6} lg={6}>
               <NuralButton
                 text="CANCEL"
                 variant="outlined"
                 color={PRIMARY_BLUE2}
                 fontSize="12px"
-                height="36px"
+                height="48px"
                 borderColor={PRIMARY_BLUE2}
+                // onClick={() => {
+                //   handleCancel();
+                //   setShowStatus(false);
+                // }}
                 width="100%"
               />
             </Grid>
@@ -359,17 +454,23 @@ const ServifyOffer = () => {
               <NuralButton
                 text="SAVE"
                 variant="outlined"
+                backgroundColor={AQUA}
                 color={PRIMARY_BLUE2}
                 fontSize="12px"
-                backgroundColor="AQUA"
-                height="36px"
-                borderColor={AQUA}
+                height="48px"
+                borderColor={BLUE_COLOR}
+                onClick={handleSaveToggle}
+                // onClick={() => {
+                //   handleCancel();
+                //   setShowStatus(false);
+                // }}
                 width="100%"
               />
             </Grid>
           </Grid>
         </NuralAccordion2>
       </Grid>
+
       <Grid marginTop={2} xs={12}>
         <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
           <Grid
@@ -389,9 +490,18 @@ const ServifyOffer = () => {
                 marginBottom: "1rem",
               }}
             >
-              Search
+              Add Task
             </Typography>
-            <Grid container spacing={2}>
+
+            <Grid
+              container
+              spacing={2}
+              mb={2}
+              sx={{
+                gap: { xs: 0, sm: 0, md: 0 },
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
                   variant="body1"
@@ -401,7 +511,7 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
+                  Need To Verify
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -419,14 +529,9 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
+                  Description
                 </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
@@ -437,44 +542,51 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
+                  Due Date
                 </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
-              {/* <Grid container spacing={2} marginTop={1}> */}
+            </Grid>
+            <Grid
+              container
+              spacing={2}
+              mb={2}
+              mt={2}
+              sx={{
+                gap: { xs: 0, sm: 0, md: 0 },
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
               <Grid item xs={12} sm={1} md={1} lg={1}>
                 <NuralButton
-                  text="RESET"
+                  text="CANCEL"
                   variant="outlined"
                   color={PRIMARY_BLUE2}
                   fontSize="12px"
                   height="36px"
                   borderColor={PRIMARY_BLUE2}
+                  // onClick={() => {
+                  //   handleCancel();
+                  //   setShowStatus(false);
+                  // }}
                   width="100%"
                 />
               </Grid>
-              <Grid item xs={12} sm={11} md={11} lg={11}>
+              <Grid item xs={12} md={11} lg={11}>
                 <NuralTextButton
                   icon={"./Icons/searchIcon.svg"}
                   iconPosition="right"
-                  height="36px"
-                  backgroundColor={PRIMARY_BLUE2}
+                  backgroundColor={DARK_PURPLE}
                   color="#fff"
                   width="100%"
-                  fontSize="12px"
                 >
                   SEARCH
                 </NuralTextButton>
               </Grid>
-              {/* </Grid> */}
             </Grid>
           </Grid>
-          <Grid md={12} marginTop={1}>
+
+          <Grid item xs={12} marginTop={2}>
             <TableContainer
               component={Paper}
               sx={{
@@ -482,6 +594,7 @@ const ServifyOffer = () => {
                 color: PRIMARY_BLUE2,
                 maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
                 overflow: "auto",
+                borderRadius: "8px",
               }}
             >
               <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
@@ -514,12 +627,28 @@ const ServifyOffer = () => {
                     </TableCell>
                   </TableRow>
                   <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
+                    <TableCell
+                      sx={{
+                        ...tableHeaderStyle,
+                        position: "sticky",
+                        top: "48px",
+                        backgroundColor: LIGHT_GRAY2,
+                        zIndex: 1100,
+                      }}
+                    >
+                      <Grid container alignItems="center" spacing={1}>
+                        <Grid item>S.NO</Grid>
+                      </Grid>
+                    </TableCell>
                     {[
-                      "MODEL",
-                      "PRICE BAND",
-                      "MAX EXCHANGE",
-                      "MAX OFFER AMOUNT",
-                      "EDIT",
+                      "Name",
+                      "Category Name",
+                      "Description",
+                      "Duration",
+                      "Creation Date",
+                      "STATUS",
+                      "Edit",
+                      "Image",
                     ].map((header, index) => (
                       <TableCell
                         key={header}
@@ -575,24 +704,82 @@ const ServifyOffer = () => {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => (
                       <TableRow key={row.id}>
-                        <TableCell sx={{ ...rowstyle }}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {page * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
                           Column {index + 1}
                         </TableCell>
-                        <TableCell sx={{ ...rowstyle }}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Column {index + 1}
+                        </TableCell>{" "}
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
                           Column {index + 1}
                         </TableCell>
-                        <TableCell sx={{ ...rowstyle }}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
                           Column {index + 1}
                         </TableCell>
-
-                        <TableCell align="left" sx={{ ...rowstyle }}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Column {index + 1}
+                        </TableCell>
+                        <TableCell
+                          align="left"
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
                           <Switch
                             checked={row.status}
                             // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
                             color="primary"
                           />
                         </TableCell>
-                        <TableCell align="left" sx={{ ...rowstyle }}>
+                        <TableCell
+                          align="left"
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
                           <img
                             src="/public/Icons/editicon.svg"
                             alt="edit"
@@ -603,6 +790,42 @@ const ServifyOffer = () => {
                             }}
                             onClick={() => console.log("Edit clicked")}
                           />
+                        </TableCell>
+                        <TableCell
+                          align="left"
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              cursor: "pointer",
+                            }}
+                            onClick={() => console.log("View clicked")}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: PRIMARY_BLUE2,
+                              }}
+                            >
+                              View
+                            </Typography>
+                            <img
+                              src="/Icons/eyeicon.svg"
+                              alt="view"
+                              style={{
+                                width: 20,
+                                height: 20,
+                              }}
+                            />
+                          </Box>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -796,4 +1019,4 @@ const ServifyOffer = () => {
   );
 };
 
-export default ServifyOffer;
+export default LnDCont;

@@ -106,3 +106,17 @@ export const labelStyle = {
   marginBottom: "5px",
   fontWeight: 400,
 };
+
+export const headTitle = {
+  fontFamily: "Manrope",
+  fontWeight: 700,
+  fontSize: "14px",
+  lineHeight: "100%",
+  letterSpacing: "0%",
+  color: DARK_PURPLE,
+  marginBottom: "10px",
+  marginTop: "10px",
+  // marginLeft: "10px",
+  marginRight: "10px",
+  mb: 3,
+};

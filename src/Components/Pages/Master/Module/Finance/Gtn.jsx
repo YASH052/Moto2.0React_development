@@ -57,7 +57,7 @@ import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheck
 import { styled } from "@mui/system";
 import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
 
-const ServifyOffer = () => {
+const Gtn = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -103,7 +103,7 @@ const ServifyOffer = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
-  const [activeTab, setActiveTab] = React.useState("servify-offer");
+  const [activeTab, setActiveTab] = React.useState("gtn");
   const navigate = useNavigate();
 
   const StyledInput = styled(InputBase)(({ theme }) => ({
@@ -276,10 +276,10 @@ const ServifyOffer = () => {
                 marginBottom: "1rem",
               }}
             >
-              Manage Entity Type
+              GTN Scheme
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={3} md={3}>
+              <Grid item xs={12} sm={12} md={12}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -288,56 +288,7 @@ const ServifyOffer = () => {
                   }}
                   fontWeight={600}
                 >
-                  Task Type
-                </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={3} md={3}>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
-                  }}
-                  fontWeight={600}
-                >
-                  Task Type
-                </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={3} md={3}>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
-                  }}
-                  fontWeight={600}
-                >
-                  Description
-                </Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-              <Grid item xs={12} sm={3} md={3}>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
-                  }}
-                  fontWeight={600}
-                >
-                  Description
+                  scheme type
                 </Typography>
                 <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
@@ -392,7 +343,7 @@ const ServifyOffer = () => {
               Search
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4} md={4}>
+              <Grid item xs={12} sm={6} md={6}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -410,25 +361,8 @@ const ServifyOffer = () => {
                   width="100%"
                 />
               </Grid>
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
-                  }}
-                  fontWeight={600}
-                >
-                  Task Type
-                </Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={4} md={4}>
+
+              <Grid item xs={12} sm={6} md={6}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -449,7 +383,7 @@ const ServifyOffer = () => {
               {/* <Grid container spacing={2} marginTop={1}> */}
               <Grid item xs={12} sm={1} md={1} lg={1}>
                 <NuralButton
-                  text="RESET"
+                  text="CANCEL"
                   variant="outlined"
                   color={PRIMARY_BLUE2}
                   fontSize="12px"
@@ -514,13 +448,20 @@ const ServifyOffer = () => {
                     </TableCell>
                   </TableRow>
                   <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                    {[
-                      "MODEL",
-                      "PRICE BAND",
-                      "MAX EXCHANGE",
-                      "MAX OFFER AMOUNT",
-                      "EDIT",
-                    ].map((header, index) => (
+                    <TableCell
+                      sx={{
+                        ...tableHeaderStyle,
+                        position: "sticky",
+                        top: "48px",
+                        backgroundColor: LIGHT_GRAY2,
+                        zIndex: 1100,
+                      }}
+                    >
+                      <Grid container alignItems="center" spacing={1}>
+                        <Grid item>S.NO</Grid>
+                      </Grid>
+                    </TableCell>
+                    {["Role Name", "STATUS", "Edit"].map((header, index) => (
                       <TableCell
                         key={header}
                         onClick={() => handleSort(`column${index + 1}`)}
@@ -575,24 +516,26 @@ const ServifyOffer = () => {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => (
                       <TableRow key={row.id}>
-                        <TableCell sx={{ ...rowstyle }}>
-                          Column {index + 1}
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {page * rowsPerPage + index + 1}
                         </TableCell>
                         <TableCell sx={{ ...rowstyle }}>
                           Column {index + 1}
                         </TableCell>
-                        <TableCell sx={{ ...rowstyle }}>
-                          Column {index + 1}
-                        </TableCell>
-
-                        <TableCell align="left" sx={{ ...rowstyle }}>
+                        <TableCell align="left">
                           <Switch
                             checked={row.status}
                             // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
                             color="primary"
                           />
                         </TableCell>
-                        <TableCell align="left" sx={{ ...rowstyle }}>
+                        <TableCell align="left">
                           <img
                             src="/public/Icons/editicon.svg"
                             alt="edit"
@@ -796,4 +739,4 @@ const ServifyOffer = () => {
   );
 };
 
-export default ServifyOffer;
+export default Gtn;

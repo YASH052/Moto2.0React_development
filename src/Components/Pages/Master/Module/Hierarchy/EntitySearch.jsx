@@ -57,13 +57,13 @@ import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheck
 import { styled } from "@mui/system";
 import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
 
-const FinanceApiBlock = () => {
+const EntitySearch = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [showStatus, setShowStatus] = React.useState(false);
   const [selected, setSelected] = React.useState("");
-  const views = ["Brand 1", "Brand 2", "Brand 3", "Brand 4"];
+  const views = ["Role 1", "Role 2", "Role 3", "Role 4"];
 
   const templates = [
     {
@@ -103,7 +103,7 @@ const FinanceApiBlock = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
-  const [activeTab, setActiveTab] = React.useState("finance-api-block");
+  const [activeTab, setActiveTab] = React.useState("entity-search");
   const navigate = useNavigate();
 
   const StyledInput = styled(InputBase)(({ theme }) => ({
@@ -135,9 +135,8 @@ const FinanceApiBlock = () => {
   }));
 
   const tabs = [
-    { label: "Finance Api Block", value: "finance-api-block" },
-    { label: "Servity Amount", value: "servify-offer" },
-    { label: "GTN", value: "gtn" },
+    { label: "Manage Entity", value: "manage-entity" },
+    { label: "Search", value: "entity-search" },
   ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -241,7 +240,7 @@ const FinanceApiBlock = () => {
         }}
       >
         <Box mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Finance" />
+          <BreadcrumbsHeader pageTitle="Hierarchy" />
         </Box>
 
         <Box ml={1}>
@@ -271,44 +270,101 @@ const FinanceApiBlock = () => {
               marginBottom: "1rem",
             }}
           >
-            API Request Type Mapping
+            Search
           </Typography>
-          <Grid container spacing={2} marginTop={2}>
-            {views.map((view) => (
-              <Grid item xs={12} sm={3} md={3} key={view}>
-                <SelectionCheckboxItem
-                  label={view}
-                  selected={selected === view}
-                  onSelect={() => setSelected(view)}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-        <Grid container spacing={2} marginTop={1}>
-          <Grid item xs={12} sm={6} md={6} lg={6}>
-            <NuralButton
-              text="CANCEL"
-              variant="outlined"
-              color={PRIMARY_BLUE2}
-              fontSize="12px"
-              height="48px"
-              borderColor={PRIMARY_BLUE2}
-              width="100%"
-            />
-          </Grid>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4} md={4}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                Task Type
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
 
-          <Grid item xs={12} sm={6} md={6} lg={6}>
-            <NuralButton
-              text="SAVE"
-              backgroundColor={AQUA}
-              variant="outlined"
-              color={PRIMARY_BLUE2}
-              fontSize="12px"
-              height="48px"
-              borderColor={AQUA}
-              width="100%"
-            />
+            <Grid item xs={12} sm={4} md={4}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                Task Type
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4} md={4}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                Task Type
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+          </Grid>
+          <Grid
+            container
+            spacing={2}
+            mb={2}
+            mt={2}
+            sx={{
+              gap: { xs: 0, sm: 0, md: 0 },
+              flexDirection: { xs: "column", sm: "row" },
+            }}
+          ></Grid>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={3} md={1} lg={1}>
+              <NuralButton
+                text="CANCEL"
+                variant="outlined"
+                color={PRIMARY_BLUE2}
+                fontSize="12px"
+                height="36px"
+                borderColor={PRIMARY_BLUE2}
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={9} md={11} lg={11}>
+              <NuralTextButton
+                icon={"./Icons/searchIcon.svg"}
+                iconPosition="right"
+                height="36px"
+                backgroundColor={PRIMARY_BLUE2}
+                color="#fff"
+                width="100%"
+                fontSize="12px"
+              >
+                SEARCH
+              </NuralTextButton>
+            </Grid>
           </Grid>
         </Grid>
         <Grid xs={12} sm={12} md={12} lg={12} xl={12} xxl={12} marginTop={2}>
@@ -319,7 +375,6 @@ const FinanceApiBlock = () => {
               color: PRIMARY_BLUE2,
               maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
               overflow: "auto",
-              borderRadius: "8px",
             }}
           >
             <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
@@ -352,56 +407,61 @@ const FinanceApiBlock = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  {["Display Name", "Login Name", "View"].map(
-                    (header, index) => (
-                      <TableCell
-                        key={header}
-                        onClick={() => handleSort(`column${index + 1}`)}
-                        sx={{
-                          ...tableHeaderStyle,
-                          cursor: "pointer",
-                          position: "sticky",
-                          top: "48px",
-                          backgroundColor: LIGHT_GRAY2,
-                          zIndex: 1100,
-                        }}
-                      >
-                        <Grid container alignItems="center" spacing={1}>
-                          <Grid item>{header}</Grid>
-                          <Grid
-                            item
-                            sx={{ display: "flex", alignItems: "center" }}
-                          >
-                            {sortConfig.key === `column${index + 1}` ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              )
+                  {[
+                    "ROLE",
+                    "BASE ENTITY",
+                    "AUTO CODE MODE",
+                    "MODE",
+                    "STATUS",
+                    "EDIT",
+                  ].map((header, index) => (
+                    <TableCell
+                      key={header}
+                      onClick={() => handleSort(`column${index + 1}`)}
+                      sx={{
+                        ...tableHeaderStyle,
+                        cursor: "pointer",
+                        position: "sticky",
+                        top: "48px",
+                        backgroundColor: LIGHT_GRAY2,
+                        zIndex: 1100,
+                      }}
+                    >
+                      <Grid container alignItems="center" spacing={1}>
+                        <Grid item>{header}</Grid>
+                        <Grid
+                          item
+                          sx={{ display: "flex", alignItems: "center" }}
+                        >
+                          {sortConfig.key === `column${index + 1}` ? (
+                            sortConfig.direction === "asc" ? (
+                              <ArrowUpwardIcon
+                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                              />
                             ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
+                              <ArrowDownwardIcon
+                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                              />
+                            )
+                          ) : (
+                            <Grid
+                              container
+                              direction="column"
+                              alignItems="center"
+                              sx={{ height: 16, width: 16 }}
+                            >
+                              <ArrowUpwardIcon
+                                sx={{ fontSize: 12, color: "grey.400" }}
+                              />
+                              <ArrowDownwardIcon
+                                sx={{ fontSize: 12, color: "grey.400" }}
+                              />
+                            </Grid>
+                          )}
                         </Grid>
-                      </TableCell>
-                    )
-                  )}
+                      </Grid>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -418,28 +478,23 @@ const FinanceApiBlock = () => {
                       >
                         Column {index + 1}
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell align="left" sx={{ ...rowstyle }}>
                         <Switch
                           checked={row.status}
                           // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
                           color="primary"
                         />
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell align="left" sx={{ ...rowstyle }}>
                         <img
                           src="/public/Icons/editicon.svg"
                           alt="edit"
@@ -634,11 +689,12 @@ const FinanceApiBlock = () => {
                 </Grid>
               </Grid>
             </Grid>
-          </TableContainer>
+          </TableContainer>{" "}
+          make it ias component
         </Grid>
       </Grid>
     </Grid>
   );
 };
 
-export default FinanceApiBlock;
+export default EntitySearch;

@@ -154,11 +154,23 @@ import StoreReports from "../Pages/Master/Reports/StoreReports.jsx";
 import IspApproval from "../Pages/Master/Isp/IspApproval.jsx";
 import PreBookingReport from "../Pages/Master/Reports/PreBookingReport.jsx";
 import MerchandizingReport from "../Pages/Master/Reports/MerchandizingReport.jsx";
+import TaskType from "../Pages/Master/Module/Merchandizing/TaskType/TaskType.jsx";
+import TaskSearch from "../Pages/Master/Module/Merchandizing/Search/TaskSearch.jsx";
+import ManageTask from "../Pages/Master/Module/Merchandizing/ManageTask/ManageTask.jsx";
 import RankingReport from "../Pages/Master/Reports/RankingReport.jsx";
 import ManageAudit from "../Pages/Master/Module/Brand/ManageAudit.jsx";
 import FocusModel from "../Pages/Master/Product/FocusModel.jsx";
 import RIAuditScore from "../Pages/Master/Module/Brand/RIAuditScore.jsx";
 import DemoConversionList from "../Pages/Master/Others/DemoConversionList.jsx";
+
+import LnDSearch from "../Pages/Master/Module/L&D/LnDSearch.jsx";
+import LnDContent from "../Pages/Master/Module/L&D/LnDContent.jsx";
+import LnDAssesment from "../Pages/Master/Module/L&D/LnDAssesment.jsx";
+import ManageEntity from "../Pages/Master/Module/Hierarchy/ManageEntity.jsx";
+import EntitySearch from "../Pages/Master/Module/Hierarchy/EntitySearch.jsx";
+import Survey from "../Pages/Master/Survey/Survey.jsx";
+import ImeiBinding from "../Pages/Master/Attendance/ImeiBinding.jsx";
+import Gtn from "../Pages/Master/Module/Finance/Gtn.jsx";
 
 const AllRoutes = () => {
   return (
@@ -341,7 +353,8 @@ const AllRoutes = () => {
 
         <Route path="/report-queue" element={<ReportQueue />} />
         <Route path="/finance-api-block" element={<FinanceApiBlock />} />
-        <Route path="/servify-offer" element={<ServifyOffer />} />
+        <Route path="/servify-amount" element={<ServifyOffer />} />
+        <Route path="/gtn" element={<Gtn />} />
 
         <Route path="/lnd-category" element={<LnDCategory />} />
 
@@ -372,6 +385,19 @@ const AllRoutes = () => {
         <Route path="/q-mapping" element={<QMapping />} />
         <Route path="/web-menu-setting" element={<WebMenuMapping />} />
         <Route path="/mobile-menu-setting" element={<MobileMenuMapping />} />
+
+        <Route path="/task-type" element={<TaskType />} />
+        <Route path="/task-search" element={<TaskSearch />} />
+        <Route path="/manage-task" element={<ManageTask />} />
+        <Route path="/lnd-search" element={<LnDSearch />} />
+        <Route path="/lnd-category" element={<LnDCategory />} />
+
+        <Route path="/lnd-content" element={<LnDContent />} />
+        <Route path="/lnd-assesment" element={<LnDAssesment />} />
+        <Route path="/manage-entity" element={<ManageEntity />} />
+        <Route path="/entity-search" element={<EntitySearch />} />
+        <Route path="/survey" element={<Survey />} />
+        <Route path="/imei-binding" element={<ImeiBinding />} />
       </Route>
 
       {/* Default and Not Found Routes */}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Grid,
   Typography,
@@ -12,29 +12,24 @@ import {
   TableHead,
   TableRow,
   TableBody,
-  MenuItem,
-  Select,
-  InputBase,
-  Switch,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import AddIcon from "@mui/icons-material/Add";
 import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
 import {
   AQUA,
   AQUA_DARK,
   BLACK,
   BLUE_COLOR,
-  BORDER_BOTTOM,
   DARK_PURPLE,
-  GREEN_COLOR,
-  LIGHT_GRAY,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
-  PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
+import {
+  tableHeaderStyle,
+  rowstyle,
+  headTitle,
+} from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -51,20 +46,12 @@ import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
 import NuralUploadFormat from "../../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../../NuralCustomComponents/NuralFileUpload";
 import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
-import { AddIcCallOutlined } from "@mui/icons-material";
-import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
-import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
-import { styled } from "@mui/system";
-import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
 
-const FinanceApiBlock = () => {
+const LnDSearch = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [showStatus, setShowStatus] = React.useState(false);
-  const [selected, setSelected] = React.useState("");
-  const views = ["Brand 1", "Brand 2", "Brand 3", "Brand 4"];
-
   const templates = [
     {
       name: "Template 1",
@@ -103,67 +90,17 @@ const FinanceApiBlock = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
-  const [activeTab, setActiveTab] = React.useState("finance-api-block");
+  const [activeTab, setActiveTab] = React.useState("lnd-search");
   const navigate = useNavigate();
 
-  const StyledInput = styled(InputBase)(({ theme }) => ({
-    marginLeft: "25px",
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    borderRadius: "8px",
-    maxHeight: "40px",
-    padding: "4px 12px",
-    fontSize: "14px",
-    width: "60px",
-    textAlign: "center",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-  }));
-
-  const StyledSelect = styled(Select)(({ theme }) => ({
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    maxHeight: "40px",
-    borderRadius: "8px",
-    paddingLeft: "12px",
-    fontSize: "14px",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-    ".MuiSelect-icon": {
-      color: "#5f74be",
-    },
-  }));
-
   const tabs = [
-    { label: "Finance Api Block", value: "finance-api-block" },
-    { label: "Servity Amount", value: "servify-offer" },
-    { label: "GTN", value: "gtn" },
+    { label: "Category", value: "lnd-category" },
+    { label: "Search", value: "lnd-search" },
   ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-  const handleDateSelect = (date) => {
-    console.log("Selected Date:", date);
-    // You can store it in state if needed
-    // setSelectedDate(date);
-  };
 
-  const handleMonthChange = (month) => {
-    console.log("Changed Month:", month);
-    // You can update state if needed
-    // setCurrentMonth(month);
-  };
-
-  const handleYearChange = (year) => {
-    console.log("Changed Year:", year);
-    // You can update state if needed
-    // setCurrentYear(year);
-  };
-
-  const handleNavigate = ({ month, year }) => {
-    console.log("Navigated to:", month, year);
-    // Useful if you want to do something when the calendar is navigated
-  };
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -208,9 +145,6 @@ const FinanceApiBlock = () => {
 
   const [rows, setRows] = React.useState(generateDummyData());
   const [filteredRows, setFilteredRows] = React.useState(rows);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -227,8 +161,9 @@ const FinanceApiBlock = () => {
     }
     setSortConfig({ key: columnName, direction });
   };
+
   return (
-    <Grid container spacing={2} sx={{ padding: "20px" }}>
+    <Grid marginTop={2} xs={12}>
       <Grid
         item
         xs={12}
@@ -241,7 +176,7 @@ const FinanceApiBlock = () => {
         }}
       >
         <Box mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Finance" />
+          <BreadcrumbsHeader pageTitle="L&D" />
         </Box>
 
         <Box ml={1}>
@@ -252,8 +187,7 @@ const FinanceApiBlock = () => {
           />
         </Box>
       </Grid>
-
-      <Grid marginTop={2} xs={12}>
+      <Grid title="View" padding={"0px"}>
         <Grid
           xs={12}
           borderRadius={2}
@@ -261,57 +195,160 @@ const FinanceApiBlock = () => {
           backgroundColor={LIGHT_GRAY2}
         >
           {/* First Row - 3 NuralAutocomplete */}
-          <Typography
-            variant="h5"
-            sx={{
-              color: DARK_PURPLE,
-              fontSize: "1.25rem",
-              fontWeight: "bold",
-              lineHeight: "1.5",
-              marginBottom: "1rem",
-            }}
-          >
-            API Request Type Mapping
+          <Typography variant="h5" sx={headTitle}>
+            Search
           </Typography>
-          <Grid container spacing={2} marginTop={2}>
-            {views.map((view) => (
-              <Grid item xs={12} sm={3} md={3} key={view}>
-                <SelectionCheckboxItem
-                  label={view}
-                  selected={selected === view}
-                  onSelect={() => setSelected(view)}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-        <Grid container spacing={2} marginTop={1}>
-          <Grid item xs={12} sm={6} md={6} lg={6}>
-            <NuralButton
-              text="CANCEL"
-              variant="outlined"
-              color={PRIMARY_BLUE2}
-              fontSize="12px"
-              height="48px"
-              borderColor={PRIMARY_BLUE2}
+
+          <Grid item xs={12} md={6} lg={6} mb={2}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: DARK_PURPLE,
+                fontFamily: "Manrope",
+                fontWeight: 400,
+                fontSize: "10px",
+                lineHeight: "13.66px",
+                letterSpacing: "4%",
+                mb: 1,
+              }}
+            >
+              SELECT MODE
+            </Typography>
+            <NuralRadioButton
+              // onChange={handleFormatChange}
+              options={[
+                { value: "interface", label: "Interface" },
+                { value: "batch", label: "Batch" },
+              ]}
+              // value={selectedFormat}
               width="100%"
+              gap="15px"
+              marginLeft="-15px"
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={6} lg={6}>
-            <NuralButton
-              text="SAVE"
-              backgroundColor={AQUA}
-              variant="outlined"
-              color={PRIMARY_BLUE2}
-              fontSize="12px"
-              height="48px"
-              borderColor={AQUA}
-              width="100%"
-            />
+          <Grid
+            container
+            spacing={2}
+            mb={2}
+            sx={{
+              gap: { xs: 0, sm: 0, md: 0 },
+              flexDirection: { xs: "column", sm: "row" },
+            }}
+          >
+            <Grid item xs={12} sm={3} md={3}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                CATEGORY NAME
+              </Typography>
+              <NuralAutocomplete
+                label="category name"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={3} md={3}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                BRAND
+              </Typography>
+              <NuralAutocomplete
+                label="product"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={3} md={3}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                PRODUCT CATEGORY
+              </Typography>
+              <NuralAutocomplete
+                label="product category"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={3} md={3}>
+              <Typography
+                variant="body1"
+                sx={{
+                  ...labelStyle,
+                  fontSize: { xs: "12px", sm: "10px" },
+                }}
+                fontWeight={600}
+              >
+                IS INDUCTION
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+          </Grid>
+          <Grid
+            container
+            spacing={2}
+            mb={2}
+            mt={2}
+            sx={{
+              gap: { xs: 0, sm: 0, md: 0 },
+              flexDirection: { xs: "column", sm: "row" },
+            }}
+          >
+            <Grid item xs={12} sm={2} md={1} lg={1}>
+              <NuralButton
+                text="CANCEL"
+                variant="outlined"
+                color={PRIMARY_BLUE2}
+                fontSize="12px"
+                height="36px"
+                borderColor={PRIMARY_BLUE2}
+                // onClick={() => {
+                //   handleCancel();
+                //   setShowStatus(false);
+                // }}
+                width="100%"
+              />
+            </Grid>
+            <Grid item xs={12} sm={10} md={11} lg={11}>
+              <NuralTextButton
+                icon={"./Icons/searchIcon.svg"}
+                iconPosition="right"
+                backgroundColor={DARK_PURPLE}
+                color="#fff"
+                width="100%"
+              >
+                SEARCH
+              </NuralTextButton>
+            </Grid>
           </Grid>
         </Grid>
-        <Grid xs={12} sm={12} md={12} lg={12} xl={12} xxl={12} marginTop={2}>
+
+        <Grid item xs={12} marginTop={2}>
           <TableContainer
             component={Paper}
             sx={{
@@ -319,7 +356,6 @@ const FinanceApiBlock = () => {
               color: PRIMARY_BLUE2,
               maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
               overflow: "auto",
-              borderRadius: "8px",
             }}
           >
             <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
@@ -352,56 +388,76 @@ const FinanceApiBlock = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  {["Display Name", "Login Name", "View"].map(
-                    (header, index) => (
-                      <TableCell
-                        key={header}
-                        onClick={() => handleSort(`column${index + 1}`)}
-                        sx={{
-                          ...tableHeaderStyle,
-                          cursor: "pointer",
-                          position: "sticky",
-                          top: "48px",
-                          backgroundColor: LIGHT_GRAY2,
-                          zIndex: 1100,
-                        }}
-                      >
-                        <Grid container alignItems="center" spacing={1}>
-                          <Grid item>{header}</Grid>
-                          <Grid
-                            item
-                            sx={{ display: "flex", alignItems: "center" }}
-                          >
-                            {sortConfig.key === `column${index + 1}` ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              )
+                  <TableCell
+                    sx={{
+                      ...tableHeaderStyle,
+                      position: "sticky",
+                      top: "48px",
+                      backgroundColor: LIGHT_GRAY2,
+                      zIndex: 1100,
+                    }}
+                  >
+                    <Grid container alignItems="center" spacing={1}>
+                      <Grid item>S.NO</Grid>
+                    </Grid>
+                  </TableCell>
+                  {[
+                    "SERIAL NUMBER",
+                    "SERIAL NUMBER 2",
+                    "SKU CODE",
+                    "SKU NAME",
+                    "USER NAME",
+                    "REQUEST TYPE",
+                    "STATUS",
+                    "REQUEST DATE & TIME",
+                  ].map((header, index) => (
+                    <TableCell
+                      key={header}
+                      onClick={() => handleSort(`column${index + 1}`)}
+                      sx={{
+                        ...tableHeaderStyle,
+                        cursor: "pointer",
+                        position: "sticky",
+                        top: "48px",
+                        backgroundColor: LIGHT_GRAY2,
+                        zIndex: 1100,
+                      }}
+                    >
+                      <Grid container alignItems="center" spacing={1}>
+                        <Grid item>{header}</Grid>
+                        <Grid
+                          item
+                          sx={{ display: "flex", alignItems: "center" }}
+                        >
+                          {sortConfig.key === `column${index + 1}` ? (
+                            sortConfig.direction === "asc" ? (
+                              <ArrowUpwardIcon
+                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                              />
                             ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
+                              <ArrowDownwardIcon
+                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                              />
+                            )
+                          ) : (
+                            <Grid
+                              container
+                              direction="column"
+                              alignItems="center"
+                              sx={{ height: 16, width: 16 }}
+                            >
+                              <ArrowUpwardIcon
+                                sx={{ fontSize: 12, color: "grey.400" }}
+                              />
+                              <ArrowDownwardIcon
+                                sx={{ fontSize: 12, color: "grey.400" }}
+                              />
+                            </Grid>
+                          )}
                         </Grid>
-                      </TableCell>
-                    )
-                  )}
+                      </Grid>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -416,40 +472,23 @@ const FinanceApiBlock = () => {
                           fontWeight: 600,
                         }}
                       >
-                        Column {index + 1}
+                        {page * rowsPerPage + index + 1}
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <Switch
-                          checked={row.status}
-                          // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
-                          color="primary"
-                        />
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.serialNumber}
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <img
-                          src="/public/Icons/editicon.svg"
-                          alt="edit"
-                          style={{
-                            cursor: "pointer",
-                            width: 20,
-                            height: 20,
-                          }}
-                          onClick={() => console.log("Edit clicked")}
-                        />
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.serialNumber2}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>{row.skuCode}</TableCell>
+                      <TableCell sx={{ ...rowstyle }}>{row.skuName}</TableCell>
+                      <TableCell sx={{ ...rowstyle }}>{row.userName}</TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.requestType}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>{row.status}</TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.requestDate}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -641,4 +680,4 @@ const FinanceApiBlock = () => {
   );
 };
 
-export default FinanceApiBlock;
+export default LnDSearch;
