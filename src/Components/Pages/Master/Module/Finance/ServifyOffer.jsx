@@ -34,7 +34,7 @@ import {
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle, headTitle } from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -267,28 +267,23 @@ const ServifyOffer = () => {
           >
             {/* First Row - 3 NuralAutocomplete */}
             <Typography
-              variant="h5"
-              sx={{
-                color: DARK_PURPLE,
-                fontSize: "1.25rem",
-                fontWeight: "bold",
-                lineHeight: "1.5",
-                marginBottom: "1rem",
-              }}
+              sx={
+                headTitle
+              }
             >
               Manage Entity Type
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
-                  variant="body1"
+                  
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
+                  
                 >
-                  Task Type
+                  MODEL
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -299,14 +294,12 @@ const ServifyOffer = () => {
               </Grid>
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Task Type
+                  PRICE BAND
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -317,27 +310,23 @@ const ServifyOffer = () => {
               </Grid>
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Description
+                  MAX EXCHANGE AMOUNT
                 </Typography>
                 <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
               <Grid item xs={12} sm={3} md={3}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Description
+                  MAX OFFER AMOUNT
                 </Typography>
                 <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
               </Grid>
@@ -380,28 +369,22 @@ const ServifyOffer = () => {
           >
             {/* First Row - 3 NuralAutocomplete */}
             <Typography
-              variant="h5"
-              sx={{
-                color: DARK_PURPLE,
-                fontSize: "1.25rem",
-                fontWeight: "bold",
-                lineHeight: "1.5",
-                marginBottom: "1rem",
-              }}
+              
+              sx={
+                headTitle
+              }
             >
               Search
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Task Type
+                  MODEL
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -412,14 +395,12 @@ const ServifyOffer = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Task Type
+                  PRICE BAND
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"
@@ -430,14 +411,12 @@ const ServifyOffer = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
-                  Task Type
+                  STATUS
                 </Typography>
                 <NuralAutocomplete
                   label="SKU"

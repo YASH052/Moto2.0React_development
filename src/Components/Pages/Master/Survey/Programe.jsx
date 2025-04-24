@@ -38,7 +38,7 @@ import {
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
-import { tableHeaderStyle, rowstyle, toggleSectionStyle } from "../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle, headTitle } from "../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -60,11 +60,9 @@ import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
 import SelectionCheckboxItem from "../../NuralCustomComponents/SelectionCheckboxItem";
 import { Stack, styled } from "@mui/system";
 import ISPZeroSaleTable from "../../Dashboard/ISPZeroSaleTable";
-import Programe from "./Programe";
-import QandA from "./QandA";
-import View from "./View";
 
-const Survey = () => {
+
+const Programe = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -255,246 +253,212 @@ const Survey = () => {
       prev.map((val, i) => (i === index ? Math.max(0, val + delta) : val))
     );
   };
-  return (
-    <Grid
-      container
-      spacing={2}
-      md={12}
-      lg={12}
-      xl={12}
-      xxl={12}
-      sx={{ padding: "20px" }}
-    >
-      <Grid
-        item
-        xs={12}
-        sx={{
-          position: "stickyf",
-          top: 0,
-          zIndex: 1000,
-          backgroundColor: "#fff",
-          paddingBottom: 1,
-        }}
-      >
-        <Box mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Survey" />
-        </Box>
-      </Grid>
-      <Grid xs={10} lg={10} md={10} xl={10} xxl={10} paddingRight={2}>
-       <Programe/>
-<QandA/>
-        
-        <View/>
-      </Grid>
 
-      <Grid xs={2} lg={2} md={2} xl={2} xxl={2} paddingRight={2}>
-        <Box
-          sx={{
-            width: 250,
-            height: "100vh",
-            bgcolor: LIGHT_GRAY2,
-            borderRadius: "8px",
-            padding: 2,
-          }}
+  return (
+    <Grid marginTop={2} xs={12}>
+      <NuralAccordion2
+        title="Programme"
+        backgroundColor={"white"}
+        padding={"0px"}
+      >
+        <Grid
+          xs={12}
+          borderRadius={2}
+          padding={2}
+          backgroundColor={LIGHT_GRAY2}
         >
-          <Paper
-            elevation={3}
+          {/* First Row - 3 NuralAutocomplete */}
+          <Typography
+            variant="h5"
+            sx={headTitle}
+          >
+            Survey
+          </Typography>
+
+          <Grid
+            container
+            spacing={2}
+            mb={2}
             sx={{
-              backgroundColor: MEDIUM_BLUE,
-              borderRadius: 2,
-              padding: 2,
+              gap: { xs: 0, sm: 0, md: 0 },
+              flexDirection: { xs: "column", sm: "row" },
             }}
           >
-            <Typography variant="subtitle2" color="text.secondary" mb={1}>
-              Activity Panel
-            </Typography>
-
-            <Typography variant="body2" color={DARK_PURPLE} fontWeight={600}>
-              Question
-            </Typography>
-
-            <FormControl fullWidth size="small" sx={{ my: 1 }}>
-              <Select
-                value={questionType}
-                onChange={(e) => setQuestionType(e.target.value)}
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography
                 sx={{
-                  borderColor: PRIMARY_BLUE2,
-                  color: PRIMARY_BLUE2,
-                  borderRadius: 1,
-                }}
-              >
-                <MenuItem value="MCQ">MCQ</MenuItem>
-                <MenuItem value="Short Answer">Short Answer</MenuItem>
-                <MenuItem value="Paragraph">Paragraph</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Typography
-              variant="body2"
-              color={DARK_PURPLE}
-              fontWeight={600}
-              mt={2}
-            >
-              Question Settings
-            </Typography>
-
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              mt={1}
-            >
-              <img
-                src="/Icons/duplicateicon.svg"
-                alt="Duplicate"
-                style={{
-                  cursor: "pointer",
-                  width: 150,
-                  marginTop: "2px",
-                  paddingRight: 15,
-                }}
-                onClick={() => {
-                  const duplicated = {
-                    id: options2.length + 1,
-                  };
-                  setOptions2([...options2, duplicated]);
-                }}
-              />
-            </Box>
-
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <img
-                src="/Icons/deleteicon.svg"
-                alt="Duplicate"
-                style={{
-                  cursor: "pointer",
-                  width: 120,
-                  marginTop: "2px",
-                  paddingRight: 15,
-                }}
-                onClick={() => {
-                  const duplicated = {
-                    id: options2.length + 1,
-                  };
-                  setOptions2([...options2, duplicated]);
-                }}
-              />
-            </Box>
-
-            <FormGroup sx={{ mt: 1 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                  sx={toggleSectionStyle}
-                    size="medium"
-                    checked={multiple}
-                    onChange={() => setMultiple(!multiple)}
-                    color="primary"
-                  />
-                }
-                label="MULTIPLE"
-                sx={{
-                  justifyContent: "space-between",
-                  ml: 0,
-                  mr: 0,
-                  backgroundColor: LIGHT_GRAY2,
-                  borderRadius: "8px",
-                  padding: "10px",
-                }}
-                labelPlacement="start"
-              />
-              <FormControl fullWidth size="small" sx={{ my: 1 }}>
-                <Select
-                  value={questionType1}
-                  onChange={(e) => setQuestionType1(e.target.value)}
-                  sx={{
-                    borderColor: PRIMARY_BLUE2,
-                    color: PRIMARY_BLUE2,
-                    borderRadius: 1,
+                    ...labelStyle,
+                    
                   }}
-                >
-                  <MenuItem value="Range">Range</MenuItem>
-                  <MenuItem value="Short Answer">Short Answer</MenuItem>
-                  <MenuItem value="Paragraph">Paragraph</MenuItem>
-                </Select>
-              </FormControl>
-              <Stack
-                spacing={2}
-                sx={{ backgroundColor: "#cdd4f2", borderRadius: 2 }}
               >
-                {values.map((value, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <IconButton
-                      onClick={() => handleChange(index, -1)}
-                      sx={{ color: "#0e133f" }}
-                    >
-                      <RemoveIcon />
-                    </IconButton>
-
-                    <Box
-                      sx={{
-                        backgroundColor: "#e8ecfd",
-                        border: "1px solid #b0c0e0",
-                        borderRadius: 2,
-                        px: 4,
-                        py: 1,
-                        minWidth: "80px",
-                        textAlign: "center",
-                        fontWeight: 500,
-                        color: "#0e133f",
-                        fontSize: "1.2rem",
-                      }}
-                    >
-                      {value}
-                    </Box>
-
-                    <IconButton
-                      onClick={() => handleChange(index, 1)}
-                      sx={{ color: "#0e133f" }}
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Stack>
-              <FormControlLabel
-                control={
-                  <Switch sx={toggleSectionStyle}
-                    size="medium"
-                    checked={addOthers}
-                    onChange={() => setAddOthers(!addOthers)}
-                    color="primary"
-                  />
-                }
-                label="ADD 'OTHERS'"
-                sx={{
-                  justifyContent: "space-between",
-                  ml: 0,
-                  mr: 0,
-                  backgroundColor: LIGHT_GRAY2,
-                  mt: "10px",
-                  borderRadius: "8px",
-                  padding: "10px",
-                }}
-                labelPlacement="start"
+                CHOOSE PROGRAME TYPE
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
               />
-            </FormGroup>
-          </Paper>
-        </Box>
-      </Grid>
+            </Grid>
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography
+                sx={{
+                    ...labelStyle,
+                    
+                  }}
+              >
+              CHOOSE USER ROLE
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography
+                sx={{
+                    ...labelStyle,
+                    
+                  }}
+              >
+                ADD PROGRAMME TITLE
+              </Typography>
+
+              <Box display="flex" alignItems="center" gap={2}>
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
+
+                <img
+                  src="/Icons/uploadicon2.svg"
+                  alt="Clear"
+                  style={{
+                    cursor: "pointer",
+                    width: 200,
+                    height: 40,
+                    paddingRight: 15,
+                  }}
+                />
+                <img
+                  src="/Icons/crossicon.svg"
+                  alt="Clear"
+                  style={{
+                    cursor: "pointer",
+                    width: 22,
+                    paddingRight: 15,
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography
+                sx={{
+                    ...labelStyle,
+                    
+                  }}
+              >
+                ADD DESCRIPTION (OPTIONAL)
+              </Typography>
+
+              <Box display="flex" alignItems="center" gap={2}>
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
+                <img
+                  src="/Icons/crossicon.svg"
+                  alt="Clear"
+                  style={{
+                    cursor: "pointer",
+                    width: 20,
+
+                    paddingRight: 15,
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography
+                sx={{
+                    ...labelStyle,
+                    
+                  }}
+              >
+                ADD PROGRAMME TAG (OPTIONAL)
+              </Typography>
+
+              <Box display="flex" alignItems="center" gap={2}>
+                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
+                <img
+                  src="/Icons/crossicon.svg"
+                  alt="Clear"
+                  style={{
+                    cursor: "pointer",
+                    width: 20,
+
+                    paddingRight: 15,
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid container spacing={2} sx={{ marginLeft: 1, marginTop: 1 }}>
+              <Grid
+                item
+                xs={12}
+                md={2}
+                lg={2}
+                xl={2}
+                xxl={2}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: "40px",
+                  },
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={labelStyle}
+                >
+                  ADD PROGRAMME END DATE
+                </Typography>
+                <NuralCalendar
+                  onDateSelect={handleDateSelect}
+                  onMonthChange={handleMonthChange}
+                  onYearChange={handleYearChange}
+                  onNavigate={handleNavigate}
+                  initialDate={new Date()}
+                  minDate={new Date(2000, 0, 1)}
+                  maxDate={new Date(2024, 11, 31)}
+                  disabledDates={[new Date(2024, 2, 15)]}
+                  highlightedDates={[new Date(2024, 2, 20)]}
+                  yearRange={{
+                    start: 2000,
+                    end: new Date().getFullYear(),
+                  }}
+                  containerStyle={{
+                    backgroundColor: MEDIUM_BLUE,
+                  }}
+                  headerStyle={{
+                    padding: "6px 8px",
+                  }}
+                  dayStyle={{
+                    fontWeight: 500,
+                  }}
+                  selectedDayStyle={{
+                    backgroundColor: AQUA,
+                    color: "#fff",
+                  }}
+                  disabledDayStyle={{
+                    opacity: 0.5,
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+        </Grid>
+      </NuralAccordion2>
     </Grid>
   );
 };
 
-export default Survey;
+export default Programe;

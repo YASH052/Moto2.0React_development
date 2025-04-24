@@ -17,17 +17,10 @@ import BreadcrumbsHeader from "../../../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../../../Common/TabsBar";
 import NuralAccordion2 from "../../../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../../../NuralCustomComponents/NuralTextField";
-import { headTitle } from "../../../../../Common/commonstyles";
+import { headTitle,labelStyle } from "../../../../../Common/commonstyles";
 
 const TaskType = () => {
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: PRIMARY_BLUE2,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
+  
 
   const options = [
     "Nural Network",
@@ -96,11 +89,9 @@ const TaskType = () => {
             >
               <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Typography
-                  variant="body1"
-                  sx={{
-                    ...labelStyle,
-                  }}
-                  fontWeight={600}
+                  
+                  sx={labelStyle}
+                  
                 >
                  TASK TYPE
                 </Typography>
@@ -130,7 +121,7 @@ const TaskType = () => {
               variant="outlined"
               color={PRIMARY_BLUE2}
               fontSize="12px"
-              height="36px"
+              height="48px"
               borderColor={PRIMARY_BLUE2}
               width="100%"
             />
@@ -140,7 +131,7 @@ const TaskType = () => {
               text="SAVE"
               variant="contained"
               color={AQUA_DARK}
-              height="36px"
+              height="48px"
               backgroundColor={AQUA}
               width="100%"
               fontSize="12px"

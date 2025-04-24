@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   TableBody,
+  Switch,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
@@ -29,6 +30,7 @@ import {
   tableHeaderStyle,
   rowstyle,
   headTitle,
+  toggleSectionStyle,
 } from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
@@ -199,33 +201,7 @@ const LnDSearch = () => {
             Search
           </Typography>
 
-          <Grid item xs={12} md={6} lg={6} mb={2}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: DARK_PURPLE,
-                fontFamily: "Manrope",
-                fontWeight: 400,
-                fontSize: "10px",
-                lineHeight: "13.66px",
-                letterSpacing: "4%",
-                mb: 1,
-              }}
-            >
-              SELECT MODE
-            </Typography>
-            <NuralRadioButton
-              // onChange={handleFormatChange}
-              options={[
-                { value: "interface", label: "Interface" },
-                { value: "batch", label: "Batch" },
-              ]}
-              // value={selectedFormat}
-              width="100%"
-              gap="15px"
-              marginLeft="-15px"
-            />
-          </Grid>
+          
 
           <Grid
             container
@@ -237,16 +213,7 @@ const LnDSearch = () => {
             }}
           >
             <Grid item xs={12} sm={3} md={3}>
-              <Typography
-                variant="body1"
-                sx={{
-                  ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
-                }}
-                fontWeight={600}
-              >
-                CATEGORY NAME
-              </Typography>
+              <Typography sx={labelStyle}>CATEGORY NAME</Typography>
               <NuralAutocomplete
                 label="category name"
                 options={options}
@@ -255,16 +222,7 @@ const LnDSearch = () => {
               />
             </Grid>
             <Grid item xs={12} sm={3} md={3}>
-              <Typography
-                variant="body1"
-                sx={{
-                  ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
-                }}
-                fontWeight={600}
-              >
-                BRAND
-              </Typography>
+              <Typography sx={labelStyle}>BRAND</Typography>
               <NuralAutocomplete
                 label="product"
                 options={options}
@@ -273,16 +231,7 @@ const LnDSearch = () => {
               />
             </Grid>
             <Grid item xs={12} sm={3} md={3}>
-              <Typography
-                variant="body1"
-                sx={{
-                  ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
-                }}
-                fontWeight={600}
-              >
-                PRODUCT CATEGORY
-              </Typography>
+              <Typography sx={labelStyle}>PRODUCT CATEGORY</Typography>
               <NuralAutocomplete
                 label="product category"
                 options={options}
@@ -291,16 +240,7 @@ const LnDSearch = () => {
               />
             </Grid>
             <Grid item xs={12} sm={3} md={3}>
-              <Typography
-                variant="body1"
-                sx={{
-                  ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
-                }}
-                fontWeight={600}
-              >
-                IS INDUCTION
-              </Typography>
+              <Typography sx={labelStyle}>IS INDUCTION</Typography>
               <NuralAutocomplete
                 label="SKU"
                 options={options}
@@ -388,28 +328,14 @@ const LnDSearch = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "48px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
-                    }}
-                  >
-                    <Grid container alignItems="center" spacing={1}>
-                      <Grid item>S.NO</Grid>
-                    </Grid>
-                  </TableCell>
                   {[
-                    "SERIAL NUMBER",
-                    "SERIAL NUMBER 2",
-                    "SKU CODE",
-                    "SKU NAME",
-                    "USER NAME",
-                    "REQUEST TYPE",
+                    "S.NO",
+                    "NAME",
+                    "DESCRIPTION",
+                    "CREATION DATE",
                     "STATUS",
-                    "REQUEST DATE & TIME",
+                    "EDIT",
+                    "IMAGE"
                   ].map((header, index) => (
                     <TableCell
                       key={header}
@@ -472,23 +398,73 @@ const LnDSearch = () => {
                           fontWeight: 600,
                         }}
                       >
-                        {page * rowsPerPage + index + 1}
+                        Column {index + 1}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.serialNumber}
+                        Column {index + 1}
+                      </TableCell>
+                     
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
                       </TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.serialNumber2}
+                        Column {index + 1}
                       </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.skuCode}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.skuName}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.userName}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.requestType}
+                      <TableCell align="left" sx={{ ...rowstyle }}>
+                        <Switch
+                        sx={toggleSectionStyle}
+                          checked={row.status}
+                          // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
+                          color="primary"
+                        />
                       </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.status}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.requestDate}
+                      <TableCell align="left" sx={{ ...rowstyle }}>
+                        <img
+                          src="/public/Icons/editicon.svg"
+                          alt="edit"
+                          style={{
+                            cursor: "pointer",
+                            width: 20,
+                            height: 20,
+                          }}
+                          onClick={() => console.log("Edit clicked")}
+                        />
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{
+                          ...rowstyle,
+                          color: PRIMARY_BLUE2,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            cursor: "pointer",
+                          }}
+                          onClick={() => console.log("View clicked")}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: PRIMARY_BLUE2,
+                            }}
+                          >
+                            View
+                          </Typography>
+                          <img
+                            src="/Icons/eyeicon.svg"
+                            alt="view"
+                            style={{
+                              width: 25,
+                              height: 25,
+                            }}
+                          />
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

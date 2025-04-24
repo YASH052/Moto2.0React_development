@@ -42,10 +42,9 @@ import NuralRadioButton from "../../../../NuralCustomComponents/NuralRadioButton
 import NuralUploadFormat from "../../../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../../../NuralCustomComponents/NuralFileUpload";
 import NuralUploadStatus from "../../../../NuralCustomComponents/NuralUploadStatus";
-// Import the new components
-import AddTask from "./AddTask";
-import ViewTask from "./ViewTask";
+import ADDTask from "./AddTask";
 import UpdateTask from "./UpdateTask";
+import ViewTask from "./ViewTask";
 
 const ManageTask = () => {
   const [page, setPage] = React.useState(0);
@@ -115,7 +114,7 @@ const ManageTask = () => {
     const requestTypes = ["Finance Block", "Theft Block", "Customer Request"];
     const userNames = ["John D.", "Sarah M.", "Mike R.", "Emma S.", "Alex P."];
 
-    return Array(25)
+    return Array(2)
       .fill()
       .map((_, index) => ({
         id: `${1000 + index}`,
@@ -143,143 +142,44 @@ const ManageTask = () => {
   const [filteredRows, setFilteredRows] = React.useState(rows);
   const handleSort = (columnName) => {
     let direction = "asc";
-    let sortedRows = [...filteredRows];
 
-    if (sortConfig.key === columnName && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-
-    sortedRows.sort((a, b) => {
-      const keys = [
-        "serialNumber",
-        "serialNumber2",
-        "skuCode",
-        "skuName",
-        "userName",
-        "requestType",
-        "status",
-        "requestDate",
-      ];
-      const keyIndex = parseInt(columnName.replace("column", ""), 10) - 1;
-      const key = keys[keyIndex];
-
-      if (!key || !a.hasOwnProperty(key) || !b.hasOwnProperty(key)) return 0;
-
-      const valA = a[key];
-      const valB = b[key];
-
-      if (valA < valB) {
-        return direction === "asc" ? -1 : 1;
+    // If clicking the same column
+    if (sortConfig.key === columnName) {
+      if (sortConfig.direction === "asc") {
+        direction = "desc";
+      } else {
+        // Reset sorting if already in desc order
+        setSortConfig({ key: null, direction: null });
+        setFilteredRows([...rows]); // Reset to original order
+        return;
       }
-      if (valA > valB) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    if (sortConfig.key === columnName && sortConfig.direction === "desc") {
-      setSortConfig({ key: null, direction: null });
-      setFilteredRows([...rows]);
-    } else {
-      setSortConfig({ key: columnName, direction });
-      setFilteredRows(sortedRows);
     }
+    setSortConfig({ key: columnName, direction });
   };
-
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
+    <Grid container spacing={2} mb={4} sx={{ padding: "20px" }}>
       <Grid
         item
         xs={12}
         sx={{
           position: "sticky",
           top: 0,
-          zIndex: 10000,
+          zIndex: 1000,
           backgroundColor: "#fff",
           paddingBottom: 1,
         }}
       >
-        <Box mt={0} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="MERCHANDIZING" />
+        <Box mt={1} mb={0} ml={1} sx={
+          labelStyle
+        }>
+          <BreadcrumbsHeader pageTitle="Mechandizing" />
         </Box>
       </Grid>
-      <Grid container spacing={0} ml={2} pr={2}>
-        <Grid marginTop={2} xs={12}>
-          <NuralAccordion2 title="ADD" padding={"0px"}>
-            <AddTask
-              saveClicked={saveClicked}
-              templates={templates}
-              labelStyle={labelStyle}
-              options={options}
-            />
-          </NuralAccordion2>
-          <Grid container spacing={2} mt={2}>
-            <Grid item xs={6}>
-              <NuralButton
-                text="CANCEL"
-                variant="outlined"
-                color={PRIMARY_BLUE2}
-                fontSize="12px"
-                height="36px"
-                borderColor={PRIMARY_BLUE2}
-                width="100%"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <NuralButton
-                text="SAVE"
-                variant="outlined"
-                backgroundColor={AQUA}
-                color={PRIMARY_BLUE2}
-                fontSize="12px"
-                height="36px"
-                borderColor={BLUE_COLOR}
-                width="100%"
-                onClick={handleSaveToggle}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
 
-        <Grid marginTop={2} xs={12}>
-          <NuralAccordion2
-            title="VIEW"
-            
-            padding={"0px"}
-          >
-            <ViewTask
-              labelStyle={labelStyle}
-              options={options}
-              filteredRows={filteredRows}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              handleSort={handleSort}
-              sortConfig={sortConfig}
-              handleChangePage={handleChangePage}
-              handleChangeRowsPerPage={handleChangeRowsPerPage}
-              setPage={setPage}
-            />
-          </NuralAccordion2>
-        </Grid>
-        <Grid marginTop={2} xs={12}>
-          <NuralAccordion2 title="UPDATE TASK" >
-            <UpdateTask
-              labelStyle={labelStyle}
-              options={options}
-              filteredRows={filteredRows}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              handleSort={handleSort}
-              sortConfig={sortConfig}
-              handleChangePage={handleChangePage}
-              handleChangeRowsPerPage={handleChangeRowsPerPage}
-              setPage={setPage}
-              images={images}
-            />
-          </NuralAccordion2>
-        </Grid>
+      <ADDTask/>
+      <ViewTask/>
+      <UpdateTask/>
       </Grid>
-    </Grid>
   );
 };
 

@@ -46,6 +46,7 @@ import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
 import NuralUploadFormat from "../../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../../NuralCustomComponents/NuralFileUpload";
 import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
+import NuralFileUpload2 from "../../../NuralCustomComponents/NuralFileUpload2";
 
 const LnDCategory = () => {
   const [page, setPage] = React.useState(0);
@@ -195,8 +196,8 @@ const LnDCategory = () => {
           backgroundColor={LIGHT_GRAY2}
         >
           {/* First Row - 3 NuralAutocomplete */}
-          <Typography variant="h5" sx={headTitle}>
-            Create L &D Category
+          <Typography  sx={headTitle}>
+            Create L&D Category
           </Typography>
 
           <Grid
@@ -217,7 +218,7 @@ const LnDCategory = () => {
                 }}
                 fontWeight={600}
               >
-                Description
+                CATEGORY NAME
               </Typography>
               <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
             </Grid>
@@ -226,11 +227,10 @@ const LnDCategory = () => {
                 variant="body1"
                 sx={{
                   ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
+                  
                 }}
-                fontWeight={600}
               >
-                Task Type
+                BRAND
               </Typography>
               <NuralAutocomplete
                 label="SKU"
@@ -244,11 +244,11 @@ const LnDCategory = () => {
                 variant="body1"
                 sx={{
                   ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
+                  
                 }}
-                fontWeight={600}
+                
               >
-                Task Type
+                PRODUCT CATEGORY
               </Typography>
               <NuralAutocomplete
                 label="SKU"
@@ -262,11 +262,11 @@ const LnDCategory = () => {
                 variant="body1"
                 sx={{
                   ...labelStyle,
-                  fontSize: { xs: "12px", sm: "10px" },
+                  
                 }}
-                fontWeight={600}
+                
               >
-                Due Date
+                DESCRIPTION
               </Typography>
               <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
             </Grid>
@@ -280,7 +280,7 @@ const LnDCategory = () => {
                 }}
                 fontWeight={600}
               >
-                Task Type
+                IS INDUCTION
               </Typography>
               <NuralAutocomplete
                 label="SKU"
@@ -291,7 +291,7 @@ const LnDCategory = () => {
             </Grid>
 
             <Grid item xs={12} sm={4} md={4}>
-              <NuralFileUpload
+              <NuralFileUpload2
                 width="100%"
                 onChange={(file) => console.log("Selected file:", file)}
                 accept=".pdf,.doc,.docx"
