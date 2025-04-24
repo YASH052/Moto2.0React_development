@@ -37,7 +37,7 @@ import {
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle, headTitle, toggleSectionStyle } from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -59,6 +59,7 @@ import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
 import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
 import { styled } from "@mui/system";
 import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
+import ToggleSection from "../../AppsSetting/ToggleSection";
 
 const LnDAssesment = () => {
   const [page, setPage] = React.useState(0);
@@ -252,7 +253,7 @@ const LnDAssesment = () => {
       <Grid container spacing={2} sx={{ padding: "20px" }}>
         <Grid
           item
-          xs={12}
+          xs={12} lg={12} xl={12} xxl={12} sm={12}
           sx={{
             position: "sticky",
             top: 0,
@@ -287,16 +288,7 @@ const LnDAssesment = () => {
                 backgroundColor={LIGHT_GRAY2}
               >
                 {/* First Row - 3 NuralAutocomplete */}
-                <Typography
-                  variant="h5"
-                  sx={{
-                    color: DARK_PURPLE,
-                    fontSize: "1.25rem",
-                    fontWeight: "bold",
-                    lineHeight: "1.5",
-                    marginBottom: "1rem",
-                  }}
-                >
+                <Typography variant="h5" sx={headTitle}>
                   Programme
                 </Typography>
 
@@ -310,16 +302,7 @@ const LnDAssesment = () => {
                   }}
                 >
                   <Grid item xs={12} sm={4} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      Training Category
-                    </Typography>
+                    <Typography sx={labelStyle}>Training Category</Typography>
                     <NuralAutocomplete
                       label="SKU"
                       options={options}
@@ -329,16 +312,7 @@ const LnDAssesment = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      Content
-                    </Typography>
+                    <Typography sx={labelStyle}>Content</Typography>
                     <NuralAutocomplete
                       label="SKU"
                       options={options}
@@ -347,16 +321,7 @@ const LnDAssesment = () => {
                     />
                   </Grid>
                   <Grid item xs={12} sm={4} md={4}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      CHOOSE USER ROLE
-                    </Typography>
+                    <Typography sx={labelStyle}>CHOOSE USER ROLE</Typography>
                     <NuralAutocomplete
                       label="SKU"
                       options={options}
@@ -377,16 +342,7 @@ const LnDAssesment = () => {
                     ))}
                   </Grid>
                   <Grid item xs={12} sm={12} md={12}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      Add programme title
-                    </Typography>
+                    <Typography sx={labelStyle}>Add programme title</Typography>
 
                     <Box display="flex" alignItems="center" gap={2}>
                       <NuralTextField
@@ -416,29 +372,11 @@ const LnDAssesment = () => {
                     </Box>
                   </Grid>
                   <Grid item xs={12} lg={6} sm={6} md={6}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      Description
-                    </Typography>
+                    <Typography sx={labelStyle}>Description</Typography>
                     <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
                   </Grid>
                   <Grid item xs={12} lg={6} sm={6} md={6}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
-                    >
-                      Description
-                    </Typography>
+                    <Typography sx={labelStyle}>Description</Typography>
                     <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
                   </Grid>
                   <Grid
@@ -459,11 +397,8 @@ const LnDAssesment = () => {
                       }}
                     >
                       <Typography
-                        variant="h6"
-                        sx={{
-                          color: "000000",
-                          fontSize: 14,
-                        }}
+                        
+                        sx={labelStyle}
                       >
                         Start Date
                       </Typography>
@@ -513,13 +448,10 @@ const LnDAssesment = () => {
                       }}
                     >
                       <Typography
-                        variant="h6"
-                        sx={{
-                          color: "000000",
-                          fontSize: 14,
-                        }}
+                        
+                        sx={labelStyle}
                       >
-                        Start Date
+                        END Date
                       </Typography>
                       <NuralCalendar
                         onDateSelect={handleDateSelect}
@@ -675,7 +607,6 @@ const LnDAssesment = () => {
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails sx={{ px: 2 }}>
-                      
                         <Grid item xs={12} sm={12} md={12} marginTop={2}>
                           <Typography
                             variant="body1"
@@ -902,6 +833,133 @@ const LnDAssesment = () => {
                     </Accordion>
                   </Grid>
                 </Grid>
+                <Grid
+                  item
+                  spacing={2}
+                  marginTop={2}
+                  direction="column"
+                  xl={12}
+                  lg={12}
+                  md={12}
+                  borderRadius={4}
+                >
+                  <Grid>
+                    <Accordion
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        borderRadius: 4,
+                        boxShadow: "none",
+                        "&::before": { display: "none" }, // removes divider line
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={
+                          <ExpandMoreIcon sx={{ color: PRIMARY_BLUE2 }} />
+                        }
+                        sx={{
+                          padding: 1,
+                          backgroundColor: "white", // ya koi bhi required color
+                          "& .MuiAccordionSummary-content": {
+                            margin: 0,
+                          },
+                          "& .MuiAccordionSummary-expandIconWrapper": {
+                            outline: "none",
+                          },
+                          "&:focus": {
+                            outline: "none",
+                          },
+                          "& .MuiSvgIcon-root:focus": {
+                            outline: "none",
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            color: PRIMARY_BLUE2,
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "14px",
+                            lineHeight: "19.12px",
+                          }}
+                        >
+                          1 - Q2
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ px: 2 }}>
+                        <Grid item xs={12} sm={12} md={12} marginTop={2}>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              ...labelStyle,
+                              fontSize: { xs: "12px", sm: "10px" },
+                            }}
+                            fontWeight={600}
+                          >
+                            ADD QUESTION
+                          </Typography>
+
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <NuralTextField
+                              placeholder="xxxxxxxxxxxxx"
+                              width="100%"
+                            />
+
+                            <img
+                              src="/Icons/uploadicon2.svg"
+                              alt="Clear"
+                              style={{
+                                cursor: "pointer",
+                                width: 200,
+                                height: 40,
+                                paddingRight: 15,
+                              }}
+                            />
+                            <img
+                              src="/Icons/crossicon.svg"
+                              alt="Clear"
+                              style={{
+                                cursor: "pointer",
+                                width: 22,
+                                paddingRight: 15,
+                              }}
+                            />
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={12} marginTop={2}>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              ...labelStyle,
+                              fontSize: { xs: "12px", sm: "10px" },
+                            }}
+                            fontWeight={600}
+                          >
+                            ADD DESCRIPTION (OPTIONAL)
+                          </Typography>
+
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <NuralTextField
+                              placeholder="xxxxxxxxxxxxx"
+                              width="100%"
+                            />
+                            <img
+                              src="/Icons/crossicon.svg"
+                              alt="Clear"
+                              style={{
+                                cursor: "pointer",
+                                width: 22,
+                                paddingRight: 15,
+                              }}
+                            />
+                          </Box>
+                        </Grid>
+
+
+                        
+                      </AccordionDetails>
+                    </Accordion>
+                  </Grid>
+                </Grid>
               </NuralAccordion2>
             </Grid>
           </Grid>
@@ -937,7 +995,7 @@ const LnDAssesment = () => {
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
                   sx={{
-                    borderColor:PRIMARY_BLUE2,
+                    borderColor: PRIMARY_BLUE2,
                     color: PRIMARY_BLUE2,
                     borderRadius: 1,
                   }}
@@ -1008,6 +1066,7 @@ const LnDAssesment = () => {
                 <FormControlLabel
                   control={
                     <Switch
+                    sx={toggleSectionStyle}
                       size="medium"
                       checked={multiple}
                       onChange={() => setMultiple(!multiple)}
@@ -1020,7 +1079,7 @@ const LnDAssesment = () => {
                     ml: 0,
                     backgroundColor: LIGHT_GRAY2,
                     borderRadius: "8px",
-                    padding: "2px",
+                    padding: "10px",
                   }}
                   labelPlacement="start"
                 />
@@ -1028,6 +1087,7 @@ const LnDAssesment = () => {
                 <FormControlLabel
                   control={
                     <Switch
+                    sx={toggleSectionStyle}
                       size="medium"
                       checked={addOthers}
                       onChange={() => setAddOthers(!addOthers)}
@@ -1039,9 +1099,9 @@ const LnDAssesment = () => {
                     justifyContent: "space-between",
                     ml: 0,
                     backgroundColor: LIGHT_GRAY2,
-                    mt:"10px",
+                    mt: "10px",
                     borderRadius: "8px",
-                    padding: "2px",
+                    padding: "12px",
                   }}
                   labelPlacement="start"
                 />

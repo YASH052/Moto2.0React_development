@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   TableBody,
+  Switch,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import NuralAutocomplete from "../../../../NuralCustomComponents/NuralAutocomplete";
@@ -23,7 +24,7 @@ import {
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
 } from "../../../../../Common/colors";
-import { tableHeaderStyle, rowstyle, headTitle } from "../../../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle } from "../../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -124,7 +125,7 @@ const TaskSearch = () => {
     setSortConfig({ key: columnName, direction });
   };
   return (
-    <Grid container spacing={0} ml={0} sx={{ padding: "0px",position:"relative" }}>
+    <Grid container spacing={2} sx={{ padding: "20px" }}>
       <Grid
         item
         xs={12}
@@ -136,11 +137,11 @@ const TaskSearch = () => {
           paddingBottom: 1,
         }}
       >
-        <Box mt={2} mb={0} ml={1}>
+        <Box mt={1} mb={0} ml={1}>
           <BreadcrumbsHeader pageTitle="Mechandizing" />
         </Box>
 
-        <Box ml={0}>
+        <Box ml={1}>
           <TabsBar
             tabs={tabs}
             activeTab={activeTab}
@@ -148,12 +149,17 @@ const TaskSearch = () => {
           />
         </Box>
       </Grid>
-      <Grid container spacing={0} ml={0} pr={2}>
-        <Grid xs={12} borderRadius={2} padding={2} backgroundColor={LIGHT_GRAY2} mt={1}>
-          {/* First Row - 3 NuralAutocomplete */}
-          <Typography
+      <Grid xs={12} borderRadius={2} padding={2} backgroundColor={LIGHT_GRAY2}>
+        {/* First Row - 3 NuralAutocomplete */}
+        <Typography
           variant="h5"
-          sx={headTitle}
+          sx={{
+            color: DARK_PURPLE,
+            fontSize: "1.25rem",
+            fontWeight: "bold",
+            lineHeight: "1.5",
+            marginBottom: "1rem",
+          }}
         >
           Search
         </Typography>
@@ -175,7 +181,7 @@ const TaskSearch = () => {
               }}
               fontWeight={600}
             >
-              TASK TYPE
+              Task Type
             </Typography>
             <NuralAutocomplete
               label="SKU"
@@ -215,7 +221,6 @@ const TaskSearch = () => {
               icon={"./Icons/searchIcon.svg"}
               iconPosition="right"
               backgroundColor={PRIMARY_BLUE2}
-              
               color="#fff"
               width="100%"
             >
@@ -264,28 +269,11 @@ const TaskSearch = () => {
                 </TableCell>
               </TableRow>
               <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                <TableCell
-                  sx={{
-                    ...tableHeaderStyle,
-                    position: "sticky",
-                    top: "48px",
-                    backgroundColor: LIGHT_GRAY2,
-                    zIndex: 1100,
-                  }}
-                >
-                  <Grid container alignItems="center" spacing={1}>
-                    <Grid item>S.NO</Grid>
-                  </Grid>
-                </TableCell>
                 {[
-                  "SERIAL NUMBER",
-                  "SERIAL NUMBER 2",
-                  "SKU CODE",
-                  "SKU NAME",
-                  "USER NAME",
-                  "REQUEST TYPE",
+                  "S.NO",
+                 "TASK TYPE",
                   "STATUS",
-                  "REQUEST DATE & TIME",
+                  "EDIT",
                 ].map((header, index) => (
                   <TableCell
                     key={header}
@@ -345,23 +333,31 @@ const TaskSearch = () => {
                         fontWeight: 600,
                       }}
                     >
-                      {page * rowsPerPage + index + 1}
+                       {index + 1}
                     </TableCell>
+                   
+                  
                     <TableCell sx={{ ...rowstyle }}>
-                      {row.serialNumber}
+                      Column {index + 1}
                     </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>
-                      {row.serialNumber2}
+                    <TableCell align="left" sx={{ ...rowstyle }}>
+                      <Switch
+                        checked={row.status}
+                        // onChange={() => handleStatusToggle(row.status)} // You can define this to update status
+                        color="primary"
+                      />
                     </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.skuCode}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.skuName}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.userName}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>
-                      {row.requestType}
-                    </TableCell>
-                    <TableCell sx={{ ...rowstyle }}>{row.status}</TableCell>
-                    <TableCell sx={{ ...rowstyle }}>
-                      {row.requestDate}
+                    <TableCell align="left" sx={{ ...rowstyle }}>
+                      <img
+                        src="/public/Icons/editicon.svg"
+                        alt="edit"
+                        style={{
+                          cursor: "pointer",
+                          width: 20,
+                          height: 20,
+                        }}
+                        onClick={() => console.log("Edit clicked")}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -545,7 +541,6 @@ const TaskSearch = () => {
             </Grid>
           </Grid>
         </TableContainer>
-      </Grid>
       </Grid>
     </Grid>
   );

@@ -9,7 +9,7 @@ import NotFound from "../Pages/NotFound/NotFound";
 import LoginForm from "../Pages/Auth/Login/LoginForm";
 import ForgotPasswordForm from "../Pages/Auth/ForgotPasswordForm";
 import ResetPasswordForm from "../Pages/Auth/ResetPasswordForm";
-
+import ManageTask from "../Pages/Master/Module/Merchandizing/ManageTask/ManageTask.jsx";
 // Private Pages
 import TestCompo from "../Pages/NuralCustomComponents/TestCompo.jsx";
 import Transactions from "../Pages/Master/Transaction/Transactions";
@@ -154,23 +154,22 @@ import StoreReports from "../Pages/Master/Reports/StoreReports.jsx";
 import IspApproval from "../Pages/Master/Isp/IspApproval.jsx";
 import PreBookingReport from "../Pages/Master/Reports/PreBookingReport.jsx";
 import MerchandizingReport from "../Pages/Master/Reports/MerchandizingReport.jsx";
-import TaskType from "../Pages/Master/Module/Merchandizing/TaskType/TaskType.jsx";
-import TaskSearch from "../Pages/Master/Module/Merchandizing/Search/TaskSearch.jsx";
-import ManageTask from "../Pages/Master/Module/Merchandizing/ManageTask/ManageTask.jsx";
 import RankingReport from "../Pages/Master/Reports/RankingReport.jsx";
 import ManageAudit from "../Pages/Master/Module/Brand/ManageAudit.jsx";
 import FocusModel from "../Pages/Master/Product/FocusModel.jsx";
 import RIAuditScore from "../Pages/Master/Module/Brand/RIAuditScore.jsx";
 import DemoConversionList from "../Pages/Master/Others/DemoConversionList.jsx";
-
+import Gtn from "../../../../../../../../Downloads/dashboardlast5/Moto2.0React_development/src/Components/Pages/Master/Module/Finance/Gtn.jsx";
 import LnDSearch from "../Pages/Master/Module/L&D/LnDSearch.jsx";
-import LnDContent from "../Pages/Master/Module/L&D/LnDContent.jsx";
+import LnDContent from "../Pages/Master/Module/L&D/LnDContent.jsx"
 import LnDAssesment from "../Pages/Master/Module/L&D/LnDAssesment.jsx";
-import ManageEntity from "../Pages/Master/Module/Hierarchy/ManageEntity.jsx";
+import ManageEntity from "../Pages/Master/Module/Hierarchy/ManageEntity.jsx"
 import EntitySearch from "../Pages/Master/Module/Hierarchy/EntitySearch.jsx";
 import Survey from "../Pages/Master/Survey/Survey.jsx";
+import TaskType from "../Pages/Master/Module/Merchandizing/TaskType/TaskType.jsx";
+import TaskSearch from "../Pages/Master/Module/Merchandizing/Search/TaskSearch.jsx";
 import ImeiBinding from "../Pages/Master/Attendance/ImeiBinding.jsx";
-import Gtn from "../Pages/Master/Module/Finance/Gtn.jsx";
+
 
 const AllRoutes = () => {
   return (
@@ -183,10 +182,10 @@ const AllRoutes = () => {
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/test" element={<TestCompo />} />
         <Route path="/change-password" element={<ChangePassword />} />
-      </Route>
+        </Route>
 
-      {/* Private Routes */}
-      <Route element={<PrivateRoute />}>
+        {/* Private Routes */}
+        <Route element={<PrivateRoute />}>
         <Route path="/" element={<Dashboard />} />
 
         <Route path="/dashboard" element={<Dashboard />} />
@@ -206,11 +205,11 @@ const AllRoutes = () => {
           path="/availability-dashboard"
           element={<AvailabilityDashboard />}
         />
-      </Route>
-      <Route path="/rat-availability" element={<RATAvailability />} />
+        </Route>
+        <Route path="/rat-availability" element={<RATAvailability />} />
 
-      {/* Private Routes */}
-      <Route element={<PrivateRoute />}>
+        {/* Private Routes */}
+        <Route element={<PrivateRoute />}>
         <Route path="/settings" element={<MasterSetting />} />
         <Route path="/transaction" element={<Transactions />} />
         <Route
@@ -230,7 +229,6 @@ const AllRoutes = () => {
         <Route path="/search-agancy" element={<ViewAgency />} />
         <Route path="/isp-upload" element={<IspUpload />} />
         <Route path="/add-isp" element={<AddIsp />} />
-
         <Route path="/isp-approval" element={<IspApproval />} />
         <Route path="/view-retailer" element={<RetailerView />} />
         <Route path="/sales-bulk-upload" element={<SalesBulkUpload />} />
@@ -265,7 +263,6 @@ const AllRoutes = () => {
         <Route path="/pre-booking-report" element={<PreBookingReport />} />
         <Route path="/merchandizing-report" element={<MerchandizingReport />} />
         <Route path="/ranking-report" element={<RankingReport />} />
-
         <Route path="/attendance-upload" element={<AttendanceUpload />} />
         <Route path="/balance-leave-bulk" element={<BalanceLeaveBulk />} />
         <Route
@@ -323,7 +320,6 @@ const AllRoutes = () => {
         <Route path="/redington-file" element={<RedingtonFile />} />
         <Route path="/demo-conversion" element={<DemoConversion />} />
         <Route path="/demo-conversion-list" element={<DemoConversionList />} />
-
         <Route path="/secondary-sale" element={<SecondarySale />} />
         <Route path="/sales-channel-stock" element={<SalesChannelStockSB />} />
         <Route path="/user-laggards" element={<UserLaggards />} />
@@ -343,30 +339,39 @@ const AllRoutes = () => {
         <Route path="/l1l2-issue-report" element={<L1L2IssueReport />} />
         <Route path="/audit-report" element={<AuditReport />} />
         <Route path="/manage-audit" element={<ManageAudit />} />
-
         <Route path="/ai-norms" element={<AInorms />} />
         <Route
           path="/stock-adjustment-reason"
           element={<StockAdjustmentReason />}
         />
+        <Route path="/survey" element={<Survey/>}/>
         <Route path="/grn" element={<Grn />} />
-
         <Route path="/report-queue" element={<ReportQueue />} />
         <Route path="/finance-api-block" element={<FinanceApiBlock />} />
         <Route path="/servify-amount" element={<ServifyOffer />} />
         <Route path="/gtn" element={<Gtn />} />
-
         <Route path="/lnd-category" element={<LnDCategory />} />
-
         <Route path="/demo-categorization" element={<DemoCat />} />
-
         <Route path="/mez-audit" element={<MezAudit />} />
         <Route path="/isp-audit" element={<IspAudit />} />
         <Route path="/visibility-audit" element={<VisibilityAudit />} />
         <Route path="/store-ops" element={<StoreOps />} />
         <Route path="/riaudit-score" element={<RIAuditScore />} />
-
         <Route path="/organization" element={<Organization />} />
+        <Route path="/finance-api-block" element={<FinanceApiBlock />} />
+        <Route path="/servify-offer" element={<ServifyOffer />} />
+        <Route path="/gtn" element={<Gtn />} />
+        <Route path="/lnd-search" element={<LnDSearch />} />
+        <Route path="/lnd-category" element={<LnDCategory />} />
+        <Route path="/lnd-content" element={<LnDContent />} />
+        <Route path="/lnd-assesment" element={<LnDAssesment />} />
+        <Route path="/manage-entity" element={<ManageEntity />} />
+        <Route path="/entity-search" element={<EntitySearch />} />
+        <Route path="/manage-task" element={<ManageTask />} />
+        <Route path="/task-type" element={<TaskType/>}/>
+        <Route path="/task-search" element={<TaskSearch/>} />
+        <Route path="/imei-binding" element={<ImeiBinding/>}/>
+        <Route path="/demo-categorization" element={<DemoCat />} />
 
         <Route path="/bulletin" element={<Bulletin />} />
 
@@ -385,19 +390,6 @@ const AllRoutes = () => {
         <Route path="/q-mapping" element={<QMapping />} />
         <Route path="/web-menu-setting" element={<WebMenuMapping />} />
         <Route path="/mobile-menu-setting" element={<MobileMenuMapping />} />
-
-        <Route path="/task-type" element={<TaskType />} />
-        <Route path="/task-search" element={<TaskSearch />} />
-        <Route path="/manage-task" element={<ManageTask />} />
-        <Route path="/lnd-search" element={<LnDSearch />} />
-        <Route path="/lnd-category" element={<LnDCategory />} />
-
-        <Route path="/lnd-content" element={<LnDContent />} />
-        <Route path="/lnd-assesment" element={<LnDAssesment />} />
-        <Route path="/manage-entity" element={<ManageEntity />} />
-        <Route path="/entity-search" element={<EntitySearch />} />
-        <Route path="/survey" element={<Survey />} />
-        <Route path="/imei-binding" element={<ImeiBinding />} />
       </Route>
 
       {/* Default and Not Found Routes */}

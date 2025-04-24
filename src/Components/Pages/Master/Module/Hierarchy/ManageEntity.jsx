@@ -34,7 +34,7 @@ import {
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle, headTitle, toggleSectionStyle } from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -253,25 +253,17 @@ const ManageEntity = () => {
             {/* First Row - 3 NuralAutocomplete */}
             <Typography
               variant="h5"
-              sx={{
-                color: DARK_PURPLE,
-                fontSize: "1.25rem",
-                fontWeight: "bold",
-                lineHeight: "1.5",
-                marginBottom: "1rem",
-              }}
+              sx={headTitle}
             >
               Manage Entity Type
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   BASE ENTITY TYPE
                 </Typography>
@@ -284,12 +276,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   ENTITY TYPE
                 </Typography>
@@ -297,12 +287,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   AUTO CODE MODE
                 </Typography>
@@ -317,12 +305,10 @@ const ManageEntity = () => {
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   CHANNEL LEVEL
                 </Typography>
@@ -335,12 +321,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   REPORTING HIERARCHY LEVEL
                 </Typography>
@@ -353,12 +337,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   BILL TO RETAILER
                 </Typography>
@@ -373,12 +355,10 @@ const ManageEntity = () => {
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={6}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   STOCK TRANSFER MODE
                 </Typography>
@@ -391,12 +371,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={6}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   TARGET MODE
                 </Typography>
@@ -411,12 +389,10 @@ const ManageEntity = () => {
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   STOCK MAINTAIN MODE
                 </Typography>
@@ -429,12 +405,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   BACK DAYS ALLOWED FOR SALE
                 </Typography>
@@ -442,12 +416,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   BACK DAYS ALLOWED FOR SALE RETURN
                 </Typography>
@@ -457,12 +429,10 @@ const ManageEntity = () => {
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   REPORTING ORGANIZATION HIERARCHY
                 </Typography>
@@ -475,12 +445,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   WORKING FROM TIME
                 </Typography>
@@ -488,12 +456,10 @@ const ManageEntity = () => {
               </Grid>
               <Grid item xs={12} sm={4} md={4}>
                 <Typography
-                  variant="body1"
                   sx={{
                     ...labelStyle,
-                    fontSize: { xs: "12px", sm: "10px" },
+                    
                   }}
-                  fontWeight={600}
                 >
                   WORKING TO TIME
                 </Typography>
@@ -695,6 +661,7 @@ const ManageEntity = () => {
                             }}
                           >
                             <Switch
+                            sx={toggleSectionStyle}
                               checked={row.status}
                               // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
                               color="primary"

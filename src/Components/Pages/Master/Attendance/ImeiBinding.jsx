@@ -34,7 +34,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import { headTitle, rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import { useNavigate } from "react-router-dom";
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
@@ -255,17 +255,10 @@ const ImeiBinding = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: DARK_PURPLE,
-                    fontFamily: "Manrope",
-
-                    fontWeight: 700,
-                    fontSize: "14px",
-                    lineHeight: "19.12px",
-                    letterSpacing: "0%",
-                    mb: 2,
+                   ...headTitle
                   }}
                 >
-                  Update
+                  SEARCH
                 </Typography>
 
                 <Grid
@@ -279,52 +272,44 @@ const ImeiBinding = () => {
                 >
                   <Grid item xs={12} sm={4} md={4} lg={4} mb={1.5}>
                     <Typography
-                      variant="body1"
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
+                    ...labelStyle,
+                    
+                  }}
                     >
-                      ROLE
+                      NAME
                     </Typography>
                     <NuralAutocomplete width="100%" placeholder="SELECT" />
                   </Grid>
                   <Grid item xs={12} sm={4} md={4} lg={4} mb={1.5}>
                     <Typography
-                      variant="body1"
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
+                    ...labelStyle,
+                    
+                  }}
                     >
-                      ROLE
+                      CODE
                     </Typography>
                     <NuralAutocomplete width="100%" placeholder="SELECT" />
                   </Grid>
                   <Grid item xs={12} sm={4} md={4} lg={4} mb={1.5}>
                     <Typography
-                      variant="body1"
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
+                    ...labelStyle,
+                    
+                  }}
                     >
-                      ROLE
+                      STATUS
                     </Typography>
                     <NuralAutocomplete width="100%" placeholder="SELECT" />
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
-                      variant="body1"
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
+                    ...labelStyle,
+                    
+                  }}
                     >
                       FROM DATE
                     </Typography>
@@ -332,12 +317,10 @@ const ImeiBinding = () => {
                   </Grid>
                   <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
-                      variant="body1"
                       sx={{
-                        ...labelStyle,
-                        fontSize: { xs: "12px", sm: "10px" },
-                      }}
-                      fontWeight={600}
+                    ...labelStyle,
+                    
+                  }}
                     >
                       TO DATE
                     </Typography>
@@ -941,11 +924,7 @@ const ImeiBinding = () => {
                     >
                       <Typography
                         sx={{
-                          color: PRIMARY_BLUE2,
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "14px",
-                          lineHeight: "19.12px",
+                          ...headTitle
                         }}
                       >
                         Rejection Remark
@@ -954,12 +933,7 @@ const ImeiBinding = () => {
                     <AccordionDetails sx={{ px: 2 }}>
                       <Box>
                         <Typography
-                          variant="body1"
-                          sx={{
-                            ...labelStyle,
-                            fontSize: { xs: "12px", sm: "10px" },
-                          }}
-                          fontWeight={600}
+                        sx={labelStyle}
                         >
                           REMARK
                         </Typography>

@@ -34,7 +34,7 @@ import {
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle } from "../../../../Common/commonstyles";
+import { tableHeaderStyle, rowstyle, headTitle } from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -262,14 +262,8 @@ const FinanceApiBlock = () => {
         >
           {/* First Row - 3 NuralAutocomplete */}
           <Typography
-            variant="h5"
-            sx={{
-              color: DARK_PURPLE,
-              fontSize: "1.25rem",
-              fontWeight: "bold",
-              lineHeight: "1.5",
-              marginBottom: "1rem",
-            }}
+            
+            sx={headTitle}
           >
             API Request Type Mapping
           </Typography>

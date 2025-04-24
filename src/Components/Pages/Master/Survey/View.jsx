@@ -12,13 +12,22 @@ import {
   TableHead,
   TableRow,
   TableBody,
-  Checkbox,
+  MenuItem,
+  Select,
+  InputBase,
+  AccordionDetails,
+  Accordion,
+  AccordionSummary,
   FormControlLabel,
   Switch,
+  FormControl,
+  FormGroup,
 } from "@mui/material";
+import RemoveIcon from "@mui/icons-material/Remove";
 import { useNavigate } from "react-router-dom";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
-import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
+import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import {
   AQUA,
   AQUA_DARK,
@@ -28,52 +37,50 @@ import {
   LIGHT_GRAY2,
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
-} from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle, headTitle, toggleSectionStyle } from "../../../../Common/commonstyles";
+} from "../../../Common/colors";
+import { tableHeaderStyle, rowstyle, headTitle } from "../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import NuralButton from "../../../NuralCustomComponents/NuralButton";
-import NuralCalendar from "../../../NuralCustomComponents/NuralCalendar";
-import NuralAccordion from "../../../NuralCustomComponents/NuralAccordion";
-import BreadcrumbsHeader from "../../../../Common/BreadcrumbsHeader";
-import TabsBar from "../../../../Common/TabsBar";
-import NuralAccordion2 from "../../../NuralCustomComponents/NuralAccordion2";
-import NuralTextField from "../../../NuralCustomComponents/NuralTextField";
-import NuralTextButton from "../../../NuralCustomComponents/NuralTextButton";
-import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
-import NuralUploadFormat from "../../../NuralCustomComponents/NuralUploadFormat";
-import NuralFileUpload from "../../../NuralCustomComponents/NuralFileUpload";
-import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
-import { AddIcCallOutlined } from "@mui/icons-material";
-import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
-import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
-import NuralFileUpload2 from "../../../NuralCustomComponents/NuralFileUpload2";
+import NuralButton from "../../NuralCustomComponents/NuralButton";
+import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
+import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
+import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
+import TabsBar from "../../../Common/TabsBar";
+import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
+import NuralTextField from "../../NuralCustomComponents/NuralTextField";
+import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
+import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
+import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
+import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
+import { AddIcCallOutlined, Image } from "@mui/icons-material";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import SelectionCheckboxItem from "../../NuralCustomComponents/SelectionCheckboxItem";
+import { Stack, styled } from "@mui/system";
+import ISPZeroSaleTable from "../../Dashboard/ISPZeroSaleTable";
 
-const LnDCont = () => {
+const View = () => {
   const [page, setPage] = React.useState(0);
   const [saveClicked, setSaveClicked] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [showStatus, setShowStatus] = React.useState(false);
-  const views = ["Role 1", "Role 2", "Role 3", "Role 4"]; // example list
+  const [selected, setSelected] = React.useState("");
+  const views = ["Role 1", "Role 2", "Role 3", "Role 4"];
+  const [options2, setOptions2] = useState([
+    { id: 1, value: "", isCorrect: false },
+    { id: 2, value: "", isCorrect: false },
+    { id: 3, value: "", isCorrect: false },
+  ]);
 
-  const [selectedViews, setSelectedViews] = useState([]);
-
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelectedViews(views); // Select all
-    } else {
-      setSelectedViews([]); // Deselect all
-    }
-  };
-
-  const handleSelect = (view) => {
-    if (selectedViews.includes(view)) {
-      setSelectedViews(selectedViews.filter((v) => v !== view));
-    } else {
-      setSelectedViews([...selectedViews, view]);
-    }
+  const handleAddOption = () => {
+    const newOption = {
+      id: options2.length + 1,
+      value: "",
+      isCorrect: false,
+    };
+    setOptions2([...options2, newOption]);
   };
 
   const templates = [
@@ -114,29 +121,62 @@ const LnDCont = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
-   const options2 = ["Yes", "No"];
-  // const views = ["View1", "View2", "View3", "View4"];
-  const [selectedOption, setSelectedOption] = useState("");
-  
 
-  const handleSelect2 = (view) => {
-    if (selectedViews.includes(view)) {
-      setSelectedViews(selectedViews.filter((v) => v !== view));
-    } else {
-      setSelectedViews([...selectedViews, view]);
-    }
-  };
-  const [activeTab, setActiveTab] = React.useState("lnd-content");
   const navigate = useNavigate();
 
-  const tabs = [
-    { label: "Content", value: "lnd-content" },
-    { label: "Assesment", value: "lnd-assesment" },
-  ];
+  const StyledInput = styled(InputBase)(({ theme }) => ({
+    marginLeft: "25px",
+    border: "1px solid #a1b0e5",
+    marginTop: "10px",
+    borderRadius: "8px",
+    maxHeight: "40px",
+    padding: "4px 12px",
+    fontSize: "14px",
+    width: "60px",
+    textAlign: "center",
+    backgroundColor: "#eef1fc",
+    color: "#5f74be",
+  }));
+
+  const StyledSelect = styled(Select)(({ theme }) => ({
+    border: "1px solid #a1b0e5",
+    marginTop: "10px",
+    maxHeight: "40px",
+    borderRadius: "8px",
+    paddingLeft: "12px",
+    fontSize: "14px",
+    backgroundColor: "#eef1fc",
+    color: "#5f74be",
+    ".MuiSelect-icon": {
+      color: "#5f74be",
+    },
+  }));
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
+  const handleDateSelect = (date) => {
+    console.log("Selected Date:", date);
+    // You can store it in state if needed
+    // setSelectedDate(date);
+  };
 
+  const handleMonthChange = (month) => {
+    console.log("Changed Month:", month);
+    // You can update state if needed
+    // setCurrentMonth(month);
+  };
+
+  const handleYearChange = (year) => {
+    console.log("Changed Year:", year);
+    // You can update state if needed
+    // setCurrentYear(year);
+  };
+
+  const handleNavigate = ({ month, year }) => {
+    console.log("Navigated to:", month, year);
+    // Useful if you want to do something when the calendar is navigated
+  };
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -181,6 +221,14 @@ const LnDCont = () => {
 
   const [rows, setRows] = React.useState(generateDummyData());
   const [filteredRows, setFilteredRows] = React.useState(rows);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [checked, setChecked] = useState(true);
+  const [questionType, setQuestionType] = React.useState("MCQ");
+  const [questionType1, setQuestionType1] = React.useState("RANGE");
+  const [multiple, setMultiple] = React.useState(true);
+  const [addOthers, setAddOthers] = React.useState(true);
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -197,180 +245,167 @@ const LnDCont = () => {
     }
     setSortConfig({ key: columnName, direction });
   };
+  const [values, setValues] = useState([0, 0]);
+
+  const handleChange = (index, delta) => {
+    setValues((prev) =>
+      prev.map((val, i) => (i === index ? Math.max(0, val + delta) : val))
+    );
+  };
+
   return (
-    <Grid container spacing={2} sx={{ padding: "20px" }}>
-      <Grid
-        item
-        xs={12}
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          backgroundColor: "#fff",
-          paddingBottom: 1,
-        }}
-      >
-        <Box mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="L&D" />
-        </Box>
-
-        <Box ml={1}>
-          <TabsBar
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </Box>
-      </Grid>
-
-      <Grid marginTop={2} xs={12}>
-        <NuralAccordion2
-          title="CREATE"
-          backgroundColor={"white"}
-          padding={"0px"}
+    <Grid marginTop={2} xs={12}>
+      <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
+        <Grid
+          xs={12}
+          borderRadius={2}
+          padding={2}
+          backgroundColor={LIGHT_GRAY2}
         >
-          <Grid
-            xs={12}
-            borderRadius={2}
-            padding={2}
-            backgroundColor={LIGHT_GRAY2}
+          {/* First Row - 3 NuralAutocomplete */}
+          <Typography
+            variant="h5"
+            sx={headTitle}
           >
-            {/* First Row - 3 NuralAutocomplete */}
-            <Typography sx={headTitle}>
-              CREATE L& D CONTENT
-            </Typography>
+            Search
+          </Typography>
 
-            <Grid
-              container
-              spacing={2}
-              mb={2}
-              sx={{
-                gap: { xs: 0, sm: 0, md: 0 },
-                flexDirection: { xs: "column", sm: "row" },
-              }}
-            >
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>content name</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>Training category</Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>Oprn to all</Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options2}
-                  placeholder="SELECT"
-                  width="100%"
-                  value={selectedOption}
-                  onChange={(e, newValue) => setSelectedOption(newValue)}
-                />
-              </Grid>
-
-              {/* Views list */}
-              {selectedOption === "No" && (
-                <>
-                  <Grid container justifyContent="flex-end" alignItems="center">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={selectedViews.length === views.length}
-                          onChange={handleSelectAll}
-                          color="primary"
-                        />
-                      }
-                      label="Select All"
-                    />
-                  </Grid>
-                  <Grid container spacing={2} marginLeft={3}>
-                    {views.map((view) => (
-                      <Grid item xs={12} sm={3} md={3} key={view}>
-                        <SelectionCheckboxItem
-                          label={view}
-                          selected={selectedViews.includes(view)}
-                          onSelect={() => handleSelect2(view)}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </>
-              )}
-              <Grid item xs={12} sm={3} md={3}>
-                <Typography sx={labelStyle}>content durantion(min)</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-
-              {/* <SelectionPanel /> */}
-              <Grid item xs={12} sm={3} md={3}>
-                <Typography sx={labelStyle}>Description</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-              <Grid item xs={12} sm={3} md={3} lg={3}>
-                <Typography sx={labelStyle}>FROM DATE</Typography>
-                <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
-              </Grid>
-              <Grid item xs={12} sm={3} md={3} lg={3}>
-                <Typography sx={labelStyle}>To DATE</Typography>
-                <NuralCalendar width="100%" placeholder="DD/MMM/YYYY" />
-              </Grid>
-              <Grid item xs={12} sm={6} md={6}>
-                <Typography sx={labelStyle}>Search tags</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-              <Grid item xs={6}>
-                <NuralFileUpload2 backgroundColor={LIGHT_GRAY2} />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={6}>
-                <Typography sx={labelStyle}>content type</Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <NuralFileUpload2 backgroundColor={LIGHT_GRAY2} />
-              </Grid>
-            </Grid>
-
-            <NuralTextButton
-              icon={"/public/Icons/plus.svg"}
-              iconPosition="right"
-              fontSize="16px"
-              backgroundColor={DARK_PURPLE}
-              color="#fff"
-              width="100%"
-            >
-              ADD CONTENT
-            </NuralTextButton>
-          </Grid>
           <Grid
             container
             spacing={2}
             mb={2}
-            mt={2}
             sx={{
               gap: { xs: 0, sm: 0, md: 0 },
               flexDirection: { xs: "column", sm: "row" },
             }}
           >
-            <Grid item xs={12} sm={6} md={6} lg={6}>
+            <Grid item xs={12} sm={4} md={4}>
+              <Typography
+                variant="body1"
+                sx={labelStyle}
+              >
+                Task Type
+              </Typography>
+              <NuralAutocomplete
+                label="SKU"
+                options={options}
+                placeholder="SELECT"
+                width="100%"
+              />
+            </Grid>
+
+            <Grid
+              item
+              xs={12}
+              md={4}
+              sm={4}
+              lg={4}
+              xl={4}
+              xxl={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: "40px",
+                },
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={labelStyle}
+              >
+                FROM DATE
+              </Typography>
+              <NuralCalendar
+                onDateSelect={handleDateSelect}
+                onMonthChange={handleMonthChange}
+                onYearChange={handleYearChange}
+                onNavigate={handleNavigate}
+                initialDate={new Date()}
+                minDate={new Date(2000, 0, 1)}
+                maxDate={new Date(2024, 11, 31)}
+                disabledDates={[new Date(2024, 2, 15)]}
+                highlightedDates={[new Date(2024, 2, 20)]}
+                yearRange={{
+                  start: 2000,
+                  end: new Date().getFullYear(),
+                }}
+                containerStyle={{
+                  backgroundColor: MEDIUM_BLUE,
+                }}
+                headerStyle={{
+                  padding: "6px 8px",
+                }}
+                dayStyle={{
+                  fontWeight: 500,
+                }}
+                selectedDayStyle={{
+                  backgroundColor: AQUA,
+                  color: "#fff",
+                }}
+                disabledDayStyle={{
+                  opacity: 0.5,
+                }}
+              />
+            </Grid>
+
+            <Grid
+              item
+              xs={12}
+              md={4}
+              lg={4}
+              xl={4}
+              xxl={4}
+              sm={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: "40px",
+                },
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={labelStyle}
+              >
+                TO DATE
+              </Typography>
+              <NuralCalendar
+                onDateSelect={handleDateSelect}
+                onMonthChange={handleMonthChange}
+                onYearChange={handleYearChange}
+                onNavigate={handleNavigate}
+                initialDate={new Date()}
+                minDate={new Date(2000, 0, 1)}
+                maxDate={new Date(2024, 11, 31)}
+                disabledDates={[new Date(2024, 2, 15)]}
+                highlightedDates={[new Date(2024, 2, 20)]}
+                yearRange={{
+                  start: 2000,
+                  end: new Date().getFullYear(),
+                }}
+                containerStyle={{
+                  backgroundColor: MEDIUM_BLUE,
+                }}
+                headerStyle={{
+                  padding: "6px 8px",
+                }}
+                dayStyle={{
+                  fontWeight: 500,
+                }}
+                selectedDayStyle={{
+                  backgroundColor: AQUA,
+                  color: "#fff",
+                }}
+                disabledDayStyle={{
+                  opacity: 0.5,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={2} md={1} lg={1}>
               <NuralButton
                 text="CANCEL"
                 variant="outlined"
                 color={PRIMARY_BLUE2}
                 fontSize="12px"
-                height="48px"
+                height="36px"
                 borderColor={PRIMARY_BLUE2}
                 // onClick={() => {
                 //   handleCancel();
@@ -379,108 +414,20 @@ const LnDCont = () => {
                 width="100%"
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={6}>
-              <NuralButton
-                text="SAVE"
-                variant="outlined"
-                backgroundColor={AQUA}
-                color={PRIMARY_BLUE2}
-                fontSize="12px"
-                height="48px"
-                borderColor={BLUE_COLOR}
-                onClick={handleSaveToggle}
-                // onClick={() => {
-                //   handleCancel();
-                //   setShowStatus(false);
-                // }}
+            <Grid item xs={12} sm={9} md={11} lg={11}>
+              <NuralTextButton
+                icon={"./Icons/searchIcon.svg"}
+                iconPosition="right"
+                backgroundColor={DARK_PURPLE}
+                color="#fff"
                 width="100%"
-              />
+              >
+                SEARCH
+              </NuralTextButton>
             </Grid>
           </Grid>
-        </NuralAccordion2>
-      </Grid>
-
-      <Grid marginTop={2} xs={12}>
-        <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
-          <Grid
-            xs={12}
-            borderRadius={2}
-            padding={2}
-            backgroundColor={LIGHT_GRAY2}
-          >
-            {/* First Row - 3 NuralAutocomplete */}
-            <Typography sx={headTitle}>
-              VIEW TASK
-            </Typography>
-
-            <Grid
-              container
-              spacing={2}
-              mb={2}
-              sx={{
-                gap: { xs: 0, sm: 0, md: 0 },
-                flexDirection: { xs: "column", sm: "row" },
-              }}
-            >
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>CONTENT NAME</Typography>
-                <NuralAutocomplete
-                  label="SKU"
-                  options={options}
-                  placeholder="SELECT"
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>FROM DATE</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-              <Grid item xs={12} sm={4} md={4}>
-                <Typography sx={labelStyle}>TO DATE</Typography>
-                <NuralTextField placeholder="xxxxxxxxxxxxx" width="100%" />
-              </Grid>
-            </Grid>
-            <Grid
-              container
-              spacing={2}
-              mb={2}
-              mt={2}
-              sx={{
-                gap: { xs: 0, sm: 0, md: 0 },
-                flexDirection: { xs: "column", sm: "row" },
-              }}
-            >
-              <Grid item xs={12} sm={2} md={1} lg={1}>
-                <NuralButton
-                  text="CANCEL"
-                  variant="outlined"
-                  color={PRIMARY_BLUE2}
-                  fontSize="12px"
-                  height="36px"
-                  borderColor={PRIMARY_BLUE2}
-                  // onClick={() => {
-                  //   handleCancel();
-                  //   setShowStatus(false);
-                  // }}
-                  width="100%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={10} md={11} lg={11}>
-                <NuralTextButton
-                  icon={"./Icons/searchIcon.svg"}
-                  iconPosition="right"
-                  backgroundColor={PRIMARY_BLUE2}
-                  color="#fff"
-                  width="100%"
-                >
-                  SEARCH
-                </NuralTextButton>
-              </Grid>
-            </Grid>
-          </Grid>
-        </NuralAccordion2>
-
-        <Grid item xs={12} marginTop={2}>
+        </Grid>
+        <Grid marginTop={2}>
           <TableContainer
             component={Paper}
             sx={{
@@ -488,7 +435,6 @@ const LnDCont = () => {
               color: PRIMARY_BLUE2,
               maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
               overflow: "auto",
-              borderRadius: "8px",
             }}
           >
             <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
@@ -521,28 +467,16 @@ const LnDCont = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "48px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
-                    }}
-                  >
-                    <Grid container alignItems="center" spacing={1}>
-                      <Grid item>S.NO</Grid>
-                    </Grid>
-                  </TableCell>
                   {[
-                    "Name",
-                    "Category Name",
-                    "Description",
-                    "Duration",
-                    "Creation Date",
+                    "SURVEY",
+                    "TYPE",
+                    "DESCRIPTION",
+                    "START DATE",
+                    "END DATE",
+                    "MIN SURVEY",
+                    "SURVEY LINK",
                     "STATUS",
-                    "Edit",
-                    "Image",
+                    "EDIT",
                   ].map((header, index) => (
                     <TableCell
                       key={header}
@@ -605,76 +539,34 @@ const LnDCont = () => {
                           fontWeight: 600,
                         }}
                       >
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
                         Column {index + 1}
                       </TableCell>
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Column {index + 1}
-                      </TableCell>{" "}
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell sx={{ ...rowstyle }}>
                         Column {index + 1}
                       </TableCell>
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell sx={{ ...rowstyle }}>
                         Column {index + 1}
                       </TableCell>
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell sx={{ ...rowstyle }}>
                         Column {index + 1}
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        Column {index + 1}
+                      </TableCell>
+                      <TableCell align="left" sx={{ ...rowstyle }}>
                         <Switch
-                        sx={toggleSectionStyle}
                           checked={row.status}
                           // onChange={() => handleStatusToggle(row.id)} // You can define this to update status
                           color="primary"
                         />
                       </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <TableCell align="left" sx={{ ...rowstyle }}>
                         <img
                           src="/public/Icons/editicon.svg"
                           alt="edit"
@@ -685,41 +577,6 @@ const LnDCont = () => {
                           }}
                           onClick={() => console.log("Edit clicked")}
                         />
-                      </TableCell>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => console.log("View clicked")}
-                        >
-                          <Typography
-                            sx={{
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: PRIMARY_BLUE2,
-                            }}
-                          >
-                          View
-                          </Typography>
-                          <img
-                            src="/Icons/eyeicon.svg"
-                            alt="view"
-                            style={{
-                              width: 25,
-                              height: 25,
-                            }}
-                          />
-                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -906,9 +763,9 @@ const LnDCont = () => {
             </Grid>
           </TableContainer>
         </Grid>
-      </Grid>
+      </NuralAccordion2>
     </Grid>
   );
 };
 
-export default LnDCont;
+export default View;
