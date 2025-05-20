@@ -126,7 +126,7 @@ const Color = () => {
     { label: "Price", value: "price" },
     { label: "Pre Booking", value: "preBooking" },
   ];
-  // Add these states for pagination
+
 
   // Add these states for sorting
   const [sortConfig, setSortConfig] = React.useState({
@@ -209,12 +209,14 @@ const Color = () => {
   };
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
-    setSearchParams((prev) => ({
-      ...prev,
-      pageIndex: newPage,
-    }));
-    fetchColorList();
+    if (newPage >= 1 && newPage <= Math.ceil(totalRecords / rowsPerPage)) {
+      setPage(newPage);
+      setSearchParams((prev) => ({
+        ...prev,
+        pageIndex: newPage,
+      }));
+      fetchColorList();
+    }
   };
 
   const handleRowsPerPageChange = (value) => {
@@ -230,10 +232,8 @@ const Color = () => {
   };
 
   const handleJumpToPage = (pageNumber) => {
-    if (
-      pageNumber >= 1 &&
-      pageNumber <= Math.ceil(totalRecords / rowsPerPage)
-    ) {
+    const maxPage = Math.ceil(totalRecords / rowsPerPage);
+    if (pageNumber >= 1 && pageNumber <= maxPage) {
       handlePageChange(pageNumber);
       setJumpToPage("");
       setDisplayPage(pageNumber.toString());
@@ -251,14 +251,14 @@ const Color = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...tableData]); // Reset to original data
         return;
       }
     }
 
     setSortConfig({ key: columnName, direction });
 
-    const sortedRows = [...filteredRows].sort((a, b) => {
+    const sortedRows = [...tableData].sort((a, b) => {
       if (!a[columnName]) return 1;
       if (!b[columnName]) return -1;
 
@@ -325,6 +325,8 @@ const Color = () => {
           error = "Color name is required";
         } else if (value.length > 50) {
           error = "Color name cannot exceed 50 characters";
+        } else if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+          error = "Color name cannot contain special characters";
         }
         break;
       case "colorCode":
@@ -334,6 +336,8 @@ const Color = () => {
           error = "Color code cannot contain spaces";
         } else if (value.length > 50) {
           error = "Color code cannot exceed 50 characters";
+        } else if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+          error = "Color code cannot contain special characters";
         }
         break;
       default:
@@ -365,8 +369,8 @@ const Color = () => {
     setFlag(!flag);
     setDisplayPage("1");
     // Keep create accordion open and view closed
-    setAccordionExpanded(true);
-    setAccordionExpanded2(false);
+    // setAccordionExpanded(true);
+    // setAccordionExpanded2(false);
   };
 
   const handlePost = async () => {
@@ -381,7 +385,7 @@ const Color = () => {
         setShowCreateStatus(true);
         setCreateStatus(res.statusCode);
         setCreateMessage(res.statusMessage);
-
+        fetchColorListDrop();
         if (formData.callType === 1) {
           // Update case
           // Reset form after successful update
@@ -407,7 +411,7 @@ const Color = () => {
           });
           setFormErrors({});
           // Open view accordion and focus on table
-          setAccordionExpanded2(true);
+          // setAccordionExpanded2(true);
         }
         requestAnimationFrame(() => {
           scrollToTableMiddle();
@@ -483,7 +487,7 @@ const Color = () => {
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    navigate(`${newValue}`);
+    navigate(`/${newValue}`);
   };
 
   const handleCancel = () => {
@@ -500,7 +504,6 @@ const Color = () => {
     setCreateMessage("");
     // Keep create accordion open and view closed
     setAccordionExpanded(true);
-    setAccordionExpanded2(false);
   };
 
   const handleJumpToFirst = () => {
@@ -597,16 +600,17 @@ const Color = () => {
         sx={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 100,
           backgroundColor: "#fff",
           paddingBottom: 1,
+          mr: 1.5,
         }}
       >
-        <Grid item xs={12} mt={0} mb={0} ml={1} pr={2}>
+        <Grid item xs={12} mt={0} mb={0} ml={0} pr={2}>
           <BreadcrumbsHeader pageTitle="Product" />
         </Grid>
 
-        <Grid item xs={12} ml={1}>
+        <Grid item xs={12} ml={0}>
           <TabsBar
             tabs={tabs}
             activeTab={activeTab}
@@ -743,7 +747,7 @@ const Color = () => {
                       backgroundColor={AQUA}
                       onClick={handlePost}
                       width="100%"
-                      disabled={!formData.colorName || !formData.colorCode}
+                      // disabled={!formData.colorName || !formData.colorCode}
                     />
                   </Grid>
                 </Grid>
@@ -1213,10 +1217,11 @@ const Color = () => {
                             placeholder="Jump to page"
                             min={1}
                             max={Math.ceil(totalRecords / rowsPerPage)}
-                            value={displayPage}
+                            value={jumpToPage}
                             onChange={(e) => {
-                              setJumpToPage(e.target.value);
-                              setDisplayPage(e.target.value);
+                              const value = e.target.value;
+                              setJumpToPage(value);
+                              setDisplayPage(value);
                             }}
                             style={jumpToPageStyle}
                           />
@@ -1239,56 +1244,55 @@ const Color = () => {
                 )}
               </Grid>
             </Grid>
-          </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={3}
+              md={2}
+              lg={2}
+              mt={1}
+              position={"fixed"}
+              right={{
+                xs: 0,
+                sm: 0,
+                md: 15,
+                lg: 15,
+              }}
+              sx={{
+                zIndex: 1000,
+                top: "0px",
+                overflowY: "auto",
+                paddingBottom: "20px",
 
-          <Grid
-            item
-            xs={12}
-            sm={3}
-            md={2}
-            lg={2}
-            mt={1}
-            position={"fixed"}
-            right={{
-              xs: 0,
-              sm: 5,
-              md: 5,
-              lg: 10,
-            }}
-            sx={{
-              zIndex: 10000,
-              top: "0px",
-              overflowY: "auto",
-              paddingBottom: "20px",
-              "& > *": {
-                marginBottom: "16px",
-                // filter: isDownloadLoading ? "blur(2px)" : "none",
-                transition: "filter 0.3s ease",
-              },
-              "& .export-button": {
-                filter: "none !important",
-              },
-            }}
-          >
-            <NuralActivityPanel>
-              <Grid
-                item
-                xs={12}
-                md={12}
-                lg={12}
-                xl={12}
-                mt={2}
-                mb={2}
-                className="export-button"
-              >
-                <NuralExport
-                  title="Export"
-                  views={""}
-                  downloadExcel={downloadExcel}
-                  isDownloadLoading={isDownloadLoading}
-                />
-              </Grid>
-            </NuralActivityPanel>
+                "& > *": {
+                  marginBottom: "16px",
+                  transition: "filter 0.3s ease",
+                },
+                "& .export-button": {
+                  filter: "none !important",
+                },
+              }}
+            >
+              <NuralActivityPanel>
+                <Grid
+                  item
+                  xs={12}
+                  md={12}
+                  lg={12}
+                  xl={12}
+                  mt={2}
+                  mb={2}
+                  className="export-button"
+                >
+                  <NuralExport
+                    title="Export"
+                    views={""}
+                    downloadExcel={downloadExcel}
+                    isDownloadLoading={isDownloadLoading}
+                  />
+                </Grid>
+              </NuralActivityPanel>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>

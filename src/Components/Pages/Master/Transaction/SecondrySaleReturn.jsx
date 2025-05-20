@@ -56,7 +56,7 @@ const SecondarySaleReturn = () => {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
   // console.log("selectedUserId", selectedDate);
-
+  const [resetFile, setResetFile] = React.useState(false);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -247,9 +247,13 @@ const SecondarySaleReturn = () => {
   };
 
   const handleClearStatus = () => {
+
     setStatus(null);
     setTitle(null);
-   
+    setResetFile(true);
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
     setSelectedDate(getTodayDate());
     setSelectedUserId(2);
   };
@@ -298,7 +302,7 @@ const SecondarySaleReturn = () => {
           <Grid item xs={12} pr={2} mb={2}>
             <Grid container spacing={0} direction="column">
               <Grid item>
-                <NuralAccordion2 title="Upload Return" backgroundColor={"#fff"}>
+                {/* <NuralAccordion2 title="Upload Return" backgroundColor={"#fff"}> */}
                   <Grid container spacing={0} lg={12} mt={1}>
                     <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
                       <Grid container spacing={2} direction="column">
@@ -345,6 +349,7 @@ const SecondarySaleReturn = () => {
                             backgroundColor={LIGHT_GRAY2}
                             fileRef={fileInputRef}
                             accept=".xlsx,.xls,.csv"
+                            resetFile={resetFile}
                           />
                         </Grid>
                         <Grid item md={6} lg={6} pr={2}>
@@ -363,6 +368,8 @@ const SecondarySaleReturn = () => {
                               <NuralButton
                                 text="CANCEL"
                                 variant="outlined"
+                      color={PRIMARY_BLUE2}
+
                                 borderColor={PRIMARY_BLUE2}
                                 onClick={handleClearStatus}
                                 width="100%"
@@ -384,7 +391,7 @@ const SecondarySaleReturn = () => {
                       </Grid>
                     </Grid>
                   </Grid>
-                </NuralAccordion2>
+                {/* </NuralAccordion2> */}
               </Grid>
             </Grid>
           </Grid>

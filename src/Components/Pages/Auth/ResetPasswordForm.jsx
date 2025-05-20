@@ -36,9 +36,15 @@ import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { baseUrl } from "../../Common/urls";
 import Slider from "../../Common/Slider";
+import LoginFooter from "../../Common/LoginFooter";
 const BASE_URL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 const ResetPasswordForm = () => {
-  let log = JSON.parse(localStorage.getItem("log"));
+  let log;
+  try {
+    log = JSON.parse(localStorage.getItem("log"));
+  } catch (error) {
+    console.error("Error parsing log from localStorage:", error);
+  }
   let email = localStorage.getItem("resetPasswordEmail");
   const images = [pdcard, one, two, five, four, three];
 
@@ -132,15 +138,14 @@ const ResetPasswordForm = () => {
       return;
     }
 
-   
     let body = {
       clientKey: "motoISP",
-      userLoginName: log.userName,
-      emailID: email,
+      userLoginName: localStorage.getItem("userName") || "",
+      emailID: localStorage.getItem("email") || "",
       newPassword: password,
     };
-   
 
+    console.log(body);
     setLoading(true);
 
     try {
@@ -344,73 +349,83 @@ const ResetPasswordForm = () => {
 
                 <Box
                   sx={{
-                    mt: 2,
+                    mt: { xs: 2, sm: 0, lg: 1, xl: 2 },
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     gap: 2,
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "row", sm: "column" }, // Row for <512px, Column for larger
-                      gap: "10px", // Space between buttons
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                    }}
+                  <Grid
+                    container
+                    // sx={{
+                    //   display: "flex",
+                    //   flexDirection: { xs: "row", sm: "column" }, // Row for <512px, Column for larger
+                    //   gap: "10px", // Space between buttons
+                    //   alignItems: "center",
+                    //   justifyContent: "center",
+                    //   width: "100%",
+                    // }}
                   >
-                    <NuralButton
-                      text={
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          {loading ? (
-                            <CircularProgress size={20} color="inherit" />
-                          ) : loginStatus === "success" ? (
-                            <CheckIcon />
-                          ) : loginStatus === "error" ? (
-                            <CloseIcon sx={{ color: ERROR_RED2 }} />
-                          ) : (
-                            "RESET PASSWORD"
-                          )}
-                          {/* LOGIN */}
-                        </Box>
-                      }
-                      backgroundColor={
-                        loginStatus === "error" ? ERROR_RED : AQUA
-                      }
-                      color={loginStatus === "error" ? WHITE : GREEN_COLOR}
-                      onClick={handleResetPassword}
-                      width="50%"
-                      border="none"
-                      fontSize="12px"
-                      disabled={loading}
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "row", sm: "column" }, // Row for <512px, Column for larger
-                      gap: "10px", // Space between buttons
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <NuralButton
-                      hoverColor={AQUA}
-                      text="CANCEL"
-                      variant="outlined"
-                      onClick={handleCancel}
-                      color={"white"}
-                      width="50%"
-                      fontSize="14px"
-                      borderColor="white"
-                      fontWeight="400"
-                    />
-                  </Box>
+                    <Grid item xs={12} sm={5.5}>
+                      <NuralButton
+                        text={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {loading ? (
+                              <CircularProgress size={20} color="inherit" />
+                            ) : loginStatus === "success" ? (
+                              <CheckIcon />
+                            ) : loginStatus === "error" ? (
+                              <CloseIcon sx={{ color: ERROR_RED2 }} />
+                            ) : (
+                              "RESET PASSWORD"
+                            )}
+                            {/* LOGIN */}
+                          </Box>
+                        }
+                        backgroundColor={
+                          loginStatus === "error" ? ERROR_RED : AQUA
+                        }
+                        color={loginStatus === "error" ? WHITE : GREEN_COLOR}
+                        onClick={handleResetPassword}
+                        width="100%"
+                        border="none"
+                        fontSize="12px"
+                        disabled={loading}
+                      />
+                    </Grid>
+                    &nbsp; &nbsp; &nbsp;
+                    <Grid item xs={12} sm={5.5}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: { xs: "row", sm: "column" }, // Row for <512px, Column for larger
+                          gap: "10px", // Space between buttons
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "100%",
+                        }}
+                      >
+                        <NuralButton
+                          hoverColor={AQUA}
+                          text="CANCEL"
+                          variant="outlined"
+                          onClick={handleCancel}
+                          color={"white"}
+                          width="100%"
+                          fontSize="14px"
+                          borderColor="white"
+                          fontWeight="400"
+                        />
+                      </Box>
+                    </Grid>
+                  </Grid>
                 </Box>
               </Box>
             </Box>
@@ -504,60 +519,7 @@ const ResetPasswordForm = () => {
       {/* </Box> */}
 
       {/* Fixed Bottom Section (30% Height) */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          height: "30vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Image Slider Section (85% of 30vh) */}
-        <Box
-          sx={{
-            width: "100%",
-            height: "85%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Slider />
-        </Box>
-
-        {/* Footer (15% of 30vh) */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "4px",
-          }}
-        >
-          <Grid
-            container
-            sx={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              width: "100%",
-              backgroundColor: AQUA,
-              textAlign: "center",
-              padding: "0px",
-            }}
-          >
-            <Grid item xs={12}>
-              <img
-                src="/Images/NuralFootLogo.png"
-                alt="logo"
-                style={{ width: "8%" }} // Adjust image size as needed
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
+      <LoginFooter />
     </Box>
   );
 };

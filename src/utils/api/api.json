@@ -1,0 +1,26 @@
+API: {
+    auth: {
+      login: {
+        type: "POST",
+        endpoint: "/auth/social-auth",
+      },
+      loginWithEmail: {
+        type: "POST",
+        endpoint: "/auth/send-otp",
+      },
+      resendOTP: {
+        type: "POST",
+        endpoint: "/auth/resend-otp",
+      },
+      verify: {
+        type: "POST",
+        endpoint: "/auth/verify-top",
+      },
+      getMe: {
+        type: "GET",
+        endpoint: "/auth/get-me",
+      },
+    },
+}
+
+

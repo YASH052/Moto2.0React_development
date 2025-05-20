@@ -28,7 +28,12 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
+import {
+  headTitle,
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import { useNavigate } from "react-router-dom";
@@ -99,7 +104,8 @@ const CompModel = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [isEditMode, setIsEditMode] = useState(false); // Added for consistency, initially false
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [touchedFields, setTouchedFields] = useState({});
 
   const [filteredRows, setFilteredRows] = React.useState([]);
   const [totalRecords, setTotalRecords] = React.useState(0);
@@ -228,7 +234,7 @@ const CompModel = () => {
     try {
       const params = {
         modelId: 0,
-        brandId: 0, // Ensure these aren't carrying over if not needed
+        brandId: viewBrand?.competitionBrandID || 0, // Add brandId from viewBrand
         categoryId: categoryId,
         mode: 2, // dropdown bind
         status: 0, // active only
@@ -350,7 +356,7 @@ const CompModel = () => {
     }
   };
 
-  // --- Form Validation --- (Add MOP validation)
+  // Modify the validateForm function
   const validateForm = () => {
     const newErrors = {};
     if (!formData.competitionBrandID || formData.competitionBrandID === 0) {
@@ -368,14 +374,12 @@ const CompModel = () => {
     ) {
       newErrors.competitionModelName = "Model Name is required";
     } else if (formData.competitionModelName.length > 100) {
-      // Example length validation
       newErrors.competitionModelName =
         "Model Name cannot exceed 100 characters";
     }
     if (!formData.mop || formData.mop.trim() === "") {
       newErrors.mop = "MOP is required";
     } else if (isNaN(parseFloat(formData.mop))) {
-      // Check if it's a valid number
       newErrors.mop = "MOP must be a valid number";
     } else if (parseFloat(formData.mop) < 0) {
       newErrors.mop = "MOP cannot be negative";
@@ -383,6 +387,13 @@ const CompModel = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Add a new function to handle field blur
+  const handleFieldBlur = (fieldName) => {
+    if (touchedFields[fieldName]) {
+      validateForm();
+    }
   };
 
   const handlePostRequest = async () => {
@@ -481,7 +492,16 @@ const CompModel = () => {
       const response = await ManageCompetitionModelMoto(payload);
       // Set status regardless of success or error, mirroring Brand.jsx approach
       setSearchStatus(response.statusCode);
-      setSearchTitle(response.statusMessage || (response.statusCode === "200" ? "Status updated" : "Status update failed"));
+      setSearchTitle(
+        response.statusMessage ||
+          (response.statusCode === "200"
+            ? "Status updated"
+            : "Status update failed")
+      );
+      setTimeout(() => {
+        setSearchStatus(null);
+        setSearchTitle("");
+      }, 5000);
 
       if (response.statusCode === "200") {
         getModelList(searchParams);
@@ -500,7 +520,7 @@ const CompModel = () => {
   };
 
   const handleCancel = () => {
-    setFormLoading(true); // Show loading briefly for reset effect
+    setFormLoading(true);
     setFormData({
       competitionBrandID: 0,
       competitionCategoryID: 0,
@@ -512,16 +532,14 @@ const CompModel = () => {
     });
     setIsEditMode(false);
     setErrors({});
-    // Clear status immediately on cancel
-    setStatus(null);
-    setTitle("");
-    setCreateCategoryList([]); // Clear dependent category list
-    setAccordionExpanded(true); // Re-open create accordion on cancel
-    setSearchAccordionExpanded(false); // Keep search closed
+    setTouchedFields({}); // Reset touched fields
+    setCreateCategoryList([]);
+    setAccordionExpanded(true);
+    setSearchAccordionExpanded(false);
 
     setTimeout(() => {
       setFormLoading(false);
-    }, 300); // Short delay to allow UI reset
+    }, 300);
   };
 
   // --- Search Form Handlers --- (Keep existing view logic)
@@ -603,8 +621,6 @@ const CompModel = () => {
     }
   };
 
-  
-
   return (
     <>
       <Grid
@@ -612,8 +628,8 @@ const CompModel = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1 },
-          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
+          pl: { xs: 1, sm: 1, md: 0 },
+          pr: { xs: 0, sm: 0, md: "180px", lg: "260px" },
           isolation: "isolate",
         }}
       >
@@ -629,10 +645,10 @@ const CompModel = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0} pr={2}>
             <BreadcrumbsHeader pageTitle="Competition" />
           </Grid>
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -646,243 +662,253 @@ const CompModel = () => {
           <Grid container spacing={2} direction="column">
             <Grid item>
               {/* Wrap accordion and buttons in a div with the ref */}
-              <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
-              {formLoading ? (
-                <FormSkeleton />
-              ) : (
-                <>
-                  <NuralAccordion2
-                    title={isEditMode ? "Update Model" : "Create Model"}
-                    backgroundColor={LIGHT_GRAY2}
-                    expanded={accordionExpanded}
-                    onChange={handleAccordionChange}
-                    controlled={true}
-                  >
-                    <Grid container spacing={2} sx={{ width: "100%" }}>
-                      {/* Brand Dropdown */}
-                      <Grid item xs={12} sm={3}>
-                        <Typography variant="h6" sx={typographyH6Style}>
-                          {" "}
-                          BRAND <Required />
-                        </Typography>
-                        <NuralAutocomplete
-                          options={brandList}
-                          placeholder="SELECT"
-                          width="100%"
-                          backgroundColor={LIGHT_GRAY2}
-                          isOptionEqualToValue={(option, value) =>
-                            option?.competitionBrandID ===
-                            value?.competitionBrandID
-                          }
-                          getOptionLabel={(option) =>
-                            option?.competitionBrandName || ""
-                          }
-                          onChange={(event, value) => {
-                            const brandId = value
-                              ? value.competitionBrandID
-                              : 0;
-                            setFormData({
-                              ...formData,
-                              competitionBrandID: brandId,
-                              competitionCategoryID: 0, // Reset category on brand change
-                            });
-                            setCreateCategoryList([]); // Clear category list
-                            setErrors({
-                              ...errors,
-                              competitionBrandID: null,
-                              competitionCategoryID: null, // Clear category error too
-                            });
-                            if (value) {
-                              getCategoryDropdown(
-                                brandId,
-                                setCreateCategoryList,
-                                setCreateCategoryLoading
-                              );
+              <div
+                ref={createAccordionRef}
+                style={{ position: "relative", zIndex: 1000 }}
+              >
+                {formLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <>
+                    <NuralAccordion2
+                      title={isEditMode ? "Update Model" : "Create Model"}
+                      backgroundColor={LIGHT_GRAY2}
+                      expanded={accordionExpanded}
+                      onChange={handleAccordionChange}
+                      controlled={true}
+                    >
+                      <Grid container spacing={2} sx={{ width: "100%" }}>
+                        {/* Brand Dropdown */}
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="h6" sx={typographyH6Style}>
+                            {" "}
+                            BRAND <Required />
+                          </Typography>
+                          <NuralAutocomplete
+                            options={brandList}
+                            placeholder="SELECT"
+                            width="100%"
+                            backgroundColor={LIGHT_GRAY2}
+                            isOptionEqualToValue={(option, value) =>
+                              option?.competitionBrandID ===
+                              value?.competitionBrandID
                             }
-                          }}
-                          value={
-                            brandList.find(
-                              (brand) =>
-                                brand.competitionBrandID ===
-                                formData.competitionBrandID
-                            ) || null
-                          }
-                          loading={brandLoading}
-                          error={!!errors.competitionBrandID}
-                        />
-                        {errors.competitionBrandID && (
-                          <Typography
-                            color="error"
-                            variant="caption"
-                            sx={{ mt: 0.5, display: "block" }}
-                          >
-                            {errors.competitionBrandID}
-                          </Typography>
-                        )}
-                      </Grid>
-
-                      {/* Category Dropdown */}
-                      <Grid item xs={12} sm={3}>
-                        <Typography variant="h6" sx={typographyH6Style}>
-                          {" "}
-                          CATEGORY <Required />
-                        </Typography>
-                        <NuralAutocomplete
-                          options={createCategoryList}
-                          getOptionLabel={(option) =>
-                            option?.competitionCategoryName || ""
-                          }
-                          isOptionEqualToValue={(option, value) =>
-                            option?.competitionCategoryID ===
-                            value?.competitionCategoryID
-                          }
-                          value={
-                            createCategoryList.find(
-                              (cat) =>
-                                cat.competitionCategoryID ===
-                                formData.competitionCategoryID
-                            ) || null
-                          }
-                          onChange={(event, value) => {
-                            setFormData({
-                              ...formData,
-                              competitionCategoryID: value
-                                ? value.competitionCategoryID
-                                : 0,
-                            });
-                            setErrors({
-                              ...errors,
-                              competitionCategoryID: null,
-                            });
-                          }}
-                          placeholder="SELECT"
-                          width="100%"
-                          backgroundColor={LIGHT_GRAY2}
-                          loading={createCategoryLoading}
-                          disabled={
-                            !formData.competitionBrandID ||
-                            createCategoryLoading
-                          }
-                          error={!!errors.competitionCategoryID}
-                        />
-                        {errors.competitionCategoryID && (
-                          <Typography
-                            color="error"
-                            variant="caption"
-                            sx={{ mt: 0.5, display: "block" }}
-                          >
-                            {errors.competitionCategoryID}
-                          </Typography>
-                        )}
-                      </Grid>
-
-                      {/* Model Name TextField */}
-                      <Grid item xs={12} sm={3}>
-                        <Typography variant="h6" sx={typographyH6Style}>
-                          {" "}
-                          MODEL <Required />
-                        </Typography>
-                        <NuralTextField
-                          value={formData.competitionModelName}
-                          onChange={(e) => {
-                            setFormData({
-                              ...formData,
-                              competitionModelName: e.target.value,
-                            });
-                            if (errors.competitionModelName)
+                            getOptionLabel={(option) =>
+                              option?.competitionBrandName || ""
+                            }
+                            onChange={(event, value) => {
+                              const brandId = value
+                                ? value.competitionBrandID
+                                : 0;
+                              setFormData({
+                                ...formData,
+                                competitionBrandID: brandId,
+                                competitionCategoryID: 0, // Reset category on brand change
+                              });
+                              setCreateCategoryList([]); // Clear category list
                               setErrors({
                                 ...errors,
-                                competitionModelName: null,
+                                competitionBrandID: null,
+                                competitionCategoryID: null, // Clear category error too
                               });
-                          }}
-                          width="100%"
-                          placeholder="ENTER MODEL NAME"
-                          backgroundColor={LIGHT_GRAY2}
-                          error={!!errors.competitionModelName}
-                          onBlur={validateForm}
-                        />
-                        {errors.competitionModelName && (
-                          <Typography
-                            color="error"
-                            variant="caption"
-                            sx={{ mt: 0.5, display: "block" }}
-                          >
-                            {errors.competitionModelName}
-                          </Typography>
-                        )}
-                      </Grid>
+                              if (value) {
+                                getCategoryDropdown(
+                                  brandId,
+                                  setCreateCategoryList,
+                                  setCreateCategoryLoading
+                                );
+                              }
+                            }}
+                            value={
+                              brandList.find(
+                                (brand) =>
+                                  brand.competitionBrandID ===
+                                  formData.competitionBrandID
+                              ) || null
+                            }
+                            loading={brandLoading}
+                            error={!!errors.competitionBrandID}
+                          />
+                          {errors.competitionBrandID && (
+                            <Typography
+                              color="error"
+                              variant="caption"
+                              sx={{ mt: 0.5, display: "block" }}
+                            >
+                              {errors.competitionBrandID}
+                            </Typography>
+                          )}
+                        </Grid>
 
-                      {/* MOP TextField */}
-                      <Grid item xs={12} sm={3}>
-                        <Typography variant="h6" sx={typographyH6Style}>
-                          {" "}
-                          MOP <Required />
-                        </Typography>
-                        <NuralTextField
-                          value={formData.mop}
-                          onChange={(e) => {
-                            setFormData({ ...formData, mop: e.target.value });
-                            if (errors.mop) setErrors({ ...errors, mop: null });
-                          }}
-                          width="100%"
-                          placeholder="ENTER MOP"
-                          backgroundColor={LIGHT_GRAY2}
-                          type="number" // Use type number for better input control
-                          error={!!errors.mop}
-                          onBlur={validateForm}
-                        />
-                        {errors.mop && (
-                          <Typography
-                            color="error"
-                            variant="caption"
-                            sx={{ mt: 0.5, display: "block" }}
-                          >
-                            {errors.mop}
+                        {/* Category Dropdown */}
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="h6" sx={typographyH6Style}>
+                            {" "}
+                            CATEGORY <Required />
                           </Typography>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </NuralAccordion2>
+                          <NuralAutocomplete
+                            options={createCategoryList}
+                            getOptionLabel={(option) =>
+                              option?.competitionCategoryName || ""
+                            }
+                            isOptionEqualToValue={(option, value) =>
+                              option?.competitionCategoryID ===
+                              value?.competitionCategoryID
+                            }
+                            value={
+                              createCategoryList.find(
+                                (cat) =>
+                                  cat.competitionCategoryID ===
+                                  formData.competitionCategoryID
+                              ) || null
+                            }
+                            onChange={(event, value) => {
+                              setFormData({
+                                ...formData,
+                                competitionCategoryID: value
+                                  ? value.competitionCategoryID
+                                  : 0,
+                              });
+                              setErrors({
+                                ...errors,
+                                competitionCategoryID: null,
+                              });
+                            }}
+                            placeholder="SELECT"
+                            width="100%"
+                            backgroundColor={LIGHT_GRAY2}
+                            loading={createCategoryLoading}
+                            disabled={
+                              !formData.competitionBrandID ||
+                              createCategoryLoading
+                            }
+                            error={!!errors.competitionCategoryID}
+                          />
+                          {errors.competitionCategoryID && (
+                            <Typography
+                              color="error"
+                              variant="caption"
+                              sx={{ mt: 0.5, display: "block" }}
+                            >
+                              {errors.competitionCategoryID}
+                            </Typography>
+                          )}
+                        </Grid>
 
-                  {/* Action Buttons & Status for Create/Update - Conditionally Rendered */}
-                  {accordionExpanded && (
-                    <Grid container spacing={1} mt={1} pr={1.5}>
-                      {/* Restore StatusModel for Create/Update status */}
-                      {status && (
-                        <StatusModel
-                          width="100%"
-                          status={status}
-                          title={title}
-                          onClose={() => {
-                            setStatus(null);
-                            setTitle("");
-                          }}
-                        />
-                      )}
-                      <Grid item xs={12} md={6} lg={6}>
-                        <NuralButton
-                          text="CANCEL"
-                          variant="outlined"
-                          borderColor={PRIMARY_BLUE2}
-                          onClick={handleCancel}
-                          width="100%"
-                          disabled={formLoading} // Disable if submitting
-                        />
+                        {/* Model Name TextField */}
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="h6" sx={typographyH6Style}>
+                            {" "}
+                            MODEL <Required />
+                          </Typography>
+                          <NuralTextField
+                            value={formData.competitionModelName}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                competitionModelName: e.target.value,
+                              });
+                              if (errors.competitionModelName) {
+                                setErrors({
+                                  ...errors,
+                                  competitionModelName: null,
+                                });
+                              }
+                            }}
+                            width="100%"
+                            placeholder="ENTER MODEL NAME"
+                            backgroundColor={LIGHT_GRAY2}
+                            error={!!errors.competitionModelName}
+                          />
+                          {errors.competitionModelName && (
+                            <Typography
+                              color="error"
+                              variant="caption"
+                              sx={{ mt: 0.5, display: "block" }}
+                            >
+                              {errors.competitionModelName}
+                            </Typography>
+                          )}
+                        </Grid>
+
+                        {/* MOP TextField */}
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="h6" sx={typographyH6Style}>
+                            {" "}
+                            MOP <Required />
+                          </Typography>
+                          <NuralTextField
+                            value={formData.mop}
+                            onChange={(e) => {
+                              setFormData({ ...formData, mop: e.target.value });
+                              if (errors.mop) {
+                                setErrors({ ...errors, mop: null });
+                              }
+                            }}
+                            width="100%"
+                            placeholder="ENTER MOP"
+                            backgroundColor={LIGHT_GRAY2}
+                            type="number"
+                            error={!!errors.mop}
+                          />
+                          {errors.mop && (
+                            <Typography
+                              color="error"
+                              variant="caption"
+                              sx={{ mt: 0.5, display: "block" }}
+                            >
+                              {errors.mop}
+                            </Typography>
+                          )}
+                        </Grid>
                       </Grid>
-                      <Grid item xs={12} md={6} lg={6}>
-                        <NuralButton
-                          text={isEditMode ? "UPDATE" : "SAVE"}
-                          backgroundColor={AQUA}
-                          variant="contained"
-                          onClick={handlePostRequest}
-                          width="100%"
-                          disabled={formLoading} // Disable if submitting
-                        />
+                    </NuralAccordion2>
+
+                    {/* Action Buttons & Status for Create/Update - Conditionally Rendered */}
+                    {accordionExpanded && (
+                      <Grid container spacing={1} mt={1} pr={1.5}>
+                        {/* StatusModel for Create/Update status */}
+                        {status && (
+                          <Grid item xs={12} mb={1}>
+                            <StatusModel
+                              width="100%"
+                              status={status}
+                              title={title}
+                              onClose={() => {
+                                setStatus(null);
+                                setTitle("");
+                              }}
+                            />
+                          </Grid>
+                        )}
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text="CANCEL"
+                            variant="outlined"
+                            borderColor={PRIMARY_BLUE2}
+                            onClick={() => {
+                              setStatus(null);
+                              setTitle("");
+                              handleCancel();
+                            }}
+                            width="100%"
+                            disabled={formLoading} // Disable if submitting
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text={isEditMode ? "UPDATE" : "SAVE"}
+                            backgroundColor={AQUA}
+                            variant="contained"
+                            onClick={handlePostRequest}
+                            width="100%"
+                            disabled={formLoading} // Disable if submitting
+                          />
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                )}
               </div>
             </Grid>
           </Grid>
@@ -897,7 +923,7 @@ const CompModel = () => {
               ) : (
                 <>
                   <NuralAccordion2
-                    title="View / Search Models"
+                    title="View"
                     backgroundColor={LIGHT_GRAY2}
                     expanded={searchAccordionExpanded}
                     onChange={handleSearchAccordionChange}
@@ -983,7 +1009,8 @@ const CompModel = () => {
                               modelId: 0,
                               pageIndex: 1,
                             });
-                            if (value) {
+                            if (value && viewBrand) {
+                              // Check if viewBrand exists
                               getModelDropdown(
                                 newCategoryId,
                                 setViewModelList,
@@ -1018,6 +1045,7 @@ const CompModel = () => {
                               : 0;
                             setSearchParams({
                               ...searchParams,
+
                               modelId: newModelId,
                               pageIndex: 1,
                             });
@@ -1082,266 +1110,268 @@ const CompModel = () => {
             </Grid>
           </Grid>
         </Grid>
-
+        <Grid container sx={{ margin: "10px 10px 10px 0px" }}>
+          {searchStatus && (
+            <StatusModel
+              width="100%"
+              status={searchStatus}
+              title={searchTitle}
+              onClose={() => {
+                setSearchStatus(null);
+                setSearchTitle("");
+              }}
+            />
+          )}
+        </Grid>
         {/* Table Section */}
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-          {/* Status model for table operations (All searchStatus here, like Brand.jsx) */}
-          <Grid container sx={{ margin: "10px 10px 10px 0px" }}>
-            {searchStatus && (
-              <StatusModel
-                width="100%"
-                status={searchStatus}
-                title={searchTitle}
-                onClose={() => {
-                  setSearchStatus(null);
-                  setSearchTitle("");
-                }}
-              />
-            )}
-          </Grid>
-          {/* Table Container */}
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 90px)",
-              overflow: "auto",
-              position: "relative",
-              "& .MuiTable-root": {
-                borderCollapse: "separate",
-                borderSpacing: 0,
-              },
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              {/* Table Header */}
-              <TableHead>
-                {/* List Title Row */}
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1050,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <Grid
-                      container
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Grid item>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
-                          }}
-                        >
-                          Model List
-                        </Typography>
-                      </Grid>
-                      <Grid item sx={{ cursor: "pointer" }}>
-                        {/* Removed export icon */}
-                      </Grid>
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-                {/* Column Headers Row */}
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "45px",
-                      zIndex: 1000,
-                      width: "50px",
-                      padding: "8px 16px",
-                    }}
-                  >
-                    S.NO
-                  </TableCell>
-                  {[
-                    // Adjusted headers
-                    { label: "MODEL NAME", key: "competitionModelName", sortable: true },
-                    { label: "BRAND", key: "competitionBrandName", sortable: true },
-                    { label: "CATEGORY", key: "competitionCategoryName", sortable: true },
-                    { label: "MOP", key: "mop", sortable: true }, // Added MOP
-                    { label: "STATUS", sortable: false },
-                    { label: "EDIT", sortable: false },
-                  ].map((header) => (
-                    <TableCell
-                      key={header.label}
-                      onClick={() =>
-                        header.sortable !== false && handleSort(header.key)
-                      }
-                      sx={{
-                        ...tableHeaderStyle,
-                        cursor:
-                          header.sortable !== false ? "pointer" : "default",
-                        position: "sticky",
-                        top: "45px",
-                        backgroundColor: LIGHT_GRAY2,
-                        zIndex: 1000,
-                        padding: "8px 16px",
-                        minWidth: header.label === "EDIT" ? "60px" : "100px",
-                      }}
-                    >
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{header.label}</Grid>
-                        {header.sortable !== false && (
-                          <Grid item>
-                            {sortConfig.key === header.key ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
-                      </Grid>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              {/* Table Body */}
-              <TableBody>
-                {tableLoading ? (
-                  <TableRowSkeleton
-                    columns={6}
-                    rows={rowsPerPage}
-                    sx={{ height: "calc(100vh - 420px)" }}
-                  />
-                ) : filteredRows.length > 0 ? (
-                  filteredRows.map((row, index) => (
-                    <TableRow
-                      key={row.competitionModelId || index}
-                      sx={{
-                        fontSize: "10px",
-                        "& td": { borderBottom: `1px solid #C6CEED` },
-                      }}
-                    >
-                      <TableCell sx={{ ...rowstyle }}>
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.competitionModelName}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.competitionBrandName}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.competitionCategoryName}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.mop || "N/A"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        <Switch
-                          checked={row.status === "Active" || row.status === 1}
-                          onChange={(e) => handleStatus(row, e.target.checked)}
-                          size="small"
-                          disabled={
-                            statusUpdateLoading &&
-                            updatingRowId === row.competitionModelID
-                          }
-                          sx={toggleSectionStyle}
-                        />
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          padding: "8px 16px",
-                          fontSize: "10px",
-                          textAlign: "left",
-                          minWidth: "60px",
-                        }}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(row)}
-                        >
-                          <EditIcon
-                            sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                          />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
+        {searchAccordionExpanded && (
+          <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
+            {/* Status model for table operations (All searchStatus here, like Brand.jsx) */}
+
+            {/* Table Container */}
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(100vh - 50px)",
+                overflow: "auto",
+                position: "relative",
+                "& .MuiTable-root": {
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                },
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                {/* Table Header */}
+                <TableHead>
+                  {/* List Title Row */}
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                      <Typography>
-                        No models found matching your criteria.
-                      </Typography>
+                    <TableCell
+                      colSpan={7}
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1050,
+                        borderBottom: "none",
+                        boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      <Grid
+                        container
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Grid item>
+                          <Typography variant="body1" sx={headTitle}>
+                            Model List
+                          </Typography>
+                        </Grid>
+                        <Grid item sx={{ cursor: "pointer" }}>
+                          {/* Removed export icon */}
+                        </Grid>
+                      </Grid>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  {/* Column Headers Row */}
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
+                    <TableCell
+                      sx={{
+                        ...tableHeaderStyle,
+                        position: "sticky",
+                        top: "55px",
+                        zIndex: 1000,
+                        width: "50px",
+                        padding: "8px 16px",
+                      }}
+                    >
+                      S.NO
+                    </TableCell>
+                    {[
+                      // Adjusted headers
+                      {
+                        label: "MODEL NAME",
+                        key: "competitionModelName",
+                        sortable: true,
+                      },
+                      {
+                        label: "BRAND",
+                        key: "competitionBrandName",
+                        sortable: true,
+                      },
+                      {
+                        label: "CATEGORY",
+                        key: "competitionCategoryName",
+                        sortable: true,
+                      },
+                      { label: "MOP", key: "mop", sortable: true }, // Added MOP
+                      { label: "STATUS", sortable: false },
+                      { label: "EDIT", sortable: false },
+                    ].map((header) => (
+                      <TableCell
+                        key={header.label}
+                        onClick={() =>
+                          header.sortable !== false && handleSort(header.key)
+                        }
+                        sx={{
+                          ...tableHeaderStyle,
+                          cursor:
+                            header.sortable !== false ? "pointer" : "default",
+                          position: "sticky",
+                          top: "55px",
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 1000,
+                          padding: "8px 16px",
+                          minWidth: header.label === "EDIT" ? "60px" : "100px",
+                        }}
+                      >
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{header.label}</Grid>
+                          {header.sortable !== false && (
+                            <Grid item>
+                              {sortConfig.key === header.key ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{ fontSize: 12, color: "grey.400" }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{ fontSize: 12, color: "grey.400" }}
+                                  />
+                                </Grid>
+                              )}
+                            </Grid>
+                          )}
+                        </Grid>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                {/* Table Body */}
+                <TableBody>
+                  {tableLoading ? (
+                    <TableRowSkeleton
+                      columns={6}
+                      rows={rowsPerPage}
+                      sx={{ height: "calc(100vh - 50px)" }}
+                    />
+                  ) : filteredRows.length > 0 ? (
+                    filteredRows.map((row, index) => (
+                      <TableRow
+                        key={row.competitionModelId || index}
+                        sx={{
+                          fontSize: "10px",
+                          "& td": { borderBottom: `1px solid #C6CEED` },
+                        }}
+                      >
+                        <TableCell sx={{ ...rowstyle }}>
+                          {page * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.competitionModelName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.competitionBrandName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.competitionCategoryName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.mop || "N/A"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          <Switch
+                            checked={
+                              row.status === "Active" || row.status === 1
+                            }
+                            onChange={(e) =>
+                              handleStatus(row, e.target.checked)
+                            }
+                            size="small"
+                            disabled={
+                              statusUpdateLoading &&
+                              updatingRowId === row.competitionModelID
+                            }
+                            sx={toggleSectionStyle}
+                          />
+                        </TableCell>
+                        <TableCell sx={rowstyle}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(row)}
+                          >
+                            <EditIcon
+                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                        <Typography>
+                          No models found matching your criteria.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
 
-            {/* Pagination Component */}
-            {!tableLoading && totalRecords > 0 && (
-              <NuralPagination
-                key={`pagination-${page}-${rowsPerPage}-${totalRecords}`} // Ensure re-render on data change
-                totalRecords={totalRecords}
-                initialPage={page} // NuralPagination uses 0-based index
-                initialRowsPerPage={rowsPerPage}
-                onPaginationChange={handlePaginationChange}
-                rowsPerPageOptions={[10, 25, 50, 100]} // Optional: customize rows per page
-              />
-            )}
-          </TableContainer>
-        </Grid>
+              {/* Pagination Component */}
+              {!tableLoading && totalRecords > 0 && (
+                <NuralPagination
+                  key={`pagination-${page}-${rowsPerPage}-${totalRecords}`} // Ensure re-render on data change
+                  totalRecords={totalRecords}
+                  initialPage={page} // NuralPagination uses 0-based index
+                  initialRowsPerPage={rowsPerPage}
+                  onPaginationChange={handlePaginationChange}
+                  rowsPerPageOptions={[10, 25, 50, 100]} // Optional: customize rows per page
+                />
+              )}
+            </TableContainer>
+          </Grid>
+        )}
       </Grid>
       <Grid
         item
         xs={12}
         sm={3}
-        md={2}
-        lg={2}
+        md={3}
+        lg={3}
         mt={1}
         mr={0}
         position={"fixed"}
-        right={10}
+        right={{
+          xs: 0,
+          sm: 0,
+          md: 10,
+          lg: 10,
+        }}
         sx={{
-          zIndex: 1000,
+          zIndex: 10000,
           top: "0px",
           overflowY: "auto",
           paddingBottom: "20px",
           "& > *": {
             marginBottom: "16px",
-            transition: "filter 0.3s ease",
-          },
-          "& .export-button": {
-            filter: "none !important",
           },
         }}
       >
@@ -1357,7 +1387,7 @@ const CompModel = () => {
             className="export-button"
           >
             <NuralExport
-              title="Export"
+              title="Export Brands"
               views={""}
               downloadExcel={handleExport}
               isDownloadLoading={isDownloadLoading}

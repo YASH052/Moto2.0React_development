@@ -28,7 +28,12 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
+import {
+  headTitle,
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import { useNavigate } from "react-router-dom";
 import { GetCompetitionBrand, ManageCompetitionBrand } from "../../../Api/Api";
@@ -63,7 +68,7 @@ const Brand = () => {
   const [title, setTitle] = useState("");
   const [searchParams, setSearchParams] = useState({
     mode: 0, // 1 = export to excel, 2= dropdown data,  0=table bind
-    status: 1, // 0= active, 1 = all
+    status: 2, // 0= active, 1 = all
     pageIndex: 1,
     pageSize: 10,
     brandId: 0,
@@ -86,6 +91,7 @@ const Brand = () => {
 
   const [accordionExpanded, setAccordionExpanded] = useState(true);
   const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
+  const [showTable, setShowTable] = useState(false);
 
   // Add skeleton loading states
   const [formLoading, setFormLoading] = useState(true);
@@ -124,9 +130,11 @@ const Brand = () => {
     if (!expanded) {
       setSearchAccordionExpanded(false);
       setAccordionExpanded(false);
+      setShowTable(false);
     } else {
       setSearchAccordionExpanded(true);
       setAccordionExpanded(false);
+      setShowTable(true);
     }
   };
 
@@ -267,6 +275,10 @@ const Brand = () => {
         handleCancel();
         setStatus(response.statusCode);
         setTitle(response.statusMessage);
+        setTimeout(() => {
+          setStatus(null);
+          setTitle("");
+        }, 5000);
         getBrandList({ ...searchParams, pageIndex: 1 });
         setPage(1);
       } else if (response.statusCode === "400") {
@@ -319,6 +331,10 @@ const Brand = () => {
       const response = await ManageCompetitionBrand(payload);
       setSearchStatus(response.statusCode);
       setSearchTitle(response.statusMessage);
+      setTimeout(() => {
+        setSearchStatus(null);
+        setSearchTitle("");
+      }, 5000);
 
       if (response.statusCode === "200") {
         getBrandList(searchParams);
@@ -367,7 +383,7 @@ const Brand = () => {
       pageIndex: 1,
       pageSize: rowsPerPage,
       mode: 0,
-      status: 1,
+      status: 2,
     };
     setSearchParams(updatedParams);
     getBrandList(updatedParams);
@@ -387,7 +403,7 @@ const Brand = () => {
       pageIndex: 1,
       pageSize: rowsPerPage,
       mode: 0,
-      status: 1,
+      status: 2,
     };
     setSearchParams(clearedParams);
     getBrandList(clearedParams);
@@ -408,13 +424,13 @@ const Brand = () => {
     getBrandList(updatedParams);
   };
 
-  // --- Export Handler --- 
+  // --- Export Handler ---
   const handleExport = async () => {
-    setIsDownloadLoading(true); 
+    setIsDownloadLoading(true);
     setSearchStatus(null);
     setSearchTitle("");
     const params = {
-      ...searchParams, 
+      ...searchParams,
       mode: 1, // 1 = excel export
       pageSize: 0, // Export all
       pageIndex: 1, // Start from page 1 for export
@@ -426,8 +442,12 @@ const Brand = () => {
           window.location.href = response.reportLink;
           setSearchStatus(response.statusCode);
           setSearchTitle(response.statusMessage || "Export successful");
+          setTimeout(() => {
+            setSearchStatus(null);
+            setSearchTitle("");
+          }, 5000);
         } else {
-          setSearchStatus("404"); 
+          setSearchStatus("404");
           setSearchTitle("Export link not found.");
         }
       } else {
@@ -439,7 +459,7 @@ const Brand = () => {
       setSearchStatus(error.statusCode || "500");
       setSearchTitle(error.statusMessage || "An error occurred during export");
     } finally {
-      setIsDownloadLoading(false); 
+      setIsDownloadLoading(false);
     }
   };
 
@@ -460,28 +480,32 @@ const Brand = () => {
 
   return (
     <>
-      <Grid container spacing={2} sx={{
-        position: "relative",
-        pl: { xs: 1, sm: 1 },
-        pr: { xs: 0, sm: 0, md: "240px", lg: "270px" },
-        isolation: "isolate",
-      }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pl: { xs: 1, sm: 1, md: 0 },
+          pr: { xs: 0, sm: 0, md: "180px", lg: "260px" },
+          isolation: "isolate",
+        }}
+      >
         <Grid
           item
           xs={12}
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 10000,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0} pr={2}>
             <BreadcrumbsHeader pageTitle="Competition" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -494,101 +518,104 @@ const Brand = () => {
           <Grid container spacing={2} direction="column">
             <Grid item>
               {/* Wrap accordion and buttons in a div with the ref */}
-              <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
-              {formLoading ? (
-                <FormSkeleton />
-              ) : (
-                <>
-                  <NuralAccordion2
-                    title={isEditMode ? "Update Brand" : "Create Brand"}
-                    backgroundColor={LIGHT_GRAY2}
-                    expanded={accordionExpanded}
-                    onChange={handleAccordionChange}
-                    controlled={true}
-                  >
-                    <Grid container spacing={2} sx={{ width: "100%" }}>
-                      <Grid item xs={12}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: DARK_BLUE,
-                            fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
-                          }}
-                        >
-                          BRAND NAME <Required />
-                        </Typography>
-                        <NuralTextField
-                          value={formData.competitionBrandName}
-                          onChange={(e) => {
-                            setFormData({
-                              ...formData,
-                              competitionBrandName: e.target.value,
-                            });
-                            if (errors.competitionBrandName) {
-                              setErrors({
-                                ...errors,
-                                competitionBrandName: "",
-                              });
-                            }
-                          }}
-                          width="100%"
-                          placeholder="Enter Brand Name"
-                          backgroundColor={LIGHT_BLUE}
-                          error={!!errors.competitionBrandName}
-                          onBlur={validateForm}
-                        />
-                        {!isEditMode && errors.competitionBrandName && (
+              <div
+                ref={createAccordionRef}
+                style={{ position: "relative", zIndex: 1000 }}
+              >
+                {formLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <>
+                    <NuralAccordion2
+                      title={isEditMode ? "Update Brand" : "Create Brand"}
+                      backgroundColor={LIGHT_GRAY2}
+                      expanded={accordionExpanded}
+                      onChange={handleAccordionChange}
+                      controlled={true}
+                    >
+                      <Grid container spacing={2} sx={{ width: "100%" }}>
+                        <Grid item xs={12}>
                           <Typography
-                            color="error"
-                            variant="caption"
-                            sx={{ mt: 0.5, display: "block" }}
+                            variant="h6"
+                            sx={{
+                              color: DARK_BLUE,
+                              fontFamily: "Manrope",
+                              fontWeight: 400,
+                              fontSize: "10px",
+                              lineHeight: "13.66px",
+                              letterSpacing: "4%",
+                              mb: 1,
+                            }}
                           >
-                            {errors.competitionBrandName}
+                            BRAND NAME <Required />
                           </Typography>
+                          <NuralTextField
+                            value={formData.competitionBrandName}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                competitionBrandName: e.target.value,
+                              });
+                              if (errors.competitionBrandName) {
+                                setErrors({
+                                  ...errors,
+                                  competitionBrandName: "",
+                                });
+                              }
+                            }}
+                            width="100%"
+                            placeholder="Enter Brand Name"
+                            backgroundColor={LIGHT_BLUE}
+                            error={!!errors.competitionBrandName}
+                            onBlur={validateForm}
+                          />
+                          {!isEditMode && errors.competitionBrandName && (
+                            <Typography
+                              color="error"
+                              variant="caption"
+                              sx={{ mt: 0.5, display: "block" }}
+                            >
+                              {errors.competitionBrandName}
+                            </Typography>
+                          )}
+                        </Grid>
+                      </Grid>
+                    </NuralAccordion2>
+                    {accordionExpanded && (
+                      <Grid container spacing={1} mt={1} pr={1}>
+                        {status && (
+                          <StatusModel
+                            width="100%"
+                            status={status}
+                            title={title}
+                            onClose={() => {
+                              setStatus(null);
+                              setTitle("");
+                            }}
+                          />
                         )}
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text="CANCEL"
+                            variant="outlined"
+                            borderColor={PRIMARY_BLUE2}
+                            onClick={handleCancel}
+                            width="100%"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={6}>
+                          <NuralButton
+                            text={isEditMode ? "UPDATE" : "SAVE"}
+                            backgroundColor={AQUA}
+                            variant="contained"
+                            onClick={handlePostRequest}
+                            width="100%"
+                          />
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </NuralAccordion2>
-                  {accordionExpanded && (
-                    <Grid container spacing={1} mt={1} pr={1}>
-                      {status && (
-                        <StatusModel
-                          width="100%"
-                          status={status}
-                          title={title}
-                          onClose={() => {
-                            setStatus(null);
-                            setTitle("");
-                          }}
-                        />
-                      )}
-                      <Grid item xs={12} md={6} lg={6}>
-                        <NuralButton
-                          text="CANCEL"
-                          variant="outlined"
-                          borderColor={PRIMARY_BLUE2}
-                          onClick={handleCancel}
-                          width="100%"
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6} lg={6}>
-                        <NuralButton
-                          text={isEditMode ? "UPDATE" : "SAVE"}
-                          backgroundColor={AQUA}
-                          variant="contained"
-                          onClick={handlePostRequest}
-                          width="100%"
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                )}
               </div>
             </Grid>
           </Grid>
@@ -687,293 +714,279 @@ const Brand = () => {
                 </>
               )}
             </Grid>
-            {searchStatus && searchStatus !== "200" && (
-              <Grid item xs={12} mt={1}>
-                <StatusModel
-                  width="100%"
-                  status={searchStatus}
-                  title={searchTitle}
-                  onClose={() => {
-                    setSearchStatus(null);
-                    setSearchTitle("");
-                  }}
-                />
-              </Grid>
-            )}
           </Grid>
         </Grid>
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-          <Grid container sx={{ margin: '10px 10px 10px 0px '}}>
-            {searchStatus && (
-              <StatusModel
-                width="100%"
-                status={searchStatus}
-                title={searchTitle}
-                onClose={() => {
-                  setSearchStatus(null);
-                  setSearchTitle("");
-                }}
-              />
-            )}
-          </Grid>
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 90px)",
-              overflow: "auto",
-              position: "relative",
-              "& .MuiTable-root": {
-                borderCollapse: "separate",
-                borderSpacing: 0,
-              },
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1050,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <Grid
-                      container
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Grid item>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
-                          }}
-                        >
-                          Brand List
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "45px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1000,
-                      width: "50px",
-                      padding: "8px 16px",
-                    }}
-                  >
-                    S.NO
-                  </TableCell>
-                  {[
-                    { label: "BRAND NAME", key: "brandName", sortable: true },
-                    { label: "STATUS", sortable: false },
-                    { label: "EDIT", sortable: false },
-                  ].map((header) => (
+        <Grid container sx={{ margin: "10px 10px 10px 0px " }}>
+          {searchStatus && (
+            <StatusModel
+              width="100%"
+              status={searchStatus}
+              title={searchTitle}
+              onClose={() => {
+                setSearchStatus(null);
+                setSearchTitle("");
+              }}
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
+          {showTable && (
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(100vh - 50px)",
+                overflow: "auto",
+                position: "relative",
+                "& .MuiTable-root": {
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                },
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
                     <TableCell
-                      key={header.label}
-                      onClick={() =>
-                        header.sortable !== false && handleSort(header.key)
-                      }
+                      colSpan={5}
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1050,
+                        borderBottom: "none",
+                        boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      <Grid
+                        container
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Grid item>
+                          <Typography variant="body1" sx={headTitle}>
+                            Brand List
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
+                    <TableCell
                       sx={{
                         ...tableHeaderStyle,
-                        cursor:
-                          header.sortable !== false ? "pointer" : "default",
                         position: "sticky",
                         top: "45px",
                         backgroundColor: LIGHT_GRAY2,
                         zIndex: 1000,
+                        width: "50px",
                         padding: "8px 16px",
-                        minWidth: header.label === "EDIT" ? "60px" : "100px",
                       }}
                     >
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{header.label}</Grid>
-                        {header.sortable !== false && (
-                          <Grid item>
-                            {sortConfig.key === header.key ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
-                      </Grid>
+                      S.NO
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableLoading || statusUpdateLoading ? (
-                  <TableRowSkeleton
-                    columns={4}
-                    rows={10}
-                    imagePath="./Icons/emptyFile.svg"
-                    sx={{ height: "calc(100vh - 420px)" }}
-                  />
-                ) : filteredRows.length > 0 ? (
-                  filteredRows.map((row, index) => (
-                    <TableRow
-                      key={row.competitionBrandID}
-                      sx={{
-                        fontSize: "10px",
-                        "& td": { borderBottom: `1px solid #C6CEED` },
-                      }}
-                    >
-                      <TableCell sx={{ ...rowstyle }}>
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.competitionBrandName}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        <Switch
-                          checked={row.status === "Active"}
-                          onChange={(e) => handleStatus(row, e.target.checked)}
-                          size="small"
-                          disabled={
-                            statusUpdateLoading &&
-                            updatingRowId === row.competitionBrandID
-                          }
-                          sx={toggleSectionStyle}
-                        />
-                      </TableCell>
+                    {[
+                      { label: "BRAND NAME", key: "brandName", sortable: true },
+                      { label: "STATUS", sortable: false },
+                      { label: "EDIT", sortable: false },
+                    ].map((header) => (
                       <TableCell
+                        key={header.label}
+                        onClick={() =>
+                          header.sortable !== false && handleSort(header.key)
+                        }
                         sx={{
+                          ...tableHeaderStyle,
+                          cursor:
+                            header.sortable !== false ? "pointer" : "default",
+                          position: "sticky",
+                          top: "45px",
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 1000,
                           padding: "8px 16px",
-                          fontSize: "10px",
-                          textAlign: "left",
-                          minWidth: "60px",
+                          minWidth: header.label === "EDIT" ? "60px" : "100px",
                         }}
                       >
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(row)}
-                          disabled={statusUpdateLoading}
-                        >
-                          <EditIcon
-                            sx={{
-                              fontSize: 16,
-                              color: PRIMARY_BLUE2,
-                            }}
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{header.label}</Grid>
+                          {header.sortable !== false && (
+                            <Grid item>
+                              {sortConfig.key === header.key ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                </Grid>
+                              )}
+                            </Grid>
+                          )}
+                        </Grid>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {tableLoading || statusUpdateLoading ? (
+                    <TableRowSkeleton
+                      columns={4}
+                      rows={10}
+                      imagePath="./Icons/emptyFile.svg"
+                      sx={{ height: "calc(100vh - 420px)" }}
+                    />
+                  ) : filteredRows.length > 0 ? (
+                    filteredRows.map((row, index) => (
+                      <TableRow
+                        key={row.competitionBrandID}
+                        sx={{
+                          fontSize: "10px",
+                          "& td": { borderBottom: `1px solid #C6CEED` },
+                        }}
+                      >
+                        <TableCell sx={{ ...rowstyle }}>
+                          {page * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.competitionBrandName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          <Switch
+                            checked={row.status === "Active"}
+                            onChange={(e) =>
+                              handleStatus(row, e.target.checked)
+                            }
+                            size="small"
+                            disabled={
+                              statusUpdateLoading &&
+                              updatingRowId === row.competitionBrandID
+                            }
+                            sx={toggleSectionStyle}
                           />
-                        </IconButton>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            padding: "8px 16px",
+                            fontSize: "10px",
+                            textAlign: "left",
+                            minWidth: "60px",
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(row)}
+                            disabled={statusUpdateLoading}
+                          >
+                            <EditIcon
+                              sx={{
+                                fontSize: 16,
+                                color: PRIMARY_BLUE2,
+                              }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                        <Typography>
+                          No brands found matching your criteria.
+                        </Typography>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                      <Typography>
-                        No brands found matching your criteria.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
 
-            {totalRecords > 0 && (
-              <NuralPagination
-                key={`pagination-${page}-${rowsPerPage}-${totalRecords}`}
-                totalRecords={totalRecords}
-                initialPage={page}
-                initialRowsPerPage={rowsPerPage}
-                onPaginationChange={handlePaginationChange}
-              />
-            )}
-          </TableContainer>
-        </Grid>
-      </Grid>
-      {/* Activity Panel for Export */}
-      <Grid
-        item
-        xs={12}
-        sm={3}
-        md={2}
-        lg={2}
-        mt={1}
-        mr={0}
-        position={"fixed"}
-        right={10}
-        sx={{
-          zIndex: 10000,
-          top: "70px",
-          overflowY: "auto",
-          paddingBottom: "20px",
-          "& > *": {
-            marginBottom: "16px",
-          },
-        }}
-      >
-        <NuralActivityPanel>
+              {totalRecords > 0 && (
+                <NuralPagination
+                  key={`pagination-${page}-${rowsPerPage}-${totalRecords}`}
+                  totalRecords={totalRecords}
+                  initialPage={page}
+                  initialRowsPerPage={rowsPerPage}
+                  onPaginationChange={handlePaginationChange}
+                />
+              )}
+            </TableContainer>
+          )}
           <Grid
             item
             xs={12}
-            md={12}
-            lg={12}
-            xl={12}
-            mt={2}
-            mb={2}
+            sm={3}
+            md={3}
+            lg={3}
+            mt={1}
+            mr={0}
+            position={"fixed"}
+            right={{
+              xs: 0,
+              sm: 0,
+              md: 10,
+              lg: 10,
+            }}
+            sx={{
+              zIndex: 10000,
+              top: "0px",
+              overflowY: "auto",
+              paddingBottom: "20px",
+              "& > *": {
+                marginBottom: "16px",
+              },
+            }}
           >
-            <NuralExport
-              title="Export Brands"
-              views={""}
-              downloadExcel={handleExport}
-              isDownloadLoading={isDownloadLoading}
-            />
+            <NuralActivityPanel>
+              <Grid
+                item
+                xs={12}
+                md={12}
+                lg={12}
+                xl={12}
+                mt={2}
+                mb={2}
+                className="export-button"
+              >
+                <NuralExport
+                  title="Export Brands"
+                  views={""}
+                  downloadExcel={handleExport}
+                  isDownloadLoading={isDownloadLoading}
+                />
+              </Grid>
+            </NuralActivityPanel>
           </Grid>
-        </NuralActivityPanel>
+        </Grid>
       </Grid>
+      {/* Activity Panel for Export */}
     </>
   );
 };

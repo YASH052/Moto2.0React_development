@@ -12,6 +12,7 @@ import {
   Switch,
   Button,
   IconButton,
+  TableSortLabel,
 } from "@mui/material";
 import {
   ArrowUpward as ArrowUpwardIcon,
@@ -225,15 +226,16 @@ const IssueTable = ({
   onPageChange,
   onRowsPerPageChange,
   tableLoading,
+  onEdit,
 }) => {
   const tableColumns = [
-    { id: "name", label: "NAME", sortable: true },
-    { id: "code", label: "CODE", sortable: true },
-    { id: "category", label: "CATEGORY", sortable: true },
+    { id: "name", label: "ISSUE", sortable: true },
+    { id: "code", label: "CATEGORY CODE", sortable: true },
+    { id: "category", label: "CATEGORY NAME", sortable: true },
     { id: "status", label: "STATUS", sortable: false },
     { id: "edit", label: "EDIT", sortable: false },
   ];
-
+  console.log("rows", rows);
   return (
     <>
       <TableContainer
@@ -241,7 +243,7 @@ const IssueTable = ({
         sx={{
           backgroundColor: LIGHT_GRAY2,
           color: PRIMARY_BLUE2,
-          maxHeight: "calc(100vh - 300px)",
+          maxHeight: "calc(100vh - 50px)",
           overflow: "auto",
         }}
       >
@@ -369,47 +371,23 @@ const IssueTable = ({
                 {tableColumns.map((column) => (
                   <TableCell
                     key={column.id}
-                    onClick={() => column.sortable && handleSort(column.id)}
+                    align="left"
                     sx={{
-                      ...tableHeaderStyle,
-                      cursor: column.sortable ? "pointer" : "default",
-                      position: "sticky",
-                      top: "48px",
                       backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
+                      color: PRIMARY_BLUE2,
+                      fontWeight: 600,
+                      fontSize: "10px",
+                      padding: "8px",
                     }}
                   >
                     {column.sortable ? (
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{column.label}</Grid>
-                        <Grid item sx={{ display: "flex", alignItems: "center" }}>
-                          {sortConfig.key === column.id ? (
-                            sortConfig.direction === "asc" ? (
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            ) : (
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            )
-                          ) : (
-                            <Grid
-                              container
-                              direction="column"
-                              alignItems="center"
-                              sx={{ height: 16, width: 16 }}
-                            >
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                            </Grid>
-                          )}
-                        </Grid>
-                      </Grid>
+                      <TableSortLabel
+                        active={sortConfig.key === column.id}
+                        direction={sortConfig.key === column.id ? sortConfig.direction : "asc"}
+                        onClick={() => handleSort(column.id)}
+                      >
+                        {column.label}
+                      </TableSortLabel>
                     ) : (
                       column.label
                     )}
@@ -437,7 +415,12 @@ const IssueTable = ({
                             }}
                           />
                         ) : column.id === "edit" ? (
-                          <Edit sx={{ color: DARK_PURPLE }} fontSize="small" />
+                          <IconButton onClick={() => {
+                            console.log("row", row);
+                            onEdit(row);
+                          }}>
+                            <Edit />
+                          </IconButton>
                         ) : (
                           row[column.id]
                         )}
@@ -482,6 +465,7 @@ const IssueCategoryTable = ({
   onPageChange,
   onRowsPerPageChange,
   tableLoading,
+  onEdit,
 }) => {
   const tableColumns = [
     { id: "name", label: "NAME", sortable: true },
@@ -497,7 +481,7 @@ const IssueCategoryTable = ({
         sx={{
           backgroundColor: LIGHT_GRAY2,
           color: PRIMARY_BLUE2,
-          maxHeight: "calc(100vh - 300px)",
+          maxHeight: "calc(100vh - 50px)",
           overflow: "auto",
         }}
       >
@@ -625,47 +609,23 @@ const IssueCategoryTable = ({
                 {tableColumns.map((column) => (
                   <TableCell
                     key={column.id}
-                    onClick={() => column.sortable && handleSort(column.id)}
+                    align="left"
                     sx={{
-                      ...tableHeaderStyle,
-                      cursor: column.sortable ? "pointer" : "default",
-                      position: "sticky",
-                      top: "48px",
                       backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
+                      color: PRIMARY_BLUE2,
+                      fontWeight: 600,
+                      fontSize: "10px",
+                      padding: "8px",
                     }}
                   >
                     {column.sortable ? (
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{column.label}</Grid>
-                        <Grid item sx={{ display: "flex", alignItems: "center" }}>
-                          {sortConfig.key === column.id ? (
-                            sortConfig.direction === "asc" ? (
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            ) : (
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                              />
-                            )
-                          ) : (
-                            <Grid
-                              container
-                              direction="column"
-                              alignItems="center"
-                              sx={{ height: 16, width: 16 }}
-                            >
-                              <ArrowUpwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                              <ArrowDownwardIcon
-                                sx={{ fontSize: 12, color: "grey.400" }}
-                              />
-                            </Grid>
-                          )}
-                        </Grid>
-                      </Grid>
+                      <TableSortLabel
+                        active={sortConfig.key === column.id}
+                        direction={sortConfig.key === column.id ? sortConfig.direction : "asc"}
+                        onClick={() => handleSort(column.id)}
+                      >
+                        {column.label}
+                      </TableSortLabel>
                     ) : (
                       column.label
                     )}
@@ -693,7 +653,9 @@ const IssueCategoryTable = ({
                             }}
                           />
                         ) : column.id === "edit" ? (
-                          <Edit sx={{ color: DARK_PURPLE }} fontSize="small" />
+                          <IconButton onClick={() => onEdit(row)}>
+                            <Edit />
+                          </IconButton>
                         ) : (
                           row[column.id]
                         )}

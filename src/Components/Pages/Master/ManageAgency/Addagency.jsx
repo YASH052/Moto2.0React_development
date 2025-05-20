@@ -43,7 +43,7 @@ const AddAgancy = () => {
         Email: editAgencyData.emailID,
         UserName: editAgencyData.loginName,
         Password: editAgencyData.password,
-        Status : editAgencyData.status,
+        Status: editAgencyData.status,
         CallType: 1,
       });
     }
@@ -152,11 +152,20 @@ const AddAgancy = () => {
     try {
       setIsLoading(true);
       const response = await ManageISPAgencyMaster(formData);
-      console.log(response);
-      if (response.status === 200) {
+      if (response.statusCode == 200) {
         setStatus(response.statusCode);
         setTittle(response.statusMessage || "Something went wrong");
-        handleCancel();
+        setFormData({
+          AgencyName: "",
+          AgencyCode: "",
+          ContactPersonName: "",
+          MobileNo: "",
+          Email: "",
+          UserName: "",
+          Password: "",
+          Status: 1,
+          CallType: 0,
+        });
       }
       else {
         setStatus(response.statusCode);
@@ -165,9 +174,16 @@ const AddAgancy = () => {
 
     } catch (error) {
       console.error("Error in AddAgency:", error);
+      setStatus(response.statusCode);
+      setTittle(response.statusMessage || "Something went wrong");
       throw error;
     } finally {
       setIsLoading(false);
+      setTimeout(() => {
+        setErrors({});
+        setStatus(null);
+        setTittle(null);
+      }, 3000);
     }
   };
 
@@ -190,11 +206,12 @@ const AddAgancy = () => {
       const response = await ManageISPAgencyMaster(formData);
       setStatus(response.statusCode);
       setTittle(response.statusMessage || "Something went wrong");
-
+      dispatch(setEditAgencyData({}));
       if (response.statusCode == 200) {
         setTimeout(() => {
-          setTittle(null);
+          setErrors({});
           setStatus(null);
+          setTittle(null);
           navigate("/search-agancy");
         }, 2000);
       }
@@ -302,6 +319,15 @@ const AddAgancy = () => {
                           name="AgencyCode"
                           value={formData.AgencyCode}
                           onChange={handleChange}
+                          onKeyDown={(e) => {
+                            if (e.key === " ") {
+                              e.preventDefault();
+                              setErrors((prev) => ({
+                                ...prev,
+                                AgencyCode: "Space is not allowed",
+                              }));
+                            }
+                          }}
                           error={!!errors.AgencyCode}
                           errorMessage={errors.AgencyCode}
                         />

@@ -1,5 +1,5 @@
 import { Grid, Typography, Button, Skeleton, Box } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -29,7 +29,11 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  tablePaginationStyle,
+} from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import { ViewSerialNumberMovement } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
@@ -67,8 +71,9 @@ const SerialNoMoment = () => {
   const [activeTab, setActiveTab] = React.useState("serial-no-moment");
   const [showStatus, setShowStatus] = React.useState(false);
   const [defaultLoading, setDefaultLoading] = React.useState(false);
+  const detailTableRef = React.useRef(null);
   const tabs = [
-    { label: "Stock Report", value: "stock-report" },
+    { label: "Stock Report", value: "download-stock-report" },
     { label: "Stock Adjustment Report", value: "stock-adjustment-report" },
     { label: "Saleschannel Stock SB", value: "saleschannel-stock-sb" },
     { label: "Serial No. Movement", value: "serial-no-moment" },
@@ -157,7 +162,6 @@ const SerialNoMoment = () => {
     }
   };
 
-  // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
 
@@ -173,11 +177,108 @@ const SerialNoMoment = () => {
     }
 
     setSortConfig({ key: columnName, direction });
+
+    // Sort the data
+    const sortedData = [...currentOwnerData].sort((a, b) => {
+      let aValue, bValue;
+
+      // Map column names to actual data properties
+      switch (columnName) {
+        case "serialNo":
+          aValue = a.serialNumber || "";
+          bValue = b.serialNumber || "";
+          break;
+        case "serialNo2":
+          aValue = a.serialNumber2 || "";
+          bValue = b.serialNumber2 || "";
+          break;
+        default:
+          aValue = a[columnName] || "";
+          bValue = b[columnName] || "";
+      }
+
+      // Convert to string for consistent comparison
+      aValue = String(aValue).toLowerCase();
+      bValue = String(bValue).toLowerCase();
+
+      if (direction === "asc") {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+
+    setCurrentOwnerData(sortedData);
+  };
+
+  const handleTransactionSort = (columnName) => {
+    let direction = "asc";
+
+    if (transactionSortConfig.key === columnName) {
+      if (transactionSortConfig.direction === "asc") {
+        direction = "desc";
+      } else {
+        setTransactionSortConfig({ key: null, direction: null });
+        return;
+      }
+    }
+
+    setTransactionSortConfig({ key: columnName, direction });
+
+    // Sort the transaction data
+    const sortedTransactions = [...transactions].sort((a, b) => {
+      let aValue, bValue;
+
+      // Map column names to actual data properties
+      switch (columnName) {
+        case "transactionType":
+          aValue = a.transType || "";
+          bValue = b.transType || "";
+          break;
+        case "transactionDate":
+          aValue = a.transDate || "";
+          bValue = b.transDate || "";
+          break;
+        case "refDocumentNo":
+          aValue = a.refDocNo || "";
+          bValue = b.refDocNo || "";
+          break;
+        case "createdOn":
+          aValue = a.createdOn || "";
+          bValue = b.createdOn || "";
+          break;
+        default:
+          aValue = a[columnName] || "";
+          bValue = b[columnName] || "";
+      }
+
+      // Convert to string for consistent comparison
+      aValue = String(aValue).toLowerCase();
+      bValue = String(bValue).toLowerCase();
+
+      if (direction === "asc") {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+
+    setTransactions(sortedTransactions);
   };
 
   // Update handleSearch function
   const handleSearch = async () => {
     setShowStatus(false);
+
+    // Check for empty field before search
+    if (!serialNumber.trim()) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Serial number cannot be empty",
+      });
+      return;
+    }
+
     if (serialNumberInlineError.error) {
       return;
     }
@@ -213,68 +314,39 @@ const SerialNoMoment = () => {
   };
 
   // Add this after the existing handleRowClick function
-  const handleTransactionChangePage = async (event, newPage) => {
-    setTransactionPage(newPage);
-    setIsTransactionLoading(true);
-    setTransactions([]); // Clear transactions to show skeleton
-    try {
-      const response = await ViewSerialNumberMovement({
-        ...searchParams,
-        serialNumber: selectedRow.serialNumber,
-        serialMasterID: selectedRow.serialMasterID,
-        callType: 1,
-        pageIndex: newPage + 1,
-        pageSize: transactionRowsPerPage,
-      });
-
-      if (response.statusCode === "200") {
-        setTransactions(response.transactions || []);
-      }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
-      setIsTransactionLoading(false);
-    }
-  };
 
   // Add this handler function
-  const handleTransactionChangeRowsPerPage = async (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setTransactionRowsPerPage(newRowsPerPage);
-    setTransactionPage(0);
-
-    setIsTransactionLoading(true);
-    setTransactions([]); // Clear transactions to show skeleton
-    try {
-      const response = await ViewSerialNumberMovement({
-        ...searchParams,
-        serialNumber: selectedRow.serialNumber,
-        serialMasterID: selectedRow.serialMasterID,
-        callType: 1,
-        pageIndex: 1,
-        pageSize: newRowsPerPage,
-      });
-
-      if (response.statusCode === "200") {
-        setTransactions(response.transactions || []);
-      }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
-      setIsTransactionLoading(false);
-    }
-  };
 
   // Update the handleSerialNumberChange function
   const handleSerialNumberChange = (e) => {
     let value = e.target.value;
     setShowStatus(false);
 
+    // If value is empty, clear everything
+    if (!value.trim()) {
+      setSerialNumber("");
+      setSerialNumberInlineError({
+        error: false,
+        errorText: "",
+      });
+      return;
+    }
+
     // Check if input contains only alphanumeric, spaces and commas
     if (!/^[a-zA-Z0-9\s,]*$/.test(value)) {
       setSerialNumberInlineError({
         error: true,
         errorText: "Only alphanumeric characters are allowed",
+      });
+      return;
+    }
+
+    // Count the number of IMEI numbers
+    const imeiCount = value.split(/[\s,]+/).filter(Boolean).length;
+    if (imeiCount > 10000) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Maximum 10,000 IMEI numbers allowed",
       });
       return;
     }
@@ -292,16 +364,45 @@ const SerialNoMoment = () => {
     });
   };
 
+  // Add handleBlur function
+  const handleBlur = () => {
+    if (!serialNumber.trim()) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Serial number cannot be empty",
+      });
+    }
+  };
+
   // Update the handleSerialNumberPaste handler
   const handleSerialNumberPaste = (e) => {
     e.preventDefault();
     const pastedText = e.clipboardData.getData("text");
+
+    // Check for empty field
+    if (!pastedText.trim()) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Serial number cannot be empty",
+      });
+      return;
+    }
 
     // Check if pasted text contains only alphanumeric, spaces and commas
     if (!/^[a-zA-Z0-9\s,]*$/.test(pastedText)) {
       setSerialNumberInlineError({
         error: true,
         errorText: "Only alphanumeric characters are allowed",
+      });
+      return;
+    }
+
+    // Count the number of IMEI numbers
+    const imeiCount = pastedText.split(/[\s,]+/).filter(Boolean).length;
+    if (imeiCount > 10000) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Maximum 10,000 IMEI numbers allowed",
       });
       return;
     }
@@ -346,6 +447,14 @@ const SerialNoMoment = () => {
       if (response.statusCode === "200") {
         setTransactions(response.transactions || []);
         setTransactionTotalRecords(response.totalRecords || 0);
+        
+        // Add a small delay to ensure the DOM is updated before scrolling
+        setTimeout(() => {
+          detailTableRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 10);
       } else {
         setSelectedRow(null);
       }
@@ -374,13 +483,13 @@ const SerialNoMoment = () => {
   };
 
   const CurrentOwnerSkeleton = () => (
-    <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+    <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, md: 0 } }}>
       <TableContainer
         component={Paper}
         sx={{
           backgroundColor: LIGHT_GRAY2,
           color: PRIMARY_BLUE2,
-          maxHeight: "calc(120vh - 320px)",
+          maxHeight: "calc(100vh - 50px)",
           overflow: "auto",
           position: "relative",
           zIndex: 1,
@@ -403,13 +512,13 @@ const SerialNoMoment = () => {
   );
 
   const TransactionsSkeleton = () => (
-    <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+    <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, md: 0, mb: 2 } }}>
       <TableContainer
         component={Paper}
         sx={{
           backgroundColor: LIGHT_GRAY2,
           color: PRIMARY_BLUE2,
-          maxHeight: "calc(70vh - 200px)",
+          maxHeight: "calc(100vh - 50px)",
           overflow: "auto",
           position: "relative",
           zIndex: 1,
@@ -528,8 +637,22 @@ const SerialNoMoment = () => {
   };
   // Update the downloadExcel function
   const downloadExcel = async () => {
-    setIsDownloadLoading(true); // Use separate loading state for download
+    if (!serialNumber.trim()) {
+      setSerialNumberInlineError({
+        error: true,
+        errorText: "Please enter serial number",
+      });
+      return;
+    }
 
+    if (currentOwnerData.length === 0) {
+      setStatus(400);
+      setTitle("No Data Found");
+      setShowStatus(true);
+      return;
+    }
+
+    setIsDownloadLoading(true);
     try {
       let response = await ViewSerialNumberMovement({
         ...searchParams,
@@ -551,7 +674,7 @@ const SerialNoMoment = () => {
       setTitle(error.response.data.title);
       setShowStatus(true);
     } finally {
-      setIsDownloadLoading(false); // Reset download loading state
+      setIsDownloadLoading(false);
     }
   };
 
@@ -562,6 +685,10 @@ const SerialNoMoment = () => {
 
   const handleReset = () => {
     setSerialNumber("");
+    setSerialNumberInlineError({
+      error: false,
+      errorText: "",
+    });
     setCurrentOwnerData([]);
     setTransactions([]);
     setSelectedRow(null);
@@ -576,7 +703,7 @@ const SerialNoMoment = () => {
         sx={{
           position: "relative",
           pr: { xs: 0, sm: "180px", md: "240px", lg: "270px" },
-          filter: isDownloadLoading ? "blur(2px)" : "none",
+          // filter: isDownloadLoading ? "blur(2px)" : "none",
           pointerEvents: isDownloadLoading ? "none" : "auto",
           transition: "filter 0.3s ease",
         }}
@@ -591,7 +718,7 @@ const SerialNoMoment = () => {
             zIndex: 2000,
             backgroundColor: "#fff",
             paddingBottom: 1,
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            // boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
           <Grid item xs={12} mt={0} mb={0} ml={1}>
@@ -638,14 +765,15 @@ const SerialNoMoment = () => {
                         SERIAL NO.
                       </Typography>
                       <NuralTextField
-                        placeholder="Enter Serial Number"
+                        placeholder="ENTER SERIAL NO."
                         width="100%"
                         backgroundColor={LIGHT_BLUE}
                         value={serialNumber}
                         onChange={handleSerialNumberChange}
                         onPaste={handleSerialNumberPaste}
+                        onBlur={handleBlur}
                         error={serialNumberInlineError.error}
-                        errorText={serialNumberInlineError.errorText}
+                        errorMessage={serialNumberInlineError.errorText}
                         inputProps={{
                           pattern: "[a-zA-Z0-9,\\s]*",
                           title: "Only alphanumeric characters are allowed",
@@ -695,514 +823,531 @@ const SerialNoMoment = () => {
                 </NuralAccordion2>
               </Grid>
             </Grid>
-          </Grid>
-        )}
-
-        <Grid item xs={12} pr={4} sx={{ position: "relative" }}>
-          {showStatus && (
-            <StatusModel width="100%" status={status} title={title} />
-          )}
-        </Grid>
-        {/* Current Owner Table */}
-        {isSearchLoading ? (
-          <CurrentOwnerSkeleton />
-        ) : (
-          currentOwnerData.length > 0 && (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-              <TableContainer
-                component={Paper}
-                sx={{
-                  backgroundColor: LIGHT_GRAY2,
-                  color: PRIMARY_BLUE2,
-                  maxHeight: selectedRow
-                    ? "calc(100vh - 200px)"
-                    : "calc(120vh - 320px)",
-                  overflow: "auto",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        colSpan={10}
-                        sx={{
-                          backgroundColor: LIGHT_GRAY2,
-                          position: "sticky",
-                          top: 0,
-                          zIndex: 1100,
-                          borderBottom: "none",
-                          boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
-                          }}
-                        >
-                          Current Owner
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                      {[
-                        { id: "serialNo", label: "SERIAL NO." },
-                        { id: "serialNo2", label: "SERIAL NO. 2" },
-                        { id: "skuCode", label: "SKU CODE" },
-                        { id: "skuName", label: "SKU NAME" },
-                        { id: "activationDate", label: "ACTIVATION DATE" },
-                        { id: "cartonNo", label: "CARTON NO." },
-                        { id: "salesChannel", label: "SALES CHANNEL" },
-                        { id: "type", label: "TYPE" },
-                        { id: "status", label: "STATUS" },
-                        { id: "lastUpdatedOn", label: "LAST UPDATED ON" },
-                        { id: "view", label: "VIEW" },
-                      ].map((column) => (
-                        <TableCell
-                          key={column.id}
-                          onClick={() => handleSort(column.id)}
-                          sx={{
-                            ...tableHeaderStyle,
-                            cursor: "pointer",
-                            position: "sticky",
-                            top: "45px",
-                            backgroundColor: LIGHT_GRAY2,
-                            zIndex: 1000,
-                          }}
-                        >
-                          <Grid container alignItems="center" spacing={1}>
-                            <Grid item>{column.label}</Grid>
-                            {column.id !== "view" && (
-                              <Grid
-                                item
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
-                                {sortConfig.key === column.id ? (
-                                  sortConfig.direction === "asc" ? (
-                                    <ArrowUpwardIcon
-                                      sx={{
-                                        fontSize: 16,
-                                        color: PRIMARY_BLUE2,
-                                      }}
-                                    />
-                                  ) : (
-                                    <ArrowDownwardIcon
-                                      sx={{
-                                        fontSize: 16,
-                                        color: PRIMARY_BLUE2,
-                                      }}
-                                    />
-                                  )
-                                ) : (
+            <Grid item xs={12} pr={2} mt={2} sx={{ position: "relative" }}>
+              {showStatus && (
+                <StatusModel width="100%" status={status} title={title} />
+              )}
+            </Grid>
+            {/* Current Owner Table */}
+            {isSearchLoading ? (
+              <CurrentOwnerSkeleton />
+            ) : (
+              currentOwnerData.length > 0 && (
+                <Grid item xs={12} mt={2} sx={{ p: { xs: 1, sm: 2, md: 0 } }}>
+                  <TableContainer
+                    component={Paper}
+                    sx={{
+                      backgroundColor: LIGHT_GRAY2,
+                      color: PRIMARY_BLUE2,
+                      maxHeight: selectedRow
+                        ? "calc(100vh - 50px)"
+                        : "calc(100vh - 50px)",
+                      overflow: "auto",
+                      position: "relative",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            colSpan={11}
+                            sx={{
+                              backgroundColor: LIGHT_GRAY2,
+                              position: "sticky",
+                              top: 0,
+                              zIndex: 1100,
+                              borderBottom: "none",
+                              boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontFamily: "Manrope",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                lineHeight: "19.12px",
+                                letterSpacing: "0%",
+                                color: PRIMARY_BLUE2,
+                                p: 1,
+                              }}
+                            >
+                              Current Owner
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
+                          {[
+                            { id: "serialNo", label: "SERIAL NO." },
+                            { id: "serialNo2", label: "SERIAL NO. 2" },
+                            { id: "skuCode", label: "SKU CODE" },
+                            { id: "skuName", label: "SKU NAME" },
+                            { id: "activationDate", label: "ACTIVATION DATE" },
+                            { id: "cartonNo", label: "CARTON NO." },
+                            { id: "salesChannel", label: "SALES CHANNEL" },
+                            { id: "type", label: "TYPE" },
+                            { id: "status", label: "STATUS" },
+                            { id: "lastUpdatedOn", label: "LAST UPDATED ON" },
+                            { id: "view", label: "VIEW" },
+                          ].map((column) => (
+                            <TableCell
+                              key={column.id}
+                              onClick={() => handleSort(column.id)}
+                              sx={{
+                                ...tableHeaderStyle,
+                                cursor: "pointer",
+                                position: "sticky",
+                                top: "45px",
+                                backgroundColor: LIGHT_GRAY2,
+                                zIndex: 1000,
+                              }}
+                            >
+                              <Grid container alignItems="center" spacing={1}>
+                                <Grid item>{column.label}</Grid>
+                                {column.id !== "view" && (
                                   <Grid
-                                    container
-                                    direction="column"
-                                    alignItems="center"
-                                    sx={{ height: 16, width: 16 }}
+                                    item
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
                                   >
-                                    <ArrowUpwardIcon
-                                      sx={{ fontSize: 12, color: "grey.400" }}
-                                    />
-                                    <ArrowDownwardIcon
-                                      sx={{ fontSize: 12, color: "grey.400" }}
-                                    />
+                                    {sortConfig.key === column.id ? (
+                                      sortConfig.direction === "asc" ? (
+                                        <ArrowUpwardIcon
+                                          sx={{
+                                            fontSize: 16,
+                                            color: PRIMARY_BLUE2,
+                                          }}
+                                        />
+                                      ) : (
+                                        <ArrowDownwardIcon
+                                          sx={{
+                                            fontSize: 16,
+                                            color: PRIMARY_BLUE2,
+                                          }}
+                                        />
+                                      )
+                                    ) : (
+                                      <Grid
+                                        container
+                                        direction="column"
+                                        alignItems="center"
+                                        sx={{ height: 16, width: 16 }}
+                                      >
+                                        <ArrowUpwardIcon
+                                          sx={{
+                                            fontSize: 12,
+                                            color: "grey.400",
+                                          }}
+                                        />
+                                        <ArrowDownwardIcon
+                                          sx={{
+                                            fontSize: 12,
+                                            color: "grey.400",
+                                          }}
+                                        />
+                                      </Grid>
+                                    )}
                                   </Grid>
                                 )}
                               </Grid>
-                            )}
-                          </Grid>
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {currentOwnerData.length > 0 ? (
-                      currentOwnerData.map((row) => (
-                        <TableRow
-                          key={row.serialMasterID}
-                          sx={{
-                            backgroundColor:
-                              selectedRow?.serialMasterID === row.serialMasterID
-                                ? DARK_PURPLE
-                                : "inherit",
-                            "&:hover": {
-                              backgroundColor:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? DARK_PURPLE
-                                  : PRIMARY_LIGHT_GRAY,
-                            },
-                            // Add transition for smooth color change
-                            transition: "background-color 0.2s ease",
-                          }}
-                        >
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.serialNumber || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.serialNumber2 || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.skuCode || MenuConstants.emptyText}
-                          </TableCell>{" "}
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.sKUName || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.activationDate || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.cartonNo || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.salesChannel || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.channelType || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.serialStatus || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                            }}
-                          >
-                            {row.modifiedOn || MenuConstants.emptyText}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...rowstyle,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              color:
-                                selectedRow?.serialMasterID ===
-                                row.serialMasterID
-                                  ? "#fff"
-                                  : "inherit",
-                              cursor: "pointer",
-                              // Add hover effect for the View button
-                              "&:hover": {
-                                opacity: 0.8,
-                              },
-                            }}
-                            onClick={(e) => handleViewClick(e, row)}
-                          >
-                            <span>View</span>
-                            <VisibilityIcon
-                              sx={{
-                                fontSize: 16,
-                                // Add transition for smooth color change
-                                transition: "color 0.2s ease",
-                              }}
-                            />
-                          </TableCell>
+                            </TableCell>
+                          ))}
                         </TableRow>
-                      ))
-                    ) : (
-                      <NoDataMessage />
-                    )}
-                  </TableBody>
-                </Table>
+                      </TableHead>
+                      <TableBody>
+                        {currentOwnerData.length > 0 ? (
+                          currentOwnerData.map((row) => (
+                            <TableRow
+                              key={row.serialMasterID}
+                              sx={{
+                                backgroundColor:
+                                  selectedRow?.serialMasterID ===
+                                  row.serialMasterID
+                                    ? DARK_PURPLE
+                                    : "inherit",
+                                "&:hover": {
+                                  backgroundColor:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? DARK_PURPLE
+                                      : PRIMARY_LIGHT_GRAY,
+                                },
+                                border: "1px solid red", // Add transition for smooth color change
+                                transition: "background-color 0.2s ease",
+                              }}
+                            >
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.serialNumber || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.serialNumber2 || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.skuCode || MenuConstants.emptyText}
+                              </TableCell>{" "}
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  minWidth: "100px",
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.sKUName || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.activationDate || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.cartonNo || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.salesChannel || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.channelType || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.serialStatus || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                }}
+                              >
+                                {row.modifiedOn || MenuConstants.emptyText}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  ...rowstyle,
+                                  // display: "flex",
+                                  // alignItems: "center",
+                                  // gap: 1,
+                                  width: "70px",
+                                  fontWeight: 700,
+                                  textAlign: "left",
+                                  color:
+                                    selectedRow?.serialMasterID ===
+                                    row.serialMasterID
+                                      ? "#fff"
+                                      : "inherit",
+                                  cursor: "pointer",
+                                  // Add hover effect for the View button
+                                  "&:hover": {
+                                    opacity: 0.8,
+                                  },
+                                }}
+                                onClick={(e) => handleViewClick(e, row)}
+                              >
+                                <span
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "left",
+                                    gap: 1,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  View
+                                  <VisibilityIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      transition: "color 0.2s ease",
+                                    }}
+                                  />
+                                </span>{" "}
+                                &nbsp;
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <NoDataMessage />
+                        )}
+                      </TableBody>
+                    </Table>
 
-                {/* Custom Pagination */}
-                <Grid
-                  container
-                  sx={{
-                    p: 2,
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderTop: `1px solid ${PRIMARY_BLUE2}`,
-                  }}
-                >
-                  {/* Left section - Total Records */}
-                  <Grid item>
-                    <Typography
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontSize: "10px",
-                        color: PRIMARY_BLUE2,
-                        whiteSpace: "nowrap",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
-                    >
-                      TOTAL RECORDS:
-                      <span style={{ fontWeight: 700 }}>
-                        {totalRecords} / {Math.ceil(totalRecords / rowsPerPage)}{" "}
-                        PAGES
-                      </span>
-                    </Typography>
-                  </Grid>
-
-                  {/* Center section - Navigation */}
-                  <Grid item>
-                    <Grid
-                      container
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        flexWrap: "nowrap",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "10px",
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        SHOW:
-                      </Typography>
-                      {[10, 25, 50, 100].map((value) => (
-                        <Button
-                          key={value}
-                          onClick={() =>
-                            handleChangeRowsPerPage({ target: { value } })
-                          }
+                    {/* Custom Pagination */}
+                    <Grid container sx={tablePaginationStyle}>
+                      {/* Left section - Total Records */}
+                      <Grid item>
+                        <Typography
                           sx={{
-                            minWidth: "25px",
-                            height: "24px",
-                            padding: "4px",
-                            borderRadius: "50%",
-                            backgroundColor:
-                              rowsPerPage === value
-                                ? PRIMARY_BLUE2
-                                : "transparent",
-                            color:
-                              rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                            fontSize: "12px",
-                            "&:hover": {
-                              backgroundColor:
-                                rowsPerPage === value
-                                  ? PRIMARY_BLUE2
-                                  : "rgba(0, 0, 0, 0.04)",
-                            },
+                            fontFamily: "Manrope",
+                            fontSize: "10px",
+                            color: PRIMARY_BLUE2,
+                            whiteSpace: "nowrap",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
                           }}
                         >
-                          {value}
-                        </Button>
-                      ))}
-                    </Grid>
-                  </Grid>
-
-                  {/* Right section - Show Rows */}
-
-                  <Grid
-                    item
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      color: PRIMARY_BLUE2,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "10px",
-                        whiteSpace: "nowrap",
-                        cursor: "pointer",
-                        "&:hover": { opacity: 0.8 },
-                      }}
-                      onClick={handleJumpToFirst}
-                    >
-                      JUMP TO FIRST
-                    </Typography>
-
-                    <IconButton
-                      onClick={() => handleChangePage(null, page - 1)}
-                      disabled={page === 0}
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        padding: "4px",
-                        "&.Mui-disabled": {
-                          color: "rgba(0, 0, 0, 0.26)",
-                        },
-                      }}
-                    >
-                      <NavigateBeforeIcon />
-                    </IconButton>
-
-                    <Typography
-                      sx={{
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      PAGE {page + 1}
-                    </Typography>
-
-                    <IconButton
-                      onClick={() => handleChangePage(null, page + 1)}
-                      disabled={
-                        page >= Math.ceil(totalRecords / rowsPerPage) - 1
-                      }
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        padding: "4px",
-                        "&.Mui-disabled": {
-                          color: "rgba(0, 0, 0, 0.26)",
-                        },
-                      }}
-                    >
-                      <NavigateNextIcon />
-                    </IconButton>
-
-                    <Typography
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "10px",
-                        whiteSpace: "nowrap",
-                        cursor: "pointer",
-                        "&:hover": { opacity: 0.8 },
-                      }}
-                      onClick={handleJumpToLast}
-                    >
-                      JUMP TO LAST
-                    </Typography>
-
-                    <Grid
-                      container
-                      alignItems="center"
-                      spacing={1}
-                      sx={{ maxWidth: 160, flexWrap: "nowrap" }}
-                    >
-                      <Grid item>
-                        <CustomPageInput
-                          type="number"
-                          value={customPageInput}
-                          onChange={handleCustomPageInputChange}
-                          onKeyPress={handleCustomPageKeyPress}
-                          placeholder="Jump to page"
-                          min={1}
-                          max={Math.ceil(totalRecords / rowsPerPage)}
-                        />
+                          TOTAL RECORDS:
+                          <span style={{ fontWeight: 700 }}>
+                            {totalRecords} /{" "}
+                            {Math.ceil(totalRecords / rowsPerPage)} PAGES
+                          </span>
+                        </Typography>
                       </Grid>
+
+                      {/* Center section - Navigation */}
+                      <Grid item>
+                        <Grid
+                          container
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "nowrap",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "10px",
+                              color: PRIMARY_BLUE2,
+                              fontWeight: 600,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            SHOW:
+                          </Typography>
+                          {[10, 25, 50, 100].map((value) => (
+                            <Button
+                              key={value}
+                              onClick={() =>
+                                handleChangeRowsPerPage({ target: { value } })
+                              }
+                              sx={{
+                                minWidth: "25px",
+                                height: "24px",
+                                padding: "4px",
+                                borderRadius: "50%",
+                                backgroundColor:
+                                  rowsPerPage === value
+                                    ? PRIMARY_BLUE2
+                                    : "transparent",
+                                color:
+                                  rowsPerPage === value
+                                    ? "#fff"
+                                    : PRIMARY_BLUE2,
+                                fontSize: "12px",
+                                "&:hover": {
+                                  backgroundColor:
+                                    rowsPerPage === value
+                                      ? PRIMARY_BLUE2
+                                      : "rgba(0, 0, 0, 0.04)",
+                                },
+                              }}
+                            >
+                              {value}
+                            </Button>
+                          ))}
+                        </Grid>
+                      </Grid>
+
+                      {/* Right section - Show Rows */}
+
                       <Grid
                         item
                         sx={{
-                          cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
-                          "&:hover": { opacity: 0.8 },
-                        }}
-                        onClick={() => {
-                          if (customPageInput) {
-                            handleCustomJump(parseInt(customPageInput));
-                            setCustomPageInput(""); // Clear input after jump
-                          }
+                          gap: 2,
+                          color: PRIMARY_BLUE2,
                         }}
                       >
-                        <img src="./Icons/footerSearch.svg" alt="arrow" />
+                        <Typography
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "10px",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer",
+                            "&:hover": { opacity: 0.8 },
+                          }}
+                          onClick={handleJumpToFirst}
+                        >
+                          JUMP TO FIRST
+                        </Typography>
+
+                        <IconButton
+                          onClick={() => handleChangePage(null, page - 1)}
+                          disabled={page === 0}
+                          sx={{
+                            color: PRIMARY_BLUE2,
+                            padding: "4px",
+                            "&.Mui-disabled": {
+                              color: "rgba(0, 0, 0, 0.26)",
+                            },
+                          }}
+                        >
+                          <NavigateBeforeIcon />
+                        </IconButton>
+
+                        <Typography
+                          sx={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          PAGE {page + 1}
+                        </Typography>
+
+                        <IconButton
+                          onClick={() => handleChangePage(null, page + 1)}
+                          disabled={
+                            page >= Math.ceil(totalRecords / rowsPerPage) - 1
+                          }
+                          sx={{
+                            color: PRIMARY_BLUE2,
+                            padding: "4px",
+                            "&.Mui-disabled": {
+                              color: "rgba(0, 0, 0, 0.26)",
+                            },
+                          }}
+                        >
+                          <NavigateNextIcon />
+                        </IconButton>
+
+                        <Typography
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "10px",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer",
+                            "&:hover": { opacity: 0.8 },
+                          }}
+                          onClick={handleJumpToLast}
+                        >
+                          JUMP TO LAST
+                        </Typography>
+
+                        <Grid
+                          container
+                          alignItems="center"
+                          spacing={1}
+                          sx={{ maxWidth: 160, flexWrap: "nowrap" }}
+                        >
+                          <Grid item>
+                            <CustomPageInput
+                              type="number"
+                              value={customPageInput}
+                              onChange={handleCustomPageInputChange}
+                              onKeyPress={handleCustomPageKeyPress}
+                              placeholder="Jump to page"
+                              min={1}
+                              max={Math.ceil(totalRecords / rowsPerPage)}
+                            />
+                          </Grid>
+                          <Grid
+                            item
+                            sx={{
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              "&:hover": { opacity: 0.8 },
+                            }}
+                            onClick={() => {
+                              if (customPageInput) {
+                                handleCustomJump(parseInt(customPageInput));
+                                setCustomPageInput(""); // Clear input after jump
+                              }
+                            }}
+                          >
+                            <img src="./Icons/footerSearch.svg" alt="arrow" />
+                          </Grid>
+                        </Grid>
                       </Grid>
                     </Grid>
-                  </Grid>
+                  </TableContainer>
                 </Grid>
-              </TableContainer>
-            </Grid>
-          )
+              )
+            )}
+          </Grid>
         )}
 
         {/* Transactions Table - Only show when a row is selected */}
@@ -1210,13 +1355,22 @@ const SerialNoMoment = () => {
           (isTransactionLoading ? (
             <TransactionsSkeleton />
           ) : (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+            <Grid
+              item
+              xs={12}
+              mt={-1}
+              
+              sx={{ p: { xs: 1, sm: 2, md: 0 }, mb: 2 }}
+              
+            >
               <TableContainer
+                ref={detailTableRef}
+                id="transaction-table"
                 component={Paper}
                 sx={{
                   backgroundColor: LIGHT_GRAY2,
                   color: PRIMARY_BLUE2,
-                  maxHeight: "calc(70vh - 200px)",
+                  maxHeight: "calc(100vh - 50px)",
                   overflow: "auto",
                   position: "relative",
                   zIndex: 1,
@@ -1380,7 +1534,7 @@ const SerialNoMoment = () => {
           paddingBottom: "20px",
           "& > *": {
             marginBottom: "16px",
-            filter: isDownloadLoading ? "blur(2px)" : "none",
+            // filter: isDownloadLoading ? "blur(2px)" : "none",
             transition: "filter 0.3s ease",
           },
           "& .export-button": {
@@ -1389,12 +1543,6 @@ const SerialNoMoment = () => {
         }}
       >
         <NuralActivityPanel>
-          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
-            <SelectionPanel columns={""} views={""} />
-          </Grid>
-          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
-            <NuralReports title="Reports" views={""} />
-          </Grid>
           <Grid
             item
             xs={12}
@@ -1414,23 +1562,6 @@ const SerialNoMoment = () => {
           </Grid>
         </NuralActivityPanel>
       </Grid>
-      {isDownloadLoading && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.2)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-          }}
-        />
-      )}
     </>
   );
 };

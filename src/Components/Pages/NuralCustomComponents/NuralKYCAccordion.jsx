@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -73,7 +73,7 @@ const FieldContainer = styled(Box)({
 
 const FieldRow = styled(Grid)({
   display: "flex",
-  alignItems: "flex-end",
+  alignItems: "flex-start",
   gap: "24px",
 });
 
@@ -99,28 +99,50 @@ const HiddenInput = styled("input")({
   display: "none",
 });
 
+const ErrorText = styled(Typography)({
+  color: ERROR_RED,
+  fontSize: "12px",
+  marginTop: "4px",
+  marginLeft: "8px",
+  fontFamily: "Manrope, sans-serif",
+});
+
 const NuralKYCAccordion = ({
   title = "KYC",
   color = DARK_PURPLE,
   fields = [],
+  expanded,
+  onChange,
+  controlled,
+  onLastFieldFilled,
   ...props
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(true);
+  const [isExpanded, setIsExpanded] = useState(expanded || true);
+  const fileInputRefs = useRef({});
 
-  const fileInputRefs = React.useRef([]);
+  useEffect(() => {
+    if (controlled) {
+      setIsExpanded(expanded);
+    }
+  }, [expanded, controlled]);
 
-  React.useEffect(() => {
-    fileInputRefs.current = fields.map(() => React.createRef());
-  }, [fields.length]);
+  const handleChange = (event, newExpanded) => {
+    if (controlled) {
+      onChange?.(event, newExpanded);
+    } else {
+      setIsExpanded(newExpanded);
+    }
+  };
 
   const handleFileClick = (index) => {
-    fileInputRefs.current[index].current?.click();
+    if (fileInputRefs.current[`file-${index}`]) {
+      fileInputRefs.current[`file-${index}`].click();
+    }
   };
 
   const handleFileChange = (index, event) => {
     const file = event.target.files?.[0];
     if (file && fields[index].onFileSelect) {
-      // Create object with both file and path info
       const fileData = {
         file: file,
         name: file.name,
@@ -130,53 +152,47 @@ const NuralKYCAccordion = ({
     }
   };
 
+  // Check if all fields are filled
+  const checkFieldsFilled = () => {
+    if (onLastFieldFilled) {
+      onLastFieldFilled();
+    }
+  };
+
   return (
     <StyledAccordion
-      defaultExpanded
-      onChange={(_, expanded) => setIsExpanded(expanded)}
+      expanded={controlled ? expanded : isExpanded}
+      onChange={handleChange}
       sx={{
-        // Size
         width: props.width,
         height: props.height,
         minWidth: props.minWidth,
         maxWidth: props.maxWidth,
         minHeight: props.minHeight,
         maxHeight: props.maxHeight,
-
-        // Margins
         margin: props.margin,
         marginTop: props.marginTop,
         marginBottom: props.marginBottom,
         marginLeft: props.marginLeft,
         marginRight: props.marginRight,
-
-        // Padding
         padding: props.padding,
         paddingTop: props.paddingTop,
         paddingBottom: props.paddingBottom,
         paddingLeft: props.paddingLeft,
         paddingRight: props.paddingRight,
-
-        // Border
         border: props.border,
         borderRadius: props.borderRadius || "8px",
         borderColor: props.borderColor,
         borderWidth: props.borderWidth,
         borderStyle: props.borderStyle,
-
-        // Colors
         backgroundColor: props.backgroundColor || LIGHT_GRAY2,
         color: props.color,
-
-        // Position
         position: props.position,
         top: props.top,
         right: props.right,
         bottom: props.bottom,
         left: props.left,
         zIndex: props.zIndex,
-
-        // Display
         display: props.display,
         alignItems: props.alignItems,
         justifyContent: props.justifyContent,
@@ -184,15 +200,12 @@ const NuralKYCAccordion = ({
         flexWrap: props.flexWrap,
         flex: props.flex,
         gap: props.gap,
-
-        // Other
         boxShadow: props.boxShadow,
         cursor: props.cursor,
         transform: props.transform,
         transition: props.transition,
         opacity: props.opacity,
         overflow: props.overflow,
-
         "& .MuiAccordionSummary-root": {
           backgroundColor: isExpanded ? DARK_PURPLE : LIGHT_GRAY2,
           borderRadius: "8px",
@@ -205,10 +218,8 @@ const NuralKYCAccordion = ({
         "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": {
           color: isExpanded ? "white" : DARK_PURPLE,
         },
-
         ...props.sx,
       }}
-      {...props}
     >
       <StyledAccordionSummary
         expandIcon={<ExpandMoreIcon />}
@@ -235,19 +246,8 @@ const NuralKYCAccordion = ({
         {fields.map((field, index) => (
           <FieldContainer key={index} sx={props.fieldContainerStyle}>
             <FieldRow>
-              <TextFieldSection
-                sx={{
-                  display: "block",
-                  textAlign: "left",
-                }}
-              >
-                <FieldLabel
-                  sx={{
-                    textAlign: "left",
-                  }}
-                >
-                  {field.label}
-                </FieldLabel>
+              <TextFieldSection>
+                <FieldLabel>{field.label}</FieldLabel>
                 <NuralTextField
                   placeholder={field.placeholder}
                   display="block"
@@ -264,54 +264,57 @@ const NuralKYCAccordion = ({
 
               {field.onFileSelect && (
                 <FileUploadSection>
-                  <FieldLabel
-                    sx={{
-                      textAlign: "left",
-                    }}
-                  >
-                    UPLOAD FILE
-                  </FieldLabel>
-                  <FileUploadBox
-                    onClick={() => handleFileClick(index)}
-                    sx={{
-                      ...props.fileUploadStyle,
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                      <Box
-                        sx={{
-                          width: "24px",
-                          height: "24px",
-                          backgroundColor: "rgba(198, 206, 237, 0.5)",
-                          borderRadius: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          ...props.fileIconBoxStyle,
-                        }}
-                      >
-                        <img src="./Icons/IconPlaceholder.svg" alt="file" />
+                  <FieldLabel>UPLOAD FILE</FieldLabel>
+                  <Box>
+                    <FileUploadBox
+                      onClick={() => handleFileClick(index)}
+                      sx={{
+                        borderColor: field.fileError ? ERROR_RED : 'transparent',
+                        borderWidth: field.fileError ? '1px' : '0px',
+                        borderStyle: 'solid',
+                        ...props.fileUploadStyle,
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: "24px",
+                            height: "24px",
+                            backgroundColor: "rgba(198, 206, 237, 0.5)",
+                            borderRadius: "4px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            ...props.fileIconBoxStyle,
+                          }}
+                        >
+                          <img src="./Icons/IconPlaceholder.svg" alt="file" />
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            color: color,
+                            fontFamily: "Manrope, sans-serif",
+                            ...props.fileNameStyle,
+                          }}
+                        >
+                          {field.fileName || "File Name"}
+                        </Typography>
                       </Box>
-                      <Typography
-                        sx={{
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          color: color,
-                          fontFamily: "Manrope, sans-serif",
-                          ...props.fileNameStyle,
-                        }}
-                      >
-                        {field.fileName || "File Name"}
-                      </Typography>
-                    </Box>
-                    <AttachFileIcon sx={{ color: color }} />
-                  </FileUploadBox>
-                  <HiddenInput
-                    ref={fileInputRefs.current[index]}
-                    type="file"
-                    accept={field.accept || ".pdf,.jpg,.jpeg,.png"}
-                    onChange={(e) => handleFileChange(index, e)}
-                  />
+                      <AttachFileIcon sx={{ color: color }} />
+                    </FileUploadBox>
+                    <input
+                      type="file"
+                      style={{ display: "none" }}
+                      ref={(el) => (fileInputRefs.current[`file-${index}`] = el)}
+                      accept={field.accept || ".pdf,.jpg,.jpeg,.png"}
+                      onChange={(e) => handleFileChange(index, e)}
+                    />
+                    {field.fileError && (
+                      <ErrorText>{field.fileErrorMessage}</ErrorText>
+                    )}
+                  </Box>
                 </FileUploadSection>
               )}
             </FieldRow>

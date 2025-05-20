@@ -6,7 +6,7 @@ import {
   Button,
   FormHelperText,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import {
@@ -38,6 +38,8 @@ import {
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import Required from "../../../Common/Required";
+import { UploadPageSkeleton } from "../../../Common/SkeletonComponents";
+import { FormSkeleton } from "../../../Common/Skeletons";
 const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
@@ -69,6 +71,7 @@ const Pricemaster = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState("price");
   const [selectedValue, setSelectedValue] = useState("COUNTRY");
+  const [loading, setLoading] = useState(false);
   const [countryDrop, setCountryDrop] = useState([]);
   const [stateDrop, setStateDrop] = useState([]);
   const [priceListNameDropdown, setPriceListNameDropdown] = useState([]);
@@ -77,8 +80,15 @@ const Pricemaster = () => {
   const [showStatus, setShowStatus] = useState(false);
   const [status, setStatus] = useState(false);
   const [title, setTitle] = useState("");
-  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
-
+  
+  // Manage accordions
+  const [accordionState, setAccordionState] = useState({
+    createPriceList: true,
+    priceListName: false,
+    priceListView: false
+  });
+  
+  const targetRef = useRef(null);
   const [errors, setErrors] = useState({
     priceListType: "",
     country: "",
@@ -90,7 +100,9 @@ const Pricemaster = () => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
-
+  const scrollToTarget = () => {
+    targetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [formData, setFormData] = useState({
     type: 1 /* 1: Create, 2: Update, 3: Status Update */,
     priceListType: null /* 1:Country, 2:State */,
@@ -137,7 +149,7 @@ const Pricemaster = () => {
       // Reset country and state when price list type changes
       setFormData((prev) => ({
         ...prev,
-     
+
         priceMappingList: [],
       }));
     }
@@ -266,19 +278,23 @@ const Pricemaster = () => {
   };
 
   const handlePost = async () => {
+    setShowStatus(false);
     if (!validateForm()) {
       return;
     }
 
+    setLoading(true);
     try {
       let res = await ManagePriceListWithMappingAPI(formData);
       if (res.statusCode == 200) {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
-        setTimeout(()=>{
+        // Dispatch custom event to notify price list creation
+        window.dispatchEvent(new CustomEvent("priceListCreated"));
+        setTimeout(() => {
           setShowStatus(false);
-        },3000)
+        }, 3000);
         resetForm();
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         window.location.href = res.invalidDataLink;
@@ -295,8 +311,31 @@ const Pricemaster = () => {
       setStatus(error.status || 500);
       setTitle(error.message || "Internal Server Error");
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Update the accordion management
+  const handleAccordionChange = (accordion) => (event, expanded) => {
+    if (expanded) {
+      // Close all accordions and open only the selected one
+      const newState = {
+        createPriceList: false,
+        priceListName: false,
+        priceListView: false
+      };
+      newState[accordion] = true;
+      setAccordionState(newState);
+    } else {
+      // If closing, just close that accordion
+      setAccordionState({
+        ...accordionState,
+        [accordion]: false
+      });
+    }
+  };
+
 
   return (
     <>
@@ -308,16 +347,16 @@ const Pricemaster = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 10000,
+            zIndex: 1000,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={3} mb={0} ml={1}>
+          <Grid item xs={12} mt={2} mb={0} ml={1}>
             <BreadcrumbsHeader pageTitle="Product" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -328,17 +367,17 @@ const Pricemaster = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={12} lg={12} sx={{ pr: 2 }}>
             <Grid container spacing={2} direction="column">
-              <Grid item>
+             {loading ? <FormSkeleton /> : <Grid item>
                 <NuralAccordion2
                   title="Create Price List Name"
                   backgroundColor={LIGHT_GRAY2}
                   controlled={true}
-                  expanded={accordionExpanded}
-                  onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                  expanded={accordionState.createPriceList}
+                  onChange={handleAccordionChange("createPriceList")}
                 >
                   <Grid container spacing={2} sx={{ width: "100%" }}>
                     {/* First Dropdown */}
-                    <Grid item xs={12} sm={6} md={6} lg={6}>
+                    <Grid item xs={12} sm={6} md={6} lg={6} ref={targetRef}>
                       <Typography
                         variant="h6"
                         sx={{
@@ -454,7 +493,7 @@ const Pricemaster = () => {
                               priceListName: "",
                             }));
                           }}
-                          placeholder="XXXXXXXXXXXXX"
+                          placeholder="ENTER PRICE LIST NAME"
                           backgroundColor={LIGHT_BLUE}
                           error={!!errors.priceListName}
                           helperText={errors.priceListName}
@@ -487,7 +526,7 @@ const Pricemaster = () => {
                               priceListName: "",
                             }));
                           }}
-                          placeholder="XXXXXXXXXXXXX"
+                          placeholder="ENTER PRICE LIST NAME"
                           backgroundColor={LIGHT_BLUE}
                           error={!!errors.priceListName}
                           helperText={errors.priceListName}
@@ -644,7 +683,7 @@ const Pricemaster = () => {
                     </Grid>
                   </Grid>
                 </NuralAccordion2>
-              </Grid>
+              </Grid>}
             </Grid>
             <Grid item xs={12} md={12} lg={12} pr={2} mt={2}>
               {showStatus && (
@@ -654,21 +693,23 @@ const Pricemaster = () => {
           </Grid>
 
           {/* Action Buttons */}
-          {accordionExpanded && (
+          {accordionState.createPriceList && (
             <Grid container spacing={1} sx={{ margin: 2, mt: 0 }}>
               <Grid item xs={12} md={6} sm={6} lg={6}>
                 <NuralButton
                   text="CANCEL"
+                  color={PRIMARY_BLUE2}
                   variant="outlined"
                   borderColor={PRIMARY_BLUE2}
                   onClick={() => {
                     resetForm();
                     setShowStatus(false);
+                    scrollToTarget();
                   }}
                   width="100%"
                 />
               </Grid>
-              <Grid item xs={12} md={6} lg={6}>
+              <Grid item xs={12} sm={6} md={6} lg={6}>
                 <NuralButton
                   text="SAVE"
                   backgroundColor={AQUA}
@@ -679,8 +720,14 @@ const Pricemaster = () => {
               </Grid>
             </Grid>
           )}
-          <PriceListName />
-          <PriceListView />
+          <Grid container spacing={0} mt={-2}>
+            <Grid item xs={12} md={12} lg={12}>
+              <PriceListName accordionExpanded={accordionState.priceListName} onAccordionChange={handleAccordionChange("priceListName")} />
+            </Grid>
+            <Grid item xs={12} md={12} lg={12}>
+              <PriceListView accordionExpanded={accordionState.priceListView} onAccordionChange={handleAccordionChange("priceListView")} />
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </>

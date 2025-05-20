@@ -83,11 +83,11 @@ const CompUpload = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={3} mb={0} ml={1}>
+        <Grid item xs={12} mt={2} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Competition" />
         </Grid>
 
-        <Grid item xs={12} ml={1}>
+        <Grid item xs={12} ml={0}>
           <TabsBar
             tabs={tabs}
             activeTab={activeTab}

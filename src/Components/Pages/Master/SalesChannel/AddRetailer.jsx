@@ -37,9 +37,10 @@ import {
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import { createFilterOptions } from "@mui/material/Autocomplete";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AddSalesChannelSkeleton from "../../../Common/AddSalesChannelSkeleton";
-
+import Required from "../../../Common/Required";
+import { setRetailerID } from "../../../Redux/action";
 
 const tabs = [
   { label: "Add Retailer", value: "add-retailer" },
@@ -65,9 +66,20 @@ const filterOptions = createFilterOptions({
   stringify: (option) => option.retailerCode + " " + option.retailerName,
 });
 
+const autocompleteStyles = {
+  "& .MuiAutocomplete-paper": {
+    maxHeight: "300px",
+    overflowY: "auto",
+  },
+  "& .MuiAutocomplete-listbox": {
+    maxHeight: "300px",
+  },
+};
+
 const AddRetailer = () => {
   const retailerID = useSelector((state) => state.retailerID);
   console.log("retailerID", retailerID);
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = React.useState("add-retailer");
   const [selectedFormat, setSelectedFormat] = React.useState("interface");
   const [isChild, setIsChild] = React.useState(0);
@@ -86,6 +98,53 @@ const AddRetailer = () => {
   const [status, setStatus] = React.useState(0);
   const [title, setTitle] = React.useState("");
   const [parentRetailer, setParentRetailer] = React.useState([]);
+
+  // Add loading states for dropdowns
+  const [isCountryLoading, setIsCountryLoading] = React.useState(false);
+  const [isStateLoading, setIsStateLoading] = React.useState(false);
+  const [isCityLoading, setIsCityLoading] = React.useState(false);
+  const [isSalesChannelLoading, setIsSalesChannelLoading] =
+    React.useState(false);
+  const [isSalesmanLoading, setIsSalesmanLoading] = React.useState(false);
+  const [isReportingHierarchyLoading, setIsReportingHierarchyLoading] =
+    React.useState(false);
+  const [isRetailerTypeLoading, setIsRetailerTypeLoading] =
+    React.useState(false);
+  const [isSCRCategoryLoading, setIsSCRCategoryLoading] = React.useState(false);
+  const [isParentRetailerLoading, setIsParentRetailerLoading] = useState(false);
+
+  // Add a computed loading state that checks if any dropdown is loading
+  const isAnyDropdownLoading = React.useMemo(() => {
+    return (
+      isCountryLoading ||
+      isStateLoading ||
+      isCityLoading ||
+      isSalesChannelLoading ||
+      isSalesmanLoading ||
+      isReportingHierarchyLoading ||
+      isRetailerTypeLoading ||
+      isSCRCategoryLoading ||
+      isParentRetailerLoading ||
+      loading
+    );
+  }, [
+    isCountryLoading,
+    isStateLoading,
+    isCityLoading,
+    isSalesChannelLoading,
+    isSalesmanLoading,
+    isReportingHierarchyLoading,
+    isRetailerTypeLoading,
+    isSCRCategoryLoading,
+    isParentRetailerLoading,
+    loading,
+  ]);
+
+  // Calculate date 1 year ago
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const formattedDate = oneYearAgo.toISOString().split("T")[0];
+
   const [formData, setFormData] = useState({
     accountHolder: "",
     accountNumber: "",
@@ -113,7 +172,7 @@ const AddRetailer = () => {
     longitute: "",
     mobileNumber: "",
     newRetailerCode: "",
-    openingStockDate: "",
+    openingStockDate: formattedDate,
     panNo: "",
     password: "",
     passwordExpiryDays: 0,
@@ -142,7 +201,7 @@ const AddRetailer = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [isParentRetailerLoading, setIsParentRetailerLoading] = useState(false);
+
   const validateField = (name, value) => {
     switch (name) {
       case "retailerTypeId":
@@ -152,7 +211,9 @@ const AddRetailer = () => {
       case "salesChannelID":
         return !value ? "Parent Sales Channel is required" : "";
       case "retailerHierarchyLevelID":
-        return !value ? "Reporting Hierarchy is required" : "";
+        return "";
+
+      // !value ? "Reporting Hierarchy is required" : "";
       case "contactPerson":
         return !value ? "Contact Person is required" : "";
       case "retailerName":
@@ -183,22 +244,63 @@ const AddRetailer = () => {
           : "";
       case "address1":
         return !value ? "Address Line 1 is required" : "";
+      case "groupParentID":
+        return isChild === 1 && !value ? "Parent Retailer is required" : "";
       case "panNo":
-        return !value ? "PAN No. is required" : "";
-      case "bankName":
         return "";
+      case "bankName":
+        // Check if any bank detail is filled
+        const hasAnyBankDetail =
+          formData.bankName ||
+          formData.accountHolder ||
+          formData.accountNumber ||
+          formData.branchLocation ||
+          formData.ifscCode;
+        return hasAnyBankDetail && !value ? "Bank Name is required" : "";
       case "accountHolder":
+        // Check if any bank detail is filled
+        const hasAnyBankDetail2 =
+          formData.bankName ||
+          formData.accountHolder ||
+          formData.accountNumber ||
+          formData.branchLocation ||
+          formData.ifscCode;
+        if (hasAnyBankDetail2 && !value) {
+          return "Account Holder Name is required";
+        }
+        if (value && !/^[A-Za-z\s]*$/.test(value)) {
+          return "Account Holder Name should contain only alphabets";
+        }
         return "";
       case "accountNumber":
-        return !value
-          ? ""
-          : !/^[0-9]{9,18}$/.test(value)
-          ? "Invalid Bank Account Number (9-18 digits)"
+        // Check if any bank detail is filled
+        const hasAnyBankDetail3 =
+          formData.bankName ||
+          formData.accountHolder ||
+          formData.accountNumber ||
+          formData.branchLocation ||
+          formData.ifscCode;
+        return hasAnyBankDetail3 && !value
+          ? "Bank Account Number is required"
           : "";
       case "branchLocation":
-        return "";
+        // Check if any bank detail is filled
+        const hasAnyBankDetail4 =
+          formData.bankName ||
+          formData.accountHolder ||
+          formData.accountNumber ||
+          formData.branchLocation ||
+          formData.ifscCode;
+        return hasAnyBankDetail4 && !value ? "Branch Location is required" : "";
       case "ifscCode":
-        return "";
+        // Check if any bank detail is filled
+        const hasAnyBankDetail5 =
+          formData.bankName ||
+          formData.accountHolder ||
+          formData.accountNumber ||
+          formData.branchLocation ||
+          formData.ifscCode;
+        return hasAnyBankDetail5 && !value ? "IFSC Code is required" : "";
       case "counterPotentialValue":
         return !value
           ? "Counter Potential Value is required"
@@ -216,6 +318,19 @@ const AddRetailer = () => {
       default:
         return "";
     }
+  };
+
+  const validateFile = (file) => {
+    const validTypes = ["image/jpeg", "image/png", "application/pdf"];
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+
+    if (!validTypes.includes(file.type)) {
+      return "File must be JPG, PNG, or PDF";
+    }
+    if (file.size > maxSize) {
+      return "File size must be less than 5MB";
+    }
+    return "";
   };
 
   const validateForm = () => {
@@ -244,18 +359,29 @@ const AddRetailer = () => {
 
     // Handle special cases for dependent dropdowns
     if (field === "countryID") {
+      // Clear state and city dropdowns when country changes
+      setStateDrop([]);
+      setCityDrop([]);
+      // Reset state and city IDs in formData
+      setFormData((prev) => ({
+        ...prev,
+        stateID: 0,
+        cityID: 0,
+      }));
       if (value) {
         fetchStateDrop(value);
-      } else {
-        setStateDrop([]);
-        setCityDrop([]);
       }
     }
     if (field === "stateID") {
+      // Clear city dropdown when state changes
+      setCityDrop([]);
+      // Reset city ID in formData
+      setFormData((prev) => ({
+        ...prev,
+        cityID: 0,
+      }));
       if (value) {
         fetchCityDrop(value);
-      } else {
-        setCityDrop([]);
       }
     }
 
@@ -289,11 +415,15 @@ const AddRetailer = () => {
       case "mobileNumber":
         processedValue = processedValue.slice(0, 10);
         break;
+      case "accountHolder":
+        // Only allow alphabets and spaces
+        processedValue = processedValue.replace(/[^A-Za-z\s]/g, "");
+        processedValue = processedValue.slice(0, 50);
+        break;
       case "contactPerson":
       case "retailerName":
       case "retailerCode":
       case "bankName":
-      case "accountNumber":
       case "branchLocation":
         processedValue = processedValue.slice(0, 50);
         break;
@@ -323,6 +453,8 @@ const AddRetailer = () => {
           setStatus(false);
           setTitle("");
         }, 3000);
+        dispatch(setRetailerID(null));
+
         handleCancel(); // Reset form after successful creation
       } else {
         setShowStatus(true);
@@ -368,7 +500,7 @@ const AddRetailer = () => {
       longitute: "",
       mobileNumber: "",
       newRetailerCode: "",
-      openingStockDate: "",
+      openingStockDate: formattedDate,
       panNo: "",
       password: "",
       passwordExpiryDays: 0,
@@ -488,8 +620,29 @@ const AddRetailer = () => {
   useEffect(() => {
     if (retailerID) {
       fetchRetailerData();
+    } else {
+      dispatch(setRetailerID(null));
     }
+
+    // Cleanup function to clear retailerID on unmount
+    return () => {
+      dispatch(setRetailerID(null));
+    };
   }, [retailerID]);
+
+  // Add effect to handle page refresh
+  useEffect(() => {
+    // Clear retailerID on page refresh
+    const handleBeforeUnload = () => {
+      dispatch(setRetailerID(null));
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const fetchRetailerData = async () => {
     let body = {
@@ -512,26 +665,86 @@ const AddRetailer = () => {
       countryID: 0,
       leaveTypeID: 0,
     };
+    setLoading(true);
     try {
       let res = await getRetailer(body);
       if (res.statusCode == "200") {
         console.log("res.getRetailerList", res.getRetailerList[0]);
         let editData = res.getRetailerList[0];
 
-        // setFormData({
-        //   ...editData,
-        //   retailerID: editData.retailerID,
-        //   retailerName: editData.retailerName,
-        //   retailerCode: editData.retailerCode,
-        //   salesChannelID: editData.salesChannelID,
-        //   stateID: editData.stateID,
-        //   countryID: editData.countryID,
-        //   retailerTypeID: editData.retailerTypeID,
-        //   scrCategoryID: editData.scrCategoryID,
-        //   groupParentID: editData.groupParentID,
-        //   isIsp: editData.isIsp,
+        setFormData({
+          accountHolder: editData.accountHolder || "",
+          accountNumber: editData.accountNumber || "",
+          address1: editData.address1 || "",
+          address2: editData.address2 || "",
+          approveRemarks: editData.approvalRemarks || "",
+          approveStatus: editData.approveStatus || 0,
+          areaID: editData.areaID || 0,
+          bankName: editData.bankName || "",
+          branchLocation: editData.branchLocation || "",
+          cityID: editData.cityID || 0,
+          contactPerson: editData.contactPerson || "",
+          counterPotentialVolume: editData.counterSize || null,
+          counterPotentialValue: editData.counterValue || null,
+          counterSize: editData.counterSize || null,
+          countryID: editData.countryID || 0,
+          createLoginOrNot: 0,
+          dateOfBirth: editData.dob || "",
+          email: editData.email || "",
+          groupParentID: editData.parentRetailerID || 0,
+          gstin_No: editData.gstNumber || "",
+          ifscCode: editData.ifscCode || "",
+          isIsp: editData.isRetailerISPMapping || 0,
+          latitute: editData.latitute || "",
+          longitute: editData.longitute || "",
+          mobileNumber: editData.mobileNumber || "",
+          newRetailerCode: editData.retailerCode || "",
+          openingStockDate: editData.openingStockDate || formattedDate,
+          panNo: editData.panNo || "",
+          password: editData.password || "",
+          passwordExpiryDays: 0,
+          passwordSalt: editData.passwordSalt || "",
+          phoneNumber: editData.phoneNumber || "",
+          pinCode: editData.pinCode || null,
+          referanceCode: editData.referanceCode || "",
+          retailerCode: editData.retailerCode || "",
+          retailerHierarchyLevelID: editData.orgnhierarchyID || 0,
+          retailerID: editData.retailerID || 0,
+          retailerName: editData.retailerName || "",
+          retailerOrgnHierarchyID: editData.orgnhierarchyID || 0,
+          retailerTypeId: editData.retailerCategoryID || 0,
+          salesChannelID: editData.salesChannelID || 0,
+          salesmanID: editData.salesmanID || 0,
+          stateID: editData.stateID || 0,
+          status: editData.status || 0,
+          tehsilID: editData.tehsilID || 0,
+          tinNumber: editData.tinNumber || "",
+          updateBankDetail: 1,
+          userName: editData.loginName || "",
+          whatsAppNumber: editData.whatsAppNumber || "",
+          scrCategoryID: editData.scrCategoryID || 0,
+          PanFilePath: editData.PanFilePath || "",
+          GstFilePath: editData.GstFilePath || "",
+        });
 
-        // });
+        // Set isChild based on parentRetailerID
+        setIsChild(editData.parentRetailerID ? 1 : 0);
+
+        // If there's a parent retailer, fetch parent retailer data
+        if (editData.parentRetailerID) {
+          getParentRetailer();
+        }
+
+        // Fetch dependent dropdowns
+        if (editData.countryID) {
+          fetchStateDrop(editData.countryID);
+        }
+        if (editData.stateID) {
+          fetchCityDrop(editData.stateID);
+        }
+        if (editData.salesChannelID) {
+          fetchReportingHierarchyDrop(editData.salesChannelID);
+        }
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -541,24 +754,31 @@ const AddRetailer = () => {
       setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.message || "Internal Server Error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCountryDrop = async () => {
     let body = {
       CountryName: "",
-      CallType: "1", // 0 = bind for table data, 1= active lists for dropdown*/
-      pageIndex: 1 /*-1 for export to excel */,
+      CallType: "1",
+      pageIndex: 1,
       pageSize: 10,
     };
     try {
+      setIsCountryLoading(true);
       let res = await Countrymasterlist(body);
       if (res.statusCode == "200") {
         setCountryDrop(res.countryMasterList);
       } else {
         setCountryDrop([]);
       }
-    } catch (error) {}
+    } catch (error) {
+      setCountryDrop([]);
+    } finally {
+      setIsCountryLoading(false);
+    }
   };
 
   const fetchStateDrop = async (countryID) => {
@@ -569,29 +789,39 @@ const AddRetailer = () => {
     };
 
     try {
+      setIsStateLoading(true);
       let res = await GetStateListForDropdown(body);
       if (res.statusCode == "200") {
         setStateDrop(res.stateDropdownList);
       } else {
         setStateDrop([]);
       }
-    } catch (error) {}
+    } catch (error) {
+      setStateDrop([]);
+    } finally {
+      setIsStateLoading(false);
+    }
   };
 
   const fetchCityDrop = async (stateID) => {
     let body = {
-      searchConditions: 1, //it will be 1
+      searchConditions: 1,
       stateID: stateID,
       cityID: 0,
     };
     try {
+      setIsCityLoading(true);
       let res = await GetCityListForDropdown(body);
       if (res.statusCode == "200") {
         setCityDrop(res.cityDropdownList);
       } else {
         setCityDrop([]);
       }
-    } catch (error) {}
+    } catch (error) {
+      setCityDrop([]);
+    } finally {
+      setIsCityLoading(false);
+    }
   };
 
   const fetchSalesmanDrop = async () => {
@@ -600,10 +830,11 @@ const AddRetailer = () => {
       salesmanName: "",
       salesmanCode: "",
       salesChannelID: 0,
-      type: 1, // will be pass 1
+      type: 1,
       mapwithRetailer: 0,
     };
     try {
+      setIsSalesmanLoading(true);
       const res = await getSalesmaninfo(body);
       if (res.statusCode == "200") {
         console.log("res.salesmanDropdownList", res.salesmanDropdownList);
@@ -613,15 +844,18 @@ const AddRetailer = () => {
       }
     } catch (error) {
       console.error("Error in fetchSalesmanDrop:", error);
+    } finally {
+      setIsSalesmanLoading(false);
     }
   };
 
   const fetchReportingHierarchyDrop = async (value) => {
     let body = {
-      salesChannelID: value, //must be pass saleschannelID
+      salesChannelID: value,
     };
 
     try {
+      setIsReportingHierarchyLoading(true);
       const res = await getReportingHierarchyName(body);
       console.log(
         "res.reportingHierarchyDropdownList",
@@ -635,6 +869,8 @@ const AddRetailer = () => {
       }
     } catch (error) {
       console.error("Error in fetchReportingHierarchyDrop:", error);
+    } finally {
+      setIsReportingHierarchyLoading(false);
     }
   };
 
@@ -646,6 +882,7 @@ const AddRetailer = () => {
     };
 
     try {
+      setIsSalesChannelLoading(true);
       const res = await GetSalesChannelListForDropdown(body);
       if (res.statusCode == "200") {
         setSalesChannelDrop(res.salesChannelDropdownList);
@@ -654,6 +891,8 @@ const AddRetailer = () => {
       }
     } catch (error) {
       console.error("Error in fetchSalesChannelDrop:", error);
+    } finally {
+      setIsSalesChannelLoading(false);
     }
   };
 
@@ -661,12 +900,13 @@ const AddRetailer = () => {
     let body = {
       scrCategoryId: 0,
       scrCategoryName: "",
-      mode: 3 /* 0 = bind grid & excel export, 1= get list for editing, 3= bind dropdown list */,
-      status: 1, //0-Deactive, 1-Active, 2-All
-      pageIndex: 1, //1-UI,-1-export excel
+      mode: 3,
+      status: 1,
+      pageIndex: 1,
       pageSize: 1000,
     };
     try {
+      setIsSCRCategoryLoading(true);
       const res = await SCRCategoryList(body);
       if (res.statusCode == "200") {
         console.log("res.scrCategoryList", res.scrCategoryList);
@@ -676,60 +916,78 @@ const AddRetailer = () => {
       }
     } catch (error) {
       console.error("Error in fetchSCRCategoryDrop:", error);
+    } finally {
+      setIsSCRCategoryLoading(false);
     }
   };
 
   const fetchRetailerDrop = async () => {
     let body = {
-      SearchConditions: 1, //default 1
+      SearchConditions: 1,
+      pageSize: 10,
     };
     try {
+      setIsRetailerTypeLoading(true);
       const res = await getRetailerlist(body);
       if (res.statusCode == "200") {
-        setRetailerDrop(res.retailerMasterList);
+        setRetailerDrop(res.retailerMasterList || []);
       } else {
         setRetailerDrop([]);
       }
     } catch (error) {
       console.error("Error in fetchRetailerDrop:", error);
+      setRetailerDrop([]);
+    } finally {
+      setIsRetailerTypeLoading(false);
     }
   };
 
   const fields = [
     {
       label: "GST NO.",
-      placeholder: "XXXXXXXXXXXXX",
+      placeholder: "ENTER GST NO.",
       name: "gst",
       value: formData.gstin_No || "",
       onChange: (e) => handleChange("gstin_No", e.target.value),
       fileName: formData.GstFilePath ? formData.GstFilePath.name : "File Name",
       onFileSelect: (fileData) => {
-        handleChange("GstFilePath", fileData.file);
+        const error = validateFile(fileData.file);
+        if (error) {
+          setErrors((prev) => ({ ...prev, GstFilePath: error }));
+        } else {
+          handleChange("GstFilePath", fileData.file);
+          setErrors((prev) => ({ ...prev, GstFilePath: "" }));
+        }
       },
       accept: ".pdf,.jpg,.jpeg,.png",
-      error: !!errors.gstin_No,
-      errorMessage: errors.gstin_No,
+      error: !!errors.gstin_No || !!errors.GstFilePath,
+      errorMessage: errors.gstin_No || errors.GstFilePath,
     },
     {
       label: "PAN NO.",
-      placeholder: "XXXXXXXXXXXXX",
+      placeholder: "ENTER PAN NO.",
       name: "pan",
       value: formData.panNo || "",
       onChange: (e) => handleChange("panNo", e.target.value),
       fileName: formData.PanFilePath ? formData.PanFilePath.name : "File Name",
       onFileSelect: (fileData) => {
-        handleChange("PanFilePath", fileData.file);
+        const error = validateFile(fileData.file);
+        if (error) {
+          setErrors((prev) => ({ ...prev, PanFilePath: error }));
+        } else {
+          handleChange("PanFilePath", fileData.file);
+          setErrors((prev) => ({ ...prev, PanFilePath: "" }));
+        }
       },
       accept: ".pdf,.jpg,.jpeg,.png",
-      error: !!errors.panNo,
-      errorMessage: errors.panNo,
+      error: !!errors.panNo || !!errors.PanFilePath,
+      errorMessage: errors.panNo || errors.PanFilePath,
     },
   ];
 
-  if (loading) {
-    return <AddSalesChannelSkeleton />;
+  if (isAnyDropdownLoading) {
+    return <AddSalesChannelSkeleton title="Retailer Details" />;
   }
-
 
   return (
     <Grid container spacing={0}>
@@ -744,8 +1002,8 @@ const AddRetailer = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={3} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Retailers" />
+        <Grid item xs={12} mt={2} mb={0} ml={1}>
+          <BreadcrumbsHeader pageTitle="Retailer" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -764,9 +1022,10 @@ const AddRetailer = () => {
               <NuralAccordion2
                 title="Organization Details"
                 backgroundColor={LIGHT_GRAY2}
+                defaultExpanded={true}
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={12} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -794,7 +1053,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -807,7 +1066,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      RETAILER TYPE
+                      RETAILER TYPE <Required />
                     </Typography>
                     <NuralAutocomplete
                       label="Retailer Type"
@@ -832,6 +1091,7 @@ const AddRetailer = () => {
                       }
                       error={!!errors.retailerTypeId}
                       errorMessage={errors.retailerTypeId}
+                      loading={isRetailerTypeLoading}
                     />
                     {errors.retailerTypeId && (
                       <FormHelperText
@@ -848,7 +1108,7 @@ const AddRetailer = () => {
                     )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -861,7 +1121,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      RETAILER CATEGORY
+                      RETAILER CATEGORY <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -885,6 +1145,7 @@ const AddRetailer = () => {
                       }
                       error={!!errors.scrCategoryID}
                       errorMessage={errors.scrCategoryID}
+                      loading={isSCRCategoryLoading}
                     />
                     {errors.scrCategoryID && (
                       <FormHelperText
@@ -918,12 +1179,14 @@ const AddRetailer = () => {
                       ISD ON COUNTER
                     </Typography>
                     <NuralRadioButton
-                      onChange={(value) => handleChange("isIsp", value)}
+                      onChange={(value) =>
+                        handleChange("isIsp", parseInt(value))
+                      }
                       options={[
-                        { value: 1, label: "Yes" },
-                        { value: 0, label: "No" },
+                        { value: "1", label: "Yes" },
+                        { value: "0", label: "No" },
                       ]}
-                      value={formData.isIsp}
+                      value={formData.isIsp.toString()}
                       width="100%"
                     />
                   </Grid>
@@ -941,7 +1204,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      PARENT SALES CHANNEL
+                      PARENT SALES CHANNEL <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -965,6 +1228,7 @@ const AddRetailer = () => {
                       }
                       error={!!errors.salesChannelID}
                       errorMessage={errors.salesChannelID}
+                      loading={isSalesChannelLoading}
                     />
                     {errors.salesChannelID && (
                       <FormHelperText
@@ -999,15 +1263,16 @@ const AddRetailer = () => {
                     </Typography>
                     <NuralRadioButton
                       options={[
-                        { value: 1, label: "Yes" },
-                        { value: 0, label: "No" },
+                        { value: "1", label: "Yes" },
+                        { value: "0", label: "No" },
                       ]}
                       onChange={(value) => {
-                        console.log("Setting isChild to:", value);
-                        setIsChild(value);
-                        getParentRetailer();
+                        setIsChild(parseInt(value));
+                        if (parseInt(value) === 1) {
+                          getParentRetailer();
+                        }
                       }}
-                      value={isChild}
+                      value={isChild.toString()}
                       margin="0px"
                       width="100%"
                     />
@@ -1027,7 +1292,7 @@ const AddRetailer = () => {
                             mb: 1,
                           }}
                         >
-                          PARENT RETAILER NAME
+                          PARENT RETAILER NAME {isChild === 1 && <Required />}
                         </Typography>
                         <NuralAutocomplete
                           width="100%"
@@ -1050,11 +1315,13 @@ const AddRetailer = () => {
                             ) || null
                           }
                           loading={isParentRetailerLoading}
-                          error={!!errors.groupParentID}
-                          errorMessage={errors.groupParentID}
+                          error={isChild === 1 && !!errors.groupParentID}
+                          errorMessage={
+                            isChild === 1 ? errors.groupParentID : ""
+                          }
                           filterOptions={filterOptions}
                         />
-                        {errors.groupParentID && (
+                        {isChild == 1 && errors.groupParentID && (
                           <FormHelperText
                             sx={{
                               color: ERROR_MSSG,
@@ -1084,7 +1351,7 @@ const AddRetailer = () => {
                             mb: 1,
                           }}
                         >
-                          PARENT RETAILER CODE
+                          PARENT RETAILER CODE {isChild === 1 && <Required />}
                         </Typography>
                         <NuralAutocomplete
                           width="100%"
@@ -1107,11 +1374,13 @@ const AddRetailer = () => {
                             ) || null
                           }
                           loading={isParentRetailerLoading}
-                          error={!!errors.groupParentID}
-                          errorMessage={errors.groupParentID}
+                          error={isChild === 1 && !!errors.groupParentID}
+                          errorMessage={
+                            isChild === 1 ? errors.groupParentID : ""
+                          }
                           filterOptions={filterOptions}
                         />
-                        {errors.groupParentID && (
+                        {isChild === 1 && errors.groupParentID && (
                           <FormHelperText
                             sx={{
                               color: ERROR_MSSG,
@@ -1127,7 +1396,7 @@ const AddRetailer = () => {
                       </Grid>
                     </>
                   )}
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1140,7 +1409,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      REPORTING HIERARCHY NAME
+                      REPORTING HIERARCHY NAME <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1152,7 +1421,7 @@ const AddRetailer = () => {
                       }
                       onChange={(event, newValue) => {
                         handleChange(
-                          "retailerHierarchyLevelID",
+                          "retailerOrgnHierarchyID",
                           newValue?.orgnhierarchyID || null
                         );
                       }}
@@ -1160,11 +1429,12 @@ const AddRetailer = () => {
                         reportingHierarchyDrop.find(
                           (option) =>
                             option.orgnhierarchyID ===
-                            formData.retailerHierarchyLevelID
+                            formData.retailerOrgnHierarchyID
                         ) || null
                       }
                       error={!!errors.retailerHierarchyLevelID}
                       errorMessage={errors.retailerHierarchyLevelID}
+                      loading={isReportingHierarchyLoading}
                     />
                     {errors.retailerHierarchyLevelID && (
                       <FormHelperText
@@ -1174,7 +1444,6 @@ const AddRetailer = () => {
                           marginTop: "4px",
                           fontFamily: "Manrope, sans-serif",
                           paddingLeft: "8px",
-                          fontWeight: 400,
                         }}
                       >
                         {errors.retailerHierarchyLevelID}
@@ -1182,7 +1451,7 @@ const AddRetailer = () => {
                     )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1217,22 +1486,8 @@ const AddRetailer = () => {
                           (option) => option.salesmanID === formData.salesmanID
                         ) || null
                       }
-                      error={!!errors.salesmanID}
-                      errorMessage={errors.salesmanID}
+                      loading={isSalesmanLoading}
                     />
-                    {errors.salesmanID && (
-                      <FormHelperText
-                        sx={{
-                          color: ERROR_MSSG,
-                          fontSize: "12px",
-                          marginTop: "4px",
-                          fontFamily: "Manrope, sans-serif",
-                          paddingLeft: "8px",
-                        }}
-                      >
-                        {errors.salesmanID}
-                      </FormHelperText>
-                    )}
                   </Grid>
 
                   <Grid item xs={12} md={12} lg={12}>
@@ -1248,7 +1503,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      CONTACT PERSON
+                      CONTACT PERSON <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
@@ -1261,11 +1516,6 @@ const AddRetailer = () => {
                       error={!!errors.contactPerson}
                       errorMessage={errors.contactPerson}
                       maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
                 </Grid>
@@ -1276,9 +1526,10 @@ const AddRetailer = () => {
               <NuralAccordion2
                 title="Retailer Details"
                 backgroundColor={LIGHT_GRAY2}
+                defaultExpanded={true}
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1291,7 +1542,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      RETAILER NAME
+                      RETAILER NAME <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
@@ -1304,15 +1555,10 @@ const AddRetailer = () => {
                       error={!!errors.retailerName}
                       errorMessage={errors.retailerName}
                       maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1335,7 +1581,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1348,28 +1594,25 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      MOBILE NO.
+                      MOBILE NO. <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
                       value={formData.mobileNumber}
-                      onChange={(e) =>
-                        handleChange("mobileNumber", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, 10);
+                        handleChange("mobileNumber", value);
+                      }}
                       placeholder="ENTER MOBILE NO."
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.mobileNumber}
                       errorMessage={errors.mobileNumber}
-                      maxLength={10}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 10) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1382,7 +1625,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      EMAIL ID
+                      EMAIL ID <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
@@ -1395,7 +1638,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1408,7 +1651,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      COUNTRY
+                      COUNTRY <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1429,6 +1672,7 @@ const AddRetailer = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.countryID}
                       errorMessage={errors.countryID}
+                      loading={isCountryLoading}
                     />
                     {errors.countryID && (
                       <FormHelperText
@@ -1445,7 +1689,7 @@ const AddRetailer = () => {
                     )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1458,7 +1702,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      STATE
+                      STATE <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1479,6 +1723,7 @@ const AddRetailer = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.stateID}
                       errorMessage={errors.stateID}
+                      loading={isStateLoading}
                     />
                     {errors.stateID && (
                       <FormHelperText
@@ -1495,7 +1740,7 @@ const AddRetailer = () => {
                     )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1508,7 +1753,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      CITY
+                      CITY <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1529,6 +1774,7 @@ const AddRetailer = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.cityID}
                       errorMessage={errors.cityID}
+                      loading={isCityLoading}
                     />
                     {errors.cityID && (
                       <FormHelperText
@@ -1544,7 +1790,7 @@ const AddRetailer = () => {
                       </FormHelperText>
                     )}
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1557,25 +1803,24 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      PIN CODE
+                      PIN CODE <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
                       value={formData.pinCode}
-                      onChange={(e) => handleChange("pinCode", e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, 6);
+                        handleChange("pinCode", value);
+                      }}
                       placeholder="ENTER PIN CODE"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.pinCode}
                       errorMessage={errors.pinCode}
-                      maxLength={6}
-                      onKeyPress={(e) => {
-                        if (e.target.value.length >= 6) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1588,7 +1833,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      ADDRESS LINE 1
+                      ADDRESS LINE 1 <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
@@ -1601,7 +1846,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1636,6 +1881,7 @@ const AddRetailer = () => {
               <NuralAccordion2
                 title="Business Details"
                 backgroundColor={LIGHT_GRAY2}
+                defaultExpanded={true}
               >
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={12} lg={12}>
@@ -1651,7 +1897,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      OPENING STOCK DATE*
+                      OPENING STOCK DATE <Required />
                     </Typography>
                     <NuralCalendar
                       value={formData.openingStockDate}
@@ -1664,14 +1910,9 @@ const AddRetailer = () => {
                       name="openingStockDate"
                       error={!!errors.openingStockDate}
                     />
-                    {errors.openingStockDate && (
-                      <FormHelperText error sx={{ mt: 0.5, ml: 1 }}>
-                        {errors.openingStockDate}
-                      </FormHelperText>
-                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1684,7 +1925,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      COUNTER POTENTIAL (VALUE)
+                      COUNTER POTENTIAL (VALUE) <Required />
                     </Typography>
                     <NuralTextField
                       value={formData.counterPotentialValue}
@@ -1696,15 +1937,10 @@ const AddRetailer = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.counterPotentialValue}
                       errorMessage={errors.counterPotentialValue}
-                      onKeyPress={(e) => {
-                        if (!/[0-9.]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1717,7 +1953,7 @@ const AddRetailer = () => {
                         mb: 1,
                       }}
                     >
-                      COUNTER POTENTIAL (VOLUME)
+                      COUNTER POTENTIAL (VOLUME) <Required />
                     </Typography>
                     <NuralTextField
                       value={formData.counterSize}
@@ -1729,11 +1965,6 @@ const AddRetailer = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.counterSize}
                       errorMessage={errors.counterSize}
-                      onKeyPress={(e) => {
-                        if (!/[0-9.]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
                 </Grid>
@@ -1744,9 +1975,10 @@ const AddRetailer = () => {
               <NuralAccordion2
                 title="Banking Details"
                 backgroundColor={LIGHT_GRAY2}
+                defaultExpanded={true}
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1778,7 +2010,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1812,7 +2044,7 @@ const AddRetailer = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1830,26 +2062,20 @@ const AddRetailer = () => {
                     <NuralTextField
                       width="100%"
                       value={formData.accountNumber}
-                      onChange={(e) =>
-                        handleChange("accountNumber", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, 20);
+                        handleChange("accountNumber", value);
+                      }}
                       placeholder="ENTER BANK ACCOUNT NUMBER"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.accountNumber}
                       errorMessage={errors.accountNumber}
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.key === " ") {
-                          e.preventDefault();
-                        }
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
-                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1920,9 +2146,10 @@ const AddRetailer = () => {
               <NuralAccordion2
                 title="Geolocation"
                 backgroundColor={LIGHT_GRAY2}
+                defaultExpanded={true}
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1939,14 +2166,14 @@ const AddRetailer = () => {
                     </Typography>
                     <NuralTextField
                       width="100%"
-                      value={formData.latitude}
-                      onChange={(e) => handleChange("latitude", e.target.value)}
+                      value={formData.latitute}
+                      onChange={(e) => handleChange("latitute", e.target.value)}
                       placeholder="ENTER LATITUDE"
                       backgroundColor={LIGHT_BLUE}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1963,9 +2190,9 @@ const AddRetailer = () => {
                     </Typography>
                     <NuralTextField
                       width="100%"
-                      value={formData.longitude}
+                      value={formData.longitute}
                       onChange={(e) =>
-                        handleChange("longitude", e.target.value)
+                        handleChange("longitute", e.target.value)
                       }
                       placeholder="ENTER LONGITUDE"
                       backgroundColor={LIGHT_BLUE}
@@ -1984,7 +2211,7 @@ const AddRetailer = () => {
             </Grid>
             <Grid item mt={-2} mb={2}>
               <Grid container spacing={1}>
-                <Grid item xs={12} md={6} lg={6}>
+                <Grid item xs={12} sm={6} md={6} lg={6}>
                   <NuralButton
                     text="CANCEL"
                     variant="outlined"
@@ -1993,13 +2220,14 @@ const AddRetailer = () => {
                       handleCancel();
                       setErrors({});
                       setShowStatus(false);
+                      dispatch(setRetailerID(null));
                     }}
                     width="100%"
                   />
                 </Grid>
-                <Grid item xs={12} md={6} lg={6}>
+                <Grid item xs={12} sm={6} md={6} lg={6}>
                   <NuralButton
-                    text="PROCEED"
+                    text={retailerID != null ? "UPDATE" : "SAVE"}
                     backgroundColor={AQUA}
                     variant="contained"
                     onClick={handlePost}

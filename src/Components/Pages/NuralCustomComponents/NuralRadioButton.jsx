@@ -51,8 +51,8 @@ const NuralRadioButton = ({
   const handleChange = (event) => {
     // Get the selected value directly from the event
     const selectedValue = event.target.value;
-    console.log("NuralRadioButton selected value:", selectedValue);
-    
+    // console.log("NuralRadioButton selected value:", selectedValue);
+
     // Call onChange with just the value instead of the event
     if (onChange) {
       // If clicking the same value, unselect it
@@ -83,7 +83,7 @@ const NuralRadioButton = ({
           display: props.display || "flex",
           justifyContent: props.justifyContent || "flex-start",
           alignItems: props.alignItems || "start",
-          border: props.border ,
+          border: props.border,
           width: props.width || "100%",
           height: props.height || "100%",
           padding: props.padding || "0",
@@ -102,7 +102,7 @@ const NuralRadioButton = ({
             control={
               <StyledRadio
                 sx={{
-                 
+
                   // Size
                   width: props.width || "24px",
                   height: props.height || "24px",
@@ -110,7 +110,7 @@ const NuralRadioButton = ({
                   maxWidth: props.maxWidth,
                   minHeight: props.minHeight,
                   maxHeight: props.maxHeight,
-                  
+
                   // Margins
                   margin: props.margin,
                   marginTop: props.marginTop,
@@ -130,10 +130,9 @@ const NuralRadioButton = ({
                   "&.Mui-checked": {
                     color: props.checkedColor || DARK_PURPLE,
                   },
-
                   // States
                   "&:hover": {
-                 
+
                     // "& .MuiSvgIcon-root": {
                     //   color: props.hoverColor || PRIMARY_LIGHT_PURPLE,
                     // },
@@ -143,9 +142,11 @@ const NuralRadioButton = ({
                   // },
                   ...props.sx,
                 }}
+                disabled={option.disabled || false}
               />
             }
             label={option.label}
+            disabled={option.disabled || false}
             sx={{
               margin: 0,
               // Label styling

@@ -1,4 +1,4 @@
-import { Divider, Grid, Stack, Typography, Skeleton } from "@mui/material";
+import {Grid } from "@mui/material";
 import React from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import {
@@ -12,17 +12,14 @@ import TabsBar from "../../../Common/TabsBar";
 import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
 import NuralFileUpload from "../../NuralCustomComponents/NuralFileUpload";
 import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import { useNavigate } from "react-router-dom";
 import {
   GetAllTemplateDataV2,
   GetStockBinTypeInfo,
-  UploadPrimarySales,
   UploadSecondarySales,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
-import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import { templateUrl } from "../../../Common/urls";
@@ -31,7 +28,6 @@ const options = [
   { value: "batch", label: "Batch" },
 ];
 
-const log = JSON.parse(localStorage.getItem("log")) || {};
 
 const BalanceLeaveBulk = () => {
   const [activeTab, setActiveTab] = React.useState("manage");
@@ -44,6 +40,10 @@ const BalanceLeaveBulk = () => {
   const [isLoading, setIsLoading] = React.useState(true);
 
   const tabs = [
+    { label: "Attendance Upload", value: "attendance-upload" },
+
+    { label: "Leave Type", value: "leave-type" },
+    { label: "Leave Allocation", value: "leave-allocation" },
     { label: "Manage", value: "manage" },
     { label: "IMEI Binding", value: "imei-binding" },
   ];
@@ -60,7 +60,7 @@ const BalanceLeaveBulk = () => {
         }, 1000);
       },
     },
-  ];
+  ]
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);

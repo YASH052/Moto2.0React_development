@@ -14,6 +14,7 @@ import {
   PRIMARY_BLUE,
   PRIMARY_LIGHT_PURPLE2,
   WHITE,
+  ERROR_RED2,
 } from "../../Common/colors";
 import NuralLoginTextField from "../NuralCustomComponents/NuralLoginTextField";
 import NuralButton from "../NuralCustomComponents/NuralButton";
@@ -27,11 +28,12 @@ import { baseUrl } from "../../Common/urls";
 import Slider from "../../Common/Slider";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import LoginFooter from "../../Common/LoginFooter";
 
 const ForgotPasswordForm = () => {
   // const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const log = JSON.parse(localStorage.getItem("log"));
-  console.log("log", log);
+  
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -50,6 +52,7 @@ const ForgotPasswordForm = () => {
   });
   const [displayField, setDisplayField] = useState("");
   const [otpResponse, setOtpResponse] = useState("");
+  const isSmallScreen = useMediaQuery("(max-width:1440px)");
 
   const ResetHooks = () => {
     navigate("/reset-password");
@@ -138,6 +141,8 @@ const ForgotPasswordForm = () => {
         emailID: email,
       });
       if (res.status === 200) {
+        localStorage.setItem("userName", username);
+        localStorage.setItem("email", email);
         toast.success(res.data.statusMessage);
         setOtpResponse(res.data.otp);
         setSendOtp(true);
@@ -271,7 +276,7 @@ const ForgotPasswordForm = () => {
               <Typography
                 sx={{
                   textAlign: "center",
-                  marginBottom: "32px",
+                  marginBottom: "10px",
                   fontSize: "14px",
                   color: PRIMARY_LIGHT_PURPLE2,
                 }}
@@ -381,6 +386,7 @@ const ForgotPasswordForm = () => {
                     color={GREEN_COLOR}
                     onClick={handleSendOtp}
                     width="50%"
+                    marginTop={isSmallScreen ? "-10px" : "0px"}
                     border="none"
                     fontSize="14px"
                   />
@@ -391,6 +397,7 @@ const ForgotPasswordForm = () => {
                     onClick={handleCancel}
                     color={"white"}
                     width="50%"
+                    marginTop={isSmallScreen ? "-10px" : "0px"}
                     fontSize="14px"
                     borderColor="white"
                     fontWeight="400"
@@ -491,50 +498,7 @@ const ForgotPasswordForm = () => {
       {/* </Box> */}
 
       {/* Fixed Bottom Section (30% Height) */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          height: "30vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Image Slider Section (85% of 30vh) */}
-        <Slider />
-
-        {/* Footer (15% of 30vh) */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "4px",
-          }}
-        >
-          <Grid
-            container
-            sx={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              width: "100%",
-              backgroundColor: AQUA,
-              textAlign: "center",
-              padding: "0px",
-            }}
-          >
-            <Grid item xs={12}>
-              <img
-                src="/Images/NuralFootLogo.png"
-                alt="logo"
-                style={{ width: "8%" }} // Adjust image size as needed
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
+      <LoginFooter/>
 
       <Toaster />
     </Box>

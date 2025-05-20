@@ -14,16 +14,17 @@ const salesReports = [
 ];
 
 const stockReports = [
-  { title: "STOCK REPORT", link: "/stock-report" },
+  { title: "STOCK REPORT", link: "/download-stock-report" },
   { title: "SALESCHANNEL STOCK SB", link: "/saleschannel-stock-sb" },
   { title: "STOCK ADJUSTMENT REPORT", link: "/stock-adjustment-report" },
   { title: "SERIAL NO. MOVEMENT", link: "/serial-no-moment" },
+  { title: "REL STOCK REPORT", link: "/rel-store-reports" },
 ];
 
 const appReports = [
   { title: "L&D ASSESSMENT REPORT", link: "#" },
-  { title: "FEEDBACK REPORT", link: "#" },
-  { title: "MERCHANDIZING REPORT", link: "merchandizing-report" },
+  { title: "FEEDBACK REPORT", link: "/feedback-report" },
+  { title: "MERCHANDIZING REPORT", link: "/merchandizing-report" },
   { title: "SURVEY REPORT", link: "#" },
   { title: "PRE BOOKING REPORT", link: "prebooking-report" },
   { title: "RANKING REPORT", link: "/ranking-report" },
@@ -37,7 +38,7 @@ const retailReports = [
 ];
 
 const targetIncentiveReports = [
-  { title: "TARGET VS ACHIEVEMENT REPORT", link: "#" },
+  { title: "TARGET VS ACHIEVEMENT REPORT", link: "target-vs-achievement-report" },
   { title: "SCHEME REPORT", link: "/#" },
 ];
 
@@ -56,7 +57,7 @@ const attendanceReports = [
 
 const userReports = [
   { title: "ORG HIERARCHY MAPPING REPORT", link: "/organization-hierarchy-report" },
-  { title: "LAST LOGIN REPORT", link: "/last-login-report" },
+  { title: "LAST LOGIN REPORT", link: "/user-lastlogin" },
   { title: "USER LAGGARD REPORT", link: "/user-laggards" },
   { title: "USER TRACK", link: "/user-track" },
   { title: "REPORT QUEUE", link: "/report-queue" },
@@ -78,7 +79,7 @@ const Reports = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={0}
         sx={{
           position: "sticky",
           top: 0,
@@ -88,7 +89,7 @@ const Reports = () => {
           // borderBottom: '1px solid #eee'
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={-1} ml={1}>
           <BreadcrumbsHeader pageTitle="Reports" />
         </Grid>
       </Grid>

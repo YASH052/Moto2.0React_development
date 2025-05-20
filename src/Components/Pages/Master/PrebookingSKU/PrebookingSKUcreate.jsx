@@ -24,26 +24,43 @@ import {
   SaveUpdateSkuPreBooking,
 } from "../../../Api/Api";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import Required from "../../../Common/Required";
 import StatusModel from "../../../Common/StatusModel";
+import PrebookingSKUview from "./PrebookingSKUview";
+
 const PrebookingSKUcreate = () => {
   const [activeTab, setActiveTab] = React.useState("prebooking-sku-create");
   const navigate = useNavigate();
+  const location = useLocation();
   const tabs = [
-    { label: "Add SKU", value: "prebooking-sku-create" },
-    { label: "Search", value: "prebooking-sku-view" },
+    { label: "Upload", value: "product-bulk-upload" },
+    { label: "Brand", value: "brand" },
+    { label: "Category", value: "category" },
+    { label: "Sub Category", value: "sub-category" },
+    { label: "Model", value: "model" },
+    { label: "Color", value: "color" },
+    { label: "SKU", value: "sku" },
+    { label: "Focus Model", value: "focus-model" },
+    { label: "Price", value: "price" },
+    { label: "Pre Booking", value: "prebooking-sku-create" },
   ];
 
   // State for Status Model
   const [status, setStatus] = useState(null);
   const [title, setTitle] = useState(null);
 
+  // Add state for edit mode and edit data
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editItemData, setEditItemData] = useState(null); // Store the row data for editing
+
   const [formData, setFormData] = React.useState({
-    preBookingId: 0,
-    modelId: 0,
-    selectedSkuId: "", // Enter mutile SkuID with Comma
+    preBookingId: 0, // Will be > 0 in edit mode
+    categoryID: null, // Add categoryID
+    subCategoryID: null, // Add subCategoryID
+    modelID: null, // Renamed from modelId for consistency
+    selectedSkuId: "", // Keep this, but selectedSkus state will be primary for UI
     startDate: "",
     endDate: "",
     status: 1,
@@ -54,7 +71,7 @@ const PrebookingSKUcreate = () => {
   const [subCategoryList, setSubCategoryList] = useState([]);
   const [modelList, setModelList] = useState([]);
   const [skuList, setSkuList] = useState([]);
-  const [selectedSkus, setSelectedSkus] = useState([]);
+  const [selectedSkus, setSelectedSkus] = useState([]); // State to hold selected SKU objects for the Checkbox UI
 
   // Loading states for dropdowns
   const [categoryLoading, setCategoryLoading] = useState(false);
@@ -62,12 +79,12 @@ const PrebookingSKUcreate = () => {
   const [modelLoading, setModelLoading] = useState(false);
   const [skuLoading, setSkuLoading] = useState(false);
 
-  // Add error states for each field
+  // Error states
   const [errors, setErrors] = React.useState({
     categoryID: "",
     subCategoryID: "",
     modelID: "",
-    selectedSkuId: "",
+    selectedSkuId: "", // Error related to the SKU selection box
     startDate: "",
     endDate: "",
   });
@@ -209,7 +226,7 @@ const PrebookingSKUcreate = () => {
         setSubCategoryList([]);
         setModelList([]);
         setSkuList([]);
-
+        setSelectedSkus([]);
         setFormData((prev) => ({
           ...prev,
           categoryID: null,
@@ -217,7 +234,6 @@ const PrebookingSKUcreate = () => {
           modelID: null,
           selectedSkuId: "",
         }));
-
         // Set error for category
         setErrors((prev) => ({
           ...prev,
@@ -229,14 +245,13 @@ const PrebookingSKUcreate = () => {
       else if (field === "subCategoryID") {
         setModelList([]);
         setSkuList([]);
-
+        setSelectedSkus([]);
         setFormData((prev) => ({
           ...prev,
-          subCategoryID: 0,
-          modelID: 0,
+          subCategoryID: null,
+          modelID: null,
           selectedSkuId: "",
         }));
-
         // Set error for subcategory
         setErrors((prev) => ({
           ...prev,
@@ -247,13 +262,12 @@ const PrebookingSKUcreate = () => {
       // Handle Model clearing - cascade to clear SKU
       else if (field === "modelID") {
         setSkuList([]);
-
+        setSelectedSkus([]);
         setFormData((prev) => ({
           ...prev,
-          modelID: 0,
+          modelID: null,
           selectedSkuId: "",
         }));
-
         // Set error for model
         setErrors((prev) => ({
           ...prev,
@@ -297,8 +311,7 @@ const PrebookingSKUcreate = () => {
       getSubCategoryList(value);
       setModelList([]);
       setSkuList([]);
-
-      // Reset dependent fields
+      setSelectedSkus([]);
       setFormData((prev) => ({
         ...prev,
         categoryID: value,
@@ -309,8 +322,7 @@ const PrebookingSKUcreate = () => {
     } else if (field === "subCategoryID") {
       getModelList(formData.categoryID, value);
       setSkuList([]);
-
-      // Reset dependent fields
+      setSelectedSkus([]);
       setFormData((prev) => ({
         ...prev,
         subCategoryID: value,
@@ -319,8 +331,7 @@ const PrebookingSKUcreate = () => {
       }));
     } else if (field === "modelID") {
       getSKUDropdown(formData.categoryID, formData.subCategoryID, value);
-
-      // Reset SKU field
+      setSelectedSkus([]);
       setFormData((prev) => ({
         ...prev,
         modelID: value,
@@ -467,32 +478,8 @@ const PrebookingSKUcreate = () => {
     setPage(0);
   };
 
-  // Update the handleSearchClick function
-  const handleSearchClick = () => {
-    const searchValues = {
-      isp: document.querySelector('[placeholder="Select"]')?.value || "",
-      fromDate: document.querySelector('[placeholder="Select"]')?.value || "",
-      toDate: document.querySelector('[placeholder="DD/MM/YY"]')?.value || "",
-      state: document.querySelector('[label="State"]')?.value || "",
-      city: document.querySelector('[label="City"]')?.value || "",
-      product:
-        document.querySelector('[placeholder="Select"]')?.lastValue || "",
-    };
-    handleSearch(searchValues);
-  };
 
-  const handleReset = () => {
-    // Reset all filters
-    const inputs = document.querySelectorAll("input");
-    inputs.forEach((input) => {
-      input.value = "";
-    });
 
-    // Reset the table to show all rows
-    setFilteredRows(rows);
-    setPage(0);
-    setSortConfig({ key: null, direction: null });
-  };
 
   // Validation function
   const validateForm = () => {
@@ -538,17 +525,19 @@ const PrebookingSKUcreate = () => {
 
   // Add handleCancel function
   const handleCancel = () => {
+    setIsEditMode(false); // Exit edit mode
+    setEditItemData(null); // Clear edit data
+
     // Reset form data to initial state
     setFormData({
       preBookingId: 0,
-      modelId: 146,
+      categoryID: null,
+      subCategoryID: null,
+      modelID: null,
       selectedSkuId: "",
       startDate: "",
       endDate: "",
       status: 1,
-      categoryID: null,
-      subCategoryID: null,
-      modelID: null,
     });
 
     // Clear all errors
@@ -571,22 +560,79 @@ const PrebookingSKUcreate = () => {
   const handleSkuSelection = (sku) => {
     setSelectedSkus((prev) => {
       const isSelected = prev.some((s) => s.skuID === sku.skuID);
+      let newSelectedSkus;
       if (isSelected) {
-        return prev.filter((s) => s.skuID !== sku.skuID);
+        newSelectedSkus = prev.filter((s) => s.skuID !== sku.skuID);
       } else {
-        return [...prev, sku];
+        newSelectedSkus = [...prev, sku];
       }
+      setFormData(f => ({ ...f, selectedSkuId: newSelectedSkus.map(s => s.skuID).join(',') }));
+      // Clear SKU error if at least one is selected
+      if (newSelectedSkus.length > 0) {
+          setErrors(prev => ({ ...prev, selectedSkuId: "" }));
+      }
+      return newSelectedSkus;
     });
   };
 
   const handleSelectAll = () => {
+    let newSelectedSkus;
     if (selectedSkus.length === skuList.length) {
-      // If all are selected, deselect all
-      setSelectedSkus([]);
+      newSelectedSkus = []; // Deselect all
     } else {
-      // If not all are selected, select all
-      setSelectedSkus([...skuList]);
+      newSelectedSkus = [...skuList]; // Select all
     }
+     setSelectedSkus(newSelectedSkus);
+     setFormData(f => ({ ...f, selectedSkuId: newSelectedSkus.map(s => s.skuID).join(',') }));
+     // Clear SKU error if selecting all results in > 0 selected
+     if (newSelectedSkus.length > 0) {
+         setErrors(prev => ({ ...prev, selectedSkuId: "" }));
+     }
+  };
+
+  // --- Effect to Populate Form in Edit Mode ---
+  useEffect(() => {
+    const populateFormForEdit = async () => {
+      if (isEditMode && editItemData) {
+        console.log("Populating form with:", editItemData);
+
+        // 1. Set basic form data
+        setFormData({
+          preBookingId: editItemData.preBookingMasterID,
+          categoryID: editItemData.categoryID, // Assuming these IDs exist in editItemData
+          subCategoryID: editItemData.subcategoryID,
+          modelID: editItemData.modelID,
+          startDate: editItemData.startDate ? new Date(editItemData.startDate) : "", // Convert string date to Date object for calendar
+          endDate: editItemData.endDate ? new Date(editItemData.endDate) : "",
+          status: editItemData.status,
+          selectedSkuId: editItemData.preBookingSkuDetailedList?.map(sku => sku.skuID).join(',') || '' // Initial string value
+        });
+         const initialSelectedSkus = editItemData.preBookingSkuDetailedList?.map(detail => ({
+            skuID: detail.skuID,
+            skuName: detail.skuName, // Make sure skuName is available or adjust as needed
+         })) || [];
+        setSelectedSkus(initialSelectedSkus);
+        // 3. Fetch dropdown data sequentially
+        try {
+          if (categoryList.length === 0) await getCategoryList();
+          // Fetch Subcategories
+          await getSubCategoryList(editItemData.categoryID);
+          await getModelList(editItemData.categoryID, editItemData.subCategoryID);
+          await getSKUDropdown(editItemData.categoryID, editItemData.subCategoryID, editItemData.modelID);
+        } catch (error) {
+            console.error("Error fetching dropdowns during edit population:", error);
+            // Handle error (e.g., show message);
+        }
+      }
+    };
+
+    populateFormForEdit();
+  }, [isEditMode, editItemData]); // Run when entering edit mode or data changes.
+  const handleEditRequest = (rowData) => {
+    setIsEditMode(true);
+    setEditItemData(rowData);
+    setStatus(null);
+    setTitle(null);
   };
 
   // Consolidated save/post logic with validation
@@ -620,14 +666,15 @@ const PrebookingSKUcreate = () => {
 
     if (!hasErrors) {
       try {
-        // Construct the payload explicitly with only required fields
+        // Construct the payload
         const payload = {
-          preBookingId: formData.preBookingId, // Use value from formData
-          modelId: formData.modelID, // Use modelID from formData
-          selectedSkuId: selectedSkus.map((sku) => sku.skuID).join(","), // Comma-separated SKUs
-          startDate: formData.startDate, // Use startDate from formData
-          endDate: formData.endDate, // Use endDate from formData
-          status: formData.status, // Use status from formData
+          preBookingId: formData.preBookingId, // This will be 0 for create, > 0 for update
+          modelId: formData.modelID, // API expects modelId
+          // Format dates to YYYY-MM-DD string if necessary for the API
+          startDate: formData.startDate instanceof Date ? formData.startDate.toISOString().split('T')[0] : formData.startDate,
+          endDate: formData.endDate instanceof Date ? formData.endDate.toISOString().split('T')[0] : formData.endDate,
+          status: formData.status,
+          selectedSkuId: selectedSkus.map((sku) => sku.skuID).join(","), // Use selectedSkus state
         };
 
         console.log("Sending payload:", payload);
@@ -637,31 +684,37 @@ const PrebookingSKUcreate = () => {
           setStatus(response.statusCode);
           setTitle(response.statusMessage);
           handleCancel(); // Reset form on success
+          // Potentially trigger a refresh of the list in PrebookingSKUview
+          // This might require passing a refresh callback down or lifting state up further
           setTimeout(() => {
             setStatus(null);
             setTitle(null);
           }, 5000);
         } else {
           setStatus(response.statusCode);
-          setTitle(response.statusMessage);
+          setTitle(response.statusMessage || 'An error occurred.');
           setTimeout(() => {
-            // Also clear non-200 status message after a delay
-            setStatus(null);
-            setTitle(null);
+              setStatus(null);
+              setTitle(null);
           }, 5000);
         }
       } catch (error) {
-        console.error("Error saving prebooking SKU:", error);
+        console.error("Error saving/updating prebooking SKU:", error);
         setStatus("Error");
         setTitle("An error occurred while saving.");
         setTimeout(() => {
-          // Clear error message after a delay
-          setStatus(null);
-          setTitle(null);
+            setStatus(null);
+            setTitle(null);
         }, 5000);
       }
     } else {
       console.log("Form has validation errors. Not saving.");
+       setStatus("Error"); // Indicate validation error
+       setTitle("Please fix the errors in the form.");
+        setTimeout(() => {
+             setStatus(null);
+             setTitle(null);
+         }, 5000);
     }
   };
 
@@ -680,7 +733,7 @@ const PrebookingSKUcreate = () => {
         }}
       >
         <Grid item xs={12} mt={1} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Pre Booking SKU" />
+          <BreadcrumbsHeader pageTitle="Product" />
         </Grid>
 
         <Grid item xs={12} ml={1}>
@@ -698,12 +751,12 @@ const PrebookingSKUcreate = () => {
         spacing={0}
         lg={12}
         mt={0}
-        sx={{ position: "relative", zIndex: 1 }}
+        sx={{ position: "relative", zIndex: 1, }}
       >
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
-              <NuralAccordion2 title="Add" backgroundColor={LIGHT_GRAY2}>
+              <NuralAccordion2 title={isEditMode ? "Edit Prebooking SKU" : "Create Prebooking SKU"} backgroundColor={LIGHT_GRAY2}>
                 {/* First Row - 3 NuralAutocomplete */}
                 <Grid
                   container
@@ -882,7 +935,7 @@ const PrebookingSKUcreate = () => {
                             lineHeight: "13.66px",
                             letterSpacing: "4%",
                             textAlign: "center",
-                            
+
                           }}
                         >
                           SELECT SKU <Required />
@@ -1088,7 +1141,7 @@ const PrebookingSKUcreate = () => {
                   </Grid>
                   <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
-                      text="SAVE"
+                      text={isEditMode ? "UPDATE" : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handlePostRequest}
@@ -1101,8 +1154,10 @@ const PrebookingSKUcreate = () => {
           </Grid>
         </Grid>
       </Grid>
+      <Grid xs={12} md={12} lg={12}>
+        <PrebookingSKUview onEdit={handleEditRequest} />
+      </Grid>
 
-      {/* Add this after the NuralAccordion2 component */}
     </Grid>
   );
 };

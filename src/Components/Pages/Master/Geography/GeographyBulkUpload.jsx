@@ -15,7 +15,10 @@ import NuralAccordion from "../../NuralCustomComponents/NuralAccordion";
 import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import { useNavigate } from "react-router-dom";
-import { BulkLocationUploadAPIV2, LocationMasterUploadRefCode } from "../../../Api/Api";
+import {
+  BulkLocationUploadAPIV2,
+  LocationMasterUploadRefCode,
+} from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 
 const GeographyBulkUpload = () => {
@@ -35,28 +38,27 @@ const GeographyBulkUpload = () => {
   ];
   const tabs = [
     { label: "Upload", value: "geography-bulk-upload" },
-    { label: "Country", value: "country" },
+    { label: "Country", value: "#" },
     { label: "State", value: "state" },
     { label: "City", value: "city" },
     { label: "Area", value: "area" },
   ];
-  
+
   const handleDownloadRefCode = async () => {
     try {
       setIsLoading(true);
       const response = await LocationMasterUploadRefCode();
-      if(response.statusCode === '200'){
+      if (response.statusCode === "200") {
         window.location.href = response?.referenceDataLink;
         setStatus(response?.statusCode);
         setTitle(response?.statusMessage);
         setTimeout(() => {
-          if (response.statusCode === '200') {
+          if (response.statusCode === "200") {
             setStatus(null);
             setTitle("");
           }
         }, 5000);
-      }
-      else{
+      } else {
         setStatus(response?.statusCode);
         setTitle(response?.statusMessage);
       }
@@ -64,18 +66,20 @@ const GeographyBulkUpload = () => {
     } catch (error) {
       console.error("Error in handleDownloadRefCode:", error);
       setStatus(500);
-      setTitle('Internal Server Error');
+      setTitle("Internal Server Error");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const handleDownloadTemplate = async () => {
     try {
       setIsLoading(true);
-      window.location.href = `${import.meta.env.VITE_TEMPLATE_URL}SingleUploadGeography.xlsx`
+      window.location.href = `${
+        import.meta.env.VITE_TEMPLATE_URL
+      }SingleUploadGeography.xlsx`;
       setStatus(200);
-      setTitle('Template Downloaded Successfully');
+      setTitle("Template Downloaded Successfully");
       setTimeout(() => {
         setStatus(null);
         setTitle("");
@@ -83,31 +87,31 @@ const GeographyBulkUpload = () => {
     } catch (error) {
       console.error("Error in handleDownloadTemplate:", error);
       setStatus(500);
-      setTitle('Internal Server Error');
+      setTitle("Internal Server Error");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const validateFileType = (file) => {
     const validTypes = [
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/csv'
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/csv",
     ];
-    
+
     if (!validTypes.includes(file.type)) {
-      return 'Please upload a valid Excel (.xlsx, .xls) or CSV file';
+      return "Please upload a valid Excel (.xlsx, .xls) or CSV file";
     }
     return null;
   };
 
   const validateFileName = (file) => {
-    const validExtensions = ['.xlsx', '.xls', '.csv'];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    
+    const validExtensions = [".xlsx", ".xls", ".csv"];
+    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
+
     if (!validExtensions.includes(fileExtension)) {
-      return 'File must have .xlsx, .xls, or .csv extension';
+      return "File must have .xlsx, .xls, or .csv extension";
     }
     return null;
   };
@@ -147,12 +151,12 @@ const GeographyBulkUpload = () => {
     setTitle("");
     setSelectedFile(null);
     setFileError(null);
-    
+
     // Reset the file input element
     if (fileInputRef && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    
+
     // Show skeleton for a brief moment
     setTimeout(() => {
       setIsLoading(false);
@@ -162,10 +166,10 @@ const GeographyBulkUpload = () => {
   const uploadGeography = async () => {
     if (!selectedFile) {
       setStatus(400);
-      setTitle('Please select a file to upload');
+      setTitle("Please select a file to upload");
       return;
     }
-    
+
     try {
       setIsLoading(true);
 
@@ -173,44 +177,41 @@ const GeographyBulkUpload = () => {
       form.append("UploadedFile", selectedFile);
 
       const response = await BulkLocationUploadAPIV2(form);
-      if(response.statusCode === '200'){
+      if (response.statusCode === "200") {
         setStatus(response?.statusCode);
         setTitle(response?.statusMessage);
         setSelectedFile(null);
         setTimeout(() => {
-          if (response.statusCode === '200') {
+          if (response.statusCode === "200") {
             setStatus(null);
             setTitle("");
           }
         }, 5000);
-      }
-      else if(response.statusCode === '400'){
-        if(response?.invalidDataLink){
+      } else if (response.statusCode === "400") {
+        if (response?.invalidDataLink) {
           window.location.href = response?.invalidDataLink;
         }
         setStatus(response?.statusCode);
         setTitle(response?.statusMessage);
-      }
-      else{
+      } else {
         setStatus(response?.statusCode);
         setTitle(response?.statusMessage);
       }
     } catch (error) {
       console.error("Error in uploadGeography:", error);
       setStatus(500);
-      setTitle('Internal Server Error');
+      setTitle("Internal Server Error");
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Geography Template Download",
       onView: () => console.log("View Template 1"),
       onDownload: handleDownloadTemplate,
     },
-   
   ];
 
   const handleTabChange = (newValue) => {
@@ -270,7 +271,7 @@ const GeographyBulkUpload = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={3} 
+        mt={1.5}
         mb={0}
         sx={{
           position: "sticky",
@@ -319,19 +320,19 @@ const GeographyBulkUpload = () => {
             <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
               <Grid container spacing={2} direction="column">
                 <Grid item>
-                  <NuralFileUpload 
+                  <NuralFileUpload
                     backgroundColor={LIGHT_GRAY2}
                     fileRef={fileInputRef}
                     onChange={handleFileChange}
-                    accept=".xlsx,.xls,.csv" 
+                    accept=".xlsx,.xls,.csv"
                     mandatory={true}
                   />
                 </Grid>
                 <Grid item>
                   {fileError && (
-                    <Typography 
-                      color="error" 
-                      variant="body2" 
+                    <Typography
+                      color="error"
+                      variant="body2"
                       sx={{ mt: 1, mb: 1 }}
                     >
                       {fileError}

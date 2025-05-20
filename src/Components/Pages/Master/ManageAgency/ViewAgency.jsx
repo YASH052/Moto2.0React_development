@@ -46,6 +46,10 @@ import { useDispatch } from "react-redux";
 import { SET_EDIT_AGENCY_DATA } from "../../../Redux/actionTypes";
 import { setEditAgencyData } from "../../../Redux/action";
 import { FormSkeleton } from "../../../Common/Skeletons";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import SelectionPanel from "../../NuralCustomComponents/SelectionPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
+import NuralReports from "../../NuralCustomComponents/NuralRetailer";
 
 const SKELETON_ROWS = 10;
 
@@ -122,6 +126,8 @@ const ViewAgency = () => {
   // Add loading states
   const [isLoading, setIsLoading] = useState(false);
   const [isDropdownLoading, setIsDropdownLoading] = useState(false);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+  const [show, setShow] = useState(false);
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -259,7 +265,7 @@ const ViewAgency = () => {
         throw new Error(response.statusMessage);
       }
     } finally {
-      setIsLoading(true);
+      setIsLoading(false);
     }
   }
 
@@ -312,6 +318,69 @@ const ViewAgency = () => {
     dispatch(setEditAgencyData(row));
     navigate(`/add-agancy`);
   }
+
+  const downloadExcel = async () => {
+    let body = {
+      ...searchData,
+      pageIndex: -1,
+    };
+    setIsDownloadLoading(true);
+    try {
+      let res = await GetISPAgencyList(body);
+      if (res.statusCode == 200) {
+        window.location.href = res.reportLink;
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      } else {
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      }
+    } catch (error) {
+      setShow(true);
+      setTitle(error.statusMessage || "Internal Server Error");
+      setStatus(500);
+      console.log(error);
+    } finally {
+      setTimeout(() => {
+        setShow(false);
+      }, 3000);
+      setIsDownloadLoading(false);
+    }
+  };
+
+  const changeStatus = async () => {
+    let body = {
+      ...searchData,
+      pageIndex: -1,
+    };
+    setIsDownloadLoading(true);
+    try {
+      let res = await GetISPAgencyList(body);
+      if (res.statusCode == 200) {
+        window.location.href = res.reportLink;
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      } else {
+        setShow(true);
+        setTitle(res.statusMessage);
+        setStatus(res.statusCode);
+      }
+    } catch (error) {
+      setShow(true);
+      setTitle(error.statusMessage || "Internal Server Error");
+      setStatus(500);
+      console.log(error);
+    } finally {
+      setTimeout(() => {
+        setShow(false);
+      }, 3000);
+      setIsDownloadLoading(false);
+    }
+  };
+
   return (
     <>
       <Grid container spacing={0}>
@@ -322,7 +391,7 @@ const ViewAgency = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1000,
+            zIndex: 10000,
             backgroundColor: "#fff",
             paddingBottom: 1,
           }}
@@ -340,7 +409,10 @@ const ViewAgency = () => {
           </Grid>
         </Grid>
         <Grid item xs={12} md={12} lg={12} sx={{ pr: 2 }}>
-          <Grid container spacing={2} direction="column">
+          <Grid container spacing={2} direction="column" sx={{
+            position: "relative",
+            pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+          }}>
             <Grid item>
               <NuralAccordion2
                 title="Contact Details"
@@ -499,350 +571,408 @@ const ViewAgency = () => {
               </NuralAccordion2>
             </Grid>
           </Grid>
-          <Grid item xs={12} sx={{ p: { xs: 1, sm: 2,md:0 },mt:2,} }>
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 300px)",
-              overflow: "auto",
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    colSpan={15}
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1100,
-                      borderBottom: "none",
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
+          <Grid item xs={12}  sx={{
+          position: "relative",
+          mt:2,
+          pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+        }}>
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(100vh - 50px)",
+                overflow: "auto",
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      colSpan={15}
                       sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "19.12px",
-                        letterSpacing: "0%",
-                        color: PRIMARY_BLUE2,
-                        p: 1,
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1100,
+                        borderBottom: "none",
                       }}
                     >
-                      List
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "49px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1100,
-                    }}
-                  >
-                    <Grid container alignItems="center" spacing={1}>
-                      <Grid item>S.NO</Grid>
-                    </Grid>
-                  </TableCell>
-                  {tableColumns.map((column) => (
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontFamily: "Manrope",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          lineHeight: "19.12px",
+                          letterSpacing: "0%",
+                          color: PRIMARY_BLUE2,
+                          p: 1,
+                        }}
+                      >
+                        List
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
                     <TableCell
-                      key={column.id}
-                      onClick={() => column.sortable && handleSort(column.id)}
                       sx={{
                         ...tableHeaderStyle,
-                        cursor: column.sortable ? "pointer" : "default",
                         position: "sticky",
-                        top: "48px",
+                        top: "49px",
                         backgroundColor: LIGHT_GRAY2,
                         zIndex: 1100,
                       }}
                     >
                       <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{column.label}</Grid>
-                        {column.sortable && (
-                          <Grid
-                            item
-                            sx={{ display: "flex", alignItems: "center" }}
-                          >
-                            {sortConfig.key === column.id ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{ fontSize: 12, color: "grey.400" }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
+                        <Grid item>S.NO</Grid>
                       </Grid>
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {isLoading ? (
-                  // <p>loDUBG</p>
-                  Array(SKELETON_ROWS)
-                    .fill(0)
-                    .map((_, index) => (
-                      <TableRowSkeleton key={index} columns={10} />
-                    ))
-                ) : (
-                  filteredRows.map((row, index) => (
-                    <TableRow key={row.id}>
+                    {tableColumns.map((column) => (
                       <TableCell
+                        key={column.id}
+                        onClick={() => column.sortable && handleSort(column.id)}
                         sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
+                          ...tableHeaderStyle,
+                          cursor: column.sortable ? "pointer" : "default",
+                          position: "sticky",
+                          top: "48px",
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 1100,
                         }}
                       >
-                        {(searchData.pageIndex - 1) * searchData.pageSize + index + 1}
-                      </TableCell>
-                      {tableColumns.map((column) => (
-                        <TableCell key={column.id} sx={{ ...rowstyle }}>
-                          {column.id === "status" ? (
-                            <Switch size="small" checked={row[column.id]} />
-                          ) : column.id === "edit" ? (
-                            <Edit
-                              onClick={() => handleEdit(row)}
-                              sx={{ color: DARK_PURPLE, cursor: "pointer" }}
-                              fontSize="small"
-                            />
-                          ) : (
-                            row[column.id]
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{column.label}</Grid>
+                          {column.sortable && (
+                            <Grid
+                              item
+                              sx={{ display: "flex", alignItems: "center" }}
+                            >
+                              {sortConfig.key === column.id ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{ fontSize: 12, color: "grey.400" }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{ fontSize: 12, color: "grey.400" }}
+                                  />
+                                </Grid>
+                              )}
+                            </Grid>
                           )}
+                        </Grid>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {isLoading ? (
+                    // <p>loDUBG</p>
+                    Array(SKELETON_ROWS)
+                      .fill(0)
+                      .map((_, index) => (
+                        <TableRowSkeleton key={index} columns={10} />
+                      ))
+                  ) : (
+                    filteredRows.map((row, index) => (
+                      <TableRow key={row.id}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {(searchData.pageIndex - 1) * searchData.pageSize + index + 1}
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                        {tableColumns.map((column) => (
+                          <TableCell key={column.id} sx={{ ...rowstyle }}>
+                            {column.id === "status" ? (
+                              <Switch size="small" checked={row[column.id]} />
+                            ) : column.id === "edit" ? (
+                              <Edit
+                                onClick={() => handleEdit(row)}
+                                sx={{ color: DARK_PURPLE, cursor: "pointer" }}
+                                fontSize="small"
+                              />
+                            ) : (
+                              row[column.id]
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
 
-            {/* Pagination */}
+              {/* Pagination */}
 
-            <Grid
-              container
-              sx={{
-                p: 2,
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "sticky",
-                bottom: 0,
-                backgroundColor: LIGHT_GRAY2,
-                borderTop: `1px solid ${PRIMARY_LIGHT_GRAY}`,
-                zIndex: 1200,
-                boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.05)",
-                minHeight: "40px",
-              }}
-            >
-              <Grid item>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 400,
-                    fontSize: "10px",
-                    lineHeight: "13.66px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  TOTAL RECORDS:{" "}
-                  <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {totalRecords} /{" "}
-                    {Math.ceil(totalRecords / searchData.pageSize)} PAGES
-                  </span>
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Grid
-                  container
-                  spacing={1}
-                  sx={{
-                    maxWidth: 300,
-                    ml: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+              <Grid
+                container
+                sx={{
+                  p: 2,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  position: "sticky",
+                  bottom: 0,
+                  backgroundColor: LIGHT_GRAY2,
+                  borderTop: `1px solid ${PRIMARY_LIGHT_GRAY}`,
+                  zIndex: 1200,
+                  boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.05)",
+                  minHeight: "40px",
+                }}
+              >
+                <Grid item>
                   <Typography
-                    variant="body2"
                     sx={{
-                      mt: 1,
+                      fontFamily: "Manrope",
+                      fontWeight: 400,
                       fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
+                      lineHeight: "13.66px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                    }}
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    TOTAL RECORDS:{" "}
+                    <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
+                      {totalRecords} /{" "}
+                      {Math.ceil(totalRecords / searchData.pageSize)} PAGES
+                    </span>
+                  </Typography>
+                </Grid>
+
+                <Grid item>
+                  <Grid
+                    container
+                    spacing={1}
+                    sx={{
+                      maxWidth: 300,
+                      ml: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    SHOW :
-                  </Typography>
-                  {[10, 25, 50, 100].map((value) => (
-                    <Grid item key={value}>
-                      <Button
-                        onClick={() =>
-                          handleChangeRowsPerPage({ target: { value } })
-                        }
-                        sx={{
-                          minWidth: "25px",
-                          height: "24px",
-                          padding: "4px",
-                          borderRadius: "50%",
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                          fontSize: "12px",
-                          "&:hover": {
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 1,
+                        fontSize: "10px",
+                        color: PRIMARY_BLUE2,
+                        fontWeight: 600,
+                      }}
+                    >
+                      SHOW :
+                    </Typography>
+                    {[10, 25, 50, 100].map((value) => (
+                      <Grid item key={value}>
+                        <Button
+                          onClick={() =>
+                            handleChangeRowsPerPage({ target: { value } })
+                          }
+                          sx={{
+                            minWidth: "25px",
+                            height: "24px",
+                            padding: "4px",
+                            borderRadius: "50%",
                             backgroundColor:
                               rowsPerPage === value
                                 ? PRIMARY_BLUE2
                                 : "transparent",
-                          },
-                          mx: 0.5,
-                        }}
-                      >
-                        {value}
-                      </Button>
-                    </Grid>
-                  ))}
+                            color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
+                            fontSize: "12px",
+                            "&:hover": {
+                              backgroundColor:
+                                rowsPerPage === value
+                                  ? PRIMARY_BLUE2
+                                  : "transparent",
+                            },
+                            mx: 0.5,
+                          }}
+                        >
+                          {value}
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Grid>
-              </Grid>
 
-              <Grid item sx={{ display: "flex", alignItems: "center", gap: 2, color: PRIMARY_BLUE2 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                    cursor: "pointer"
-                  }}
-                  onClick={handleFirstPage}
-                >
-                  JUMP TO FIRST
-                </Typography>
+                <Grid item sx={{ display: "flex", alignItems: "center", gap: 2, color: PRIMARY_BLUE2 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "Manrope",
+                      fontWeight: 700,
+                      fontSize: "8px",
+                      lineHeight: "10.93px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                      cursor: "pointer"
+                    }}
+                    onClick={handleFirstPage}
+                  >
+                    JUMP TO FIRST
+                  </Typography>
 
-                <IconButton
-                  onClick={handlePrevPage}
-                  disabled={page <= 1}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
+                  <IconButton
+                    onClick={handlePrevPage}
+                    disabled={page <= 1}
+                  >
+                    <NavigateBeforeIcon />
+                  </IconButton>
 
-                <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
-                  PAGE {page}
-                </Typography>
+                  <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
+                    PAGE {page}
+                  </Typography>
 
-                <IconButton
-                  onClick={handleNextPage}
-                  disabled={page >= Math.ceil(totalRecords / rowsPerPage)}
-                >
-                  <NavigateNextIcon />
-                </IconButton>
+                  <IconButton
+                    onClick={handleNextPage}
+                    disabled={page >= Math.ceil(totalRecords / rowsPerPage)}
+                  >
+                    <NavigateNextIcon />
+                  </IconButton>
 
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                    cursor: "pointer"
-                  }}
-                  variant="body2"
-                  onClick={handleLastPage}
-                >
-                  JUMP TO LAST
-                </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "Manrope",
+                      fontWeight: 700,
+                      fontSize: "8px",
+                      lineHeight: "10.93px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                      cursor: "pointer"
+                    }}
+                    variant="body2"
+                    onClick={handleLastPage}
+                  >
+                    JUMP TO LAST
+                  </Typography>
 
-                <input
-                  type="number"
-                  placeholder="Jump to page"
-                  min={1}
-                  max={Math.ceil(totalRecords / searchData.pageSize)}
-                  onChange={(e) => {
-                    // Just store the value, don't trigger page change
-                    const value = e.target.value;
-                    e.target.dataset.pageValue = value;
-                  }}
-                  style={{
-                    width: "100px",
-                    height: "24px",
-                    fontSize: "10px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    borderWidth: "1px",
-                    border: `1px solid ${PRIMARY_BLUE2}`,
-                    backgroundColor: LIGHT_GRAY2,
-                    "&::placeholder": {},
-                    outline: "none",
-                    "&:focus": {
+                  <input
+                    type="number"
+                    placeholder="Jump to page"
+                    min={1}
+                    max={Math.ceil(totalRecords / searchData.pageSize)}
+                    onChange={(e) => {
+                      // Just store the value, don't trigger page change
+                      const value = e.target.value;
+                      e.target.dataset.pageValue = value;
+                    }}
+                    style={{
+                      width: "100px",
+                      height: "24px",
+                      fontSize: "10px",
+                      paddingRight: "8px",
+                      paddingLeft: "8px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      borderWidth: "1px",
+                      border: `1px solid ${PRIMARY_BLUE2}`,
+                      backgroundColor: LIGHT_GRAY2,
+                      "&::placeholder": {},
                       outline: "none",
-                    },
-                  }}
-                />
-                <Grid
-                  mt={1}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousSibling;
-                    const pageValue = parseInt(input.value, 10);
-                    if (
-                      pageValue >= 1 &&
-                      pageValue <= Math.ceil(totalRecords / searchData.pageSize)
-                    ) {
-                      handlePageChange(pageValue);
-                      // input.value = ''; 
-                    }
-                  }}
-                >
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
+                      "&:focus": {
+                        outline: "none",
+                      },
+                    }}
+                  />
+                  <Grid
+                    mt={1}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={(e) => {
+                      const input = e.currentTarget.previousSibling;
+                      const pageValue = parseInt(input.value, 10);
+                      if (
+                        pageValue >= 1 &&
+                        pageValue <= Math.ceil(totalRecords / searchData.pageSize)
+                      ) {
+                        handlePageChange(pageValue);
+                        // input.value = ''; 
+                      }
+                    }}
+                  >
+                    <img src="./Icons/footerSearch.svg" alt="arrow" />
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
 
-          </TableContainer>
+            </TableContainer>
+          </Grid>
         </Grid>
-        </Grid>
+      </Grid>
 
-        
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={2}
+        mt={1}
+        position={"fixed"}
+        right={{
+          xs: 0,
+          sm: 5,
+          md: 5,
+          lg: 12,
+        }}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            // filter: isDownloadLoading ? "blur(2px)" : "none",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel>
+          {/* <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <SelectionPanel columns={""} views={""} />
+          </Grid> */}
+          {/* <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <NuralReports title="Reports" views={""} />
+          </Grid> */}
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={downloadExcel}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </>
   );

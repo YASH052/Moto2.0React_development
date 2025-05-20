@@ -1,266 +1,49 @@
-// import React from "react";
-// import { Doughnut } from "react-chartjs-2";
-// import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-// import { Box, Button, Card, Grid, Typography } from "@mui/material";
-// import { styled } from "@mui/material/styles";
-// import NuralAutocomplete from "../NuralAutocomplete";
-// import {
-//   AQUA,
-//   AQUA_DARK2,
-//   DARK_PURPLE,
-//   ERROR_MSSG,
-//   ERROR_RED,
-//   LIGHT_GRAY2,
-//   MEDIUM_BLUE,
-//   PRIMARY_BLUE,
-//   PRIMARY_BLUE2,
-//   SECONDARY_BLUE,
-//   WHITE,
-//   WHITE_COLOR,
-// } from "../../../Common/colors";
-// import SalesMetricsGrid from "./SalesMetricsGrid";
-
-// // Register ChartJS components
-// ChartJS.register(ArcElement, Tooltip, Legend);
-//  const tileColors = [
-//    PRIMARY_BLUE2,
-//    ERROR_MSSG,
-//    ERROR_RED,
-//    MEDIUM_BLUE,
-//    MEDIUM_BLUE,
-//    MEDIUM_BLUE,
-//  ];
-// const salesMetrics = [
-//   {
-//     title: "Yesterday Sales",
-//     value: "₹14,200",
-//     trend: 5.2,
-//     comparedTo: "VS PREV. DAY",
-//     backgroundColor: "#F8F7FF",
-//   },
-
-//   {
-//     title: "MTD Sales",
-//     value: "₹2,85,400",
-//     trend: -12.3,
-//     comparedTo: "VS PREV. MONTH",
-//     backgroundColor: "#F8F7FF",
-//   },
-//   {
-//     title: "YTD Sales",
-//     value: "₹14.85Cr",
-//     trend: -2.7,
-//     comparedTo: "VS PREV. YEAR",
-//     backgroundColor: "#FFF1F1",
-//   },
-//   {
-//     title: "ISPs Present Yesterday",
-//     value: "115/124",
-//     trend: 92,
-//     comparedTo: "ATTENDANCE",
-//     subtitle: "93% ATTENDANCE",
-//     backgroundColor: "#FFFFFF",
-//   },
-//   {
-//     title: "ISPs Present Yesterday",
-//     value: "78/124",
-//     trend: 56,
-//     comparedTo: "ATTENDANCE",
-//     subtitle: "89% ATTENDANCE",
-//     backgroundColor: "#FFFFFF",
-//   },
-//   {
-//     title: "ISPs Present Yesterday",
-//     value: "78/124",
-//     trend: 56,
-//     comparedTo: "ATTENDANCE",
-//     subtitle: "89% ATTENDANCE",
-//     backgroundColor: "#FFFFFF",
-//   },
-// ];
-// const StyledCard = styled(Card)(({ theme }) => ({
-//   padding: theme.spacing(2),
-//   height: "92%",
-//   display: "flex",
-//   flexDirection: "column",
-//   alignItems: "center",
-//   position: "relative",
-//   backgroundColor: LIGHT_GRAY2,
-//   borderRadius: "8px",
-// }));
-
-// const CenterText = styled("div")({
-//   position: "absolute",
-//   top: "50%",
-//   left: "45%",
-//   transform: "translate(-50%, -50%)",
-//   textAlign: "center",
-//   "& h2": {
-//     margin: 0,
-//     fontSize: "24px",
-//     fontWeight: "bold",
-//     color: DARK_PURPLE,
-//   },
-//   "& p": {
-//     margin: 0,
-//     fontSize: "12px",
-//     color: DARK_PURPLE,
-//     opacity: 0.7,
-//   },
-// });
-
-// const AttendanceChart = () => {
-// //   const distributors = ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"];
-// //   const [selectedDistributor, setSelectedDistributor] = React.useState(
-// //     distributors[0]
-// //   );
-
-//   const data = {
-//     labels: ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"],
-//     datasets: [
-//       {
-//         data: [90, 25, 15, 15, 50],
-//         backgroundColor: [
-//           AQUA_DARK2,
-//           ERROR_MSSG,
-//           MEDIUM_BLUE,
-//           PRIMARY_BLUE2,
-//           SECONDARY_BLUE,
-//         ],
-//         borderWidth: 0,
-//         cutout: "75%",
-//       },
-//     ],
-//   };
-
-//   const options = {
-//     responsive: true,
-//     maintainAspectRatio: false,
-//     plugins: {
-//       legend: {
-//         position: "right",
-//         align: "center",
-//         labels: {
-//           boxWidth: 6,
-//           boxHeight: 6,
-//           padding: 12,
-//           font: {
-//             size: 8,
-//             family: "Manrope",
-//           },
-//           color: DARK_PURPLE,
-//           usePointStyle: true,
-//           pointStyle: "circle",
-//           textAlign: "left",
-//         },
-//       },
-//       tooltip: {
-//         enabled: true,
-//         backgroundColor: WHITE,
-//         titleColor: DARK_PURPLE,
-//         bodyColor: DARK_PURPLE,
-//         padding: 10,
-//         displayColors: false,
-//         callbacks: {
-//           label: function (context) {
-//             return `${context.parsed}%`;
-//           },
-//         },
-//       },
-//     },
-//   };
-
-//   return (
-//     <StyledCard>
-//       <Typography
-//         variant="h6"
-//         sx={{
-//           fontWeight: 700,
-//           color: DARK_PURPLE,
-//           fontFamily: "Manrope",
-//           fontSize: "10px",
-//           lineHeight: "13.66px",
-//           letterSpacing: "0%",
-//           alignSelf: "flex-start",
-//           mb: 2,
-//         }}
-//       >
-//         ISP Attendance Overview
-//       </Typography>
-
-//       <Grid container spacing={2}>
-//         {/* Doughnut Chart Section */}
-//         <Grid
-//           item
-//           xs={12}
-//           md={4}
-//           sx={{ position: "relative", height: "250px" }}
-//         >
-//           <Doughnut data={data} options={options} />
-//           <CenterText>
-//             <h2>103.72K</h2>
-//             <p>4 WEEKS</p>
-//           </CenterText>
-//         </Grid>
-
-//         {/* Tiles Section in 2 rows x 3 columns */}
-//         <Grid item xs={12} md={8}>
-//           <Grid container spacing={2}>
-//             {[...Array(6)].map((_, index) => (
-//               <Grid item xs={12} md={4} key={index}>
-//                 <Typography
-//                   variant="h6"
-//                   sx={{
-//                     fontWeight: 500,
-//                     color: index >= 3 ? PRIMARY_BLUE2 : WHITE_COLOR,
-//                     paddingTop: "12px",
-//                     textAlign: "center",
-//                     borderRadius: "8px",
-//                     height: "80px",
-//                     marginTop: "10px",
-//                     cursor: "pointer",
-//                     backgroundColor: tileColors[index],
-//                   }}
-//                 >
-//                   Present
-//                   <br />
-//                   23
-//                 </Typography>
-//               </Grid>
-//             ))}
-//           </Grid>
-//         </Grid>
-//       </Grid>
-//     </StyledCard>
-//   );
-// };
-
-// export default AttendanceChart;
-
 import React from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Box, Button, Card, Grid, Typography } from "@mui/material";
+import { Card, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import NuralAutocomplete from "../NuralAutocomplete";
+import PropTypes from "prop-types";
 import {
-  AQUA,
   AQUA_DARK2,
   DARK_PURPLE,
   ERROR_MSSG,
   ERROR_RED,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
-  PRIMARY_BLUE,
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
   WHITE,
   WHITE_COLOR,
 } from "../../../Common/colors";
-import SalesMetricsGrid from "./SalesMetricsGrid";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
+
+// Define the specific colors for the 5 chart segments
+const chartSegmentColors = [
+  AQUA_DARK2, // Present
+  ERROR_MSSG, // Absent
+  ERROR_RED, // Late (Changed from MEDIUM_BLUE based on user edits)
+  SECONDARY_BLUE, // Leave
+  "#8D9EDB", // Weekly Off (New Color)
+];
+
+// Labels for the first 5 chart segments
+const firstFiveLabels = ["Present", "Absent", "Late", "Leave", "Weekly Off"];
+
+// Corresponding keys in ISPOverviewList[0] for the first 5 segments
+const firstFiveKeys = [
+  "present",
+  "absent",
+  "late",
+  "leave",
+  "weeklyOff", // Added weeklyOff
+];
+
+// Colors used for the tiles (Order: Present, Absent, Late, Leave, Weekly Off, Closed)
+// NOTE: This array definition is kept from the original code state provided in context,
+// but the tiles themselves might use different colors based on their sx props.
 const tileColors = [
   PRIMARY_BLUE2,
   ERROR_MSSG,
@@ -269,54 +52,7 @@ const tileColors = [
   MEDIUM_BLUE,
   MEDIUM_BLUE,
 ];
-const salesMetrics = [
-  {
-    title: "Yesterday Sales",
-    value: "₹14,200",
-    trend: 5.2,
-    comparedTo: "VS PREV. DAY",
-    backgroundColor: "#F8F7FF",
-  },
 
-  {
-    title: "MTD Sales",
-    value: "₹2,85,400",
-    trend: -12.3,
-    comparedTo: "VS PREV. MONTH",
-    backgroundColor: "#F8F7FF",
-  },
-  {
-    title: "YTD Sales",
-    value: "₹14.85Cr",
-    trend: -2.7,
-    comparedTo: "VS PREV. YEAR",
-    backgroundColor: "#FFF1F1",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "115/124",
-    trend: 92,
-    comparedTo: "ATTENDANCE",
-    subtitle: "93% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-];
 const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(2),
   height: "92%",
@@ -343,27 +79,24 @@ const CenterText = styled("div")({
   },
 });
 
-const AttendanceChart = () => {
-  //   const distributors = ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"];
-  //   const [selectedDistributor, setSelectedDistributor] = React.useState(
-  //     distributors[0]
-  //   );
+const AttendanceChart = ({ ISPOverviewList }) => {
+  // Prepare chart data using the first 5 categories from ISPOverviewList
+  const chartDataFirstFive =
+    ISPOverviewList && ISPOverviewList.length > 0
+      ? firstFiveKeys.map((key) => ISPOverviewList[0][key] || 0) // Default to 0
+      : [0, 0, 0, 0, 0]; // Default to zeros if no data
 
-  const data = {
-    // labels: ["DIST. 1", "DIST. 2", "DIST. 3", "DIST. 4", "DIST. 5"],
-    datasets: [
-      {
-        data: [90, 25, 15, 50],
-        backgroundColor: [AQUA_DARK2, ERROR_MSSG, MEDIUM_BLUE, SECONDARY_BLUE],
-        borderWidth: 0,
-        cutout: "75%",
-      },
-    ],
-  };
+  // Get the total present count for the center text
+  const totalPresent =
+    ISPOverviewList && ISPOverviewList.length > 0
+      ? ISPOverviewList[0].present || 0
+      : 0;
 
+  // Configure chart options (rotation removed)
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    // rotation: rotation, // Rotation removed
     plugins: {
       legend: {
         position: "right",
@@ -391,11 +124,25 @@ const AttendanceChart = () => {
         displayColors: false,
         callbacks: {
           label: function (context) {
-            return `${context.parsed}%`;
+            // Return the raw data value (the count)
+            return context.raw || ''; // Use raw value, fallback to empty string
           },
         },
       },
     },
+  };
+
+  // Configure chart data object
+  const data = {
+    labels: firstFiveLabels, // Use labels for the first 5 categories
+    datasets: [
+      {
+        data: chartDataFirstFive, // Use data for the first 5 categories
+        backgroundColor: chartSegmentColors, // Use the specific 5 colors
+        borderWidth: 0,
+        cutout: "75%",
+      },
+    ],
   };
 
   return (
@@ -426,65 +173,296 @@ const AttendanceChart = () => {
         >
           <Doughnut data={data} options={options} />
           <CenterText>
-            <div className="label">Present</div>
-            <div className="value">315</div>
+            <div className="label" style={{ color: "#039194" }}>
+              Present
+            </div>
+            <div className="value" style={{ color: "#039194" }}>
+              {totalPresent}
+            </div>
           </CenterText>
         </Grid>
 
         {/* Tiles Section in 2 rows x 3 columns */}
         <Grid item xs={12} md={8}>
           <Grid container spacing={1}>
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 500,
-                    color: index >= 3 ? PRIMARY_BLUE2 : WHITE_COLOR,
-                    paddingTop: "12px",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    height: "80px",
-                    marginTop: "10px",
-                    cursor: "pointer",
-                    backgroundColor: tileColors[index],
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "Manrope",
-                      fontWeight: 400,
-                      fontSize: "10px",
-                      lineHeight: "100%",
-                      letterSpacing: "4%",
+            {/* Attendance status tiles */}
+            {ISPOverviewList && ISPOverviewList.length > 0 && (
+              <>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: WHITE_COLOR,
+                      paddingTop: "12px",
                       textAlign: "center",
-                      textTransform: "uppercase",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[0],
                     }}
                   >
-                    Present
-                  </span>
-                  <br />
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Present
+                    </span>
+                    <br />
 
-                  <span
-                    style={{
-                      fontFamily: "Manrope",
-                      fontWeight: 700,
-                      fontSize: "24px",
-                      lineHeight: "28px",
-                      letterSpacing: "0%",
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].present}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: WHITE_COLOR,
+                      paddingTop: "12px",
                       textAlign: "center",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[1],
                     }}
                   >
-                    23
-                  </span>
-                </Typography>
-              </Grid>
-            ))}
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Absent
+                    </span>
+                    <br />
+
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].absent}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: WHITE_COLOR,
+                      paddingTop: "12px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[2],
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Late
+                    </span>
+                    <br />
+
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].late}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: PRIMARY_BLUE2,
+                      paddingTop: "12px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[3],
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Leave
+                    </span>
+                    <br />
+
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].leave}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: PRIMARY_BLUE2,
+                      paddingTop: "12px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[4],
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Weekly Off
+                    </span>
+                    <br />
+
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].weeklyOff}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 500,
+                      color: PRIMARY_BLUE2,
+                      paddingTop: "12px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      height: "80px",
+                      marginTop: "10px",
+                      cursor: "pointer",
+                      backgroundColor: tileColors[5],
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Closed
+                    </span>
+                    <br />
+
+                    <span
+                      style={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "24px",
+                        lineHeight: "28px",
+                        letterSpacing: "0%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {ISPOverviewList[0].closed}
+                    </span>
+                  </Typography>
+                </Grid>
+              </>
+            )}
           </Grid>
         </Grid>
       </Grid>
     </StyledCard>
   );
+};
+
+AttendanceChart.propTypes = {
+  ISPOverviewList: PropTypes.array,
 };
 
 export default AttendanceChart;

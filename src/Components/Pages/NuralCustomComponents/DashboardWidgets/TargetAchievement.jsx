@@ -6,6 +6,7 @@ import {
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
 } from "../../../Common/colors";
+import { formatIndianNumberSystem } from "../../../../utils/numberFormatter";
 
 const CircularProgressWithLabel = ({ value, mainText, subText, label }) => {
   return (
@@ -113,7 +114,40 @@ const CircularProgressWithLabel = ({ value, mainText, subText, label }) => {
   );
 };
 
-const TargetAchievement = () => {
+const TargetAchievement = ({ targetAchievement }) => {
+  // Check if targetAchievement exists and has required properties
+  const hasData = targetAchievement && 
+    typeof targetAchievement.mtdTargetSaleAch === 'number' &&
+    typeof targetAchievement.mtdTargetQtyAch === 'number';
+
+  if (!hasData) {
+    return (
+      <Grid
+        container
+        sx={{
+          backgroundColor: LIGHT_GRAY2,
+          borderRadius: "8px",
+          p: 2,
+          minHeight: "300px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            fontSize: "14px",
+            color: PRIMARY_BLUE2,
+            textAlign: "center"
+          }}
+        >
+          No target achievement data available
+        </Typography>
+      </Grid>
+    );
+  }
+
   return (
     <Grid
       container
@@ -121,7 +155,6 @@ const TargetAchievement = () => {
         backgroundColor: LIGHT_GRAY2,
         borderRadius: "8px",
         p: 2,
-      
       }}
     >
       <Grid item xs={12}>
@@ -138,19 +171,24 @@ const TargetAchievement = () => {
         </Typography>
       </Grid>
 
-      <Grid container spacing={1} justifyContent="space-around" alignItems="center">
+      <Grid
+        container
+        spacing={1}
+        justifyContent="space-around"
+        alignItems="center"
+      >
         <Grid item>
           <CircularProgressWithLabel
-            value={62}
-            mainText="930/1500"
+            value={targetAchievement.mtdTargetSaleAch}
+            mainText={`${formatIndianNumberSystem(targetAchievement.mtdispSale)}/${formatIndianNumberSystem(targetAchievement.totalSaleTarget)}`}
             subText="UNITS"
             label="VOLUME"
           />
         </Grid>
         <Grid item>
           <CircularProgressWithLabel
-            value={58}
-            mainText="₹2.6L/₹4.5L"
+            value={targetAchievement.mtdTargetQtyAch}
+            mainText={`${formatIndianNumberSystem(targetAchievement.mtdispQty)}/${formatIndianNumberSystem(targetAchievement.totalQtyTarget)}`}
             subText="UNITS"
             label="VALUE"
           />

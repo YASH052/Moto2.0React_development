@@ -26,36 +26,23 @@ const data = [
 ];
 
 const RATIncentive = () => {
-  const [activeTab, setActiveTab] = React.useState("incentive");
-  const tabRoutes = {
-    business: "/business-dashboard",
-    channels: "/channel-performance",
-    availability: "/availability-overview",
-    attendance: "/rat-attendance",
-    inventory: "/rat-inventory-dashboard",
-    brand: "/brand-monitor",
-    target: "/rat-target",
-    incentive: "/rat-incentive",
-  };
-  const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
-    { label: "Brand", value: "brand" },
-    { label: "Attendance", value: "attendance" },
-    { label: "Inventory", value: "inventory" },
+  const [activeTab, setActiveTab] = React.useState("rat-incentive");
 
-    { label: "Target", value: "target" },
-    { label: "Incentive", value: "incentive" },
+  const tabs = [
+    { label: "Business", value: "dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
+    { label: "Brand", value: "brand-dashboard" },
+    { label: "Inventory", value: "inventory-dashboard" },
+    { label: "Attendance", value: "rat-attendance" },
+    { label: "Target", value: "rat-target" },
+    { label: "Incentive", value: "rat-incentive" },
   ];
   const navigate = useNavigate();
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    const route = tabRoutes[newValue];
-    if (route) {
-      navigate(route);
-    }
+    navigate(`/${newValue}`);
   };
   {
     tabs.map((tab) => (

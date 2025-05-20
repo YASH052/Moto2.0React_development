@@ -6,109 +6,66 @@ import { DARK_PURPLE, LIGHT_GRAY2 } from "../../../Common/colors";
 const RankContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
-  marginBottom: theme.spacing(0.5),
-  padding: theme.spacing(0.25, 1),
   "&:last-child": {
     marginBottom: 0,
   },
 }));
 
-const RankNumber = styled(Typography)(({ theme, rankNumberColor }) => ({
-  color: rankNumberColor || "#4267B2",
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  gap: theme.spacing(1),
-}));  
+const RankNumber = styled(Typography)(({ theme }) => ({
+  color: "#00D1C1",
+  fontWeight: "700",
+  fontSize: "14px",
+  lineHeight: "1.2",
+}));
 
-const RankingCard = ({ 
-  height,
-  title,
-  data = [], 
-  dateRange,
-  // Color props with default values
-  backgroundColor = LIGHT_GRAY2,
-  titleColor = DARK_PURPLE,
-  dateColor = "#6B7280",
-  scoreColor = DARK_PURPLE,
-  // Style props with default values
+const RankLabel = styled(Typography)(({ theme }) => ({
+  color: "#637381",
+  fontSize: "8px",
+  fontWeight: "400",
+  textTransform: "uppercase",
+  marginTop: theme.spacing(.7),
+}));
+
+const RankingCard = ({
+  data,
+  height = "auto",
+  backgroundColor = "#FFFFFF",
   cardStyles = {
-    padding: 1.5,
+    paddingY: 1,
+    paddingX: 2,
     borderRadius: 2,
-    width: "200px",
-    height: height,
+    // width: "144px",
   },
-  titleStyles = {
-    ml: 0.5,
-    fontFamily: "Manrope",
-    fontWeight: 700,
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    mb: 1,
-  },
-  dateStyles = {
-    fontSize: "8px",
-  },
-  rankContainerStyles = {
-    gap: "0px",
-    my: -0.1,
-    mb: 1,
-  },
-  rankNumberStyles = {
-    fontFamily: "Manrope",
-    fontWeight: 700,
-    fontSize: "18px",
-    lineHeight: "24px",
-  },
-  scoreStyles = {
-    fontFamily: "Manrope",
-    fontWeight: 400,
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    textAlign: "start",
-  },
-  rankNumberColor
 }) => {
+  console.log("data", data);
   return (
     <Card sx={{ ...cardStyles, backgroundColor }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0 }}>
-        <Typography
-          variant="h6"
-          sx={{ ...titleStyles, color: titleColor }}
-        >
-          {title}
-        </Typography>
-        {dateRange && (
-          <Typography
-            variant="caption"
-            sx={{ ...dateStyles, color: dateColor }}
-          >
-            {dateRange}
-          </Typography>
-        )}
-      </Box>
-      {data.map((item, index) => (
-        <RankContainer 
-          key={index} 
-          sx={{ ...rankContainerStyles }}
-        >
-          <RankNumber
-            variant="body1"
-            rankNumberColor={rankNumberColor}
-            sx={{ ...rankNumberStyles }}
-          >
-            <span>#{index + 1}</span>
-            <span>NSM {index + 1}</span>
-          </RankNumber>
-          <Typography
-            variant="body2"
-            sx={{ ...scoreStyles, color: scoreColor }}
-          >
-            SCORE: {item.score}
-          </Typography>
-        </RankContainer>
-      ))}
+      <Typography
+        variant="h6"
+        sx={{
+          color: "#0B4B66",
+          fontWeight: 600,
+          fontSize: "12px",
+          mb:1.8,
+        }}
+      >
+        My Rank
+      </Typography>
+
+      <RankContainer>
+        <RankNumber>#{data[0]?.regionRank || 0}</RankNumber>
+        <RankLabel>REGION</RankLabel>
+      </RankContainer>
+
+      <RankContainer>
+        <RankNumber>#{data[0]?.areaRank || 0}</RankNumber>
+        <RankLabel>AREA</RankLabel>
+      </RankContainer>
+
+      <RankContainer>
+        <RankNumber>#{data[0]?.nationRank || 0}</RankNumber>
+        <RankLabel>NATIONAL</RankLabel>
+      </RankContainer>
     </Card>
   );
 };

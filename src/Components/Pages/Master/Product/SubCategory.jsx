@@ -23,7 +23,12 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleButtonStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import EditIcon from "@mui/icons-material/Edit";
 import {
   Table,
@@ -112,6 +117,7 @@ const SubCategory = () => {
   const [searchCategoryLoading, setSearchCategoryLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(true);
   const [searchFormLoading, setSearchFormLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Error states
   const [errors, setErrors] = useState({});
@@ -119,6 +125,8 @@ const SubCategory = () => {
   // Accordion states
   const [accordionExpanded, setAccordionExpanded] = useState(true);
   const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
+  const [isTableVisible, setIsTableVisible] = useState(false);
+  const [isCreateButtonsVisible, setIsCreateButtonsVisible] = useState(true);
 
   // Add state for edit mode
   const [isEditMode, setIsEditMode] = useState(false);
@@ -134,6 +142,9 @@ const SubCategory = () => {
 
   // State for export loading
   const [isDownloadLoading, setIsDownloadLoading] = useState(false);
+
+  // Add loading states for autocomplete
+  const [subcategoryLoading, setSubcategoryLoading] = useState(false);
 
   // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
@@ -340,7 +351,7 @@ const SubCategory = () => {
 
   // Handle form field changes
   const handleChange = (field, value) => {
-    console.log("handleChange called for", field, "with value:", value);
+    // console.log("handleChange called for", field, "with value:", value);
 
     // Handle null/undefined values
     if (value === null || value === undefined) {
@@ -392,18 +403,18 @@ const SubCategory = () => {
       const newValue = value.toString();
 
       // Common validation for both fields
-      if (newValue.length > 50) {
+      if (newValue.length > 20) {
         setErrors((prev) => ({
           ...prev,
           [field]: `${
             field === "SubCategoryName"
               ? "Sub-Category Name"
               : "Sub-Category Code"
-          } cannot exceed 50 characters`,
+          } cannot exceed 20 characters`,
         }));
         setFormData((prev) => ({
           ...prev,
-          [field]: newValue.substring(0, 50),
+          [field]: newValue.substring(0, 20),
         }));
         return;
       }
@@ -449,14 +460,14 @@ const SubCategory = () => {
   // Get subcategory list for search filter
   const getSubCategory = async (categoryID = 0) => {
     try {
-      setSearchFormLoading(true);
+      setSubcategoryLoading(true);
       const params = {
         brandID: 0,
         categoryID: categoryID,
         subcategoryID: 0,
         callType: 1, // 1 = Active List for dropdown
         pageIndex: 1,
-        pageSize: 100
+        pageSize: 100,
       };
       const response = await GetSubCategoryList(params);
       if (response.statusCode === "200") {
@@ -468,7 +479,7 @@ const SubCategory = () => {
       console.error("Error fetching subcategory list:", error);
       setSubcategoryList([]);
     } finally {
-      setSearchFormLoading(false);
+      setSubcategoryLoading(false);
     }
   };
 
@@ -546,9 +557,9 @@ const SubCategory = () => {
 
     if (!formData.SubCategoryName || formData.SubCategoryName.trim() === "") {
       newErrors.SubCategoryName = "Sub-Category Name is required";
-    } else if (formData.SubCategoryName.length > 50) {
+    } else if (formData.SubCategoryName.length > 20) {
       newErrors.SubCategoryName =
-        "Sub-Category Name cannot exceed 50 characters";
+        "Sub-Category Name cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.SubCategoryName)) {
       newErrors.SubCategoryName =
         "Sub-Category Name can only contain alphanumeric characters and spaces";
@@ -556,9 +567,9 @@ const SubCategory = () => {
 
     if (!formData.SubCategoryDesc || formData.SubCategoryDesc.trim() === "") {
       newErrors.SubCategoryDesc = "Sub-Category Code is required";
-    } else if (formData.SubCategoryDesc.length > 50) {
+    } else if (formData.SubCategoryDesc.length > 20) {
       newErrors.SubCategoryDesc =
-        "Sub-Category Code cannot exceed 50 characters";
+        "Sub-Category Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.SubCategoryDesc)) {
       newErrors.SubCategoryDesc =
         "Sub-Category Code can only contain alphanumeric characters (no spaces)";
@@ -571,25 +582,29 @@ const SubCategory = () => {
   // Handle accordion changes
   const handleAccordionChange = (event, expanded) => {
     if (!expanded) {
-      // Closing this accordion closes both
+      // Closing create accordion
       setAccordionExpanded(false);
-      setSearchAccordionExpanded(false);
+      setIsCreateButtonsVisible(false);
     } else {
-      // Opening this accordion closes the other
+      // Opening create accordion
       setAccordionExpanded(true);
-      setSearchAccordionExpanded(false);
+      setSearchAccordionExpanded(false); // Close view accordion
+      setIsCreateButtonsVisible(true);
+      setIsTableVisible(false); // Hide table when create is opened
     }
   };
 
   const handleSearchAccordionChange = (event, expanded) => {
     if (!expanded) {
-      // Closing this accordion closes both
-      setAccordionExpanded(false);
+      // Closing view accordion
       setSearchAccordionExpanded(false);
+      setIsTableVisible(false);
     } else {
-      // Opening this accordion closes the other
+      // Opening view accordion
       setSearchAccordionExpanded(true);
-      setAccordionExpanded(false);
+      setAccordionExpanded(false); // Close create accordion
+      setIsCreateButtonsVisible(false); // Hide create buttons
+      setIsTableVisible(true); // Show table when view is opened
     }
   };
 
@@ -605,6 +620,7 @@ const SubCategory = () => {
       ...searchParams,
       pageIndex: -1, // -1 indicates export to excel
     };
+    setIsDownloadLoading(true);
     try {
       const response = await GetSubCategoryList(params);
       if (response.statusCode === "200") {
@@ -614,6 +630,8 @@ const SubCategory = () => {
       }
     } catch (error) {
       console.error("Error exporting subcategory list:", error);
+    } finally {
+      setIsDownloadLoading(false);
     }
   };
   const handleTabChange = (newValue) => {
@@ -631,13 +649,28 @@ const SubCategory = () => {
 
   const options2 = ["Brand 1", "Brand 2", "Brand 3"];
 
-  // Add handlePostRequest function
+  // Add a function to reset form data
+  const resetFormData = () => {
+    setFormData({
+      BrandID: 0,
+      CategoryID: 0,
+      SubCategoryName: "",
+      SubCategoryDesc: "",
+      SubCategoryID: 0,
+      Active: 1,
+      CallType: 0,
+    });
+    setErrors({});
+  };
+
+  // Update handlePostRequest function
   const handlePostRequest = async () => {
     if (!validateForm()) {
       return;
     }
 
     try {
+      setIsCreating(true);
       setCreateStatus(null);
       setCreateTitle("");
 
@@ -655,7 +688,8 @@ const SubCategory = () => {
       if (response.statusCode === "200") {
         setCreateStatus(response.statusCode);
         setCreateTitle(response.statusMessage);
-        handleCancel();
+        resetFormData();
+        setIsEditMode(false);
         getSubCategoryList();
       } else {
         setCreateStatus(response.statusCode);
@@ -665,69 +699,20 @@ const SubCategory = () => {
       setCreateStatus(error.statusCode);
       setCreateTitle(error.statusMessage);
       console.log(error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  // Add handleEdit function
-  const handleEdit = async (row) => {
-    try {
-      // Find the matching category from categoryList
-      const matchingCategory = categoryList.find(
-        (category) => category.categoryID === row.productCategoryID
-      );
-
-      setFormData({
-        BrandID: row.brandID || 0,
-        CategoryID: row.productCategoryID || 0, // Use productCategoryID from row
-        SubCategoryName: row.subCategory || "",
-        SubCategoryDesc: row.subCategoryDesc || "",
-        SubCategoryID: row.subCategoryID || 0,
-        Active: row.status === 1 ? 1 : 0,
-        CallType: 1, // 1 for edit
-      });
-
-      // Scroll to top and expand the create form accordion if it's not expanded
-      setAccordionExpanded(true);
-      setIsEditMode(true);
-      setErrors({});
-      // Use setTimeout and scrollIntoView on the ref
-      setTimeout(() => {
-        formAccordionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-      setSearchAccordionExpanded(false); // Explicitly close search accordion
-    } catch (error) {
-      console.error("Error setting up edit form:", error);
-    }
-  };
-
-  // Update handleCancel function
+  // Update handleCancel function to use resetFormData
   const handleCancel = () => {
-    setFormLoading(true);
-    const updatedForm = {
-      ...formData,
-      modelName: "",
-      modelCode: "",
-      brandID: 0,
-      categoryID: 0,
-      subCategoryID: 0,
-      modelType: 0,
-      modelMode: 0,
-      status: 1,
-      modelID: 0,
-      callType: 1, // Reset to Insert mode
-    };
-    setFormData(updatedForm);
-
-    // Reset edit mode
+    // setFormLoading(true);
+    resetFormData(); // Use the new reset function
     setIsEditMode(false);
-
-    // Clear all errors
-    setErrors({});
-
-    setTimeout(() => {
-      getSubCategoryList();
-      setFormLoading(false);
-    }, 500);
+    // setTimeout(() => {
+    //   getSubCategoryList();
+    //   setFormLoading(false);
+    // }, 500);
   };
 
   // Add useEffect for status timeout
@@ -779,6 +764,38 @@ const SubCategory = () => {
     }
   }, [status]);
 
+  // Add handleEdit function
+  const handleEdit = async (row) => {
+    try {
+      setFormData({
+        BrandID: row.brandID || 0,
+        CategoryID: row.productCategoryID || 0,
+        SubCategoryName: row.subCategory || "",
+        SubCategoryDesc: row.subCategoryDesc || "",
+        SubCategoryID: row.subCategoryID || 0,
+        Active: row.status === 1 ? 1 : 0,
+        CallType: 1, // 1 for edit
+      });
+
+      // Scroll to top and expand the create form accordion if it's not expanded
+      setAccordionExpanded(true);
+      setIsEditMode(true);
+      setIsCreateButtonsVisible(true);
+      setErrors({});
+
+      // Use setTimeout and scrollIntoView on the ref
+      setTimeout(() => {
+        formAccordionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+      setSearchAccordionExpanded(false); // Explicitly close search accordion
+    } catch (error) {
+      console.error("Error setting up edit form:", error);
+    }
+  };
+
   return (
     <>
       <Grid
@@ -786,7 +803,7 @@ const SubCategory = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1 },
+          pl: { xs: 1, sm: 1, md: 0 },
           pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
           isolation: "isolate",
         }}
@@ -803,11 +820,11 @@ const SubCategory = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0} pr={2}>
             <BreadcrumbsHeader pageTitle="Product" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -820,7 +837,7 @@ const SubCategory = () => {
         <Grid item xs={12} pr={1.5}>
           <Grid container spacing={2} direction="column">
             <Grid item>
-              {formLoading ? (
+              {formLoading || isCreating ? (
                 <FormSkeleton />
               ) : (
                 <>
@@ -851,20 +868,18 @@ const SubCategory = () => {
                             CATEGORY <Required />
                           </Typography>
 
-                          {/*  {
-            "categoryID": 65,
-            "categoryCode": "Accessories",
-            "categoryName": "Accessories"
-        }, */}
                           <NuralAutocomplete
                             options={categoryList}
-                            getOptionLabel={(option) => option.categoryName || ""}
+                            getOptionLabel={(option) =>
+                              option.categoryName || ""
+                            }
                             isOptionEqualToValue={(option, value) =>
                               option?.categoryID === value?.categoryID
                             }
                             value={
                               categoryList.find(
-                                (item) => item.categoryID === formData.CategoryID
+                                (item) =>
+                                  item.categoryID === formData.CategoryID
                               ) || null
                             }
                             onChange={(event, newValue) => {
@@ -874,7 +889,7 @@ const SubCategory = () => {
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
                             error={!!errors.CategoryID}
-                            helperText={errors.CategoryID}
+                            // helperText={errors.CategoryID}
                             loading={categoryLoading}
                             onBlur={() => {
                               if (!formData.CategoryID) {
@@ -912,7 +927,7 @@ const SubCategory = () => {
                           </Typography>
                           <NuralTextField
                             width="100%"
-                            placeholder="Enter Sub-Category Name"
+                            placeholder="ENTER SUBCATEGORY NAME"
                             backgroundColor={LIGHT_BLUE}
                             value={formData.SubCategoryName}
                             onChange={(e) =>
@@ -931,7 +946,9 @@ const SubCategory = () => {
                                     "Sub-Category Name is required",
                                 }));
                               } else if (
-                                !/^[a-zA-Z0-9 ]*$/.test(formData.SubCategoryName)
+                                !/^[a-zA-Z0-9 ]*$/.test(
+                                  formData.SubCategoryName
+                                )
                               ) {
                                 setErrors((prev) => ({
                                   ...prev,
@@ -968,7 +985,7 @@ const SubCategory = () => {
                           </Typography>
                           <NuralTextField
                             width="100%"
-                            placeholder="Enter Sub-Category Code"
+                            placeholder="ENTER SUBCATEGORY CODE"
                             backgroundColor={LIGHT_BLUE}
                             value={formData.SubCategoryDesc}
                             onChange={(e) =>
@@ -1011,39 +1028,41 @@ const SubCategory = () => {
                       <Grid container spacing={1} mt={1} pr={2}></Grid>
                     </NuralAccordion2>
                   </div>
-                  <Grid
-                    container
-                    sx={{ width: "100%", mt: "16px", mb: "16px" }}
-                  >
-                    {createStatus && (
+                  {createStatus && (
+                    <Grid
+                      container
+                      sx={{ width: "100%", mt: "16px", mb: "16px" }}
+                    >
                       <StatusModel
                         width="100%"
                         status={createStatus}
                         title={createTitle}
                         onClose={() => setCreateStatus(null)}
                       />
-                    )}
-                  </Grid>
-                  <Grid container spacing={2} direction="row">
-                    <Grid item xs={12} md={6} lg={6}>
-                      <NuralButton
-                        text="CANCEL"
-                        variant="outlined"
-                        borderColor={PRIMARY_BLUE2}
-                        onClick={handleCancel}
-                        width="100%"
-                      />
                     </Grid>
-                    <Grid item xs={12} md={6} lg={6}>
-                      <NuralButton
-                        text={isEditMode ? "UPDATE" : "SAVE"}
-                        backgroundColor={AQUA}
-                        variant="contained"
-                        onClick={handlePostRequest}
-                        width="100%"
-                      />
+                  )}
+                  {isCreateButtonsVisible && (
+                    <Grid container spacing={2} mt={1} direction="row">
+                      <Grid item xs={12} md={6} lg={6}>
+                        <NuralButton
+                          text="CANCEL"
+                          variant="outlined"
+                          borderColor={PRIMARY_BLUE2}
+                          onClick={handleCancel}
+                          width="100%"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6} lg={6}>
+                        <NuralButton
+                          text={isEditMode ? "UPDATE" : "SAVE"}
+                          backgroundColor={AQUA}
+                          variant="contained"
+                          onClick={handlePostRequest}
+                          width="100%"
+                        />
+                      </Grid>
                     </Grid>
-                  </Grid>
+                  )}
                 </>
               )}
             </Grid>
@@ -1145,6 +1164,7 @@ const SubCategory = () => {
                           width="100%"
                           placeholder="SELECT"
                           backgroundColor={LIGHT_BLUE}
+                          loading={subcategoryLoading}
                         />
                       </Grid>
                     </Grid>
@@ -1184,7 +1204,7 @@ const SubCategory = () => {
           </Grid>
         </Grid>
 
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+        <Grid item xs={12} mt={-1} sx={{ p: { xs: 1, sm: 2, md: 1.5 } }}>
           <Grid container sx={{ width: "100%", marginBottom: "10px" }}>
             {status && (
               <StatusModel
@@ -1195,241 +1215,244 @@ const SubCategory = () => {
               />
             )}
           </Grid>
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(120vh - 180px)", // Adjusted to account for headers
-              overflow: "auto",
-              position: "relative",
-              "& .MuiTable-root": {
-                borderCollapse: "separate",
-                borderSpacing: 0,
-              },
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 100,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <Grid
-                      container
-                      justifyContent="space-between"
-                      alignItems="center"
+          {isTableVisible && (
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(120vh - 180px)",
+                overflow: "auto",
+                position: "relative",
+                "& .MuiTable-root": {
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                },
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 100,
+                        borderBottom: "none",
+                        boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
+                      }}
                     >
-                      <Grid item>
-                        <Typography
-                          variant="body1"
+                      <Grid
+                        container
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Grid item>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontFamily: "Manrope",
+                              fontWeight: 700,
+                              fontSize: "14px",
+                              lineHeight: "19.12px",
+                              letterSpacing: "0%",
+                              color: PRIMARY_BLUE2,
+                              p: 1,
+                            }}
+                          >
+                            List
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
                           sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
+                            cursor: "pointer",
                           }}
                         >
-                          List
-                        </Typography>
+                          {/* Remove the old export icon */}
+                        </Grid>
                       </Grid>
-                      <Grid
-                        item
-                        sx={{
-                          cursor: "pointer",
-                        }}
-                      >
-                        {/* Remove the old export icon */}
-                      </Grid>
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "45px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 100,
-                      width: "50px",
-                      padding: "8px 16px",
-                    }}
-                  >
-                    S.NO
-                  </TableCell>
-                  {[
-                    { label: "CATEGORY", key: "category" },
-                    { label: "SUBCATEGORY", key: "subCategory" },
-                    { label: "SUBCATEGORY CODE", key: "subCategoryDesc" },
-                    { label: "STATUS", sortable: false },
-                    { label: "EDIT", sortable: false },
-                  ].map((header, index) => (
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
                     <TableCell
-                      key={header.label}
-                      onClick={() =>
-                        header.sortable !== false && handleSort(header.key)
-                      }
                       sx={{
                         ...tableHeaderStyle,
-                        cursor:
-                          header.sortable !== false ? "pointer" : "default",
                         position: "sticky",
                         top: "45px",
                         backgroundColor: LIGHT_GRAY2,
                         zIndex: 100,
+                        width: "50px",
                         padding: "8px 16px",
-                        minWidth: header.label === "EDIT" ? "60px" : "100px",
                       }}
                     >
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{header.label}</Grid>
-                        {header.sortable !== false && (
-                          <Grid item>
-                            {sortConfig.key === header.key ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
-                      </Grid>
+                      S.NO
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {/* "sNo": 1,
-            "brandID": 27,
-            "brandCode": "Moto",
-            "brandName": "Moto",
-            "productCategoryID": 65,
-            "category": "Accessories",
-            "categoryDesc": "Accessories",
-            "subCategoryID": 40,
-            "subCategory": "NewBrandrpk1subcat",
-            "subCategoryDesc": "NewBrandrpk1subcat01",
-            "status": 1,
-            "currentStatus": "Active" */}
-                {tableLoading ? (
-                  <TableRowSkeleton columns={6} rows={10} />
-                ) : filteredRows.length > 0 ? (
-                  filteredRows.map((row, index) => (
-                    <TableRow
-                      key={row.id}
-                      sx={{
-                        fontSize: "10px",
+                    {[
+                      { label: "CATEGORY", key: "category" },
+                      { label: "SUBCATEGORY", key: "subCategory" },
+                      { label: "SUBCATEGORY CODE", key: "subCategoryDesc" },
+                      { label: "STATUS", sortable: false },
+                      { label: "EDIT", sortable: false },
+                    ].map((header, index) => (
+                      <TableCell
+                        key={header.label}
+                        onClick={() =>
+                          header.sortable !== false && handleSort(header.key)
+                        }
+                        sx={{
+                          ...tableHeaderStyle,
+                          cursor:
+                            header.sortable !== false ? "pointer" : "default",
+                          position: "sticky",
+                          top: "45px",
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 100,
+                          padding: "8px 16px",
+                          minWidth: header.label === "EDIT" ? "60px" : "100px",
+                        }}
+                      >
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{header.label}</Grid>
+                          {header.sortable !== false && (
+                            <Grid item>
+                              {sortConfig.key === header.key ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                </Grid>
+                              )}
+                            </Grid>
+                          )}
+                        </Grid>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {/* "sNo": 1,
+              "brandID": 27,
+              "brandCode": "Moto",
+              "brandName": "Moto",
+              "productCategoryID": 65,
+              "category": "Accessories",
+              "categoryDesc": "Accessories",
+              "subCategoryID": 40,
+              "subCategory": "NewBrandrpk1subcat",
+              "subCategoryDesc": "NewBrandrpk1subcat01",
+              "status": 1,
+              "currentStatus": "Active" */}
+                  {tableLoading ? (
+                    <TableRowSkeleton columns={6} rows={10} />
+                  ) : filteredRows.length > 0 ? (
+                    filteredRows.map((row, index) => (
+                      <TableRow
+                        key={row.id}
+                        sx={{
+                          fontSize: "10px",
 
-                        "& td": {
-                          borderBottom: `1px solid #C6CEED`,
-                        },
-                      }}
-                    >
-                      <TableCell sx={{ ...rowstyle }}>
-                        {" "}
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.category}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.subCategory}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.subCategoryDesc}
-                      </TableCell>
+                          "& td": {
+                            borderBottom: `1px solid #C6CEED`,
+                          },
+                        }}
+                      >
+                        <TableCell sx={{ ...rowstyle }}>
+                          {" "}
+                          {page * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.category}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.subCategory}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.subCategoryDesc}
+                        </TableCell>
 
-                      <TableCell sx={{ ...rowstyle }}>
-                        <Switch
-                          checked={row.status === 1}
-                          onChange={(e) => {
-                            // Call handleStatus instead of directly updating the UI
-                            handleStatus(row, e.target.checked);
-                          }}
-                          size="small"
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: PRIMARY_BLUE2,
-                            },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: DARK_PURPLE,
+                        <TableCell sx={{ ...rowstyle }}>
+                          <Switch
+                            checked={row.status === 1}
+                            onChange={(e) => {
+                              // Call handleStatus instead of directly updating the UI
+                              handleStatus(row, e.target.checked);
+                            }}
+                            sx={{
+                              ...toggleSectionStyle,
+                              "& .MuiSwitch-thumb": {
+                                backgroundColor:
+                                  row.status === 1
+                                    ? PRIMARY_BLUE2
+                                    : DARK_PURPLE,
                               },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(row)}
-                        >
-                          <EditIcon
-                            sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                            }}
                           />
-                        </IconButton>
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(row)}
+                          >
+                            <EditIcon
+                              sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        No data available
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      No data available
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
 
-            {/* Replace the old pagination with NuralPagination */}
-            <NuralPagination
-              key={`pagination-${page}-${rowsPerPage}`}
-              totalRecords={totalRecords}
-              initialPage={page}
-              initialRowsPerPage={rowsPerPage}
-              onPaginationChange={handlePaginationChange}
-            />
-          </TableContainer>
+              {/* Replace the old pagination with NuralPagination */}
+              <NuralPagination
+                key={`pagination-${page}-${rowsPerPage}`}
+                totalRecords={totalRecords}
+                initialPage={page}
+                initialRowsPerPage={rowsPerPage}
+                onPaginationChange={handlePaginationChange}
+              />
+            </TableContainer>
+          )}
         </Grid>
       </Grid>
       {/* Activity Panel for Export */}
@@ -1469,7 +1492,7 @@ const SubCategory = () => {
             className="export-button"
           >
             <NuralExport
-              title="Export SubCategory List"
+              title="Export"
               views={""} // Add views if applicable
               downloadExcel={handleExport}
               isDownloadLoading={isDownloadLoading}

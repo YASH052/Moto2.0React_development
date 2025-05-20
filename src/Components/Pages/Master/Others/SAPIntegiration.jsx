@@ -26,8 +26,9 @@ const SAPIntegiration = () => {
   const navigate = useNavigate();
   const tabs = [
     { label: "Activation File Received", value: "activation-file-received" },
-    { label: "SAP Integration", value: "sap-integration" },
-    { label: "Demo Conversion", value: "demo-conversion" },
+    { label: "SAP Integration", value: "redington-file" },
+    { label: "Reliance API Status", value: "rel-api-status" },
+    { label: "Log Report", value: "Log Report" },
   ];
   const templates = [
     {

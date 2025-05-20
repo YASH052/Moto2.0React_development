@@ -7,6 +7,7 @@ import {
   PRIMARY_BLUE2,
   AQUA,
   LIGHT_BLUE,
+  DARK_PURPLE,
 } from "../../../Common/colors";
 import EditIcon from "@mui/icons-material/Edit";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -17,7 +18,11 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import NuralPagination from "../../../Common/NuralPagination";
 import {
   Table,
@@ -42,10 +47,12 @@ import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 import NuralLoginTextField from "../../NuralCustomComponents/NuralLoginTextField";
 import Required from "../../../Common/Required";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const tabs = [
   { label: "Upload", value: "geography-bulk-upload" },
-  { label: "Country", value: "country" },
+  { label: "Country", value: "#" },
   { label: "State", value: "state" },
   { label: "City", value: "city" },
   { label: "Area", value: "area" },
@@ -95,6 +102,7 @@ const State = () => {
   const [titleSearch, setTitleSearch] = useState("");
 
   // Add loading states
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(true);
   const [searchFormLoading, setSearchFormLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(true);
@@ -116,30 +124,8 @@ const State = () => {
   };
 
   // Add a useRef to store the timer ID
-  const statusTimerRef = useRef(null);
 
   // Add useEffect to handle auto-dismiss for success messages
-  useEffect(() => {
-    // Only set timer for success messages (status code 200)
-    if (statusSearch === "200") {
-      // Clear any existing timer
-      if (statusTimerRef.current) {
-        clearTimeout(statusTimerRef.current);
-      }
-
-      // Set new timer to clear status after 5 seconds
-      statusTimerRef.current = setTimeout(() => {
-        setStatusSearch(null);
-      }, 5000); // 5000ms = 5 seconds
-    }
-
-    // Cleanup function to clear timer when component unmounts or statusSearch changes
-    return () => {
-      if (statusTimerRef.current) {
-        clearTimeout(statusTimerRef.current);
-      }
-    };
-  }, [statusSearch]); // Only run effect when statusSearch changes
 
   // Add error state
   const [errors, setErrors] = useState({});
@@ -220,8 +206,12 @@ const State = () => {
     }
   };
 
+  const [regionLoading, setRegionLoading] = useState(false);
+  const [regionSearchLoading, setRegionSearchLoading] = useState(false);
+
   const getRegion = async (countryID = 0) => {
     try {
+      setRegionLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: 0,
@@ -233,11 +223,14 @@ const State = () => {
       }
     } catch (error) {
       console.error("Error in getRegion:", error);
+    } finally {
+      setRegionLoading(false);
     }
   };
 
   const getRegionSearch = async (countryID = 0) => {
     try {
+      setRegionSearchLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: 0,
@@ -249,6 +242,8 @@ const State = () => {
       }
     } catch (error) {
       console.error("Error in getRegionSearch:", error);
+    } finally {
+      setRegionSearchLoading(false);
     }
   };
 
@@ -260,6 +255,7 @@ const State = () => {
 
       if (response.statusCode === "200") {
         setTableData(response.stateMasterList);
+        setFilteredRows(response.stateMasterList);
         setTotalRecords(response.totalRecords);
         // Only set status for empty results or specific messages
         if (response.stateMasterList.length === 0) {
@@ -279,12 +275,12 @@ const State = () => {
         setStatusSearch(response.statusCode);
         setTitleSearch("Internal Server Error");
       }
-      setTableLoading(false);
     } catch (error) {
       console.error("Error in getState:", error);
       setHasSearchError(true);
       setStatusSearch(error.statusCode || "500");
       setTitleSearch("Internal Server Error");
+    } finally {
       setTableLoading(false);
     }
   };
@@ -340,6 +336,7 @@ const State = () => {
         ...searchParams,
         pageIndex: -1, //1-UI,-1-Export to excel
       };
+      setIsDownloadLoading(true);
       const response = await GetStateListForMoto(params);
       if (response.statusCode === "200") {
         window.location.href = response?.filepathlink;
@@ -356,6 +353,8 @@ const State = () => {
       console.error("Error in downloadExcel:", error);
       setStatusSearch(error.statusCode || "500");
       setTitleSearch("Internal Server Error");
+    } finally {
+      setIsDownloadLoading(false);
     }
   };
 
@@ -421,10 +420,13 @@ const State = () => {
           countryID: 0,
           regionID: 0,
         }));
-        setErrors((prev) => ({
-          ...prev,
-          countryID: "Country is required",
-        }));
+        // Only set error if the field was previously filled
+        if (formData.countryID !== 0) {
+          setErrors((prev) => ({
+            ...prev,
+            countryID: "Country is required",
+          }));
+        }
         // Clear region options when country is cleared
         setRegion([]);
         return;
@@ -433,10 +435,13 @@ const State = () => {
           ...prev,
           regionID: 0,
         }));
-        setErrors((prev) => ({
-          ...prev,
-          regionID: "Region is required",
-        }));
+        // Only set error if the field was previously filled
+        if (formData.regionID !== 0) {
+          setErrors((prev) => ({
+            ...prev,
+            regionID: "Region is required",
+          }));
+        }
         return;
       }
     }
@@ -453,23 +458,61 @@ const State = () => {
 
     // Special handling for state code field
     if (field === "stateCode") {
-      // Check if this is a paste event (value length > 1)
-      if (typeof newValue === "string" && newValue.length > 1) {
-        // Trim whitespace for pasted content
-        newValue = newValue.trim();
-      }
-      
-      // Check for whitespace in the input
-      if (newValue.includes(' ')) {
+      // Check for spaces in real-time
+      if (newValue.includes(" ")) {
         setErrors((prev) => ({
           ...prev,
-          stateCode: "State Code cannot contain spaces",
+          stateCode: "Spaces are not allowed in State Code",
         }));
-        return; // Don't update the value if it contains spaces
+        // Remove spaces from the value
+        newValue = newValue.replace(/\s+/g, "");
       }
-      
+
       // Remove any non-alphanumeric characters
-      newValue = newValue.replace(/[^a-zA-Z0-9]/g, '');
+      newValue = newValue.replace(/[^a-zA-Z0-9]/g, "");
+
+      // Check character limit
+      if (newValue.length > 20) {
+        setErrors((prev) => ({
+          ...prev,
+          stateCode: "State Code cannot exceed 20 characters",
+        }));
+        newValue = newValue.slice(0, 20);
+      } else {
+        // Clear error if within limit
+        setErrors((prev) => ({
+          ...prev,
+          stateCode: "",
+        }));
+      }
+    }
+
+    // Special handling for state name field
+    if (field === "stateName") {
+      // Check for multiple spaces in real-time
+      if (newValue.includes("  ")) {
+        setErrors((prev) => ({
+          ...prev,
+          stateName: "Multiple spaces are not allowed",
+        }));
+        // Replace multiple spaces with single space
+        newValue = newValue.replace(/\s+/g, " ");
+      }
+
+      // Check character limit
+      if (newValue.length > 20) {
+        setErrors((prev) => ({
+          ...prev,
+          stateName: "State Name cannot exceed 20 characters",
+        }));
+        newValue = newValue.slice(0, 20);
+      } else {
+        // Clear error if within limit
+        setErrors((prev) => ({
+          ...prev,
+          stateName: "",
+        }));
+      }
     }
 
     // Update form data
@@ -478,111 +521,42 @@ const State = () => {
       [field]: newValue,
     }));
 
-    // Clear error when valid value is entered
-    if (newValue) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }));
-    }
-
-    // Validate specific fields
-    if (field === "stateName") {
-      if (!newValue || newValue.trim() === "") {
-        setErrors((prev) => ({
-          ...prev,
-          stateName: "State Name is required",
-        }));
-      } else if (newValue.length > 50) {
-        setErrors((prev) => ({
-          ...prev,
-          stateName: "State Name cannot exceed 50 characters",
-        }));
-      } else if (!/^[a-zA-Z0-9 ]+$/.test(newValue)) {
-        setErrors((prev) => ({
-          ...prev,
-          stateName:
-            "State Name can only contain alphanumeric characters and spaces",
-        }));
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          stateName: "",
-        }));
-      }
-    }
-
-    if (field === "stateCode") {
-      if (!newValue || newValue.trim() === "") {
-        setErrors((prev) => ({
-          ...prev,
-          stateCode: "State Code is required",
-        }));
-      } else if (newValue.length > 50) {
-        setErrors((prev) => ({
-          ...prev,
-          stateCode: "State Code cannot exceed 50 characters",
-        }));
-      } else if (!/^[a-zA-Z0-9]+$/.test(newValue)) {
-        setErrors((prev) => ({
-          ...prev,
-          stateCode:
-            "State Code can only contain alphanumeric characters (no spaces)",
-        }));
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          stateCode: "",
-        }));
-      }
-    }
-
     // Handle country changes - with new logic for clearing
     if (field === "countryID") {
       if (value) {
-        // Country selected - reset region and state fields and fetch new regions
-        setFormData((prevData) => ({
-          ...prevData,
-          regionID: 0,
-          stateID: 0,
-          stateName: "",
-          stateCode: "",
-        }));
+        // Country selected - fetch new regions
         getRegion(value?.countryID || null);
+
+        // Only reset region if it's not a valid region for the new country
+        const selectedRegion = region.find(
+          (r) => r.regionID === formData.regionID
+        );
+        if (!selectedRegion || selectedRegion.countryID !== value.countryID) {
+          setFormData((prevData) => ({
+            ...prevData,
+            regionID: 0,
+          }));
+        }
       } else {
         // Country cleared - reset all dependent fields
         setRegion([]); // Reset region dropdown options
-        setState([]); // Reset state dropdown options
         setFormData((prevData) => ({
           ...prevData,
           regionID: 0,
-          stateID: 0,
-          stateName: "",
-          stateCode: "",
         }));
       }
     }
 
     // Handle region changes - with new logic for clearing
     if (field === "regionID") {
-      if (value) {
-        // Region selected - reset state fields and fetch new states
+      if (!value) {
+        // Region cleared - reset state fields
         setFormData((prevData) => ({
           ...prevData,
           stateID: 0,
           stateName: "",
           stateCode: "",
         }));
-        // getStateSearch(formData.countryID, value);
-      } else {
-        // Region cleared - reset all state-related fields
-        setFormData((prevData) => ({
-          ...prevData,
-          stateID: 0,
-          stateName: "",
-          stateCode: "",
-        }));
-        setState([]); // Reset state dropdown options
       }
     }
 
@@ -632,7 +606,7 @@ const State = () => {
       [field]: value,
     }));
 
-    // Handle country changes in search form - with new logic for clearing
+    // Handle country changes in search form
     if (field === "countryID") {
       if (value) {
         // Country selected - reset region and state fields and fetch new regions
@@ -658,7 +632,7 @@ const State = () => {
       }
     }
 
-    // Handle region changes in search form - with new logic for clearing
+    // Handle region changes in search form
     if (field === "regionID") {
       if (value) {
         // Region selected - reset state fields and fetch new states
@@ -681,7 +655,27 @@ const State = () => {
       }
     }
 
-    // Auto-fill logic for state in search form - unchanged
+    // Handle state name clearing - just update the state without API call
+    if (field === "stateName" && !value) {
+      setSearchParams((prevParams) => ({
+        ...prevParams,
+        stateName: "",
+        stateID: 0,
+        stateCode: "",
+      }));
+    }
+
+    // Handle state code clearing - just update the state without API call
+    if (field === "stateCode" && !value) {
+      setSearchParams((prevParams) => ({
+        ...prevParams,
+        stateCode: "",
+        stateID: 0,
+        stateName: "",
+      }));
+    }
+
+    // Auto-fill logic for state in search form
     if (field === "stateID" && value) {
       const stateObj = state.find((s) => s.stateID === value);
       if (stateObj) {
@@ -691,14 +685,16 @@ const State = () => {
         }));
       }
     } else if (field === "stateID" && !value) {
-      // State ID cleared - reset state code
+      // State ID cleared - just update the state without API call
       setSearchParams((prevParams) => ({
         ...prevParams,
+        stateID: 0,
         stateCode: "",
+        stateName: "",
       }));
     }
 
-    // Auto-fill logic when state code is selected in search - unchanged
+    // Auto-fill logic when state code is selected in search
     if (field === "stateCode" && value) {
       const stateObj = state.find((s) => s.stateCode === value);
       if (stateObj) {
@@ -707,12 +703,6 @@ const State = () => {
           stateID: stateObj.stateID,
         }));
       }
-    } else if (field === "stateCode" && !value) {
-      // State code cleared - reset state ID
-      setSearchParams((prevParams) => ({
-        ...prevParams,
-        stateID: 0,
-      }));
     }
   };
 
@@ -725,7 +715,7 @@ const State = () => {
       // Clear any existing status
       setStatus(null);
       setTitle("");
-      
+
       const form = {
         ...formData,
         callType: formData.stateID > 0 ? 2 : 1, // 1=Insert, 2=Update
@@ -734,12 +724,19 @@ const State = () => {
       if (response.statusCode === "200") {
         setStatus(response.statusCode);
         setTitle(response.statusMessage);
-        
+        getState(searchParams);
         // Add delay before resetting form
+        setFormData({
+          stateID: 0,
+          stateName: "",
+          stateCode: "",
+          status: 1,
+          countryID: 0,
+          regionID: 0,
+        });
         setTimeout(() => {
           handleCancel();
-          getState(searchParams);
-        }, 2000); // Wait 2 seconds before clearing
+        }, 5000); // Wait 2 seconds before clearing
       } else if (response.statusCode === "400") {
         setStatus(response.statusCode);
         setTitle(response.statusMessage);
@@ -765,14 +762,16 @@ const State = () => {
         status: row.status === 1 ? 0 : 1,
       };
       const response = await ManageStateAPIForMoto(form);
-      if (response.statusCode === "200") {
+      if (response.statusCode == "200") {
         setStatusSearch(response.statusCode);
         setTitleSearch(response.statusMessage);
-
-        // Add delay before refreshing the table
         setTimeout(() => {
-          getState(searchParams);
+          setStatusSearch(null);
+          setTitleSearch("");
         }, 5000); // Wait for 5 seconds before refreshing
+
+        getState(searchParams);
+        // Wait for 5 seconds before refreshing
       } else if (response.statusCode === "400") {
         setStatusSearch(response.statusCode);
         setTitleSearch(response.statusMessage);
@@ -815,11 +814,16 @@ const State = () => {
 
     // Clear any existing errors
     setErrors({});
+
+    // Scroll to country field
+    const countryField = document.getElementById("country-autocomplete");
+    if (countryField) {
+      countryField.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   // Update the handleCancel function to clear create status
   const handleCancel = () => {
-    setFormLoading(true);
     setFormData({
       stateID: 0,
       stateName: "",
@@ -833,15 +837,11 @@ const State = () => {
     setState([]);
     setErrors({});
     setStatus(null);
-    setTimeout(() => {
-      getState(searchParams);
-      setFormLoading(false);
-    }, 500);
   };
 
-  // Update the handleCancelSearch function to clear search status
+  // Update the handleCancelSearch function to reset search parameters and fetch table data
   const handleCancelSearch = () => {
-    setSearchFormLoading(true);
+    // Reset all search parameters
     const resetParams = {
       stateID: 0,
       stateName: "",
@@ -853,20 +853,25 @@ const State = () => {
       pageSize: 10,
     };
 
+    // Reset pagination state
     setPage(0);
     setRowsPerPage(10);
+
+    // Reset search form state
     setSearchParams(resetParams);
     setRegionSearch([]);
     setState([]);
     setStatusSearch(null);
-    setTimeout(() => {
-      getState(resetParams);
-      setSearchFormLoading(false);
-    }, 500);
+    setTitleSearch("");
+
+    // Fetch fresh data with reset parameters
+    getState(resetParams);
   };
 
   // Add handleSearch function for the search button
   const handleSearch = () => {
+    setPage(0);
+    setRowsPerPage(10);
     setTableLoading(true);
     const updatedParams = {
       ...searchParams,
@@ -876,25 +881,65 @@ const State = () => {
     getState(updatedParams);
   };
 
-  // Add this function to handle pagination changes - place it before the return statement
+  // Update handlePaginationChange to properly handle data loading
   const handlePaginationChange = (paginationState) => {
-    const updatedParams = {
-      ...searchParams,
-      pageIndex: paginationState.page + 1, // Convert 0-based to 1-based for API
-      pageSize: paginationState.rowsPerPage,
-    };
-
-    setPage(paginationState.page);
-    setRowsPerPage(paginationState.rowsPerPage);
-    setSearchParams(updatedParams);
-
-    // Call the API with updated pagination parameters
-    getState(updatedParams);
+    // Handle different types of pagination changes
+    if (paginationState.type === "jumpToFirst") {
+      const updatedParams = {
+        ...searchParams,
+        pageIndex: 1,
+        pageSize: paginationState.rowsPerPage,
+      };
+      setPage(0);
+      setRowsPerPage(paginationState.rowsPerPage);
+      setSearchParams(updatedParams);
+      getState(updatedParams);
+    } else if (paginationState.type === "jumpToLast") {
+      const lastPage =
+        Math.ceil(totalRecords / paginationState.rowsPerPage) - 1;
+      const updatedParams = {
+        ...searchParams,
+        pageIndex: lastPage + 1,
+        pageSize: paginationState.rowsPerPage,
+      };
+      setPage(lastPage);
+      setRowsPerPage(paginationState.rowsPerPage);
+      setSearchParams(updatedParams);
+      getState(updatedParams);
+    } else if (paginationState.type === "pageSearch") {
+      const updatedParams = {
+        ...searchParams,
+        pageIndex: paginationState.page + 1,
+        pageSize: paginationState.rowsPerPage,
+      };
+      setPage(paginationState.page);
+      setRowsPerPage(paginationState.rowsPerPage);
+      setSearchParams(updatedParams);
+      getState(updatedParams);
+    } else {
+      // Regular page change
+      const updatedParams = {
+        ...searchParams,
+        pageIndex: paginationState.page + 1,
+        pageSize: paginationState.rowsPerPage,
+      };
+      setPage(paginationState.page);
+      setRowsPerPage(paginationState.rowsPerPage);
+      setSearchParams(updatedParams);
+      getState(updatedParams);
+    }
   };
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          position: "relative",
+          pr: { xs: 0, sm: 0, md: "240px", lg: "260px" },
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -907,14 +952,15 @@ const State = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0} pr={2}>
             <BreadcrumbsHeader pageTitle="Geography" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
+              l
               onTabChange={handleTabChange}
             />
           </Grid>
@@ -951,6 +997,7 @@ const State = () => {
                           COUNTRY <Required />
                         </Typography>
                         <NuralAutocomplete
+                          id="country-autocomplete"
                           options={country}
                           getOptionLabel={(option) => option.countryName}
                           isOptionEqualToValue={(option, value) =>
@@ -969,14 +1016,6 @@ const State = () => {
                           placeholder="SELECT"
                           backgroundColor={LIGHT_GRAY2}
                           error={!!errors.countryID}
-                          onBlur={() => {
-                            if (!formData.countryID) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                countryID: "Country is required",
-                              }));
-                            }
-                          }}
                         />
                         {errors.countryID && (
                           <Typography
@@ -1021,14 +1060,7 @@ const State = () => {
                           placeholder="SELECT"
                           backgroundColor={LIGHT_GRAY2}
                           error={!!errors.regionID}
-                          onBlur={() => {
-                            if (!formData.regionID) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                regionID: "Region is required",
-                              }));
-                            }
-                          }}
+                          loading={regionLoading}
                         />
                         {errors.regionID && (
                           <Typography
@@ -1156,7 +1188,15 @@ const State = () => {
                       )}
                     </Grid>
 
-                    <Grid container sm={12} md={12} lg={12} spacing={1} mt={1} pr={0}>
+                    <Grid
+                      container
+                      sm={12}
+                      md={12}
+                      lg={12}
+                      spacing={1}
+                      mt={1}
+                      pr={0}
+                    >
                       <Grid item xs={12} sm={6} md={6} lg={6}>
                         <NuralButton
                           text="CANCEL"
@@ -1168,7 +1208,7 @@ const State = () => {
                       </Grid>
                       <Grid item xs={12} sm={6} md={6} lg={6}>
                         <NuralButton
-                          text="SAVE"
+                          text={formData.stateID > 0 ? "UPDATE" : "SAVE"}
                           backgroundColor={AQUA}
                           variant="contained"
                           onClick={handleSave}
@@ -1230,7 +1270,7 @@ const State = () => {
                           }}
                           width="100%"
                           placeholder="SELECT"
-                          backgroundColor={LIGHT_BLUE}
+                          // backgroundColor={LIGHT_BLUE}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6} md={3} lg={3}>
@@ -1268,7 +1308,8 @@ const State = () => {
                           }}
                           width="100%"
                           placeholder="SELECT"
-                          backgroundColor={LIGHT_BLUE}
+                          // backgroundColor={LIGHT_BLUE}
+                          loading={regionSearchLoading}
                         />
                       </Grid>
 
@@ -1390,13 +1431,13 @@ const State = () => {
             )}
           </Grid>
           {!hasSearchError && (
-            <Grid item xs={12} mt={1} sx={{ p: { xs: 1, sm: 2 } }}>
+            <Grid item xs={12} mt={0} sx={{ p: { xs: 1, sm: 2 } }}>
               <TableContainer
                 component={Paper}
                 sx={{
                   backgroundColor: LIGHT_GRAY2,
                   color: PRIMARY_BLUE2,
-                  maxHeight: "calc(120vh - 180px)", // Adjusted to account for headers
+                  maxHeight: "calc(100vh - 50px)", // Adjusted to account for headers
                   overflow: "auto",
                   position: "relative",
                   "& .MuiTable-root": {
@@ -1439,18 +1480,6 @@ const State = () => {
                             >
                               List
                             </Typography>
-                          </Grid>
-                          <Grid
-                            item
-                            sx={{
-                              cursor: "pointer",
-                            }}
-                          >
-                            <img
-                              src="./Images/export.svg"
-                              alt="export"
-                              onClick={downloadExcel}
-                            />
                           </Grid>
                         </Grid>
                       </TableCell>
@@ -1544,78 +1573,72 @@ const State = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {tableLoading
-                      ? // Display skeleton rows while loading
-                        Array(10)
-                          .fill(0)
-                          .map((_, index) => (
-                            <TableRowSkeleton key={index} columns={7} />
-                          ))
-                      : // Display actual data rows
-                        filteredRows.map((row, index) => (
-                          <TableRow
-                            key={row.stateID || index}
+                    {tableLoading ? (
+                      <TableRowSkeleton columns={8} />
+                    ) : (
+                      filteredRows.map((row, index) => (
+                        <TableRow
+                          key={row.stateID || index}
+                          sx={{
+                            fontSize: "10px",
+                            "& td": {
+                              borderBottom: `1px solid #C6CEED`,
+                            },
+                          }}
+                        >
+                          <TableCell sx={{ ...rowstyle }}>
+                            {page * rowsPerPage + index + 1}
+                          </TableCell>
+                          <TableCell sx={{ ...rowstyle }}>
+                            {row?.countryName || "-"}
+                          </TableCell>
+                          <TableCell sx={{ ...rowstyle }}>
+                            {row?.regionName || "-"}
+                          </TableCell>
+                          <TableCell sx={{ ...rowstyle }}>
+                            {row.stateName || "-"}
+                          </TableCell>
+                          <TableCell sx={{ ...rowstyle }}>
+                            {row.stateCode || "-"}
+                          </TableCell>
+                          <TableCell sx={{ ...rowstyle }}>
+                            <Switch
+                              checked={row.status === 1}
+                              onChange={() => handleStatusChange(row)}
+                              sx={{
+                                ...toggleSectionStyle,
+                                "& .MuiSwitch-thumb": {
+                                  backgroundColor:
+                                    row.status === 1
+                                      ? PRIMARY_BLUE2
+                                      : DARK_PURPLE,
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell
                             sx={{
+                              padding: "8px 16px",
                               fontSize: "10px",
-
-                              "& td": {
-                                borderBottom: `1px solid #C6CEED`,
-                              },
+                              textAlign: "left",
+                              minWidth: "60px",
                             }}
                           >
-                            <TableCell sx={{ ...rowstyle }}>
-                              {page * rowsPerPage + index + 1}
-                            </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              {row?.countryName || "-"}
-                            </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              {row?.regionName || "-"}
-                            </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              {row.stateName || "-"}
-                            </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              {row.stateCode || "-"}
-                            </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              <Switch
-                                checked={row.status === 1}
-                                onChange={() => handleStatusChange(row)}
-                                size="small"
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(row)}
+                            >
+                              <EditIcon
                                 sx={{
-                                  "& .MuiSwitch-switchBase.Mui-checked": {
-                                    color: PRIMARY_BLUE2,
-                                  },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                    {
-                                      backgroundColor: PRIMARY_BLUE2,
-                                    },
+                                  fontSize: 16,
+                                  color: PRIMARY_BLUE2,
                                 }}
                               />
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                padding: "8px 16px",
-                                fontSize: "10px",
-                                textAlign: "left",
-                                minWidth: "60px",
-                              }}
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEdit(row)}
-                              >
-                                <EditIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
 
@@ -1631,6 +1654,54 @@ const State = () => {
             </Grid>
           )}
         </>
+        <Grid
+          item
+          xs={12}
+          sm={3}
+          md={3}
+          lg={3}
+          mt={0}
+          position={"fixed"}
+          right={{
+            xs: 0,
+            sm: 5,
+            md: 10,
+            lg: 10,
+          }}
+          sx={{
+            zIndex: 10000,
+            top: "0px",
+            overflowY: "auto",
+            paddingBottom: "20px",
+            "& > *": {
+              marginBottom: "16px",
+              transition: "filter 0.3s ease",
+            },
+            "& .export-button": {
+              filter: "none !important",
+            },
+          }}
+        >
+          <NuralActivityPanel>
+            <Grid
+              item
+              xs={12}
+              md={12}
+              lg={12}
+              xl={12}
+              mt={0}
+              mb={2}
+              className="export-button"
+            >
+              <NuralExport
+                title="Export"
+                views={""}
+                downloadExcel={downloadExcel}
+                isDownloadLoading={isDownloadLoading}
+              />
+            </Grid>
+          </NuralActivityPanel>
+        </Grid>
       </Grid>
     </>
   );

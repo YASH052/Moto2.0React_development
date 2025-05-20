@@ -56,12 +56,12 @@ const Organization = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={1} pr={3}>
           <BreadcrumbsHeader pageTitle="Organization" />
         </Grid>
       </Grid>
 
-      <Grid container spacing={2} p={1}>
+      <Grid container spacing={0} p={1}>
         <Grid item xs={12} md={6} lg={6}>
           <TransationCard salesTypes={announcementTypes} title="Announcement" />
         </Grid>

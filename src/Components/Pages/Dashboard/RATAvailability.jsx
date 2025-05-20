@@ -143,7 +143,7 @@ const productData = [
 ];
 
 const RATAvailability = () => {
-  const [activeTab, setActiveTab] = React.useState("availability");
+  const [activeTab, setActiveTab] = React.useState("availability-dashboard");
   const [quickLinks, setQuickLinks] = React.useState([
     { id: 1, label: "QUICK LINK 4", path: "/quick-link-4" },
     null,
@@ -152,11 +152,14 @@ const RATAvailability = () => {
   ]);
 
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
-    { label: "Brand", value: "brand" },
-    { label: "Inventory", value: "inventory" },
+    { label: "Business", value: "dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
+    { label: "Brand", value: "brand-dashboard" },
+    { label: "Inventory", value: "inventory-dashboard" },
+    { label: "Attendance", value: "rat-attendance" },
+    { label: "Target", value: "rat-target" },
+    { label: "Incentive", value: "rat-incentive" },
   ];
   const navigate = useNavigate();
   const labelStyle = {

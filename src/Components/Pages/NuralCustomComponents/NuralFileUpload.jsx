@@ -7,11 +7,12 @@ import {
   AccordionDetails,
   Grid,
   Skeleton,
+  FormHelperText,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { DARK_PURPLE, LIGHT_GRAY2 } from "../../Common/colors";
+import { DARK_PURPLE, LIGHT_GRAY2, LIGHT_BLUE } from "../../Common/colors";
 import { AccordionFileUploadSkeleton } from "../../Common/SkeletonComponents";
 import Required from "../../Common/Required";
 
@@ -47,6 +48,14 @@ const StyledAccordion = styled(Accordion)({
       outline: "none",
     },
   },
+  "&.Mui-disabled": {
+    backgroundColor: LIGHT_GRAY2,
+    opacity: 1,
+  },
+  "& .Mui-disabled": {
+    backgroundColor: LIGHT_GRAY2,
+    opacity: 1,
+  },
 });
 
 const StyledAccordionSummary = styled(AccordionSummary)({
@@ -58,6 +67,9 @@ const StyledAccordionSummary = styled(AccordionSummary)({
     "&:focus": {
       outline: "none",
     },
+  },
+  "&.Mui-disabled": {
+    opacity: 1,
   },
 });
 
@@ -97,12 +109,22 @@ const HiddenInput = styled("input")({
   display: "none",
 });
 
-const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, mandatory = false, error = false, helperText = "", ...props }) => {
+const NuralFileUpload = ({
+  title = "File Upload",
+  fileRef,
+  isLoading = false,
+  mandatory = false,
+  error = false,
+  helperText = "",
+
+  resetFile = false,
+  showExpandIcon = false,
+  ...props
+}) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const internalFileRef = useRef(null);
-
-  // Use the provided ref or internal ref
   const actualFileRef = fileRef || internalFileRef;
+  const prevResetFileRef = useRef(resetFile);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -112,32 +134,16 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ma
     }
   };
 
-  // Reset file selection
-  const resetFile = () => {
-    setSelectedFile(null);
-    if (actualFileRef.current) {
-      actualFileRef.current.value = "";
-    }
-  };
-
-  // Listen for file input changes
+  // Reset file selection when resetFile prop changes
   React.useEffect(() => {
-    if (actualFileRef.current) {
-      actualFileRef.current.addEventListener('change', handleFileSelect);
-    }
-    return () => {
+    if (resetFile && !prevResetFileRef.current) {
+      setSelectedFile(null);
       if (actualFileRef.current) {
-        actualFileRef.current.removeEventListener('change', handleFileSelect);
+        actualFileRef.current.value = "";
       }
-    };
-  }, []);
-
-  // Reset file when props.selectedFile is null
-  React.useEffect(() => {
-    if (props.selectedFile === null) {
-      resetFile();
     }
-  }, [props.selectedFile]);
+    prevResetFileRef.current = resetFile;
+  }, [resetFile]);
 
   const handleClick = () => {
     actualFileRef.current?.click();
@@ -150,51 +156,22 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ma
   return (
     <StyledAccordion
       defaultExpanded
+      disabled={!showExpandIcon}
+      expanded={!showExpandIcon ? true : undefined}
       sx={{
-        // Size
-        width: props.width,
-        height: props.height,
-        minWidth: props.minWidth,
-        maxWidth: props.maxWidth,
-        minHeight: props.minHeight,
-        maxHeight: props.maxHeight,
-
-        // Margins
-        margin: props.margin,
-        marginTop: props.marginTop,
-        marginBottom: props.marginBottom,
-        marginLeft: props.marginLeft,
-        marginRight: props.marginRight,
-
-        // Padding
-        padding: props.padding,
-        paddingTop: props.paddingTop,
-        paddingBottom: props.paddingBottom,
-        paddingLeft: props.paddingLeft,
-        paddingRight: props.paddingRight,
-
-        // Position
-        display: props.display,
-        position: props.position,
-        top: props.top,
-        bottom: props.bottom,
-        left: props.left,
-        right: props.right,
-        zIndex: props.zIndex,
-
-        // Colors
         backgroundColor: props.backgroundColor || LIGHT_GRAY2,
         borderRadius: props.borderRadius || "8px",
-
         ...props.sx,
       }}
       {...props}
     >
       <StyledAccordionSummary
         expandIcon={
-          <ExpandMoreIcon
-            sx={{ color: props.expandIconColor || DARK_PURPLE }}
-          />
+          showExpandIcon ? (
+            <ExpandMoreIcon
+              sx={{ color: props.expandIconColor || DARK_PURPLE }}
+            />
+          ) : null
         }
       >
         <Typography
@@ -208,14 +185,14 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ma
         </Typography>
       </StyledAccordionSummary>
       <AccordionDetails sx={{ padding: 0 }}>
-        <Box sx={{ padding: "12px 16px", marginBottom: "-30px" ,mt:"-10"}}>
+        <Box sx={{ padding: "12px 16px", marginBottom: "-30px", mt: "-10" }}>
           <Typography
             textAlign={"start"}
             fontSize={"10px"}
             fontWeight={400}
             color={DARK_PURPLE}
           >
-            UPLOADED FILE{mandatory && <Required/>}
+            UPLOADED FILE {mandatory && <Required />}
           </Typography>
         </Box>
         <FileItem
@@ -255,11 +232,16 @@ const NuralFileUpload = ({ title = "File Upload", fileRef, isLoading = false, ma
             ref={actualFileRef}
             type="file"
             accept={props.accept}
+            onChange={handleFileSelect}
           />
         </FileItem>
         {error && helperText && (
           <Box sx={{ padding: "0 16px 12px" }}>
-            <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem' }}>
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ fontSize: "0.75rem" }}
+            >
               {helperText}
             </Typography>
           </Box>

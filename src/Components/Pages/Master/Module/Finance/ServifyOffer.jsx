@@ -22,16 +22,8 @@ import AddIcon from "@mui/icons-material/Add";
 import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
 import {
   AQUA,
-  AQUA_DARK,
-  BLACK,
-  BLUE_COLOR,
-  BORDER_BOTTOM,
   DARK_PURPLE,
-  GREEN_COLOR,
-  LIGHT_GRAY,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
-  PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
 import { tableHeaderStyle, rowstyle, headTitle } from "../../../../Common/commonstyles";
@@ -40,22 +32,14 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import NuralButton from "../../../NuralCustomComponents/NuralButton";
-import NuralCalendar from "../../../NuralCustomComponents/NuralCalendar";
-import NuralAccordion from "../../../NuralCustomComponents/NuralAccordion";
+
 import BreadcrumbsHeader from "../../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../../Common/TabsBar";
 import NuralAccordion2 from "../../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../../NuralCustomComponents/NuralTextField";
 import NuralTextButton from "../../../NuralCustomComponents/NuralTextButton";
-import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
-import NuralUploadFormat from "../../../NuralCustomComponents/NuralUploadFormat";
-import NuralFileUpload from "../../../NuralCustomComponents/NuralFileUpload";
-import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
-import { AddIcCallOutlined } from "@mui/icons-material";
-import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
-import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
+
 import { styled } from "@mui/system";
-import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
 
 const ServifyOffer = () => {
   const [page, setPage] = React.useState(0);
@@ -65,28 +49,6 @@ const ServifyOffer = () => {
   const [selected, setSelected] = React.useState("");
   const views = ["Role 1", "Role 2", "Role 3", "Role 4"];
 
-  const templates = [
-    {
-      name: "Template 1",
-      onView: () => console.log("View Template 1"),
-      onDownload: () => console.log("Download Template 1"),
-    },
-    {
-      name: "Template 2",
-      onView: () => console.log("View Template 2"),
-      onDownload: () => console.log("Download Template 2"),
-    },
-    {
-      name: "Template 3",
-      onView: () => console.log("View Template 3"),
-      onDownload: () => console.log("Download Template 3"),
-    },
-    {
-      name: "Template 4",
-      onView: () => console.log("View Template 4"),
-      onDownload: () => console.log("Download Template 4"),
-    },
-  ];
   const labelStyle = {
     fontSize: "10px",
     lineHeight: "13.66px",
@@ -106,39 +68,14 @@ const ServifyOffer = () => {
   const [activeTab, setActiveTab] = React.useState("servify-offer");
   const navigate = useNavigate();
 
-  const StyledInput = styled(InputBase)(({ theme }) => ({
-    marginLeft: "25px",
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    borderRadius: "8px",
-    maxHeight: "40px",
-    padding: "4px 12px",
-    fontSize: "14px",
-    width: "60px",
-    textAlign: "center",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-  }));
 
-  const StyledSelect = styled(Select)(({ theme }) => ({
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    maxHeight: "40px",
-    borderRadius: "8px",
-    paddingLeft: "12px",
-    fontSize: "14px",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-    ".MuiSelect-icon": {
-      color: "#5f74be",
-    },
-  }));
 
- const tabs = [
-   { label: "Finance Api Block", value: "finance-api-block" },
-   { label: "Servity Amount", value: "servify-offer" },
-   { label: "GTN", value: "gtn" },
- ];
+  const tabs = [
+    { label: "Finance Api Block", value: "finance-api-block" },
+    { label: "Servity Amount", value: "servify-offer" },
+    { label: "GTN", value: "gtn" },
+    { label: "GTN Payout Report", value: "gtn-payout-report" },
+  ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -228,7 +165,7 @@ const ServifyOffer = () => {
     setSortConfig({ key: columnName, direction });
   };
   return (
-    <Grid container spacing={2} sx={{ padding: "20px" }}>
+    <Grid container spacing={2} >
       <Grid
         item
         xs={12}
@@ -240,7 +177,7 @@ const ServifyOffer = () => {
           paddingBottom: 1,
         }}
       >
-        <Box mt={1} mb={0} ml={1}>
+        <Box mt={0} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Finance" />
         </Box>
 
@@ -253,7 +190,7 @@ const ServifyOffer = () => {
         </Box>
       </Grid>
 
-      <Grid marginTop={2} xs={12}>
+      <Grid marginTop={2} xs={12} padding={2}>
         <NuralAccordion2
           title="CREATE"
           backgroundColor={"white"}
@@ -359,7 +296,7 @@ const ServifyOffer = () => {
           </Grid>
         </NuralAccordion2>
       </Grid>
-      <Grid marginTop={2} xs={12}>
+      <Grid marginTop={2} xs={12} padding={2}>
         <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
           <Grid
             xs={12}

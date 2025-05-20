@@ -10,12 +10,15 @@ import View from "../../L1&L2/View";
 const L1L2Issue = () => {
   const navigate = useNavigate();
   const [showModel, setShowModel] = React.useState(false);
+  const [issueEditData, setIssueEditData] = React.useState(null);
+  const [categoryEditData, setCategoryEditData] = React.useState(null);
   const [activeTab, setActiveTab] = React.useState("l1l2-issue");
+  const [refreshView, setRefreshView] = React.useState(false);
   const [tabbs, setTabbs] = React.useState([
-    { label: "Demo Planogram", value: "demo-categorization" },
+    { label: "Demo Planogram", value: "demo-planogram" },
     { label: "Manage Audit", value: "manage-audit" },
     { label: "L1L2 Issue", value: "l1l2-issue" },
-    { label: "RIAudit Score", value: "riaudit-score" },
+    { label: "RI Weightage", value: "ri-weightage" },
   ]);
 
   const handleTabChange = (newValue) => {
@@ -23,10 +26,20 @@ const L1L2Issue = () => {
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
+  const handleRecordAdded = () => {
+    setRefreshView((prev) => !prev);
+  };
+
+  const handleEditIssue = (issue) => {
+    setIssueEditData(issue);
+  };
+
+  const handleEditCategory = (category) => {
+    setCategoryEditData(category);
+  };
 
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
+    <Grid container spacing={2}  sx={{ position: "relative" }}>
       {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
       <Grid
         item
@@ -39,11 +52,11 @@ const L1L2Issue = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={0} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Brand" />
         </Grid>
 
-        <Grid item xs={12} ml={1}>
+        <Grid item xs={12} ml={0}>
           <TabsBar
             tabs={tabbs}
             activeTab={activeTab}
@@ -57,17 +70,27 @@ const L1L2Issue = () => {
         container
         spacing={0}
         lg={12}
-        mt={-1}
+        mt={0}
         sx={{ position: "relative", zIndex: 1 }}
       >
         <Grid
           item
           xs={12}
-          sx={{ p: { xs: 2, sm: 2 }, pl: { xs: 3 }, pr: { xs: 0 } }}
+          sx={{ p: { xs: 0, sm: 0, md: 0 }, pl: { xs: 2 }, pr: { xs: 2 } }}
         >
-          <CreateCategory />
-          <CreateIssue />
-          <View />
+          <CreateCategory
+            onRecordAdded={handleRecordAdded}
+            editData={categoryEditData}
+          />
+          <CreateIssue
+            onRecordAdded={handleRecordAdded}
+            editData={issueEditData}
+          />
+          <View
+            refreshTrigger={refreshView}
+            onEditIssue={handleEditIssue}
+            onEditCategory={handleEditCategory}
+          />
         </Grid>
       </Grid>
     </Grid>

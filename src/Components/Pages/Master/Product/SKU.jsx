@@ -13,7 +13,11 @@ import {
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import Required from "../../../Common/Required";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import {
@@ -51,14 +55,15 @@ import NuralExport from "../../NuralCustomComponents/NuralExport";
 const columnDefinitions = [
   { label: "SKU CODE", field: "skuCode" },
   { label: "SKU NAME", field: "skuName" },
+  { label: "SKU DESCRIPTION", field: "skuDesc" }, // Changed from skudesc to skuDesc to match data
   { label: "BRAND", field: "brandName" },
   { label: "CATEGORY", field: "categoryName" },
   { label: "SUB-CATEGORY", field: "subCategoryName" },
   { label: "MODEL", field: "modelName" },
   { label: "COLOR", field: "colorName" },
   { label: "HSN CODE", field: "hsnCode" },
-  { label: "STATUS", field: "status" },
-  { label: "ACTION", field: "action" },
+  { label: "STATUS", field: "status", sortable: false },
+  { label: "ACTION", field: "action", sortable: false },
 ];
 
 const tabs = [
@@ -85,6 +90,7 @@ const SKU = () => {
   });
   const [accordionExpanded, setAccordionExpanded] = useState(true); // Keep Create open initially
   const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false); // Keep View closed initially
+  const detailTableRef = useRef(null);
 
   const handleAccordionChange = (event, expanded) => {
     if (!expanded) {
@@ -130,7 +136,7 @@ const SKU = () => {
     colorID: 0,
     skuName: "",
     skuCode: "",
-    skuDescription: "",
+
     hsnCode: "",
     hsnDesc: "",
     attribute1: "",
@@ -198,7 +204,10 @@ const SKU = () => {
   const scrollToTop = (elementRef = null) => {
     if (elementRef && elementRef.current) {
       // If element ref is provided, scroll to that element
-      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      elementRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     } else {
       // Otherwise scroll to top of page
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -206,6 +215,8 @@ const SKU = () => {
   };
 
   const handleSort = (columnName) => {
+    console.log("Sorting by:", columnName); // Debug log
+
     let direction = "asc";
 
     if (sortConfig.key === columnName) {
@@ -223,37 +234,29 @@ const SKU = () => {
     const sortedRows = [...filteredRows].sort((a, b) => {
       let valueA, valueB;
 
+      // Handle different field names and null/undefined values
       if (columnName === "categoryName") {
+        valueA = a.categoryName || a.category || "";
+        valueB = b.categoryName || b.category || "";
+      } else if (columnName === "subCategoryName") {
+        valueA = a.subCategoryName || a.subCategory || "";
+        valueB = b.subCategoryName || b.subCategory || "";
+      } else if (columnName === "modelName") {
+        valueA = a.modelName || a.model || "";
+        valueB = b.modelName || b.model || "";
+      } else if (columnName === "skuDesc") {
+        valueA = a.skuDesc || "";
+        valueB = b.skuDesc || "";
+      } else {
+        valueA = a[columnName] || "";
+        valueB = b[columnName] || "";
+      }
 
-        valueA = (a.categoryName !== undefined && a.categoryName !== null) ? a.categoryName : 
-                 (a.category !== undefined && a.category !== null) ? a.category : '';
-        
-        valueB = (b.categoryName !== undefined && b.categoryName !== null) ? b.categoryName : 
-                 (b.category !== undefined && b.category !== null) ? b.category : '';
-      }
-      else if (columnName === "subCategoryName") {
-        valueA = (a.subCategoryName !== undefined && a.subCategoryName !== null) ? a.subCategoryName : 
-                 (a.subCategory !== undefined && a.subCategory !== null) ? a.subCategory : '';
-        
-        valueB = (b.subCategoryName !== undefined && b.subCategoryName !== null) ? b.subCategoryName : 
-                 (b.subCategory !== undefined && b.subCategory !== null) ? b.subCategory : '';
-      }
-      else if (columnName === "modelName") {
-        valueA = (a.modelName !== undefined && a.modelName !== null) ? a.modelName : 
-                 (a.model !== undefined && a.model !== null) ? a.model : '';
-        
-        valueB = (b.modelName !== undefined && b.modelName !== null) ? b.modelName : 
-                 (b.model !== undefined && b.model !== null) ? b.model : '';
-      }
-      else {
-        valueA = (a[columnName] !== undefined && a[columnName] !== null) ? a[columnName] : '';
-        valueB = (b[columnName] !== undefined && b[columnName] !== null) ? b[columnName] : '';
-      }
-      
-      const aValue = typeof valueA === 'string' ? valueA.toLowerCase() : valueA.toString().toLowerCase();
-      const bValue = typeof valueB === 'string' ? valueB.toLowerCase() : valueB.toString().toLowerCase();
+      // Convert to lowercase strings for comparison
+      const aValue = String(valueA).toLowerCase();
+      const bValue = String(valueB).toLowerCase();
 
-
+      // Compare values
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
       }
@@ -263,35 +266,17 @@ const SKU = () => {
       return 0;
     });
 
+    console.log("Sorted rows:", sortedRows); // Debug log
     setFilteredRows(sortedRows);
   };
 
   const [skuDropdownList, setSkuDropdownList] = React.useState([]);
   const [hsnList, setHsnList] = React.useState([]);
   const [hsnLoading, setHsnLoading] = React.useState(false);
+  const [skuDropdownLoading, setSkuDropdownLoading] = React.useState(false);
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
-  };
-  const getSKUDropdown = async () => {
-    try {
-      const params = {
-        skuID: 0,
-        categoryID: 0 /*product CategoryID*/,
-        modelID: 0,
-        subCategoryID: 0 /*productID*/,
-        brandID: 0,
-      };
-      const response = await GetSKUListForDropdown(params);
-      if (response.statusCode == 200) {
-        setSkuDropdownList(response.skuDropdownList || []);
-      } else {
-        setSkuDropdownList([]);
-      }
-    } catch (error) {
-      console.error("Error fetching SKU dropdown:", error);
-      setSkuDropdownList([]);
-    }
   };
 
   const getHSNList = async () => {
@@ -322,7 +307,7 @@ const SKU = () => {
     getSearchBrandList();
     getSearchColorList();
     getColorList();
-    getSKUDropdown();
+
     getHSNList();
     getSKUList();
   }, []);
@@ -351,9 +336,8 @@ const SKU = () => {
       setFilteredRows([]);
       setTotalRecords(0);
       // Clear previous errors only if a new search is initiated
-      // setSearchStatus(null); 
+      // setSearchStatus(null);
       // setSearchTitle("");
-      
 
       const startTime = Date.now();
 
@@ -364,13 +348,17 @@ const SKU = () => {
         setTableData(data);
         setFilteredRows(data);
         setTotalRecords(response.totalRecords || data.length);
-        setSearchStatus(null); // Clear errors on success
-        setSearchTitle("");
+        setTimeout(() => {
+          setSearchStatus(null); // Clear errors on success
+          setSearchTitle("");
+        }, 5000);
 
         // Ensure minimum loading time of 800ms for skeleton to be visible
         const loadingTime = Date.now() - startTime;
         if (loadingTime < 800) {
-          await new Promise(resolve => setTimeout(resolve, 800 - loadingTime));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 800 - loadingTime)
+          );
         }
       } else {
         // Error case (including 404)
@@ -381,7 +369,6 @@ const SKU = () => {
         setTotalRecords(0);
 
         // No minimum loading time needed if error occurs quickly
-
       }
     } catch (error) {
       console.error("Error in getSKUList:", error);
@@ -515,7 +502,7 @@ const SKU = () => {
     // Text field validations
     if (!formData.skuCode || formData.skuCode.trim() === "") {
       newErrors.skuCode = "SKU Code is required";
-    } else if (formData.skuCode.length > 20) { // Update limit to 20
+    } else if (formData.skuCode.length > 20) {
       newErrors.skuCode = "SKU Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.skuCode)) {
       newErrors.skuCode =
@@ -531,29 +518,14 @@ const SKU = () => {
         "SKU Name can only contain alphanumeric characters and spaces";
     }
 
-    if (!formData.skuDescription || formData.skuDescription.trim() === "") {
-      newErrors.skuDescription = "SKU Description is required";
-    } else if (formData.skuDescription.length > 50) { // Update limit to 50
-      newErrors.skuDescription = "SKU Description cannot exceed 50 characters";
-    }
-
-    if (formData.hsnCode && formData.hsnCode.length > 20) {
-      newErrors.hsnCode = "HSN Code cannot exceed 20 characters";
-    } else if (formData.hsnCode && !/^[a-zA-Z0-9]+$/.test(formData.hsnCode)) {
-      newErrors.hsnCode = "HSN Code can only contain alphanumeric characters";
-    }
-
-    // Attribute validations
-    if (formData.attribute1 && formData.attribute1.length > 100) {
-      newErrors.attribute1 = "Attribute 1 cannot exceed 100 characters";
-    }
-
-    if (formData.attribute2 && formData.attribute2.length > 100) {
-      newErrors.attribute2 = "Attribute 2 cannot exceed 100 characters";
+    if (!formData.skudesc || formData.skudesc.trim() === "") {
+      newErrors.skudesc = "SKU Description is required";
+    } else if (formData.skudesc.length > 50) {
+      newErrors.skudesc = "SKU Description cannot exceed 50 characters";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   // Handle form field changes
@@ -674,7 +646,7 @@ const SKU = () => {
           ? "SKU Code"
           : field === "skuName"
           ? "SKU Name"
-          : field === "skuDescription"
+          : field === "skudesc"
           ? "SKU Description"
           : field === "hsnCode"
           ? "HSN Code"
@@ -726,14 +698,14 @@ const SKU = () => {
       // Text field validations
       if (field === "skuCode") {
         // Check length first
-        if (newValue.length > 20) { // Update limit to 20
+        if (newValue.length > 20) {
           setFormData((prev) => ({
             ...prev,
             [field]: newValue.substring(0, 20), // Truncate to 20 chars
           }));
           setErrors((prev) => ({
             ...prev,
-            skuCode: "SKU Code cannot exceed 20 characters", // Update error message
+            skuCode: "SKU Code cannot exceed 20 characters",
           }));
           return;
         }
@@ -790,80 +762,25 @@ const SKU = () => {
             skuName: "SKU Name is required",
           }));
         }
-      } else if (field === "skuDescription") {
+      } else if (field === "skudesc") {
         // Check length only
-        if (newValue.length > 50) { // Update limit to 50
+        if (newValue.length > 50) {
           setFormData((prev) => ({
             ...prev,
             [field]: newValue.substring(0, 50), // Truncate to 50 chars
           }));
           setErrors((prev) => ({
             ...prev,
-            skuDescription: "SKU Description cannot exceed 50 characters", // Update error message
+            skudesc: "SKU Description cannot exceed 50 characters",
           }));
           return;
         } else if (newValue.trim() === "") {
           setErrors((prev) => ({
             ...prev,
-            skuDescription: "SKU Description is required",
+            skudesc: "SKU Description is required",
           }));
         } else {
-          setErrors((prev) => ({ ...prev, skuDescription: "" }));
-        }
-      } else if (field === "hsnCode") {
-        // Check length first
-        if (newValue.length > 20) {
-          setFormData((prev) => ({
-            ...prev,
-            [field]: newValue.substring(0, 20), // Truncate to 20 chars
-          }));
-          setErrors((prev) => ({
-            ...prev,
-            hsnCode: "HSN Code cannot exceed 20 characters",
-          }));
-          return;
-        }
-
-        // If input contains non-alphanumeric characters, show error
-        if (newValue && !/^[a-zA-Z0-9]*$/.test(newValue)) {
-          setErrors((prev) => ({
-            ...prev,
-            hsnCode: "HSN Code can only contain alphanumeric characters",
-          }));
-          return;
-        }
-
-        // Clear errors for valid input
-        setErrors((prev) => ({ ...prev, hsnCode: "" }));
-      } else if (field === "attribute1") {
-        // Check length only for attribute1
-        if (newValue.length > 100) {
-          setFormData((prev) => ({
-            ...prev,
-            [field]: newValue.substring(0, 100), // Truncate to 100 chars
-          }));
-          setErrors((prev) => ({
-            ...prev,
-            attribute1: "Attribute 1 cannot exceed 100 characters",
-          }));
-          return;
-        } else {
-          setErrors((prev) => ({ ...prev, attribute1: "" }));
-        }
-      } else if (field === "attribute2") {
-        // Check length only for attribute2
-        if (newValue.length > 100) {
-          setFormData((prev) => ({
-            ...prev,
-            [field]: newValue.substring(0, 100), // Truncate to 100 chars
-          }));
-          setErrors((prev) => ({
-            ...prev,
-            attribute2: "Attribute 2 cannot exceed 100 characters",
-          }));
-          return;
-        } else {
-          setErrors((prev) => ({ ...prev, attribute2: "" }));
+          setErrors((prev) => ({ ...prev, skudesc: "" }));
         }
       }
     }
@@ -1091,6 +1008,30 @@ const SKU = () => {
     }
   };
 
+  const getSKUDropdown = async (val) => {
+    try {
+      setSkuDropdownLoading(true); // Start loading
+      const params = {
+        skuID: 0,
+        categoryID: 0 /*product CategoryID*/,
+        modelID: val,
+        subCategoryID: 0 /*productID*/,
+        brandID: 0,
+      };
+      const response = await GetSKUListForDropdown(params);
+      if (response.statusCode == 200) {
+        setSkuDropdownList(response.skuDropdownList || []);
+      } else {
+        setSkuDropdownList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching SKU dropdown:", error);
+      setSkuDropdownList([]);
+    } finally {
+      setSkuDropdownLoading(false); // End loading
+    }
+  };
+
   // Updates to handle search changes
   const handleSearchChange = (field, value) => {
     console.log("handleSearchChange called for", field, "with value:", value);
@@ -1112,6 +1053,7 @@ const SKU = () => {
         setSearchCategoryList([]);
         setSearchSubCategoryList([]);
         setSearchModelList([]);
+        setSkuDropdownList([]);
 
         // Update search params
         setSearchParams((prev) => ({
@@ -1126,7 +1068,7 @@ const SKU = () => {
         // Clear subcategory and model options
         setSearchSubCategoryList([]);
         setSearchModelList([]);
-
+        setSkuDropdownList([]);
         // Update search params
         setSearchParams((prev) => ({
           ...prev,
@@ -1138,7 +1080,7 @@ const SKU = () => {
       } else if (field === "subCategoryID") {
         // Clear model options
         setSearchModelList([]);
-
+        setSkuDropdownList([]);
         // Update search params
         setSearchParams((prev) => ({
           ...prev,
@@ -1148,11 +1090,15 @@ const SKU = () => {
         return;
       } else if (field === "modelID") {
         // Just update form data
+        setSkuDropdownList([]);
         setSearchParams((prev) => ({
           ...prev,
           modelID: 0,
           selectedModel: null,
         }));
+
+        // Call getSKUDropdown with the selected model ID
+
         return;
       } else if (field === "colorID") {
         // Just update form data
@@ -1273,6 +1219,9 @@ const SKU = () => {
         [field]: newValue,
         modelID: 0,
       }));
+    } else if (field === "modelID") {
+      // Call getSKUDropdown with the selected model ID
+      getSKUDropdown(newValue);
     }
   };
 
@@ -1289,6 +1238,8 @@ const SKU = () => {
     setSearchFormLoading(true);
     setSearchStatus(null); // Clear persistent error status explicitly
     setSearchTitle("");
+    setSkuDropdownList([]);
+
     // Reset search params to default/initial state
     const defaultParams = {
       skuname: "",
@@ -1386,7 +1337,7 @@ const SKU = () => {
       colorID: 0,
       skuName: "",
       skuCode: "",
-      skuDescription: "",
+      skudesc: "",
       hsnCode: "",
       hsnDesc: "",
       attribute1: "",
@@ -1434,8 +1385,8 @@ const SKU = () => {
   };
 
   const handleEdit = (row) => {
+    console.log("row", row);
     setAccordionExpanded(true); // Ensure create/update accordion is open
-    setSearchAccordionExpanded(false); // Explicitly close search accordion
     setIsEditMode(true);
     setFormData({
       skuID: row.skuID,
@@ -1457,7 +1408,9 @@ const SKU = () => {
       colorID: row.colorID,
       skuName: row.skuName,
       skuCode: row.skuCode,
-      skuDescription: row.skuDesc,
+      skudesc: row.skuDesc || "",
+      attribute1: row.skuAttribute1 || "",
+      attribute2: row.skuAttribute2 || "",
     });
 
     // Load dependent dropdowns
@@ -1468,13 +1421,22 @@ const SKU = () => {
     getColorList(); // Ensure color list is loaded for the create form
     getHSNList(); // Ensure HSN list is available
 
-    // Use setTimeout with a longer delay to ensure all state updates and re-renders complete
-    setTimeout(() => {
-      // Temporarily use window.scrollTo for testing
-      // window.scrollTo({ top: 0, behavior: 'smooth' });
-      // Original code: scrollToTop(createAccordionRef); 
-      scrollToTop(createAccordionRef); // Use the intended scroll function
-    }, 300);
+    // Use requestAnimationFrame to ensure DOM is updated before scrolling
+    requestAnimationFrame(() => {
+      // First try to scroll the accordion into view
+      if (createAccordionRef.current) {
+        createAccordionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      } else {
+        // Fallback to window scroll if ref is not available
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+    });
   };
 
   // Update handleStatus to use row-specific loading
@@ -1514,22 +1476,22 @@ const SKU = () => {
   };
 
   // Add this useEffect alongside the existing createStatus useEffect
-  useEffect(() => {
-    let timeoutId;
-    if (searchStatus) {
-      timeoutId = setTimeout(() => {
-        setSearchStatus(null);
-        setSearchTitle("");
-      }, 5000); // 5 seconds
-    }
+  // useEffect(() => {
+  //   let timeoutId;
+  //   if (searchStatus) {
+  //     timeoutId = setTimeout(() => {
+  //       setSearchStatus(null);
+  //       setSearchTitle("");
+  //     }, 5000); // 5 seconds
+  //   }
 
-    // Cleanup function to clear timeout if component unmounts or status changes
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [searchStatus]); // Only run when searchStatus changes
+  //   // Cleanup function to clear timeout if component unmounts or status changes
+  //   return () => {
+  //     if (timeoutId) {
+  //       clearTimeout(timeoutId);
+  //     }
+  //   };
+  // }, [searchStatus]); // Only run when searchStatus changes
 
   // Update handleExport function
   const handleExport = async () => {
@@ -1539,9 +1501,10 @@ const SKU = () => {
       pageIndex: -1, // -1 indicates export to excel
     };
     try {
-      const response = await getSKUList(params);
-      if (response.statusCode === "200") {
-        window.location.href = response?.reportLink;
+      const response = await GetSKUListForMoto(params);
+      if (response.statusCode == "200") {
+        // console.log("response.filepathlink", response.filepathlink);
+        window.location.href = response.filepathlink;
       } else {
         console.error("Error exporting SKU list:", response.message);
       }
@@ -1562,8 +1525,8 @@ const SKU = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1 },
-          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          pl: { xs: 1, sm: 1, md: 0 },
+          pr: { xs: 0, sm: 0, md: "180px", lg: "270px" }, // Adjust right padding for activity panel
           isolation: "isolate",
         }}
       >
@@ -1579,11 +1542,11 @@ const SKU = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0}>
             <BreadcrumbsHeader pageTitle="Product" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -1593,14 +1556,14 @@ const SKU = () => {
         </Grid>
 
         <>
-          <Grid item xs={12} pr={1.5}>
+          <Grid item xs={12} pr={0}>
             <Grid container spacing={2} direction="column">
               <Grid item>
                 {formLoading ? (
                   <FormSkeleton />
                 ) : (
                   <>
-                    <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
+                    <div style={{ position: "relative", zIndex: 1000 }}>
                       <NuralAccordion2
                         title={isEditMode ? "Update" : "Create"}
                         backgroundColor={LIGHT_GRAY2}
@@ -1609,7 +1572,12 @@ const SKU = () => {
                         expanded={accordionExpanded}
                         defaultExpanded={true}
                       >
-                        <Grid container spacing={2} sx={{ width: "100%" }}>
+                        <Grid
+                          container
+                          spacing={2}
+                          sx={{ width: "100%" }}
+                          ref={createAccordionRef}
+                        >
                           <Grid item xs={12} sm={3}>
                             <Typography
                               variant="h6"
@@ -1625,34 +1593,38 @@ const SKU = () => {
                             >
                               BRAND <Required />
                             </Typography>
-                            <NuralAutocomplete
-                              options={brandList}
-                              getOptionLabel={(option) => option.brandName || ""}
-                              isOptionEqualToValue={(option, value) =>
-                                option?.brandID === value?.brandID
-                              }
-                              value={
-                                brandList.find(
-                                  (item) => item.brandID == formData.brandID
-                                ) || null
-                              }
-                              onChange={(event, newValue) => {
-                                handleChange("brandID", newValue || null);
-                              }}
-                              placeholder="SELECT"
-                              width="100%"
-                              backgroundColor={LIGHT_GRAY2}
-                              error={!!errors.brandID}
-                              loading={brandLoading}
-                              onBlur={() => {
-                                if (!formData.brandID) {
-                                  setErrors((prev) => ({
-                                    ...prev,
-                                    brandID: "Brand is required",
-                                  }));
+                            <div ref={detailTableRef}>
+                              <NuralAutocomplete
+                                options={brandList}
+                                getOptionLabel={(option) =>
+                                  option.brandName || ""
                                 }
-                              }}
-                            />
+                                isOptionEqualToValue={(option, value) =>
+                                  option?.brandID === value?.brandID
+                                }
+                                value={
+                                  brandList.find(
+                                    (item) => item.brandID == formData.brandID
+                                  ) || null
+                                }
+                                onChange={(event, newValue) => {
+                                  handleChange("brandID", newValue || null);
+                                }}
+                                placeholder="SELECT"
+                                width="100%"
+                                backgroundColor={LIGHT_GRAY2}
+                                error={!!errors.brandID}
+                                loading={brandLoading}
+                                onBlur={() => {
+                                  if (!formData.brandID) {
+                                    setErrors((prev) => ({
+                                      ...prev,
+                                      brandID: "Brand is required",
+                                    }));
+                                  }
+                                }}
+                              />
+                            </div>
                             {errors.brandID && (
                               <Typography
                                 variant="caption"
@@ -1688,7 +1660,8 @@ const SKU = () => {
                               }
                               value={
                                 categoryList.find(
-                                  (item) => item.categoryID == formData.categoryID
+                                  (item) =>
+                                    item.categoryID == formData.categoryID
                                 ) || null
                               }
                               onChange={(event, newValue) => {
@@ -1791,7 +1764,9 @@ const SKU = () => {
                             </Typography>
                             <NuralAutocomplete
                               options={modelList}
-                              getOptionLabel={(option) => option.modelName || ""}
+                              getOptionLabel={(option) =>
+                                option.modelName || ""
+                              }
                               isOptionEqualToValue={(option, value) =>
                                 option?.modelID === value?.modelID
                               }
@@ -1845,7 +1820,9 @@ const SKU = () => {
                             </Typography>
                             <NuralAutocomplete
                               options={colorList}
-                              getOptionLabel={(option) => option.colorName || ""}
+                              getOptionLabel={(option) =>
+                                option.colorName || ""
+                              }
                               isOptionEqualToValue={(option, value) =>
                                 option?.colorID === value?.colorID
                               }
@@ -1913,7 +1890,8 @@ const SKU = () => {
                                     ...prev,
                                     skuCode: "SKU Code is required",
                                   }));
-                                } else if (formData.skuCode.length > 20) { // Update limit to 20
+                                } else if (formData.skuCode.length > 20) {
+                                  // Update limit to 20
                                   setErrors((prev) => ({
                                     ...prev,
                                     skuCode:
@@ -2025,56 +2003,52 @@ const SKU = () => {
 
                             <NuralTextField
                               width="100%"
-                              value={formData.skuDescription || ""}
+                              value={formData.skudesc || ""}
                               onChange={(event) => {
-                                handleChange(
-                                  "skuDescription",
-                                  event.target.value
-                                );
+                                handleChange("skudesc", event.target.value);
                               }}
                               placeholder="ENTER DESCRIPTION"
-                              error={!!errors.skuDescription}
+                              error={!!errors.skudesc}
                               onBlur={() => {
                                 if (
-                                  !formData.skuDescription ||
-                                  formData.skuDescription.trim() === ""
+                                  !formData.skudesc ||
+                                  formData.skudesc.trim() === ""
                                 ) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    skuDescription: "SKU Description is required",
+                                    skudesc: "SKU Description is required",
                                   }));
-                                } else if (formData.skuDescription.length > 50) { // Update limit to 50
+                                } else if (formData.skudesc.length > 50) {
+                                  // Update limit to 50
                                   setErrors((prev) => ({
                                     ...prev,
-                                    skuDescription:
+                                    skudesc:
                                       "SKU Description cannot exceed 50 characters", // Update error message
                                   }));
                                   setFormData((prev) => ({
                                     ...prev,
-                                    skuDescription:
-                                      formData.skuDescription.substring(0, 50), // Truncate to 50
+                                    skudesc: formData.skudesc.substring(0, 50), // Truncate to 50
                                   }));
                                 } else {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    skuDescription: "",
+                                    skudesc: "",
                                   }));
                                 }
                               }}
                             />
-                            {errors.skuDescription && (
+                            {errors.skudesc && (
                               <Typography
                                 variant="caption"
                                 color="error"
                                 sx={{ fontSize: "0.75rem" }}
                               >
-                                {errors.skuDescription}
+                                {errors.skudesc}
                               </Typography>
                             )}
                           </Grid>
 
-                          <Grid item xs={12} sm={4}>
-
+                          <Grid item xs={12} sm={3}>
                             <Typography
                               variant="h6"
                               sx={{
@@ -2095,7 +2069,6 @@ const SKU = () => {
                               getOptionLabel={(option) => option.hsnCode || ""}
                               isOptionEqualToValue={(option, value) =>
                                 option?.hsnID === value?.hsnID
-
                               }
                               value={
                                 hsnList.find(
@@ -2111,7 +2084,7 @@ const SKU = () => {
                               loading={hsnLoading}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={4}>
+                          <Grid item xs={12} sm={3}>
                             <Typography
                               variant="h6"
                               sx={{
@@ -2128,36 +2101,44 @@ const SKU = () => {
                             </Typography>
                             <NuralTextField
                               width="100%"
-                              value={formData.attribute1 || ""}
+                              value={formData.skuAttribute1 || ""}
                               onChange={(event) => {
-                                handleChange("attribute1", event.target.value);
+                                handleChange(
+                                  "skuAttribute1",
+                                  event.target.value
+                                );
                               }}
                               placeholder="ENTER ATTRIBUTE 1"
-                              error={!!errors.attribute1}
+                              error={!!errors.skuAttribute1}
                               onBlur={() => {
-                                if (formData.attribute1 && formData.attribute1.length > 100) {
+                                if (
+                                  formData.skuAttribute1 &&
+                                  formData.skuAttribute1.length > 100
+                                ) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    attribute1: "Attribute 1 cannot exceed 100 characters",
+                                    skuAttribute1:
+                                      "Attribute 1 cannot exceed 100 characters",
                                   }));
                                   setFormData((prev) => ({
                                     ...prev,
-                                    attribute1: formData.attribute1.substring(0, 100),
+                                    skuAttribute1:
+                                      formData.skuAttribute1.substring(0, 100),
                                   }));
                                 }
                               }}
                             />
-                            {errors.attribute1 && (
+                            {errors.skuAttribute1 && (
                               <Typography
                                 variant="caption"
                                 color="error"
                                 sx={{ fontSize: "0.75rem" }}
                               >
-                                {errors.attribute1}
+                                {errors.skuAttribute1}
                               </Typography>
                             )}
                           </Grid>
-                          <Grid item xs={12} sm={4}>
+                          <Grid item xs={12} sm={3}>
                             <Typography
                               variant="h6"
                               sx={{
@@ -2174,26 +2155,87 @@ const SKU = () => {
                             </Typography>
                             <NuralTextField
                               width="100%"
-                              value={formData.attribute2 || ""}
+                              value={formData.skuAttribute2 || ""}
                               onChange={(event) => {
-                                handleChange("attribute2", event.target.value);
+                                handleChange(
+                                  "skuAttribute2",
+                                  event.target.value
+                                );
                               }}
                               placeholder="ENTER ATTRIBUTE 2"
-                              error={!!errors.attribute2}
+                              error={!!errors.skuAttribute2}
                               onBlur={() => {
-                                if (formData.attribute2 && formData.attribute2.length > 100) {
+                                if (
+                                  formData.skuAttribute2 &&
+                                  formData.skuAttribute2.length > 100
+                                ) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    attribute2: "Attribute 2 cannot exceed 100 characters",
+                                    skuAttribute2:
+                                      "Attribute 2 cannot exceed 100 characters",
                                   }));
                                   setFormData((prev) => ({
                                     ...prev,
-                                    attribute2: formData.attribute2.substring(0, 100),
+                                    skuAttribute2:
+                                      formData.skuAttribute2.substring(0, 100),
                                   }));
                                 }
                               }}
                             />
-                            {errors.attribute2 && (
+                            {errors.skuAttribute2 && (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ fontSize: "0.75rem" }}
+                              >
+                                {errors.skuAttribute2}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_BLUE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              ARTICLE CODE
+                            </Typography>
+                            <NuralTextField
+                              width="100%"
+                              value={formData.articleCode || ""}
+                              onChange={(event) => {
+                                handleChange("articleCode", event.target.value);
+                              }}
+                              placeholder="ENTER ARTICLE CODE"
+                              error={!!errors.articleCode}
+                              onBlur={() => {
+                                if (
+                                  formData.articleCode &&
+                                  formData.articleCode.length > 100
+                                ) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    articleCode:
+                                      "Attribute 2 cannot exceed 100 characters",
+                                  }));
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    articleCode: formData.articleCode.substring(
+                                      0,
+                                      100
+                                    ),
+                                  }));
+                                }
+                              }}
+                            />
+                            {errors.articleCode && (
                               <Typography
                                 variant="caption"
                                 color="error"
@@ -2245,7 +2287,7 @@ const SKU = () => {
             </Grid>
           </Grid>
 
-          <Grid item xs={12} pr={1.5}>
+          <Grid item xs={12} pr={0}>
             <Grid container spacing={2} direction="column">
               <Grid item>
                 {searchFormLoading ? (
@@ -2481,7 +2523,8 @@ const SKU = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={searchColorLoading}
+                            loading={skuDropdownLoading}
+                            disabled={skuDropdownLoading}
                           />
                         </Grid>
                         <Grid item xs={12} sm={4}>
@@ -2516,320 +2559,313 @@ const SKU = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={searchColorLoading}
+                            loading={skuDropdownLoading}
+                            disabled={skuDropdownLoading}
                           />
+                        </Grid>
+
+                        <Grid container spacing={1} mt={1} ml={1} px={0}>
+                          <Grid item xs={12} sm={6} md={1}>
+                            <NuralButton
+                              text="CANCEL"
+                              variant="outlined"
+                              color={PRIMARY_BLUE2}
+                              fontSize="12px"
+                              height="36px"
+                              borderColor={PRIMARY_BLUE2}
+                              onClick={handleClearSearch}
+                              width="100%"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={11}>
+                            <NuralTextButton
+                              icon={"./Icons/searchIcon.svg"}
+                              iconPosition="right"
+                              height="36px"
+                              backgroundColor={PRIMARY_BLUE2}
+                              color="#fff"
+                              width="100%"
+                              fontSize="12px"
+                              onClick={handleSearch}
+                            >
+                              SEARCH
+                            </NuralTextButton>
+                          </Grid>
                         </Grid>
                       </Grid>
                     </NuralAccordion2>
-                    {searchAccordionExpanded && (
-                      <Grid container spacing={1} mt={1} px={1}> {/* Added padding */}                        <Grid item xs={12} sm={6} md={1}> {/* Adjusted grid sizing */}                          <NuralButton
-                            text="CANCEL"
-                            variant="outlined"
-                            color={PRIMARY_BLUE2}
-                            fontSize="12px"
-                            height="36px"
-                            borderColor={PRIMARY_BLUE2}
-                            onClick={handleClearSearch}
-                            width="100%"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={11}> {/* Adjusted grid sizing */}                          <NuralTextButton
-                            icon={"./Icons/searchIcon.svg"}
-                            iconPosition="right"
-                            height="36px"
-                            backgroundColor={PRIMARY_BLUE2}
-                            color="#fff"
-                            width="100%"
-                            fontSize="12px"
-                            onClick={handleSearch}
-                          >
-                            SEARCH
-                          </NuralTextButton>
-                        </Grid>
-                      </Grid>
-                    )}
                   </>
                 )}
               </Grid>
             </Grid>
           </Grid>
         </>
-        <Grid container sx={{ margin: "10px" }}>
-          {searchStatus && (
+        {searchStatus && (
+          <Grid container mt={1}>
             <StatusModel
               width="100%"
               status={searchStatus}
               title={searchTitle}
-              onClose={() => {
-                setSearchStatus(null);
-                setSearchTitle("");
-              }}
             />
-          )}
-        </Grid>
-     {!searchStatus &&   <Grid item xs={12} mt={2} sx={{ p: { xs: 1, sm: 2 } }}>
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 45px)", // Adjusted to account for headers
-              overflow: "auto",
-              position: "relative",
-              zIndex: 900, // Lower than header z-index 
-              "& .MuiTable-root": {
-                borderCollapse: "separate",
-                borderSpacing: 0,
-              },
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    colSpan={columnDefinitions.length + 1} // +1 for S.NO
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1100,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
-                    }}
-                  >
-                    <Grid
-                      container
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Grid item>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
-                          }}
-                        >
-                          List
-                        </Typography>
-                      </Grid>
-                      <Grid item>
-                        {/* Remove the old export icon */}
-                      </Grid>
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "45px", // Adjusted to account for "List" header
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 1000,
-                      "&::after": {
-                        // Add bottom border effect
-                        content: '""',
-                        position: "absolute",
-                        left: 0,
-                        bottom: 0,
-                        width: "100%",
-                        borderBottom: "2px solid #e0e0e0",
-                      },
-                    }}
-                  >
-                    <Grid container alignItems="center" spacing={1}>
-                      <Grid item>S.NO</Grid>
-                    </Grid>
-                  </TableCell>
-                  {columnDefinitions.map((column) => (
+          </Grid>
+        )}
+        {searchAccordionExpanded && (
+          <Grid item xs={12} mt={0} sx={{ p: { xs: 1, sm: 2, md: 0 } }}>
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(100vh - 45px)", // Adjusted to account for headers
+                overflow: "auto",
+                position: "relative",
+                zIndex: 900, // Lower than header z-index
+                "& .MuiTable-root": {
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                },
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
                     <TableCell
-                      key={column.field}
-                      onClick={() => handleSort(column.field)}
+                      colSpan={columnDefinitions.length + 1} // +1 for S.NO
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1100,
+                        borderBottom: "none",
+                        boxShadow: "0 2px 2px rgba(0,0,0,0.05)", // Add subtle shadow
+                      }}
+                    >
+                      <Grid
+                        container
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
+                        <Grid item>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontFamily: "Manrope",
+                              fontWeight: 700,
+                              fontSize: "14px",
+                              lineHeight: "19.12px",
+                              letterSpacing: "0%",
+                              color: PRIMARY_BLUE2,
+                              p: 1,
+                            }}
+                          >
+                            List
+                          </Typography>
+                        </Grid>
+                        <Grid item>{/* Remove the old export icon */}</Grid>
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
+                    <TableCell
                       sx={{
                         ...tableHeaderStyle,
-                        cursor: "pointer",
                         position: "sticky",
-                        top: "45px", // Same as S.NO cell
+                        top: "45px", // Adjusted to account for "List" header
                         backgroundColor: LIGHT_GRAY2,
                         zIndex: 1000,
+                        "&::after": {
+                          // Add bottom border effect
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          bottom: 0,
+                          width: "100%",
+                          borderBottom: "2px solid #e0e0e0",
+                        },
                       }}
                     >
                       <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{column.label}</Grid>
-                        <Grid
-                          item
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          {sortConfig.key === column.field ? (
-                            sortConfig.direction === "asc" ? (
-                              <ArrowUpwardIcon // Use correct icon
-                                sx={{
-                                  fontSize: 16,
-                                  color: PRIMARY_BLUE2,
-                                }}
-                              />
-                            ) : (
-                              <ArrowDownwardIcon // Use correct icon
-                                sx={{
-                                  fontSize: 16,
-                                  color: PRIMARY_BLUE2,
-                                }}
-                              />
-                            )
-                          ) : (
+                        <Grid item>S.NO</Grid>
+                      </Grid>
+                    </TableCell>
+                    {columnDefinitions.map((column) => (
+                      <TableCell
+                        key={column.field}
+                        onClick={() =>
+                          column.sortable !== false && handleSort(column.field)
+                        }
+                        sx={{
+                          ...tableHeaderStyle,
+                          cursor:
+                            column.sortable !== false ? "pointer" : "default",
+                          position: "sticky",
+                          top: "45px", // Same as S.NO cell
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 1000,
+                          "&:hover": {
+                            backgroundColor:
+                              column.sortable !== false
+                                ? "rgba(0, 0, 0, 0.04)"
+                                : "inherit",
+                          },
+                        }}
+                      >
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{column.label}</Grid>
+                          {column.sortable !== false && (
                             <Grid
-                              container
-                              direction="column"
-                              alignItems="center"
-                              sx={{ height: 16, width: 16 }}
+                              item
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                              }}
                             >
-                              <ArrowUpwardIcon // Use correct icon
-                                sx={{
-                                  fontSize: 12,
-                                  color: "grey.400",
-                                }}
-                              />
-                              <ArrowDownwardIcon // Use correct icon
-                                sx={{
-                                  fontSize: 12,
-                                  color: "grey.400",
-                                }}
-                              />
+                              {sortConfig.key === column.field ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                </Grid>
+                              )}
                             </Grid>
                           )}
                         </Grid>
-                      </Grid>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableLoading ? (
-                  <TableRowSkeleton
-                    columns={11} // 11 columns to match your table
-                    rows={10} // Show 10 skeleton rows
-                    imagePath="./Icons/emptyFile.svg"
-                    sx={{ height: "calc(100vh - 420px)" }}
-                  />
-                ) : searchStatus ? ( // Check for persistent search error FIRST
-                  <TableRow>
-                    <TableCell 
-                      colSpan={columnDefinitions.length + 1} // Span all columns
-                      align="center" 
-                      sx={{ py: 3, color: 'error.main' }} // Style error message
-                    >
-                      <Typography variant="body1"> 
-                        {searchTitle} {/* Display the error message */}
-                      </Typography>
-                    </TableCell>
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ) : tableData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
-                      <Typography variant="body1">No records found</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredRows.map((row, index) => (
-                    <TableRow key={row.skuID || index}>
-                      <TableCell
-                        sx={{
-                          ...rowstyle,
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.skuCode || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.skuName || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.brandName || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.category || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.subCategory || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.model || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.colorName || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.hsnCode || "-"}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        <Switch
-                          checked={row.status === 1}
-                          onChange={(e) => {
-                            handleStatus(row, e.target.checked);
-                          }}
-                          size="small"
-                          disabled={loadingRows.has(row.skuID)}
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: PRIMARY_BLUE2,
-                            },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: DARK_PURPLE,
-                              },
-                            opacity: loadingRows.has(row.skuID) ? 0.5 : 1,
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          padding: "8px 16px",
-                          fontSize: "10px",
-                          textAlign: "left",
-                          minWidth: "60px",
-                        }}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(row)}
-                        >
-                          <EditIcon
-                            sx={{
-                              fontSize: 16,
-                              color: PRIMARY_BLUE2,
-                            }}
-                          />
-                        </IconButton>
+                </TableHead>
+                <TableBody>
+                  {tableLoading ? (
+                    <TableRowSkeleton
+                      columns={11} // 11 columns to match your table
+                      rows={10} // Show 10 skeleton rows
+                      imagePath="./Icons/emptyFile.svg"
+                      sx={{ height: "calc(100vh - 420px)" }}
+                    />
+                  ) : tableData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                        <Typography variant="body1">
+                          No records found
+                        </Typography>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredRows.map((row, index) => (
+                      <TableRow key={row.skuID || index}>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {page * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.skuCode || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.skuName || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.skuDesc || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.brandName || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.category || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.subCategory || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.model || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.colorName || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.hsnCode || "-"}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          <Switch
+                            checked={row.status === 1}
+                            onChange={(e) => {
+                              handleStatus(row, e.target.checked);
+                            }}
+                            sx={{
+                              ...toggleSectionStyle,
+                              "& .MuiSwitch-thumb": {
+                                backgroundColor:
+                                  row.status === 1
+                                    ? PRIMARY_BLUE2
+                                    : DARK_PURPLE,
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={rowstyle}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(row)}
+                          >
+                            <EditIcon
+                              sx={{
+                                fontSize: 16,
+                                color: PRIMARY_BLUE2,
+                              }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
 
-            {/* Custom Pagination */}
-            <NuralPagination
-              key={`pagination-${page}-${rowsPerPage}`}
-              totalRecords={totalRecords}
-              initialPage={page}
-              initialRowsPerPage={rowsPerPage}
-              onPaginationChange={handlePaginationChange}
-            />
-          </TableContainer>
-        </Grid>}
+              {/* Custom Pagination */}
+              <NuralPagination
+                key={`pagination-${page}-${rowsPerPage}`}
+                totalRecords={totalRecords}
+                initialPage={page}
+                initialRowsPerPage={rowsPerPage}
+                onPaginationChange={handlePaginationChange}
+              />
+            </TableContainer>
+          </Grid>
+        )}
       </Grid>
       {/* Activity Panel for Export */}
       <Grid

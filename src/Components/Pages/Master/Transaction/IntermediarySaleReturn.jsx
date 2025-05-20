@@ -53,7 +53,7 @@ const IntermediarySaleReturn = () => {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
   // console.log("selectedUserId", selectedDate);
-
+const [resetFile,setResetFile]=React.useState(false);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -89,7 +89,7 @@ const IntermediarySaleReturn = () => {
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
-          window.location.href = `${templateUrl}IntermediarySalesExistInSystem.xlsx`;
+          window.location.href = `${templateUrl}IntermediarySalesReturnExistInSystem.xlsx`;
           setStatus(200);
           setTitle("Template downloaded successfully.");
           setIsLoading(false);
@@ -122,19 +122,7 @@ const IntermediarySaleReturn = () => {
       },
     },
   ];
-  // const templates = [
-  //   {
-  //     name: "Template 1",
-  //     onView: () => console.log("View Template 1"),
-  //     onDownload: () => {
-  //       setIsLoading(true);
-  //       setTimeout(() => {
-  //         window.location.href = `${templateUrl}IntermediarySalesSB.xlsx`;
-  //         setIsLoading(false);
-  //       }, 1000);
-  //     },
-  //   },
-  // ];
+
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
@@ -151,11 +139,10 @@ const IntermediarySaleReturn = () => {
     }
   };
 
-  const handleBinCodeClick = async () => {
+ const handleBinCodeClick = async () => {
     setIsLoading(true);
     try {
       let res = await GetStockBinTypeInfo();
-
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
 
@@ -261,6 +248,10 @@ const IntermediarySaleReturn = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
     }
+    setResetFile(true);
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
     setStatus(null);
     setTitle(null);
     setSelectedDate(getTodayDate());
@@ -352,6 +343,7 @@ const IntermediarySaleReturn = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
@@ -369,6 +361,8 @@ const IntermediarySaleReturn = () => {
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
+                      color={PRIMARY_BLUE2}
+
                       variant="outlined"
                       borderColor={PRIMARY_BLUE2}
                       onClick={handleClearStatus}

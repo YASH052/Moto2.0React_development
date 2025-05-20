@@ -7,7 +7,7 @@ import {
 } from "./colors";
 import NuralAccordion2 from "../Pages/NuralCustomComponents/NuralAccordion2";
 
-const AddSalesChannelSkeleton = () => {
+const AddSalesChannelSkeleton = ({ title }) => {
   return (
     <Grid container spacing={0} mb={2}>
       <Grid
@@ -74,7 +74,7 @@ const AddSalesChannelSkeleton = () => {
             </Grid>
             <Grid item>
               <NuralAccordion2
-                title="Sales Channel Details"
+                title={title}
                 backgroundColor={LIGHT_GRAY2}
               >
                 <Grid container spacing={2}>

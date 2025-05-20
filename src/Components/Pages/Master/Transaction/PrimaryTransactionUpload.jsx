@@ -34,6 +34,8 @@ const log = JSON.parse(localStorage.getItem("log")) || {};
 
 const PrimaryTransactionUpload = () => {
   const [activeTab, setActiveTab] = React.useState("primary-transaction");
+  const [resetFile, setResetFile] = React.useState(false);
+  const [showStatus, setShowStatus] = React.useState(false);
   const navigate = useNavigate();
   const [status, setStatus] = React.useState(null);
   const [title, setTitle] = React.useState(null);
@@ -56,6 +58,14 @@ const PrimaryTransactionUpload = () => {
         setIsLoading(true);
         setTimeout(() => {
           window.location.href = `${templateUrl}PrimarySales.xlsx`;
+          setShowStatus(true);  
+          setStatus(200);
+          setTitle("Data fetched successfully");
+          setTimeout(() => {
+            handleClearStatus();
+            setStatus(null);
+            setTitle(null);
+          }, 5000);
           setIsLoading(false);
         }, 1000);
       },
@@ -83,27 +93,25 @@ const PrimaryTransactionUpload = () => {
       let res = await GetStockBinTypeInfo();
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
-        }, 3000);
+          handleClearStatus();
+        }, 5000);
       } else {
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
-        }, 3000);
+          handleClearStatus();
+        }, 5000);
       }
     } catch (error) {
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       setTimeout(() => {
-        setStatus(null);
-        setTitle(null);
-      }, 3000);
+        handleClearStatus();
+      }, 5000);
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -124,27 +132,27 @@ const PrimaryTransactionUpload = () => {
       let res = await GetAllTemplateDataV2(body);
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
-        }, 3000);
-      } else {
+          handleClearStatus();
+        }, 5000);
+      } else {  
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
-        }, 3000);
+          handleClearStatus();
+        }, 5000);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       setTimeout(() => {
-        setStatus(null);
-        setTitle(null);
-      }, 3000);
+        handleClearStatus();
+      }, 5000);
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -168,23 +176,25 @@ const PrimaryTransactionUpload = () => {
     try {
       let res = await UploadPrimarySales(formData);
       if (res.statusCode == 200) {
-        fileInput.value = "";
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
-        }, 3000);
+          handleClearStatus();
+        }, 5000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(String(error.status));
+      setShowStatus(true);
+      setStatus(String(error.status || 500));
       setTitle(MenuConstants.somethingWentWrong);
       console.log(error);
     } finally {
@@ -194,9 +204,16 @@ const PrimaryTransactionUpload = () => {
   };
 
   const handleClearStatus = () => {
-    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setStatus(null);
     setTitle(null);
+    setShowStatus(false);
+    setResetFile(true);
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
   };
 
   React.useEffect(() => {
@@ -250,10 +267,12 @@ const PrimaryTransactionUpload = () => {
                   backgroundColor={LIGHT_GRAY2}
                   options={options}
                   value={selectedFormat}
+                  showExpandIcon={false}
                 />
               </Grid>
               <Grid item>
                 <NuralAccordion
+                  
                   titleColor={DARK_PURPLE}
                   buttonColor={PRIMARY_BLUE2}
                   buttonBg={MEDIUM_BLUE}
@@ -279,10 +298,12 @@ const PrimaryTransactionUpload = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
+                  showExpandIcon={false}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
+                {showStatus && (
                   <StatusModel
                     width="100%"
                     status={status}
@@ -295,6 +316,7 @@ const PrimaryTransactionUpload = () => {
                 <Grid container spacing={1}>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
+                      color={PRIMARY_BLUE2}
                       text="CANCEL"
                       variant="outlined"
                       borderColor={PRIMARY_BLUE2}
@@ -305,7 +327,7 @@ const PrimaryTransactionUpload = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
+                      text={isUploading ? "UPLOADING..." : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handleUploadClick}

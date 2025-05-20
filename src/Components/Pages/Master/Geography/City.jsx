@@ -8,6 +8,7 @@ import {
   AQUA,
   LIGHT_BLUE,
   DARK_BLUE,
+  DARK_PURPLE,
 } from "../../../Common/colors";
 import EditIcon from "@mui/icons-material/Edit";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -16,7 +17,13 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
 import {
   Countrymasterlist,
   GetCityListForDropdown,
@@ -34,8 +41,8 @@ import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import NuralPagination from "../../../Common/NuralPagination";
 
 const tabs = [
-  { label: "Upload", value: "upload" },
-  { label: "Country", value: "country" },
+  { label: "Upload", value: "geography-bulk-upload" },
+  { label: "Country", value: "#" },
   { label: "State", value: "state" },
   { label: "City", value: "city" },
   { label: "Area", value: "area" },
@@ -54,7 +61,9 @@ import {
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 
 const City = () => {
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const navigate = useNavigate();
+  const editSectionRef = useRef(null);
   const [activeTab, setActiveTab] = useState("city");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -129,18 +138,28 @@ const City = () => {
   const handleSearchAccordionChange = (event, expanded) => {
     setSearchAccordionExpanded(expanded);
   };
+
+  const [countryLoading, setCountryLoading] = useState(false);
+  const [regionLoading, setRegionLoading] = useState(false);
+  const [stateLoading, setStateLoading] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+
   const downloadExcel = async () => {
     const params = {
-      ...formData,
+      ...searchParams,
       callType: 3,
       pageIndex: -1,
-    }
+    };
+    setIsDownloadLoading(true);
     try {
       const response = await getCityMasterlist(params);
       if (response.statusCode === "200") {
-        window.location.href = response?.reportLink; 
+        window.location.href = response?.reportLink;
         setStatusSearch(200);
         setTitleSearch(response?.statusMessage);
+        setTimeout(() => {
+          setStatusSearch(null);
+        }, 5000);
       } else {
         setStatusSearch(response?.statusCode);
         setTitleSearch(response?.statusMessage);
@@ -149,6 +168,8 @@ const City = () => {
       console.log(error);
       setStatusSearch(error?.statusCode);
       setTitleSearch(error?.statusMessage);
+    } finally {
+      setIsDownloadLoading(false);
     }
   };
 
@@ -208,11 +229,24 @@ const City = () => {
     setSortConfig({ key: columnName, direction });
 
     const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
+      // Map column names to actual data fields
+      const fieldMap = {
+        country: "country",
+        region: "regionName",
+        state: "stateName",
+        cityName: "cityName",
+        cityCode: "cityCode",
+      };
 
-      const aValue = a[columnName]?.toString().toLowerCase() || "";
-      const bValue = b[columnName]?.toString().toLowerCase() || "";
+      const field = fieldMap[columnName] || columnName;
+
+      // Handle null/undefined values
+      if (!a[field] && !b[field]) return 0;
+      if (!a[field]) return 1;
+      if (!b[field]) return -1;
+
+      const aValue = a[field]?.toString().toLowerCase() || "";
+      const bValue = b[field]?.toString().toLowerCase() || "";
 
       if (aValue < bValue) {
         return direction === "asc" ? -1 : 1;
@@ -344,10 +378,10 @@ const City = () => {
           ...prev,
           cityName: "City Name is required",
         }));
-      } else if (newValue.length > 50) {
+      } else if (newValue.length > 20) {
         setErrors((prev) => ({
           ...prev,
-          cityName: "City Name cannot exceed 50 characters",
+          cityName: "City Name cannot exceed 20 characters",
         }));
       } else if (!/^[a-zA-Z0-9 ]+$/.test(newValue)) {
         setErrors((prev) => ({
@@ -369,10 +403,10 @@ const City = () => {
           ...prev,
           cityCode: "City Code is required",
         }));
-      } else if (newValue.length > 50) {
+      } else if (newValue.length > 20) {
         setErrors((prev) => ({
           ...prev,
-          cityCode: "City Code cannot exceed 50 characters",
+          cityCode: "City Code cannot exceed 20 characters",
         }));
       } else if (!/^[a-zA-Z0-9]+$/.test(newValue)) {
         setErrors((prev) => ({
@@ -484,6 +518,7 @@ const City = () => {
   const getCountry = async () => {
     try {
       setFormLoading(true);
+      setCountryLoading(true);
       const params = {
         CountryName: "",
         CallType: "1", // 0 = bind for table data, 1= active lists for dropdown*/
@@ -495,15 +530,18 @@ const City = () => {
         setCountry(response.countryMasterList);
       }
       setFormLoading(false);
+      setCountryLoading(false);
     } catch (error) {
       console.error("Error in getCountry:", error);
       setFormLoading(false);
+      setCountryLoading(false);
     }
   };
 
   const getCountrySearch = async () => {
     try {
       setSearchFormLoading(true);
+      setCountryLoading(true);
       const params = {
         CountryName: "",
         CallType: "1",
@@ -515,14 +553,17 @@ const City = () => {
         setCountrySearch(response.countryMasterList);
       }
       setSearchFormLoading(false);
+      setCountryLoading(false);
     } catch (error) {
       console.error("Error in getCountrySearch:", error);
       setSearchFormLoading(false);
+      setCountryLoading(false);
     }
   };
 
   const getRegion = async (countryID = 0) => {
     try {
+      setRegionLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: 0,
@@ -531,13 +572,16 @@ const City = () => {
       if (response.statusCode === "200") {
         setRegion(response.regionDropdownList);
       }
+      setRegionLoading(false);
     } catch (error) {
       console.error("Error in getRegion:", error);
+      setRegionLoading(false);
     }
   };
 
   const getRegionSearch = async (countryID = 0) => {
     try {
+      setRegionLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: 0,
@@ -546,13 +590,16 @@ const City = () => {
       if (response.statusCode === "200") {
         setRegionSearch(response.regionDropdownList);
       }
+      setRegionLoading(false);
     } catch (error) {
       console.error("Error in getRegionSearch:", error);
+      setRegionLoading(false);
     }
   };
 
   const getState = async (countryID = 0, regionID = 0) => {
     try {
+      setStateLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: regionID || 0,
@@ -562,13 +609,16 @@ const City = () => {
       if (response.statusCode === "200") {
         setState(response.stateDropdownList);
       }
+      setStateLoading(false);
     } catch (error) {
       console.error("Error in getState:", error);
+      setStateLoading(false);
     }
   };
 
   const getStateSearch = async (countryID = 0, regionID = 0) => {
     try {
+      setStateLoading(true);
       const params = {
         countryID: countryID || 0,
         regionID: regionID || 0,
@@ -578,13 +628,16 @@ const City = () => {
       if (response.statusCode === "200") {
         setStateSearch(response.stateDropdownList);
       }
+      setStateLoading(false);
     } catch (error) {
       console.error("Error in getStateSearch:", error);
+      setStateLoading(false);
     }
   };
 
   const getCitySearch = async (stateID = 0) => {
     try {
+      setCityLoading(true);
       const params = {
         searchConditions: 1, //it will be 1
         stateID: stateID || 0,
@@ -594,8 +647,10 @@ const City = () => {
       if (response.statusCode === "200") {
         setCitySearch(response.cityDropdownList);
       }
+      setCityLoading(false);
     } catch (error) {
       console.error("Error in getCitySearch:", error);
+      setCityLoading(false);
     }
   };
 
@@ -675,8 +730,8 @@ const City = () => {
 
     if (!formData.cityName || formData.cityName.trim() === "") {
       newErrors.cityName = "City Name is required";
-    } else if (formData.cityName.length > 50) {
-      newErrors.cityName = "City Name cannot exceed 50 characters";
+    } else if (formData.cityName.length > 20) {
+      newErrors.cityName = "City Name cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.cityName)) {
       newErrors.cityName =
         "City Name can only contain alphanumeric characters and spaces";
@@ -684,8 +739,8 @@ const City = () => {
 
     if (!formData.cityCode || formData.cityCode.trim() === "") {
       newErrors.cityCode = "City Code is required";
-    } else if (formData.cityCode.length > 50) {
-      newErrors.cityCode = "City Code cannot exceed 50 characters";
+    } else if (formData.cityCode.length > 20) {
+      newErrors.cityCode = "City Code cannot exceed 20 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.cityCode)) {
       newErrors.cityCode =
         "City Code can only contain alphanumeric characters (no spaces)";
@@ -800,7 +855,7 @@ const City = () => {
     }
   };
 
-  // Add handleEdit function
+  // Update handleEdit function
   const handleEdit = (row) => {
     // Set form data with the row data
     console.log(row);
@@ -828,6 +883,19 @@ const City = () => {
 
     // Clear any existing errors
     setErrors({});
+
+    // Ensure create section is expanded
+    setAccordionExpanded(true);
+
+    // Scroll to country autocomplete field
+    setTimeout(() => {
+      if (editSectionRef.current) {
+        editSectionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 100); // Small delay to ensure DOM is updated
   };
 
   // Update handleSave function
@@ -841,10 +909,16 @@ const City = () => {
               ? 1
               : 0 /* 0= default for save, 1= edit, 2= toggle Active Status*/,
         };
+        setFormLoading(true);
         const response = await manageCityMaster(form);
         if (response.statusCode === "200") {
           setStatus(response.statusCode);
-          setTitle(response.statusMessage); 
+          setTitle(response.statusMessage);
+          setTimeout(() => {
+            setStatus(null);
+            setTitle("");
+          }, 5000);
+
           handleCancel();
           getCityList(searchParams);
         } else if (response.statusCode === "400") {
@@ -855,16 +929,24 @@ const City = () => {
           setTitle("Internal server error.");
         }
       } catch (error) {
-        console.error("Error in handleSave:", error);
         setStatus(error.statusCode || "500");
         setTitle("Internal server error.");
+      } finally {
+        setFormLoading(false);
       }
     }
   };
 
   return (
     <>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+        position="relative"
+        sx={{
+          pr: { xs: 0, sm: 0, md: "240px", lg: "260px" },
+        }}
+      >
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -877,11 +959,11 @@ const City = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0}>
             <BreadcrumbsHeader pageTitle="Geography" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -894,7 +976,7 @@ const City = () => {
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
               <Grid item>
-                <NuralAccordion2 
+                <NuralAccordion2
                   title={formData.cityID > 0 ? "Update" : "Create"}
                   backgroundColor={LIGHT_GRAY2}
                   onChange={handleAccordionChange}
@@ -906,6 +988,7 @@ const City = () => {
                     <FormSkeleton />
                   ) : (
                     <>
+                      <div ref={editSectionRef}></div>
                       <Grid container spacing={3} sx={{ width: "100%" }}>
                         <Grid item xs={12} sm={6} md={4} lg={4}>
                           <Typography
@@ -941,6 +1024,7 @@ const City = () => {
                             placeholder="SELECT"
                             backgroundColor={LIGHT_GRAY2}
                             error={!!errors.countryID}
+                            loading={countryLoading}
                           />
                           {errors.countryID && (
                             <Typography
@@ -986,6 +1070,7 @@ const City = () => {
                             placeholder="SELECT"
                             backgroundColor={LIGHT_GRAY2}
                             error={!!errors.regionID}
+                            loading={regionLoading}
                           />
                           {errors.regionID && (
                             <Typography
@@ -1030,6 +1115,7 @@ const City = () => {
                             placeholder="SELECT"
                             backgroundColor={LIGHT_GRAY2}
                             error={!!errors.stateID}
+                            loading={stateLoading}
                           />
                           {errors.stateID && (
                             <Typography
@@ -1059,11 +1145,20 @@ const City = () => {
                           <NuralTextField
                             width="100%"
                             value={formData.cityName}
-                            onChange={(e) =>
-                              handleChange("cityName", e.target.value)
-                            }
+                            onChange={(e) => {
+                              if (e.target.value.length > 20) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  cityName:
+                                    "City Name cannot exceed 20 characters",
+                                }));
+                              } else {
+                                handleChange("cityName", e.target.value);
+                              }
+                            }}
                             placeholder="ENTER CITY NAME"
                             error={!!errors.cityName}
+                            inputProps={{ maxLength: 20 }}
                             onBlur={() => {
                               if (
                                 !formData.cityName ||
@@ -1105,14 +1200,23 @@ const City = () => {
                           >
                             CITY CODE <Required />
                           </Typography>
-                            <NuralTextField
-                            width="100%"  
+                          <NuralTextField
+                            width="100%"
                             value={formData.cityCode}
-                            onChange={(e) =>
-                              handleChange("cityCode", e.target.value)
-                            }
+                            onChange={(e) => {
+                              if (e.target.value.length > 20) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  cityCode:
+                                    "City Code cannot exceed 20 characters",
+                                }));
+                              } else {
+                                handleChange("cityCode", e.target.value);
+                              }
+                            }}
                             placeholder="ENTER CITY CODE"
                             error={!!errors.cityCode}
+                            inputProps={{ maxLength: 20 }}
                             onBlur={() => {
                               if (
                                 !formData.cityCode ||
@@ -1146,29 +1250,31 @@ const City = () => {
               </Grid>
             </Grid>
           </Grid>
-
+          {status && (
+            <Grid container mt={1} pr={1.5}>
+              <StatusModel
+                width="100%"
+                status={status}
+                title={title}
+                onClose={() => {
+                  setStatus(null);
+                  setTitle("");
+                }}
+              />
+            </Grid>
+          )}
           {accordionExpanded && (
             <Grid container spacing={1} mt={1} pr={0} ml={1} mr={1}>
-              <Grid container sx={{ width: "100%", mt: "16px" }}>
-                {status && (
-                  <StatusModel
-                    width="100%"
-                    status={status}
-                    title={title}
-                    onClose={() => {
-                      setStatus(null);
-                      setTitle("");
-                    }}
-                  />
-                )}
-              </Grid>
-
               <Grid item xs={12} sm={6} md={6} lg={6}>
                 <NuralButton
                   text="CANCEL"
                   variant="outlined"
                   borderColor={PRIMARY_BLUE2}
-                  onClick={handleCancel}
+                  onClick={() => {
+                    handleCancel();
+                    setStatus(null);
+                    setTitle("");
+                  }}
                   width="97%"
                 />
               </Grid>
@@ -1187,8 +1293,8 @@ const City = () => {
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
               <Grid item>
-                <NuralAccordion2 
-                  title="View" 
+                <NuralAccordion2
+                  title="View"
                   backgroundColor={LIGHT_GRAY2}
                   onChange={handleSearchAccordionChange}
                   controlled={true}
@@ -1233,6 +1339,7 @@ const City = () => {
                             }
                             placeholder="SELECT"
                             backgroundColor={LIGHT_BLUE}
+                            loading={countryLoading}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={4}>
@@ -1268,6 +1375,7 @@ const City = () => {
                             }
                             placeholder="SELECT"
                             backgroundColor={LIGHT_BLUE}
+                            loading={regionLoading}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={4}>
@@ -1303,6 +1411,7 @@ const City = () => {
                             }
                             placeholder="SELECT"
                             backgroundColor={LIGHT_BLUE}
+                            loading={stateLoading}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6} md={6} lg={6}>
@@ -1337,6 +1446,7 @@ const City = () => {
                             width="100%"
                             placeholder="SELECT"
                             backgroundColor={LIGHT_BLUE}
+                            loading={cityLoading}
                           />
                         </Grid>
                         <Grid item xs={12} sm={12} md={6} lg={6}>
@@ -1422,24 +1532,24 @@ const City = () => {
             </Grid>
           </Grid>
 
-          <Grid container xs={12} sx={{ mr: 1, margin: "16px 10px" }}>
+          <Grid container xs={12} mb={1} pr={1.5} mt={1} ml={2}>
             {statusSearch && (
               <StatusModel
                 width="100%"
                 status={statusSearch}
                 title={titleSearch}
-                onClose={() => setStatusSearch(null)}
+                // onClose={() => setStatusSearch(null)}
               />
             )}
           </Grid>
           {!hasSearchError && (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: 0 }}>
+            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, md: 1.5 }, mt: -2 }}>
               <TableContainer
                 component={Paper}
                 sx={{
                   backgroundColor: LIGHT_GRAY2,
                   color: PRIMARY_BLUE2,
-                  maxHeight: "calc(120vh - 180px)",
+                  maxHeight: "calc(100vh - 50px)",
                   overflow: "auto",
                   position: "relative",
                   "& .MuiTable-root": {
@@ -1483,14 +1593,6 @@ const City = () => {
                               List
                             </Typography>
                           </Grid>
-                          <Grid
-                            item
-                            sx={{
-                              cursor: "pointer",
-                            }}
-                          >
-                            <img src="./Images/export.svg" alt="export" onClick={downloadExcel}/>
-                          </Grid>
                         </Grid>
                       </TableCell>
                     </TableRow>
@@ -1509,11 +1611,11 @@ const City = () => {
                         S.NO
                       </TableCell>
                       {[
-                        { label: "COUNTRY", key: "country" },
-                        { label: "REGION", key: "region" },
-                        { label: "STATE", key: "state" },
-                        { label: "CITY NAME", key: "cityName" },
-                        { label: "CITY CODE", key: "cityCode" },
+                        { label: "COUNTRY", key: "country", sortable: true },
+                        { label: "REGION", key: "region", sortable: true },
+                        { label: "STATE", key: "state", sortable: true },
+                        { label: "CITY NAME", key: "cityName", sortable: true },
+                        { label: "CITY CODE", key: "cityCode", sortable: true },
                         { label: "STATUS", sortable: false },
                         { label: "EDIT", sortable: false },
                       ].map((header) => (
@@ -1595,7 +1697,7 @@ const City = () => {
                             key={row.cityID || index}
                             sx={{
                               fontSize: "10px",
-                              
+
                               "& td": {
                                 borderBottom: `1px solid #C6CEED`,
                               },
@@ -1623,15 +1725,14 @@ const City = () => {
                               <Switch
                                 checked={row.status === 1}
                                 onChange={() => handleStatusChange(row)}
-                                size="small"
                                 sx={{
-                                  "& .MuiSwitch-switchBase.Mui-checked": {
-                                    color: PRIMARY_BLUE2,
+                                  ...toggleSectionStyle,
+                                  "& .MuiSwitch-thumb": {
+                                    backgroundColor:
+                                      row.status === 1
+                                        ? PRIMARY_BLUE2
+                                        : DARK_PURPLE,
                                   },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                    {
-                                      backgroundColor: PRIMARY_BLUE2,
-                                    },
                                 }}
                               />
                             </TableCell>
@@ -1671,6 +1772,54 @@ const City = () => {
             </Grid>
           )}
         </>
+        <Grid
+          item
+          xs={12}
+          sm={3}
+          md={3}
+          lg={3}
+          mt={0}
+          position={"fixed"}
+          right={{
+            xs: 0,
+            sm: 5,
+            md: 10,
+            lg: 10,
+          }}
+          sx={{
+            zIndex: 10000,
+            top: "0px",
+            overflowY: "auto",
+            paddingBottom: "20px",
+            "& > *": {
+              marginBottom: "16px",
+              transition: "filter 0.3s ease",
+            },
+            "& .export-button": {
+              filter: "none !important",
+            },
+          }}
+        >
+          <NuralActivityPanel>
+            <Grid
+              item
+              xs={12}
+              md={12}
+              lg={12}
+              xl={12}
+              mt={0}
+              mb={2}
+              className="export-button"
+            >
+              <NuralExport
+                title="Export"
+                views={""}
+                downloadExcel={downloadExcel}
+                isDownloadLoading={isDownloadLoading}
+              />
+            </Grid>
+          </NuralActivityPanel>
+        </Grid>
       </Grid>
     </>
   );

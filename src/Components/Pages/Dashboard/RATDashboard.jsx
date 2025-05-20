@@ -1,6 +1,5 @@
 import { Grid, Typography, Button, Stack } from "@mui/material";
-import React from "react";
-import ISPZeroSaleTable from "./ISPZeroSaleTable";
+import React, { use, useEffect } from "react";
 
 import {
   AQUA,
@@ -22,7 +21,8 @@ import NuralButton from "../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../NuralCustomComponents/NuralTextButton";
 import SalesTrendGraph from "../NuralCustomComponents/DashboardWidgets/SalesTrendGraph";
 import TargetAchievement from "../NuralCustomComponents/DashboardWidgets/TargetAchievement";
-
+import GreetingHeader from "../../Common/GreetingHeader.jsx";
+import ZeroSalesISPYesterday from "./ISPZeroSaleTable.jsx";
 import CounterShare from "../NuralCustomComponents/DashboardWidgets/CounterShare";
 import {
   weeklyData,
@@ -30,88 +30,96 @@ import {
   yearlyData,
   rankings,
 } from "../NuralCustomComponents/TestCompo.jsx";
-
+import AttendanceCard from "../NuralCustomComponents/DashboardWidgets/AttendanceCard.jsx";
 import SalesMetricsGrid from "../NuralCustomComponents/DashboardWidgets/SalesMetricsGrid";
 import RankingNSM from "../NuralCustomComponents/DashboardWidgets/RankingNSM.jsx";
-import RankingCard from "../NuralCustomComponents/DashboardWidgets/RankingCard.jsx";
-import AttendanceCard from "../NuralCustomComponents/DashboardWidgets/AttendanceCard.jsx";
 import FocusModelPerformance from "../../Common/NuralCustomComponents/DashboardWidgets/FocusModelPerformance.jsx";
-const data = [
-  { date: "14/03", total: 3000, nsm: 2000 },
-  { date: "15/03", total: 9000, nsm: 8000 },
-  { date: "16/03", total: 4000, nsm: 7000 },
-  { date: "17/03", total: 6000, nsm: 8000 },
-  { date: "18/03", total: 8000, nsm: 4000 },
-  { date: "19/03", total: 9000, nsm: 7000 },
-  { date: "20/03", total: 8500, nsm: 8000 },
-];
-const salesMetrics = [
-  {
-    title: "Yesterday Sales",
-    value: "₹14,200",
-    trend: 5.2,
-    comparedTo: "VS PREV. DAY",
-    backgroundColor: "#F8F7FF",
-  },
+import {
+  GetBusinessDashboard,
+  GetDropdownHierarchyList,
+} from "../../Api/Api.js";
+import {
+  dayWiseSalesDummy,
+  weekWiseSalesDummy,
+  monthWiseSalesDummy,
+  YearWiseGraphDummy,
+  focusModelGraphData,
+  priceBandData,
+  priceBrandGraphdummy,
+  dummyCounterShareData,
+} from "../../Common/dummyData.js";
+import NsmPerformanceTable from "../../Common/NuralCustomComponents/DashboardWidgets/NsmPerformanceTable.jsx";
+import RsmPerformanceTable from "../../Common/NuralCustomComponents/DashboardWidgets/RsmPerformanceTable.jsx";
+import IspPerformanceTable from "../../Common/NuralCustomComponents/DashboardWidgets/IspPerformanceTable.jsx";
+import CounterShareTable from "../../Common/NuralCustomComponents/DashboardWidgets/CounterShareTable.jsx";
+import { DashboardExportButton } from "../../Common/DashboardExportButton.jsx";
+import { formatDate } from "../../Common/commonFunction.js";
+import RankingCard from "../NuralCustomComponents/DashboardWidgets/RankingCard.jsx";
 
-  {
-    title: "MTD Sales",
-    value: "₹2,85,400",
-    trend: -12.3,
-    comparedTo: "VS PREV. MONTH",
-    backgroundColor: "#F8F7FF",
-  },
-  {
-    title: "YTD Sales",
-    value: "₹14.85Cr",
-    trend: -2.7,
-    comparedTo: "VS PREV. YEAR",
-    backgroundColor: "#FFF1F1",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "115/124",
-    trend: 92,
-    comparedTo: "ATTENDANCE",
-    subtitle: "93% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-];
 const RATDashboard = () => {
-  const [activeTab, setActiveTab] = React.useState("ho-dashboard");
+  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [log, setLog] = React.useState(() => {
+    const storedLog = localStorage.getItem("log");
+    return storedLog ? JSON.parse(storedLog) : {};
+  });
+  const [flag, setFlag] = React.useState(false);
+  const [autoCompleteRole, setAutoCompleteRole] = React.useState([]);
+  const [autoCompleteRole2, setAutoCompleteRole2] = React.useState([]);
+  const [dayWiseSales, setDayWiseSales] = React.useState([]);
+  const [myRanking, setMyRanking] = React.useState([]);
+  const [weeklySales, setWeeklySales] = React.useState([]);
+  const [monthlySales, setMonthlySales] = React.useState([]);
+  const [yearlySales, setYearlySales] = React.useState([]);
+  const [salesMetrics, setSalesMetrics] = React.useState([]);
+  const [targetAchievement, setTargetAchievement] = React.useState([]);
+  const [rankings, setRankings] = React.useState([]);
+  const [focusModel, setFocusModel] = React.useState([]);
+  const [priceBand, setPriceBand] = React.useState([]);
+  const [focusModelGraph, setFocusModelGraph] = React.useState([]);
+  const [priceBrandGraph, setPriceBrandGraph] = React.useState([]);
+  const [performanceTableQTY, setPerformanceTableQTY] = React.useState([]);
+  const [performanceTableVAL, setPerformanceTableVAL] = React.useState([]);
+  const [nsmDropdown, setNSMDropdown] = React.useState([]);
+  const [rsmDropdown, setRsmDropdown] = React.useState([]);
+  const [selectedRSM, setSelectedRSM] = React.useState(null);
+  const [rsmPerformanceTableQTY, setRsmPerformanceTableQTY] = React.useState(
+    []
+  );
+  const [rsmPerformanceTableVAL, setRsmPerformanceTableVAL] = React.useState(
+    []
+  );
+  const [ispPerformanceTableQTY, setISPPerformanceTableQTY] = React.useState(
+    []
+  );
+  const [ispPerformanceTableVAL, setISPPerformanceTableVAL] = React.useState(
+    []
+  );
+  const [zeroSaleTable, setZeroSaleTable] = React.useState([]);
+  const [showZeroSaleTable, setShowZeroSaleTable] = React.useState(false);
+
+  const [searchParams, setSearchParams] = React.useState({
+    level1ID: 0,
+    level2ID: 0,
+    modelID: 0,
+    priceBandID: 0,
+    selectedID: 0,
+    selected1ID: 0,
+    topBottom: 0 /*0=TOP,1=BOTTOM*/,
+    callType: 0 /*1=Export*/,
+    IsShow: 0 /*1=HO/NSM,0=RSM/ASM/TSM*/,
+  });
 
   const tabs = [
-    { label: "Business", value: "ho-dashboard" },
+    { label: "Business", value: "dashboard" },
     { label: "Channels", value: "channels-dashboard" },
     { label: "Availability", value: "availability-dashboard" },
-    { label: "Brand", value: "brand" },
+    { label: "Brand", value: "brand-dashboard" },
     { label: "Inventory", value: "inventory-dashboard" },
+    { label: "Attendance", value: "rat-attendance" },
+    { label: "Target", value: "rat-target" },
+    { label: "Incentive", value: "rat-incentive" },
   ];
   const navigate = useNavigate();
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
 
   const options = [
     "Nural Network",
@@ -125,9 +133,192 @@ const RATDashboard = () => {
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
+  // Format date
+  const today = new Date();
+  const dateOptions = { year: "numeric", month: "short", day: "numeric" };
 
-  // Replace the existing dummy data with this more realistic data
+  const isInitialMount = React.useRef(true); // Ref to track initial mount
+
+  // Add effect to watch for localStorage changes
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const storedLog = localStorage.getItem("log");
+      if (storedLog) {
+        const newLog = JSON.parse(storedLog);
+        // Only update and fetch if the log has actually changed
+        if (JSON.stringify(newLog) !== JSON.stringify(log)) {
+          setLog(newLog);
+          fetchNSMDropdown(newLog);
+        }
+      }
+    };
+
+    // Listen for storage events
+    window.addEventListener("storage", handleStorageChange);
+
+    // Initial check
+    handleStorageChange();
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [log]); // Add log as dependency to properly track changes
+
+  // Modify fetchNSMDropdown to accept log parameter
+  const fetchNSMDropdown = async (currentLog = log) => {
+    if (!currentLog?.entityId) return;
+
+    let body = {
+      orgnHierarchyID: currentLog.entityId,
+    };
+    try {
+      let res = await GetDropdownHierarchyList(body);
+      if (res.statusCode == 200) {
+        setNSMDropdown(res.hierarchyDropdownList);
+        setAutoCompleteRole(res.dropDownName);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Effect for initial data fetch on mount
+  useEffect(() => {
+    console.log("on id change");
+    fetchBusinessDashboard();
+    fetchNSMDropdown(log);
+  }, []); // Empty dependency array for initial mount only
+
+  // Effect to fetch data when flag is true
+  useEffect(() => {
+    fetchBusinessDashboard();
+  }, [flag]);
+
+  const fetchRSMDropdown = async (selectedLevel1ID) => {
+    if (!selectedLevel1ID || selectedLevel1ID === 0) {
+      setRsmDropdown([]);
+      return;
+    }
+    let body = {
+      orgnHierarchyID: selectedLevel1ID,
+    };
+
+    try {
+      let res = await GetDropdownHierarchyList(body);
+      if (res.statusCode == 200) {
+        setAutoCompleteRole2(res.dropDownName);
+
+        setRsmDropdown(res.hierarchyDropdownList || []);
+      } else {
+        setRsmDropdown([]);
+      }
+    } catch (error) {
+      console.log("Error fetching RSM dropdown:", error);
+      setRsmDropdown([]);
+    }
+  };
+
+  const fetchBusinessDashboard = async () => {
+    console.log("Fetching business dashboard with params:", searchParams);
+    try {
+      let res = await GetBusinessDashboard(searchParams);
+      if (res) {
+        // console.log("res.saleTrendGraph_Day", res);
+        setDayWiseSales(res.saleTrendGraph_Day);
+        setWeeklySales(res.saleTrendGraph_Week);
+        setMonthlySales(res.saleTrendGraph_Month);
+        setYearlySales(res.saleTrendGraph_Year);
+        setSalesMetrics(res.clsSalesList[0]);
+        setTargetAchievement(res.clsTargetAchList[0]);
+        setRankings(res.clsRankList);
+        setFocusModel(res.clsFocusModelList);
+        setPriceBand(res.clsCounterShareList);
+        setPriceBrandGraph(res.clsCounterShareGraphList);
+        setFocusModelGraph(res.clsFocusModelGraphList);
+        setPerformanceTableQTY(res.clsPerformance_1QtyList);
+        setPerformanceTableVAL(res.clsPerformance_1ValList);
+        setRsmPerformanceTableQTY(res.clsPerformance_2QtyList);
+        setRsmPerformanceTableVAL(res.clsPerformance_2ValList);
+
+        console.log("res.clsPerformance_2ValList", res.clsPerformance_2ValList);
+        setISPPerformanceTableQTY(res.clsISPPerformanceList);
+        setZeroSaleTable(res.clsISPZeroSaleUploadedList);
+        setMyRanking(res.clsMyRankList);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSearchChange = (field, value, newValue) => {
+    console.log(`Updating ${field} to ${value}`);
+    setFlag(!flag);
+    setSearchParams((prevParams) => ({ ...prevParams, [field]: value }));
+  };
+
+  const handleZeroSaleClick = () => {
+    setShowZeroSaleTable(true);
+  };
+
+  const handleCloseZeroSaleTable = () => {
+    setShowZeroSaleTable(false);
+  };
+
+  const handleNSMRowSelect = (selectedRowId) => {
+    console.log("selectedRowId", selectedRowId);
+    const newSelectedID =
+      searchParams.selected1ID === selectedRowId ? 0 : selectedRowId;
+    setSearchParams((prev) => ({
+      ...prev,
+      selected1ID: newSelectedID,
+      // Reset RSM selection when NSM changes
+    }));
+    setFlag(!flag); // Set flag when NSM is selected
+  };
+
+  const handleRSMRowSelect = (selectedRowId) => {
+    const newSelected1ID =
+      searchParams.selectedID === selectedRowId ? 0 : selectedRowId;
+    setSearchParams((prev) => ({
+      ...prev,
+      selectedID: newSelected1ID,
+    }));
+    setFlag(!flag); // Set flag when RSM is selected
+  };
+
+  const handleISPRowSelect = (selectedRowId) => {
+    const newSelected1ID =
+      searchParams.topBottom === selectedRowId ? 0 : selectedRowId;
+    setSearchParams((prev) => ({
+      ...prev,
+      topBottom: newSelected1ID,
+    }));
+    setFlag(!flag); // Set flag when ISP is selected
+  };
+
+  const handleExportClick = async () => {
+    console.log("Export request body:");
+    let body = {
+      ...searchParams,
+      callType: 1,
+    };
+    try {
+      let res = await GetBusinessDashboard(body);
+
+      if (res) {
+        window.location.href = res.reportLink;
+      } else {
+        console.error("Export failed: Invalid response format", res);
+        // You might want to show an error message to the user here
+      }
+    } catch (error) {
+      console.error("Export API error:", error);
+      // You might want to show an error message to the user here
+    }
+  };
+  // Add effect to fetch RSM data when NSM selection changes
+
+  // Add effect to fetch ISP data when RSM selection changes
 
   return (
     <>
@@ -136,11 +327,9 @@ const RATDashboard = () => {
         spacing={2}
         sx={{
           position: "relative",
-
-          // pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+          pr: 1,
         }}
       >
-        {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
         <Grid
           item
           xs={12}
@@ -152,44 +341,9 @@ const RATDashboard = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
-            <Grid item xs={12} md={12} lg={12} mt={2}>
-              <Stack direction="row" spacing={0}>
-                <Typography
-                  variant="h6"
-                  component="div"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "24px",
-                    lineHeight: "28px",
-                    letterSpacing: "0%",
-                  }}
-                  color={DARK_PURPLE}
-                >
-                  Good Afternoon Name Surname
-                </Typography>
-              </Stack>
-              <Stack>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "100%",
-                    letterSpacing: "4%",
-                    textTransform: "uppercase",
-                    color: SECONDARY_BLUE,
-                    m: 1,
-                  }}
-                >
-                  LAST LOGIN : 120:05 PM, 20 MARCH 2025
-                </Typography>
-              </Stack>
-            </Grid>
-          </Grid>
+          <GreetingHeader />
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -214,6 +368,7 @@ const RATDashboard = () => {
                   container
                   spacing={2}
                   mb={2}
+                  alignItems="center"
                   sx={{
                     gap: { xs: 2, sm: 0, md: 0, lg: 0 },
                     flexDirection: { xs: "column", sm: "row" },
@@ -221,21 +376,76 @@ const RATDashboard = () => {
                 >
                   <Grid item xs={12} sm={6} md={3} lg={3}>
                     <NuralAutocomplete
-                      width="100%"
                       label="All NSM"
-                      options={options}
-                      placeholder="ALL NSM"
-                      backgroundColor={WHITE}
+                      options={nsmDropdown}
+                      placeholder={`SELECT ${autoCompleteRole}`}
+                      width="100%"
+                      getOptionLabel={(option) => option.locationName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.locationID === value?.locationID
+                      }
+                      onChange={(event, newValue) => {
+                        handleSearchChange(
+                          "level1ID",
+                          newValue?.locationID || 0,
+                          newValue
+                        );
+                        handleSearchChange("level2ID", 0, null);
+                        setSelectedRSM(null);
+                        setRsmDropdown([]);
+                        if (newValue?.locationID) {
+                          fetchRSMDropdown(newValue.locationID);
+                        }
+                      }}
+                      value={
+                        nsmDropdown.find(
+                          (option) =>
+                            option.locationID === searchParams.level1ID
+                        ) || null
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
                     <NuralAutocomplete
+                      label="All RSM"
+                      options={rsmDropdown}
+                      placeholder={`SELECT ${autoCompleteRole2}`}
                       width="100%"
-                      label="ALL RSM"
-                      options={options}
-                      backgroundColor={WHITE}
-                      placeholder="ALL RSM"
+                      disabled={
+                        !searchParams.level1ID || searchParams.level1ID === 0
+                      }
+                      getOptionLabel={(option) => option.locationName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.locationID === value?.locationID
+                      }
+                      onChange={(event, newValue) => {
+                        setSelectedRSM(newValue);
+                        handleSearchChange(
+                          "level2ID",
+                          newValue?.locationID || 0,
+                          newValue
+                        );
+                      }}
+                      value={selectedRSM}
                     />
+                  </Grid>
+                  {/* Date Display */}
+                  <Grid item sx={{ marginLeft: "auto" }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontFamily: "Manrope",
+                        fontWeight: 700,
+                        fontSize: "10px",
+                        lineHeight: "100%",
+                        letterSpacing: "4%",
+                        textTransform: "uppercase",
+                        color: SECONDARY_BLUE,
+                        fontWeight: "medium",
+                      }}
+                    >
+                      {formatDate(today)}
+                    </Typography>
                   </Grid>
                 </Grid>
 
@@ -243,39 +453,61 @@ const RATDashboard = () => {
               </Grid>
             </Grid>
           </Grid>
-        
+          <Grid container spacing={0} ml={2} pr={0} mt={-1} mb={2}>
+            <DashboardExportButton
+              handleExportExcel={handleExportClick}
+              handleExportPDF={handleExportClick}
+            />
+          </Grid>
           <Grid container spacing={0} ml={2} p={0}>
             {" "}
-            <Grid item xs={12} md={6} lg={6} xl={6}>
+            <Grid item xs={12} md={6} lg={6} xl={6} p={0}>
               <SalesTrendGraph
-                height="248px"
+                height="255px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={data}
-                title="Sales Trend"
+                data={
+                  // dayWiseSalesDummy
+                  dayWiseSales
+                }
+                caseType=""
+                title="Sales Trend [DAY]"
                 showLegend={false}
               />
             </Grid>
-            <Grid item xs={12} md={4} lg={3} xl={3} ml={2}>
-              <SalesMetricsGrid metrics={salesMetrics} />
+            <Grid item xs={12} md={6} lg={6} xl={6}>
+              <SalesMetricsGrid
+                metrics={salesMetrics}
+                type="rat"
+                onZeroSaleClick={handleZeroSaleClick}
+              />
             </Grid>
           </Grid>
-          <Grid container spacing={0} ml={2} mt={2} pr={2} mb={2}>
+          <Grid container spacing={0} ml={2} mt={2} pr={2}>
             <Grid item xs={12}>
-              <ISPZeroSaleTable />
+              {showZeroSaleTable && (
+                <ZeroSalesISPYesterday
+                  zeroSaleTable={zeroSaleTable}
+                  onClose={handleCloseZeroSaleTable}
+                />
+              )}
             </Grid>
           </Grid>
           {/* Add Target Achievement section */}
 
-          <Grid container spacing={2} ml={0} mt={0.5} pr={2}>
+          <Grid container spacing={2} ml={0} mt={-1} pr={2}>
             <Grid item xs={12} md={4} lg={4} xl={4}>
               <SalesTrendGraph
                 height="248px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={weeklyData}
+                data={
+                  // weekWiseSalesDummy
+                  weeklySales
+                }
+                caseType=""
                 title="Sales Trend [Week]"
                 period="week"
                 showLegend={false}
@@ -287,7 +519,11 @@ const RATDashboard = () => {
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={monthlyData}
+                data={
+                  // monthWiseSalesDummy
+                  monthlySales
+                }
+                caseType=""
                 title="Sales Trend [Month]"
                 period="month"
                 showLegend={false}
@@ -299,7 +535,11 @@ const RATDashboard = () => {
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={yearlyData}
+                data={
+                  // YearWiseGraphDummy
+                  yearlySales
+                }
+                caseType=""
                 title="Sales Trend [Year]"
                 period="year"
                 showLegend={false}
@@ -311,17 +551,21 @@ const RATDashboard = () => {
             <Grid item xs={12} md={4} spacing={2} lg={4} xl={4} pr={1}>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={12} lg={12} xl={12}>
-                  <TargetAchievement />
+                  <TargetAchievement targetAchievement={targetAchievement} />
                 </Grid>
                 <Grid item xs={12} md={12} lg={12} xl={12}>
                   <SalesTrendGraph
-                    height="248px"
+                    height="235px"
                     paperBgColor={LIGHT_GRAY2}
                     gap="15px"
                     borderRadius="8px"
-                    data={monthlyData}
-                    title="Sales Trend [Month]"
-                    period="month"
+                    data={
+                      weeklySales
+                      // weekWiseSalesDummy
+                    }
+                    title="Sales Trend [Week]"
+                    period="week"
+                    caseType="asp"
                     showLegend={false}
                   />
                 </Grid>
@@ -329,67 +573,136 @@ const RATDashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={4} lg={4} xl={4} pl={1} pr={1}>
-              <FocusModelPerformance data={data} />
+              <FocusModelPerformance
+                focusModelData={focusModel}
+                focusModelGraphData={
+                  // focusModelGraphData
+                  focusModelGraph
+                }
+                onModelChange={(value, newValue) => {
+                  handleSearchChange("modelID", value, newValue);
+                }}
+              />
             </Grid>
 
             <Grid item xs={12} md={4} lg={4} xl={4} pl={1.5}>
-              <CounterShare />
+              <CounterShare
+                priceBandData={
+                  priceBandData
+                  // priceBand
+                }
+                priceBrandGraph={
+                  // priceBrandGraphdummy
+                  priceBrandGraph
+                }
+                onPriceBandChange={(value, newValue) => {
+                  handleSearchChange("priceBandID", value, newValue);
+                }}
+              />
             </Grid>
           </Grid>
-          <Grid container spacing={1} ml={2} mt={-3} pr={2}>
-            <Grid item xs={12} md={3} lg={3} pr={1} xl={3}>
+          <Grid container spacing={0} mt={-1.5} ml={2} pr={2}>
+            <Grid item xs={12} md={3.5} lg={3.5} xl={3.5} pr={1}>
               <SalesTrendGraph
                 height="248px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={yearlyData}
-                title="ASP Trend [Year]"
-                period="year"
+                data={monthlySales}
+                title="ASP Trend [Month]"
+                period="month"
+                caseType="asp"
                 showLegend={false}
               />
-            </Grid>
-            <Grid item xs={12} md={3} lg={3} pr={1} xl={3}>
+            </Grid>{" "}
+            <Grid item xs={12} md={3.5} lg={3.5} xl={3.5} pr={0} pl={1}>
               <SalesTrendGraph
                 height="248px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={yearlyData}
+                data={yearlySales}
+                caseType="asp"
                 title="ASP Trend [Year]"
                 period="year"
                 showLegend={false}
               />
+            </Grid>{" "}
+            <Grid container xs={12} md={2} lg={2} xl={2} direction="column">
+              <Grid item xs={12} md={2} lg={2} xl={2} ml={1.5}>
+                <RankingCard
+                  title="Ranking"
+                  // width="110%"
+                  data={myRanking}
+                  height="130px"
+                  backgroundColor={LIGHTAQUA}
+                  titleColor={"#026668"}
+                  dateColor={"#026668"}
+                  scoreColor={"#026668"}
+                  rankNumberColor={"#05CFD3"}
+                />
+              </Grid>
+              <Grid item xs={12} md={2} lg={2} xl={2} pl={1.5}>
+                <AttendanceCard
+                  mt={0.8}
+                  present={salesMetrics.ydispPresent || 0}
+                  growth={salesMetrics.ispAtt || 0} // width="100%"
+                  backgroundColor={LIGHT_GRAY2}
+                  titleColor={DARK_PURPLE}
+                  valueColor={DARK_PURPLE}
+                  percentageColor={PRIMARY_BLUE2}
+                  salesMetrics={salesMetrics}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={2} lg={2} xl={2}>
-              <RankingCard
-                title="Ranking"
-                width="100%"
-                data={rankings}
-                height="130px"
-                backgroundColor={LIGHTAQUA}
-                titleColor={"#026668"}
-                dateColor={"#026668"}
-                scoreColor={"#026668"}
-                rankNumberColor={"#05CFD3"}
-              />
-              <AttendanceCard
-                mt={0.8}
-                present={115}
-                total={143}
-                width="100%"
-                backgroundColor={LIGHT_GRAY2}
-                titleColor={DARK_PURPLE}
-                valueColor={DARK_PURPLE}
-                percentageColor={PRIMARY_BLUE2}
-              />
-            </Grid>
-            <Grid item xs={12} md={4} lg={4} xl={4}>
-              <RankingNSM title="Ranking" data={rankings} />
+            <Grid item xs={12} md={3} lg={3} xl={3} pl={1.5}>
+              <RankingNSM rankings={rankings} />
             </Grid>
           </Grid>
 
-          {/* Add ISP Zero Sale Table */}
+          <Grid container spacing={0} ml={2} mt={2} pr={2}>
+            <Grid item xs={12}>
+              <NsmPerformanceTable
+                performanceTableQTY={performanceTableQTY}
+                performanceTableVAL={performanceTableVAL}
+                data={performanceTableQTY}
+                title="NSM Performance"
+                onRowSelect={handleNSMRowSelect}
+                selectedRowId={searchParams.selected1ID}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Add RSM Performance QTY Table */}
+          <Grid container spacing={0} ml={2} mt={2} pr={2}>
+            <Grid item xs={12}>
+              <RsmPerformanceTable
+                performanceTableQTY={rsmPerformanceTableQTY}
+                performanceTableVAL={rsmPerformanceTableVAL}
+                title="RSM Performance"
+                onRowSelect={handleRSMRowSelect}
+                selectedRowId={searchParams.selected1ID}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Add ISP Performance QTY Table */}
+          <Grid container spacing={0} ml={2} mt={2} pr={2}>
+            <Grid item xs={12}>
+              <IspPerformanceTable
+                onRowSelect={handleISPRowSelect}
+                ispdata={ispPerformanceTableQTY}
+                title="ISP Performance"
+              />
+            </Grid>
+          </Grid>
+
+          {/* Add Counter Share Table */}
+          <Grid container spacing={0} ml={2} mt={2} pr={4}>
+            <Grid item xs={12}>
+              <CounterShareTable data={dummyCounterShareData} />
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </>

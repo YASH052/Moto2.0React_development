@@ -46,6 +46,7 @@ import SelectionPanel from "./SelectionPanel";
 import NuralExport from "./NuralExport";
 import NuralReports from "./NuralReports";
 import FocusModelPerformance from "../../Common/NuralCustomComponents/DashboardWidgets/FocusModelPerformance";
+
 export const data = [
   { date: "14/03", total: 3000, nsm1: 2000 },
   { date: "15/03", total: 9000, nsm1: 8000 },

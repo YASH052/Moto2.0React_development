@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -20,13 +20,17 @@ import {
   Button,
 } from "@mui/material";
 import {
+  AQUA_DARK,
   DARK_PURPLE,
   LIGHT_GRAY2,
   MEDIUM_BLUE,
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
+  LIGHT_GRAY3,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../NuralAutocomplete";
+import { GetPriceBandDropDown } from "../../../Api/Api";
+import { format } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -38,92 +42,274 @@ ChartJS.register(
   Legend
 );
 
-const CounterShare = ({ data }) => {
+// Helper function to generate random colors for chart lines
+const getRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};
+
+const CounterShare = ({
+  priceBandData = [],
+  priceBrandGraph = [],
+  onPriceBandChange,
+}) => {
+  //   console.log("priceBrandGraph", priceBrandGraph);
+  //   console.log("priceBandData", priceBandData);
   const [selectedPriceBand, setSelectedPriceBand] = useState("ALL");
+  const [priceBandDropDown, setPriceBandDropDown] = useState([]);
 
-  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL"];
+  useEffect(() => {
+    fetchPriceBandDropDown();
+  }, []);
 
-  const brandData = {
-    MOTOROLA: { share: "140.15K", percentage: "17%" },
-    VIVO: { share: "169K", percentage: "14%" },
-    SAMSUNG: { share: "151K", percentage: "18%" },
-    OPPO: { share: "150K", percentage: "21%" },
-    REALME: { share: "90K", percentage: "8%" },
-    XIAOMI: { share: "78K", percentage: "5%" },
-    APPLE: { share: "71K", percentage: "4%" },
-    OTHERS: { share: "139K", percentage: "23%" },
+  const fetchPriceBandDropDown = async () => {
+    try {
+      const res = await GetPriceBandDropDown();
+      if (res.statusCode == 200) {
+        setPriceBandDropDown(res.priceBandDropdownList);
+      } else {
+        setPriceBandDropDown([]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const chartData = {
-    labels: months,
-    datasets: [
-      {
-        label: "Line 1",
-        data: [8000, 9000, 7500, 6500, 9000, 11000, 12500],
-        borderColor: PRIMARY_BLUE2,
-        borderWidth: 1.5,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-      },
-      {
-        label: "Line 2",
-        data: [4000, 4500, 4000, 5500, 7000, 8500, 9000],
-        borderColor: PRIMARY_BLUE2,
-        borderWidth: 1.5,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-      },
-      {
-        label: "Line 3",
-        data: [3000, 3500, 2000, 3000, 4500, 2500, 2000],
-        borderColor: PRIMARY_BLUE2,
-        borderWidth: 1.5,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-      },
-    ],
+  // Process priceBrandGraph data for the chart
+  const processChartData = (graphData) => {
+    if (!graphData || graphData.length === 0) {
+      return { labels: [], datasets: [] };
+    }
+
+    // Extract unique months and sort them (assuming monthName is like 'Jan', 'Feb')
+    const monthOrder = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const labels = [...new Set(graphData.map((item) => item.monthName))].sort(
+      (a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b)
+    );
+
+    // Group data by brand
+    const brands = {};
+    graphData.forEach((item) => {
+      if (!brands[item.brandName]) {
+        const isLastMonth = (context) =>
+          context.dataIndex === labels.length - 1; // Helper to check if it's the last point
+
+        brands[item.brandName] = {
+          label: item.brandName,
+          data: Array(labels.length).fill(null), // Initialize data array for the brand
+          borderColor: LIGHT_GRAY3,
+          borderWidth: 1.5,
+          tension: 0.4,
+          pointRadius: (context) => (isLastMonth(context) ? 6 : 0), // Larger radius for the last point
+          pointHoverRadius: (context) => (isLastMonth(context) ? 8 : 6), // Adjust hover radius too
+          pointBackgroundColor: (context) =>
+            isLastMonth(context) ? "#00D2D2" : LIGHT_GRAY3, // Highlight color for last point
+          pointBorderColor: (context) =>
+            isLastMonth(context) ? "#00D2D2" : LIGHT_GRAY3, // Highlight color for last point border
+        };
+      }
+      const monthIndex = labels.indexOf(item.monthName);
+      if (monthIndex !== -1) {
+        brands[item.brandName].data[monthIndex] = item.monthSale;
+      }
+    });
+
+    return {
+      labels,
+      datasets: Object.values(brands),
+    };
   };
+
+  const chartData = processChartData(priceBrandGraph);
+
+  // Find max value for chart scale
+  const maxSale = Math.max(...priceBrandGraph.map((item) => item.monthSale), 0);
+  const chartMaxY =
+    maxSale > 0 ? Math.ceil(maxSale / 4000) * 4000 + 4000 : 16000; // Ensure max is a multiple of 4k + buffer
 
   const options = {
     responsive: true,
+
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: false, // You might want to display legend if multiple brands
       },
       tooltip: {
         mode: "index",
         intersect: false,
+        backgroundColor: "#00D2D2",
+        titleColor: AQUA_DARK,
+        bodyColor: AQUA_DARK,
+        titleFont: {
+          size: 12,
+          weight: "normal",
+        },
+        bodyFont: {
+          size: 12,
+          weight: "bold",
+        },
+        padding: 12,
+        displayColors: false,
+        callbacks: {
+          title: function (context) {
+            const label = context[0].label;
+            const dataItem = priceBrandGraph?.find(
+              (item) => item.monthName === label
+            );
+            if (dataItem?.monthStartDate) {
+              try {
+                const date = new Date(
+                  dataItem.monthStartDate.replace(/-/g, " ")
+                );
+                return format(date, "dd/MM/yy");
+              } catch (e) {
+                console.error("Error formatting date:", e);
+                return label;
+              }
+            }
+            return label;
+          },
+          label: function (context) {
+            let label = context.dataset.label || "";
+            if (label) {
+              label += ": ";
+            }
+            const value = context.parsed.y;
+            if (value !== null) {
+              if (value >= 1000000)
+                label += `₹${(value / 1000000).toFixed(2)}M`;
+              else if (value >= 1000) label += `₹${(value / 1000).toFixed(2)}K`;
+              else label += `₹${value.toLocaleString("en-IN")}`;
+            }
+            return label;
+          },
+        },
+        position: "average",
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        max: 16000,
+        max: chartMaxY,
         ticks: {
-          stepSize: 4000,
+          stepSize: chartMaxY / 4,
           callback: function (value) {
-            return value === 0 ? "0" : `${value / 1000}k`;
+            if (value >= 1000000) return `₹${(value / 1000000).toFixed(2)}M`;
+            if (value >= 1000) return `₹${(value / 1000).toFixed(2)}K`;
+            return `₹${value}`;
           },
-          color: DARK_PURPLE
+          color: PRIMARY_BLUE2,
+          font: {
+            size: 10,
+          },
         },
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          display: false,
+          drawBorder: false,
+          drawTicks: true,
+        },
+        border: {
+          display: true,
+          color: PRIMARY_BLUE2,
         },
       },
       x: {
         grid: {
-          display: false,
+          display: true,
+          color: "rgba(0, 0, 0, 0.1)",
+          drawTicks: true,
         },
         ticks: {
-          color: DARK_PURPLE
-        }
+          callback: function (value, index) {
+            const label = this.getLabelForValue(value);
+            return label === "MAR" ? label : label;
+          },
+          color: (context) => {
+            const label = context.tick.label;
+            return label === "MAR" ? "#00D2D2" : PRIMARY_BLUE2;
+          },
+          font: {
+            size: 10,
+          },
+        },
+        tooltip: {
+          backgroundColor: "#00D2D2",
+          titleColor: AQUA_DARK,
+          bodyColor: AQUA_DARK,
+          titleFont: {
+            size: 12,
+            weight: "normal",
+          },
+          bodyFont: {
+            size: 12,
+            weight: "bold",
+          },
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            title: function (context) {
+              const label = context[0].label;
+              const dataItem = graphData?.find(
+                (item) => item.monthName === label
+              );
+              if (dataItem?.monthStartDate) {
+                try {
+                  const date = new Date(
+                    dataItem.monthStartDate.replace(/-/g, " ")
+                  );
+                  return format(date, "dd/MM/yy");
+                } catch (e) {
+                  return label;
+                }
+              }
+              return label;
+            },
+            label: function (context) {
+              if (context.datasetIndex === 0) {
+                const value = context.parsed.y;
+                if (value >= 1000000)
+                  return `₹${(value / 1000000).toFixed(2)}M`;
+                if (value >= 1000) return `₹${(value / 1000).toFixed(2)}K`;
+                return `₹${value.toLocaleString("en-IN")}`;
+              }
+              return null;
+            },
+          },
+          position: "average",
+          filter: function (tooltipItem) {
+            return tooltipItem.datasetIndex === 0;
+          },
+        },
+        border: {
+          display: true,
+          color: PRIMARY_BLUE2,
+        },
       },
     },
   };
+
+  // Find Motorola data for the featured box
+  const motorolaData = priceBandData.find(
+    (brand) => brand.brandName?.toUpperCase() === "MOTOROLA"
+  );
 
   return (
     <Card
@@ -139,66 +325,86 @@ const CounterShare = ({ data }) => {
       <Typography
         variant="h6"
         sx={{
-          color: PRIMARY_BLUE,
-          fontSize: "16px",
+          color: PRIMARY_BLUE2,
+          fontSize: "10px",
           fontWeight: 700,
           mb: 2,
         }}
       >
         Counter Share
       </Typography>
-
-      <Box sx={{ mb: 3 }}>
+      <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
         <NuralAutocomplete
-          placeholder="ALL PRICE BANDS"
+          label="PRICE BAND"
+          options={priceBandDropDown}
+          placeholder="PRICE BAND"
           width="100%"
-          options={[]}
-          backgroundColor={LIGHT_GRAY2}
+          getOptionLabel={(option) => option.priceBandCode || ""}
+          isOptionEqualToValue={(option, value) =>
+            option?.priceBandID === value?.priceBandID
+          }
+          onChange={(event, newValue) => {
+            setSelectedPriceBand(newValue);
+            if (onPriceBandChange) {
+              onPriceBandChange(newValue?.priceBandID || 0, newValue); // Call the passed onChange handler
+            }
+          }}
+          value={selectedPriceBand}
         />
-      </Box>
-
+      </Grid>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={5} lg={5} xl={5} mt={5}>
-          <Box
-            sx={{
-              backgroundColor: MEDIUM_BLUE,
-              width: 158.3330078125,
-              height: 106,
-              gap: 0,
-              borderRadius: 1,
-              paddingRight: 1,
-              paddingLeft: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
-              MOTOROLA
-            </Typography>
-            <Typography
+        {/* Featured Brand (Motorola) */}
+        {motorolaData && (
+          <Grid item xs={12} md={5} lg={5} xl={5} mt={5}>
+            <Box
               sx={{
-                color: DARK_PURPLE,
-                fontSize: "14px",
-                fontWeight: "bold",
+                backgroundColor: MEDIUM_BLUE,
+                width: 158.3330078125,
+                height: 106,
+                gap: 0,
+                borderRadius: 1,
+                paddingRight: 1,
+                paddingLeft: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
               }}
             >
-              140.15K
-            </Typography>
-            <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
-              17%
-            </Typography>
-          </Box>
-        </Grid>
+              <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
+                {motorolaData.brandName.toUpperCase()}
+              </Typography>
+              <Typography
+                sx={{
+                  color: DARK_PURPLE,
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                }}
+              >
+                {/* Format mtdSale as needed */}
+                {new Intl.NumberFormat("en-US", {
+                  notation: "compact",
+                  compactDisplay: "short",
+                }).format(motorolaData.mtdSale)}
+                {/* {(motorolaData.mtdSale / 1000).toFixed(2)}K */}
+              </Typography>
+              <Typography sx={{ color: DARK_PURPLE, fontSize: "8px" }}>
+                {motorolaData.salePercent?.toFixed(0)}%
+              </Typography>
+            </Box>
+          </Grid>
+        )}
 
-        <Grid item xs={12} md={7} lg={7} xl={7} >
+        {/* Other Brands */}
+        <Grid item xs={12} md={7} lg={7} xl={7}>
           <Grid container spacing={1} justifyContent="center">
-            {Object.entries(brandData)
-              .filter(([brand]) => brand !== "MOTOROLA")
-              .map(([brand, data]) => (
-                <Grid item xs={3} key={brand}>
+            {priceBandData
+              .filter((brand) => brand.brandName?.toUpperCase() !== "MOTOROLA")
+              .map((brand) => (
+                <Grid item xs={3} key={brand.brandName}>
+                  {" "}
+                  {/* Ensure unique key */}
                   <Box
                     sx={{
                       textAlign: "center",
@@ -207,26 +413,31 @@ const CounterShare = ({ data }) => {
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      height: "100%",
+                      height: "100%", // Ensure consistent height
                     }}
                   >
                     <Typography
                       sx={{ color: DARK_PURPLE, fontSize: "8px", mb: 0.5 }}
                     >
-                      {brand}
+                      {brand.brandName?.toUpperCase()}
                     </Typography>
                     <Typography
                       sx={{
                         color: DARK_PURPLE,
-                        fontSize: "14px",
+                        fontSize: "14px", // Make font size consistent
                         fontWeight: "bold",
                         mb: 0.5,
                       }}
                     >
-                      {data.share}
+                      {/* Format mtdSale as needed */}
+                      {new Intl.NumberFormat("en-US", {
+                        notation: "compact",
+                        compactDisplay: "short",
+                      }).format(brand.mtdSale)}
+                      {/* {(brand.mtdSale / 1000).toFixed(0)}K */}
                     </Typography>
                     <Typography sx={{ color: DARK_PURPLE, fontSize: "12px" }}>
-                      {data.percentage}
+                      {brand.salePercent?.toFixed(0)}%
                     </Typography>
                   </Box>
                 </Grid>
@@ -234,7 +445,10 @@ const CounterShare = ({ data }) => {
           </Grid>
         </Grid>
 
-        <Grid item xs={12} pb={2}>
+        {/* Chart */}
+        <Grid item xs={12} pb={2} mt={1}>
+          {" "}
+          {/* Added slight top margin */}
           <Typography
             sx={{
               color: DARK_PURPLE,
@@ -243,10 +457,20 @@ const CounterShare = ({ data }) => {
               opacity: 0.7,
             }}
           >
-            LAST 6 MONTHS
+            {chartData.labels.length > 0
+              ? `LAST ${chartData.labels.length} MONTHS`
+              : "MONTHLY TREND"}
           </Typography>
           <Box sx={{ height: "200px" }}>
-            <Line data={chartData} options={options} />
+            {chartData.datasets.length > 0 ? (
+              <Line data={chartData} options={options} />
+            ) : (
+              <Typography
+                sx={{ textAlign: "center", color: DARK_PURPLE, mt: 5 }}
+              >
+                No chart data available.
+              </Typography>
+            )}
           </Box>
         </Grid>
       </Grid>

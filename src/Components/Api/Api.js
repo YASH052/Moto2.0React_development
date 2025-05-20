@@ -3,6 +3,7 @@ import axios from "axios";
 // Base URL from environment variables
 const baseURL = "https://qa.nuralsales.com/MotoNewAPI/api/user";
 // Retrieve user ID with a fallback to 1
+
 const getUserId = () => localStorage.getItem("userId") || 1;
 
 // Create Axios instance with default configurations
@@ -12,15 +13,13 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-// Add Request Interceptor.
-
+// Add Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authKey");
-    console.log(token);
+    // console.log(token);
 
-    console.log("config", config);
+    // console.log("config", config);
     if (token) {
       config.headers["authkey"] = token;
     } else {
@@ -67,7 +66,6 @@ api.interceptors.response.use(
     }
     return response; // Ensure the response is returned
   },
-
   (error) => {
     const { response } = error;
 
@@ -481,6 +479,19 @@ export const RetailerStatusUpdate = async (params) => {
     return response.data;
   } catch (error) {
     console.error("Error in RetailerStatusUpdate:", error);
+    throw error;
+  }
+};
+
+export const getRetailerlistinfo = async (params) => {
+  try {
+    const response = await api.post(
+      `/getRetailerlistinfo/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in getRetailerlistinfo:", error);
     throw error;
   }
 };
@@ -1698,6 +1709,18 @@ export const GetISPList = async (body) => {
     throw error;
   }
 };
+export const getISPMasterDataLink = async (params) => {
+  try {
+    const response = await api.post(
+      `/getISPMasterDataLink/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in getISPMasterDataLink:", error);
+    throw error;
+  }
+};
 export const GetAgencyListDropdown = async () => {
   try {
     const response = await api.get(`/GetAgencyListDropdown/${getUserId()}`);
@@ -1727,6 +1750,52 @@ export const SaveUpdateISPData = async (body) => {
     return response.data;
   } catch (error) {
     console.error("Error in SaveUpdateISPData:", error);
+    throw error;
+  }
+};
+
+export const GetISPListDrpdown = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetISPListDrpdown/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetISPListDrpdown:", error);
+    throw error;
+  }
+};
+
+export const ExitISP = async (params) => {
+  try {
+    const response = await api.post(`/ExitISP/${getUserId()}`, params);
+    return response.data;
+  } catch (error) {
+    console.error("Error in ExitISP:", error);
+    throw error;
+  }
+};
+
+export const UpdateISPMappingToNewRetailer = async (params) => {
+  try {
+    const response = await api.post(
+      `/UpdateISPMappingToNewRetailer/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in UpdateISPMappingToNewRetailer:", error);
+    throw error;
+  }
+};
+
+export const UpdateStatusISP = async (params) => {
+  try {
+    const response = await api.post(`/UpdateStatusISP/${getUserId()}`, params);
+    return response.data;
+  } catch (error) {
+    console.error("Error in UpdateStatusISP:", error);
     throw error;
   }
 };
@@ -1838,6 +1907,32 @@ export const UserWiseUpdateBalanceLeave = async (params) => {
     return response.data;
   } catch (error) {
     console.error("Error in UserWiseUpdateBalanceLeave:", error);
+    throw error;
+  }
+};
+
+export const GetAttendanceRegularisationData = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetAttendanceRegularisationData/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetAttendanceRegularisationData:", error);
+    throw error;
+  }
+};
+
+export const GetUserLeaveDetailsListMoto = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetUserLeaveDetailsListMoto/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetUserLeaveDetailsListMoto:", error);
     throw error;
   }
 };
@@ -2047,7 +2142,6 @@ export const ManageCompetitionModelMoto = async (params) => {
   }
 };
 // ------------------------------Competition Model end ---------------------------------------------
-// ------------------------------APP menu start ---------------------------------------------
 
 //----------------------------- L1&L2 Issue start ---------------------------------------------
 
@@ -2377,3 +2471,382 @@ export const UpdateStatusBannerCMS = async (params) => {
 };
 
 //-----------------------------Banner end-------------------------------------------//
+
+//-----------------------------Business  start-------------------------------------------//
+
+export const GetBusinessDashboard = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetBusinessDashboard/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetBusinessDashboard:", error);
+
+    throw error;
+  }
+};
+// ----------------------------- Get Dropdown Hierarchy List start ---------------------------------------------
+export const GetDropdownHierarchyList = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetDropdownHierarchyList/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetDropdownHierarchyList:", error);
+
+    throw error;
+  }
+};
+// ----------------------------- Get Dropdown Hierarchy List end ---------------------------------------------
+
+// ----------------------------- Target Dashboard start ---------------------------------------------
+
+export const GetTargetDashboard = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetTargetDashboard/${getUserId()}`,
+
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetBusinessDashboard:", error);
+    throw error;
+  }
+};
+
+export const GetFocusModelGroupDropDown = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetFocusModelGroupDropDown/${getUserId()}`,
+
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetFocusModelGroupDropDown:", error);
+
+    throw error;
+  }
+};
+
+export const GetPriceBandDropDown = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetPriceBandDropDown/${getUserId()}`,
+
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetPriceBandDropDown:", error);
+
+    throw error;
+  }
+};
+
+//-----------------------------Business  end-------------------------------------------//
+
+//-----------------------------Demo planogram end-------------------------------------------//
+
+//-----------------------------Demo bin conversion start-------------------------------------------//
+
+export const GetDemoBinConversion = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetDemotoGoodPendinglist/${getUserId()}`,
+      params
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error in getStoreList:", error);
+
+    throw error;
+  }
+};
+
+export const DemotoGoodApprovedReject = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetDemotoGoodApprovedReject/${getUserId()}`,
+      params
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error in DemotoGoodApprovedReject:", error);
+
+    throw error;
+  }
+};
+
+//-----------------------------Demo bin conversion end-------------------------------------------//
+
+//-----------------------------ChannelsDashBoard start-------------------------------------------//
+
+export const GetChannelDashboard = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetChannelDashboard/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetChannelDashboard:", error);
+    throw error;
+  }
+};
+
+export const GetChannelDashboardListDropDown = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetChannelDashboardListDropDown/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetChannelDashboardListDropDown:", error);
+    throw error;
+  }
+};
+
+//-----------------------------ChannelsDashBoard end-------------------------------------------//
+
+//-----------------------------Audit start-------------------------------------------//
+
+export const GetAuditTypeDropdownList = async () => {
+  try {
+    const response = await api.get(`/GetAuditTypeDropdownList/${getUserId()}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetAuditTypeDropdownList:", error);
+
+    throw error;
+  }
+};
+
+export const ManageAuditAPI = async (params) => {
+  console.log("params", params);
+  try {
+    const response = await api.post(`/ManageAudit/${getUserId()}`, params);
+    return response.data;
+  } catch (error) {
+    console.error("Error in ManageAudit:", error);
+
+    throw error;
+  }
+};
+
+export const GetAuditMasterList = async (params) => {
+  console.log("params", params);
+  try {
+    const response = await api.post(
+      `/GetAuditMasterList/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetAuditMasterList:", error);
+    throw error;
+  }
+};
+
+//-----------------------------Business  end-------------------------------------------//
+
+// ----------------------------- Target Dashboard end ---------------------------------------------
+
+export const GetSkuPreBookingDetailList = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetSkuPreBookingDetailList/${getUserId()}`,
+      params
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetSkuPreBookingDetailList:", error);
+
+    throw error;
+  }
+};
+
+export const UpdStatusBrandAudit = async (params) => {
+  console.log("params", params);
+  try {
+    const response = await api.post(
+      `/UpdStatusBrandAudit/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in UpdStatusBrandAudit:", error);
+    throw error;
+  }
+};
+
+export const UpdateStatusSkuPreBooking = async (params) => {
+  try {
+    const response = await api.post(
+      `/UpdateStatusSkuPreBooking/${getUserId()}`,
+
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in UpdateStatusSkuPreBooking:", error);
+    throw error;
+  }
+};
+
+//-----------------------------Audit end-------------------------------------------//
+
+//-----------------------------REL Stock Report start-------------------------------------------//
+
+export const GetRelStoreStockReport = async (params) => {
+  console.log("params", params);
+  try {
+    const response = await api.post(
+      `/GetRelStoreStockReport/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetRelStoreStockReport:", error);
+    throw error;
+  }
+};
+
+export const GetRelEDIInetgrationStatusView = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetRelEDIInetgrationStatusView/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetRelEDIInetgrationStatusView:", error);
+    throw error;
+  }
+};
+
+export const GetRelianceStoreType = async () => {
+  try {
+    const response = await api.get(`/GetRelianceStoreType/${getUserId()}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetRelianceStoreType:", error);
+
+    throw error;
+  }
+};
+
+export const GetAuditReport = async (params) => {
+  try {
+    const response = await api.post(`/MEZ_AuditReport/${getUserId()}`, params);
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetAuditReport:", error);
+    throw error;
+  }
+};
+//-----------------------------REL Stock Report end-------------------------------------------//
+
+//-----------------------------L1L2 Issue Report start-------------------------------------------//
+
+export const GetL1L2IssueReport = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetL1L2IssueReport/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetL1L2IssueReport:", error);
+    throw error;
+  }
+};
+
+//-----------------------------L1L2 Issue Report end-------------------------------------------//
+
+//-----------------------------Brand Dashboard start-------------------------------------------//
+
+export const GetBrandDashboard = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetBrandDashboard/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetBrandDashboard:", error);
+    throw error;
+  }
+};
+// Isp Approval List API
+
+//-----------------------------Brand Dashboard end-------------------------------------------//
+export const GetIspApprovalList = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetIspApprovalList/${getUserId()}`,
+
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetIspApprovalList:", error);
+    throw error;
+  }
+};
+
+export const SaveIspApprovalList = async (params) => {
+  try {
+    const response = await api.post(
+      `/SaveIspApprovalList/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in SaveIspApprovalList:", error);
+    throw error;
+  }
+};
+// Isp Approval List API end
+
+//-----------------------------Audit Report start-------------------------------------------//
+
+export const GetISP_StoreOpsReport = async (params) => {
+  try {
+    const response = await api.post(
+      `/GetISP_StoreOpsReport/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetISP_StoreOpsReport:", error);
+    throw error;
+  }
+};
+
+//-----------------------------Audit Report end-------------------------------------------//
+
+//-----------------------------Demo Audit Report-------------------------------------------//
+
+export const GetDemoAuditReport = async (params) => {
+  try {
+    const response = await api.post(
+      `/DemoAuditReport/${getUserId()}`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in GetDemoAuditReport:", error);
+    throw error;
+  }
+};
+

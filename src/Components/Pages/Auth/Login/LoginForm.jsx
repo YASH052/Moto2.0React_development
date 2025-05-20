@@ -19,6 +19,7 @@ import {
   WHITE,
   ERROR_RED,
   ERROR_RED2,
+  AQUA_DARK,
 } from "../../../Common/colors";
 import pdcard from "../../../../assets/carousel/pdcard.png";
 import one from "../../../../assets/carousel/one.png";
@@ -33,6 +34,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from "@mui/icons-material/Login";
 import { baseUrl } from "../../../Common/urls";
 import Slider from "../../../Common/Slider";
+import LoginFooter from "../../../Common/LoginFooter";
 
 const LoginForm = () => {
   // const [accessKey, setAccessKey] = useState("");
@@ -301,7 +303,7 @@ const LoginForm = () => {
   };
 
   return (
-    <Box sx={{ position: "relative", width: "100%", height: "100vh" }}>
+    <Box sx={{  width: "100%", height: "100vh" }}>
       <Box
         sx={{
           display: "flex",
@@ -587,81 +589,8 @@ const LoginForm = () => {
           </Box>
         </Box>
       </Box>
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          height: "30vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Grid
-          container
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: AQUA,
-            textAlign: "center",
-            padding: "0px",
-          }}
-        >
-          <Grid item xs={12}>
-            <img
-              src="/Images/NuralFootLogo.png"
-              alt="logo"
-              style={{ width: "8%" }}
-            />
-          </Grid>
-        </Grid>
-      </Box>
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          height: "30vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Image Slider Section (85% of 30vh) */}
-        <Slider />
 
-        {/* Footer (15% of 30vh) */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "4px",
-          }}
-        >
-          <Grid
-            container
-            sx={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              width: "100%",
-              backgroundColor: AQUA,
-              textAlign: "center",
-              padding: "0px",
-            }}
-          >
-            <Grid item xs={12}>
-              <img
-                src="/Images/NuralFootLogo.png"
-                alt="logo"
-                style={{ width: "8%" }} // Adjust image size as needed
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
+      <LoginFooter />
     </Box>
   );
 };

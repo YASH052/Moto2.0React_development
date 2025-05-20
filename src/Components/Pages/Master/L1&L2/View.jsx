@@ -18,7 +18,7 @@ import {
 import { FormSkeleton } from "../../../Common/Skeletons";
 import StatusModel from "../../../Common/StatusModel";
 
-const View = () => {
+const View = ({ refreshTrigger, onEditIssue, onEditCategory }) => {
   const [accordionExpanded, setAccordionExpanded] = React.useState(true);
   const [issueCategoryDrop, setIssueCategoryDrop] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
@@ -79,25 +79,57 @@ const View = () => {
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
         direction = "desc";
-      } else if (sortConfig.direction === "desc") {
-        // Reset sort when clicking the same column for the third time
+      } else {
+        // Reset sorting when clicking the same column for the third time
         setSortConfig({ key: null, direction: null });
+        // Reset to original data
+        // if (selectedType === "ISSUE") {
+        //   fetchIssueList();
+        // } else {
+        //   fetchIssueCatList();
+        // }
         return;
       }
     }
     setSortConfig({ key: columnName, direction });
-  };
-
-  // Add useEffect to watch for sortConfig changes
-  useEffect(() => {
-    if (sortConfig.key) {
-      if (selectedType === "ISSUE") {
-        setFlag2(prev => !prev);
-      } else {
-        setFlag(prev => !prev);
-      }
+    
+    // Sort the existing data
+    if (selectedType === "ISSUE") {
+      setIssueRows(prevRows => {
+        const sortedRows = [...prevRows];
+        sortedRows.sort((a, b) => {
+          if (columnName === "status") {
+            return direction === "asc"
+              ? (a.status ? 1 : -1) - (b.status ? 1 : -1)
+              : (b.status ? 1 : -1) - (a.status ? 1 : -1);
+          }
+          const aValue = a[columnName]?.toString().toLowerCase() || "";
+          const bValue = b[columnName]?.toString().toLowerCase() || "";
+          return direction === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        });
+        return sortedRows;
+      });
+    } else {
+      setIssueCategoryRows(prevRows => {
+        const sortedRows = [...prevRows];
+        sortedRows.sort((a, b) => {
+          if (columnName === "status") {
+            return direction === "asc"
+              ? (a.status ? 1 : -1) - (b.status ? 1 : -1)
+              : (b.status ? 1 : -1) - (a.status ? 1 : -1);
+          }
+          const aValue = a[columnName]?.toString().toLowerCase() || "";
+          const bValue = b[columnName]?.toString().toLowerCase() || "";
+          return direction === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        });
+        return sortedRows;
+      });
     }
-  }, [sortConfig, selectedType]);
+  };
 
   const handleToggleChange = (id) => {
     if (selectedType === "ISSUE") {
@@ -118,14 +150,14 @@ const View = () => {
   const handlePageChange = (newPage) => {
     if (selectedType === "ISSUE") {
       setIssuePage(newPage);
-      setIssueSearchParams(prev => ({
+      setIssueSearchParams((prev) => ({
         ...prev,
         pageIndex: newPage + 1,
       }));
       setFlag2(!flag2);
     } else {
       setIssueCatPage(newPage);
-      setIssueCatSearchParams(prev => ({
+      setIssueCatSearchParams((prev) => ({
         ...prev,
         pageIndex: newPage + 1,
       }));
@@ -137,7 +169,7 @@ const View = () => {
     if (selectedType === "ISSUE") {
       setIssuePageSize(newRowsPerPage);
       setIssuePage(0);
-      setIssueSearchParams(prev => ({
+      setIssueSearchParams((prev) => ({
         ...prev,
         pageSize: newRowsPerPage,
         pageIndex: 1,
@@ -146,7 +178,7 @@ const View = () => {
     } else {
       setIssueCatPageSize(newRowsPerPage);
       setIssueCatPage(0);
-      setIssueCatSearchParams(prev => ({
+      setIssueCatSearchParams((prev) => ({
         ...prev,
         pageSize: newRowsPerPage,
         pageIndex: 1,
@@ -158,10 +190,12 @@ const View = () => {
   const currentRows = selectedType === "ISSUE" ? issueRows : issueCategoryRows;
 
   useEffect(() => {
-    fetchIssueCatList();
-    fetchIssueList();
-    fetchIssueListDropDown();
-  }, []);
+    if (refreshTrigger !== undefined) {
+      fetchIssueCatList();
+      fetchIssueList();
+      fetchIssueListDropDown();
+    }
+  }, [refreshTrigger]);
 
   useEffect(() => {
     fetchIssueCatList();
@@ -172,10 +206,17 @@ const View = () => {
   }, [flag2]);
 
   const fetchIssueListDropDown = async () => {
+    let body = {
+      issuesCategoryID: 0,
+      issueMasterID: 0,
+      pageSize: 1000,
+      pageIndex: 1,
+      CallType: 0,
+    };
     try {
-      let res = await GetIssueMasterList(issueSearchParams);
+      let res = await GetIssueMasterList(body);
       if (res.statusCode == 200) {
-        setIssueListDropDown(res.issueMasterList);
+        setIssueListDropDown(res.issueDropDownList);
       } else {
         setIssueListDropDown([]);
       }
@@ -191,37 +232,22 @@ const View = () => {
     try {
       let res = await GetIssueMasterList(issueSearchParams);
       if (res.statusCode == 200) {
-        let sortedRows = res.issueMasterList.map((item) => ({
+        let rows = res.issueMasterList.map((item) => ({
           id: item.issueMasterID,
           name: item.issue,
           code: item.issue,
           category: item.issueCategoryName,
           status: item.status === 1,
+          issueCategoryID: item.issueCategoryID,
+         
         }));
-
-        // Apply sorting if sortConfig is set
-        if (sortConfig.key) {
-          sortedRows.sort((a, b) => {
-            if (sortConfig.key === 'status') {
-              return sortConfig.direction === 'asc' 
-                ? (a.status ? 1 : -1) - (b.status ? 1 : -1)
-                : (b.status ? 1 : -1) - (a.status ? 1 : -1);
-            }
-            const aValue = a[sortConfig.key]?.toString().toLowerCase() || '';
-            const bValue = b[sortConfig.key]?.toString().toLowerCase() || '';
-            return sortConfig.direction === 'asc'
-              ? aValue.localeCompare(bValue)
-              : bValue.localeCompare(aValue);
-          });
-        }
-
-        setIssueRows(sortedRows);
+        setIssueRows(rows);
         setTotalIssueRecords(res.totalRecords);
       } else {
         setIssueRows([]);
         setTotalIssueRecords(0);
-        setStatus(500);
-        setMessage(res.message || "Internal Server Error");
+        setStatus(res.statusCode);
+        setMessage(res.statusMessage || "Internal Server Error");
         setShowStatus(true);
       }
     } catch (error) {
@@ -246,36 +272,19 @@ const View = () => {
     try {
       let res = await getIssueCategoryList(body);
       if (res.statusCode == 200) {
-        let sortedRows = res.issueCategoryList.map((item) => ({
+        let rows = res.issueCategoryList.map((item) => ({
           id: item.issueCategoryID,
           name: item.issueCategoryName,
           code: item.issueCategoryCode,
           status: item.status === 1,
         }));
-
-        // Apply sorting if sortConfig is set
-        if (sortConfig.key) {
-          sortedRows.sort((a, b) => {
-            if (sortConfig.key === 'status') {
-              return sortConfig.direction === 'asc' 
-                ? (a.status ? 1 : -1) - (b.status ? 1 : -1)
-                : (b.status ? 1 : -1) - (a.status ? 1 : -1);
-            }
-            const aValue = a[sortConfig.key]?.toString().toLowerCase() || '';
-            const bValue = b[sortConfig.key]?.toString().toLowerCase() || '';
-            return sortConfig.direction === 'asc'
-              ? aValue.localeCompare(bValue)
-              : bValue.localeCompare(aValue);
-          });
-        }
-
-        setIssueCategoryRows(sortedRows);
+        setIssueCategoryRows(rows);
         setTotalIssueCatRecords(res.totalRecords);
       } else {
         setIssueCategoryRows([]);
         setTotalIssueCatRecords(0);
-        setStatus(500);
-        setMessage(res.message || "Internal Server Error");
+        setStatus(res.statusCode);
+        setMessage(res.statusMessage || "Internal Server Error");
         setShowStatus(true);
       }
     } catch (error) {
@@ -300,14 +309,14 @@ const View = () => {
   const handleSearch = () => {
     if (selectedType === "ISSUE") {
       setIssuePage(0);
-      setIssueSearchParams(prev => ({
+      setIssueSearchParams((prev) => ({
         ...prev,
         pageIndex: 1,
       }));
       setFlag2(!flag2);
     } else {
       setIssueCatPage(0);
-      setIssueCatSearchParams(prev => ({
+      setIssueCatSearchParams((prev) => ({
         ...prev,
         pageIndex: 1,
       }));
@@ -370,8 +379,17 @@ const View = () => {
     }
   };
 
+  const handleEdit = (row) => {
+    console.log("selectedType", selectedType);
+    if (selectedType === "ISSUE") {
+      onEditIssue(row);
+    } else {
+      onEditCategory(row);
+    }
+  };
+
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
+    <Grid container spacing={0} sx={{ position: "relative" }}>
       <Grid
         container
         spacing={0}
@@ -379,7 +397,7 @@ const View = () => {
         mt={1}
         sx={{ position: "relative", zIndex: 1 }}
       >
-       {loading ? <FormSkeleton /> : <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralAccordion2
@@ -603,7 +621,7 @@ const View = () => {
               </NuralAccordion2>
             </Grid>
           </Grid>
-        </Grid>}
+        </Grid>
       </Grid>
 
       {/* Status Model */}
@@ -628,6 +646,7 @@ const View = () => {
               onPageChange={handlePageChange}
               onRowsPerPageChange={handleRowsPerPageChange}
               tableLoading={tableLoading}
+              onEdit={handleEdit}
             />
           ) : (
             <IssueCategoryTable
@@ -641,6 +660,7 @@ const View = () => {
               onPageChange={handlePageChange}
               onRowsPerPageChange={handleRowsPerPageChange}
               tableLoading={tableLoading}
+              onEdit={handleEdit}
             />
           )}
         </Grid>

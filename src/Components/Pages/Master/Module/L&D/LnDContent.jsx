@@ -401,7 +401,7 @@ const LnDCont = () => {
       </Grid>
 
       <Grid marginTop={2} xs={12}>
-        <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
+        <NuralAccordion2 title="View"  padding={"0px"}>
           <Grid
             xs={12}
             borderRadius={2}
@@ -480,6 +480,7 @@ const LnDCont = () => {
           </Grid>
         </NuralAccordion2>
 
+
         <Grid item xs={12} marginTop={2}>
           <TableContainer
             component={Paper}
@@ -506,6 +507,7 @@ const LnDCont = () => {
                   >
                     <Typography
                       variant="body1"
+
                       sx={{
                         fontFamily: "Manrope",
                         fontWeight: 700,
@@ -903,9 +905,11 @@ const LnDCont = () => {
                   <img src="./Icons/footerSearch.svg" alt="arrow" />
                 </Grid>
               </Grid>
+
             </Grid>
           </TableContainer>
         </Grid>
+
       </Grid>
     </Grid>
   );

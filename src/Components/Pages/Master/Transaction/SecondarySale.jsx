@@ -35,6 +35,8 @@ const log = JSON.parse(localStorage.getItem("log")) || {};
 
 const SecondarySale = () => {
   const [activeTab, setActiveTab] = React.useState("secondary-sale");
+  const [resetFile, setResetFile] = React.useState(false);
+  const [showStatus, setShowStatus] = React.useState(false);
   const navigate = useNavigate();
   const [status, setStatus] = React.useState(null);
   const [title, setTitle] = React.useState(null);
@@ -51,12 +53,20 @@ const SecondarySale = () => {
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Download Secondary Sale Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
           window.location.href = `${templateUrl}SecondarySales.xlsx`;
+          setShowStatus(true);
+          setStatus(200);
+          setTitle("Data fetched successfully");
+          setTimeout(() => {
+            handleClearStatus();
+            setStatus(null);
+            setTitle(null);
+          }, 3000);
           setIsLoading(false);
         }, 1000);
       },
@@ -84,17 +94,19 @@ const SecondarySale = () => {
       let res = await GetStockBinTypeInfo();
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
+          handleClearStatus();
         }, 3000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
@@ -117,17 +129,19 @@ const SecondarySale = () => {
       let res = await GetAllTemplateDataV2(body);
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
+          handleClearStatus();
         }, 3000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
@@ -140,6 +154,7 @@ const SecondarySale = () => {
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
+      setShowStatus(true);
       setStatus(String(400));
       setTitle("Please select a file to upload");
       return;
@@ -153,22 +168,24 @@ const SecondarySale = () => {
     try {
       let res = await UploadSecondarySales(formData);
       if (res.statusCode == 200) {
-        fileInput.value = "";
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle(res.statusMessage);
         setTimeout(() => {
-          setStatus(null);
-          setTitle(null);
+          handleClearStatus();
         }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(String(error.status));
       setTitle(MenuConstants.somethingWentWrong);
       console.log(error);
@@ -179,8 +196,16 @@ const SecondarySale = () => {
   };
 
   const handleClearStatus = () => {
+    setShowStatus(false);
     setStatus(null);
     setTitle(null);
+    setResetFile(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
   };
 
   React.useEffect(() => {
@@ -263,10 +288,11 @@ const SecondarySale = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
+                {showStatus && (
                   <StatusModel
                     width="100%"
                     status={status}
@@ -281,6 +307,8 @@ const SecondarySale = () => {
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
+                      color={PRIMARY_BLUE2}
+
                       borderColor={PRIMARY_BLUE2}
                       onClick={handleClearStatus}
                       width="100%"
@@ -289,7 +317,7 @@ const SecondarySale = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
+                      text={isUploading ? "UPLOADING..." : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handleUploadClick}

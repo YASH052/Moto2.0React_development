@@ -6,27 +6,18 @@ import {
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
 
-const RankingNSM = () => {
-  const nsmRankings = [
-    { rank: 1, title: "NSM 1", scr: 340, zero: 120 },
-    { rank: 2, title: "NSM 2", scr: 340, zero: 120 },
-    { rank: 3, title: "NSM 3", scr: 340, zero: 120 },
-  ];
+const RankingNSM = ({ rankings = [] }) => {
 
-  const rsmRankings = [
-    { rank: 1, title: "RSM 1", scr: 340, zero: 120 },
-    { rank: 2, title: "RSM 2", scr: 340, zero: 120 },
-    { rank: 3, title: "RSM 3", scr: 340, zero: 120 },
-  ];
-
-  const ispRankings = [
-    { rank: 1, title: "ISP 1", scr: 340, zero: 120 },
-    { rank: 2, title: "ISP 2", scr: 340, zero: 120 },
-    { rank: 3, title: "ISP 3", scr: 340, zero: 120 },
-  ];
+  // console.log("rankings", rankings);
+  // Filter rankings based on level
+  const nsmRankings = rankings.filter((item) => item.level === "NSM");
+  const rsmRankings = rankings.filter((item) => item.level === "RSM");
+  // Assuming 'ISP' is the intended level, based on the data provided.
+  // Adjust if the actual level key differs.
+  const ispRankings = rankings.filter((item) => item.level === "ISP");
 
   const RankingSection = ({ rankings }) => (
-    <Stack spacing={2.5}>
+    <Stack spacing={3}>
       {rankings.map((item) => (
         <Box
           key={item.rank}
@@ -50,26 +41,14 @@ const RankingNSM = () => {
             <Typography
               sx={{
                 color: DARK_PURPLE,
-                fontSize: "14px",
+                fontSize: "10px",
                 fontWeight: 700,
                 fontFamily: "Manrope",
               }}
             >
-              {item.title}
+              {item.rankName}
             </Typography>
           </Stack>
-          <Typography
-            sx={{
-              color: DARK_PURPLE,
-              fontSize: "8px",
-              fontFamily: "Manrope",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-            }}
-          >
-            SCR : <span style={{ fontWeight: 700 }}>{item.scr}</span> | ZERO :{" "}
-            <span style={{ fontWeight: 700 }}>{item.zero}</span>
-          </Typography>
         </Box>
       ))}
     </Stack>
@@ -82,7 +61,8 @@ const RankingNSM = () => {
         backgroundColor: LIGHT_GRAY2,
         borderRadius: "8px",
         padding: "24px",
-        height: "200px",
+        height: "auto",
+        minHeight: "200px",
       }}
     >
       <Typography
@@ -95,34 +75,33 @@ const RankingNSM = () => {
           marginBottom: "20px",
         }}
       >
-        Ranking [NSM]
+        Ranking
       </Typography>
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "24px",
+          display: "flex",
+          // flexDirection: "column",
+          gap: "20px",
         }}
       >
-        <Box>
-          <RankingSection rankings={nsmRankings} />
-        </Box>
-        <Box
-          sx={{
-            borderLeft: `1px solid rgba(0, 0, 0, 0.12)`,
-            paddingLeft: "24px",
-          }}
-        >
-          <RankingSection rankings={rsmRankings} />
-        </Box>
-        <Box
-          sx={{
-            borderLeft: `1px solid rgba(0, 0, 0, 0.12)`,
-            paddingLeft: "24px",
-          }}
-        >
-          <RankingSection rankings={ispRankings} />
-        </Box>
+        {nsmRankings.length > 0 && (
+          <Box>
+             <Typography sx={{ mb: 1, fontWeight: 'bold', fontSize: '12px', color: DARK_PURPLE }}>NSM</Typography>
+            <RankingSection rankings={nsmRankings} />
+          </Box>
+        )}
+        {rsmRankings.length > 0 && (
+          <Box>
+             <Typography sx={{ mb: 1, fontWeight: 'bold', fontSize: '12px', color: DARK_PURPLE }}>RSM</Typography>
+            <RankingSection rankings={rsmRankings} />
+          </Box>
+        )}
+        {ispRankings.length > 0 && (
+          <Box>
+             <Typography sx={{ mb: 1, fontWeight: 'bold', fontSize: '12px', color: DARK_PURPLE }}>ISP</Typography>
+            <RankingSection rankings={ispRankings} />
+          </Box>
+        )}
       </Box>
     </Paper>
   );

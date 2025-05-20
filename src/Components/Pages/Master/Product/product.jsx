@@ -2,25 +2,7 @@ import { Button, Grid, Typography } from "@mui/material";
 import React, { useState } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
-import {
-  DARK_PURPLE,
-  LIGHT_GRAY2,
-  PRIMARY_BLUE2,
-  AQUA,
-  WHITE,
-  PRIMARY_LIGHT_GRAY,
-  LIGHT_BLUE,
-} from "../../../Common/colors";
-import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralButton from "../../NuralCustomComponents/NuralButton";
-import { Search } from "@mui/icons-material";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+
 import { useNavigate } from "react-router-dom";
 
 const tabs = [
@@ -34,6 +16,7 @@ const tabs = [
   { label: "Focus Model", value: "focus-model" },
   { label: "Price", value: "price" },
   { label: "Pre Booking", value: "prebooking-sku-create" },
+  
 ];
 
 const Product = () => {
@@ -51,41 +34,7 @@ const Product = () => {
     setPage(0);
   };
 
-  const handleSort = (columnName) => {
-    let direction = "asc";
-
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
-      }
-    }
-
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setFilteredRows(sortedRows);
-  };
+ 
 
   // Replace the existing dummy data with this more realistic data
   const generateDummyData = () => {

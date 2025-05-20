@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -10,7 +10,6 @@ import {
   Typography,
   IconButton,
   InputBase,
-  styled,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -18,43 +17,31 @@ import {
 import {
   Dashboard,
   SwapHoriz,
-  GpsFixed as TargetIcon,
-  EmojiEvents,
   LocalOffer,
-  School,
-  Flag as FlagIcon,
-  Assessment,
   EventNote,
   Poll,
-  HelpOutline,
   Person,
   Settings,
   Logout,
   Search as SearchIcon,
   Notifications,
-  Menu as MenuIcon,
   KeyboardArrowDown,
-  Add as AddIcon,
-  Edit,
 } from "@mui/icons-material";
 import {
   PRIMARY_BLUE,
   SECONDARY_BLUE,
   WHITE,
-  LIGHT_GRAY,
-  TRANSPARENT_WHITE_15,
-  TRANSPARENT_WHITE_25,
   NOTIFICATION_BLUE,
   HOVER_BLUE,
   GREEN_COLOR,
   DARK_PURPLE,
   PRIMARY_BLUE2,
+  AQUA,
 } from "../../Common/colors";
-// Make sure to update the path to the actual image location
+import close from "../../../assets/logo/close.svg";
 
-const collapsedWidth = 90; // Reduced from 80
-const expandedWidth = 280; // Reduced from 300
-
+const collapsedWidth = 90;
+const expandedWidth = 280;
 
 const menuGroups = [
   {
@@ -68,24 +55,28 @@ const menuGroups = [
       },
       { text: "Transaction", icon: <SwapHoriz />, path: "/transaction" },
       {
-        text: "Inventory",
+        text: "Reports",
         icon: <LocalOffer />,
-        path: "#",
+        path: "/reports",
       },
-      // { text: "Competition", icon: <FlagIcon />, path: "/competition-brand" },
+      { text: "Target ", icon: <EventNote />, path: "/target" },
     ],
   },
   {
     title: "Secondary Module",
     items: [
-      { text: "Merchandising", icon: <LocalOffer />, path: "#" },
+      {
+        text: "Merchandising",
+        icon: <LocalOffer />,
+        path: "/merchandizing-report",
+      },
       {
         text: "Prebooking",
         icon: <EventNote />,
         path: "/prebooking-sku-create",
       },
-      // { text: "Learning & Dev.", icon: <School />, path: "/learning" },
-      { text: "Survey", icon: <Poll />, path: "#" },
+      { text: "Incentive", icon: <Poll />, path: "/create-scheme" },
+      { text: "Survey", icon: <LocalOffer />, path: "/survey" },
     ],
   },
 ];
@@ -102,22 +93,16 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleMouseEnter = () => {
-    setIsExpanded(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsExpanded(false);
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
   };
 
   const handleLogout = () => {
-    // Clear all authentication related data
     localStorage.removeItem("log");
     localStorage.removeItem("userId");
     localStorage.removeItem("authKey");
     localStorage.removeItem("token");
 
-    // Redirect to login page
     navigate("/login");
   };
 
@@ -143,7 +128,6 @@ const Sidebar = () => {
         flexDirection: "column",
       }}
     >
-      {/* Scrollable content */}
       <Box
         sx={{
           flexGrow: 1,
@@ -151,49 +135,78 @@ const Sidebar = () => {
           bgcolor: PRIMARY_BLUE,
           overflowX: "hidden",
           width: "100%",
-
           borderRadius: "5px 5px 10px 10px",
           margin: "auto",
         }}
       >
         <Box sx={{ p: 0 }}>
-          {/* Logo section */}
           <Box
             sx={{
               p: 2,
               display: "flex",
               alignItems: "center",
-              justifyContent: collapsed ? "center" : "space-between",
+              justifyContent: "space-between",
               mb: 2,
             }}
           >
             {!collapsed ? (
-              <Box
-                sx={{
-                  height: 50,
-                  width: "100%",
-                  bgcolor: LIGHT_GRAY,
-                  borderRadius: 1,
-                  p: 0.5,
-                  textAlign: "center",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: PRIMARY_BLUE2,
-                }}
-              >
-                {" "}
-                MOTOROLA
-              </Box>
+              <>
+                <Box
+                  sx={{
+                    height: 35,
+                   backgroundColor: "white",
+                    borderRadius: 1,
+                    p: 1,
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: PRIMARY_BLUE2,
+                    flexGrow: 1,
+                    mr: 1,
+                  }}
+                >
+                  {/* <Typography sx={{ fontWeight: "bold", color: PRIMARY_BLUE2 }}>
+                    MOTOROLAs
+                  </Typography> */}
+
+                  <img src={import.meta.env.VITE_MOTO_LOGO_NAME} alt="MOTOROLA" style={{ width: "100%", height: "90%" }} />
+                </Box>
+
+                <Box
+                  sx={{
+                    width: "1px",
+                    height: "50px",
+                    bgcolor: "#fff",
+                    mx: 0.5,
+                  }}
+                />
+
+                <IconButton
+                  onClick={toggleSidebar}
+                  size="small"
+                  sx={{ color: PRIMARY_BLUE2 }}
+                >
+                  <img
+                    src={close}
+                    alt="close"
+                    style={{ width: "40px", height: "40px" }}
+                  />
+                </IconButton>
+              </>
             ) : (
               <Box
+                onClick={toggleSidebar}
                 sx={{
                   ml: -2,
                   mt: -1,
+                  cursor: "pointer",
                 }}
               >
                 <img
-                  src={"./Images/motologo.webp"}
+                  src={
+                    import.meta.env.VITE_MOTO_LOGO
+                  }
                   alt="Powered by Nural"
                   style={{
                     maxWidth: "100%",
@@ -206,7 +219,6 @@ const Sidebar = () => {
             )}
           </Box>
 
-          {/* Search and notification */}
           {!collapsed ? (
             <Box
               sx={{
@@ -267,11 +279,9 @@ const Sidebar = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 2,
-
                 mt: -3,
               }}
             >
-              {/* Search Icon */}
               <Box
                 sx={{
                   width: 45,
@@ -288,7 +298,6 @@ const Sidebar = () => {
                 <SearchIcon sx={{ color: "white", fontSize: "1.2rem" }} />
               </Box>
 
-              {/* Notification Icon */}
               <Box
                 sx={{
                   width: 45,
@@ -304,7 +313,6 @@ const Sidebar = () => {
                 <Notifications sx={{ color: "white" }} />
               </Box>
 
-              {/* Dashboard Icon */}
               <Box
                 sx={{
                   width: 45,
@@ -322,7 +330,6 @@ const Sidebar = () => {
                 <Dashboard sx={{ color: "white" }} />
               </Box>
 
-              {/* Grid Icon */}
               <Box
                 sx={{
                   width: 45,
@@ -362,7 +369,6 @@ const Sidebar = () => {
             </Box>
           )}
 
-          {/* My Apps section */}
           {!collapsed ? (
             <Accordion
               expanded={myAppsExpanded}
@@ -421,12 +427,10 @@ const Sidebar = () => {
 
               <AccordionDetails sx={{ px: 2 }}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {/* Dashboard button */}
                   <Box
                     sx={{
                       borderRadius: 2,
                       border: "1px solid rgb(244, 240, 242)",
-
                       p: 1.5,
                       display: "flex",
                       alignItems: "center",
@@ -441,7 +445,6 @@ const Sidebar = () => {
                       sx={{
                         fontWeight: 500,
                         fontSize: "0.875rem",
-
                         "&:hover": { bgcolor: WHITE, color: PRIMARY_BLUE },
                       }}
                     >
@@ -449,7 +452,6 @@ const Sidebar = () => {
                     </Typography>
                   </Box>
 
-                  {/* DMS and ISP row */}
                   <Box sx={{ display: "flex", gap: 2 }}>
                     <Box
                       sx={{
@@ -512,13 +514,15 @@ const Sidebar = () => {
                     >
                       <Box
                         sx={{
-                          bgcolor: "#",
+                          bgcolor: WHITE,
+                          color: PRIMARY_BLUE,
                           border: "1px solid #DFDDDE",
                           borderRadius: 2,
                           p: 1,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+
                           cursor: "pointer",
                           "&:hover": { bgcolor: WHITE, color: PRIMARY_BLUE },
                         }}
@@ -555,7 +559,6 @@ const Sidebar = () => {
           )}
         </Box>
 
-        {/* Main menu items */}
         {!collapsed ? (
           <Box sx={{ px: 0 }}>
             <List sx={{ p: 0 }}>
@@ -563,7 +566,7 @@ const Sidebar = () => {
                 .flatMap((group) => group.items)
                 .map((item) => (
                   <ListItem
-                    button
+                    button={true}
                     key={item.text}
                     onClick={() => handleNavigation(item.path)}
                     sx={{
@@ -574,7 +577,6 @@ const Sidebar = () => {
                         backgroundColor: "rgba(255, 255, 255, 0.1)",
                       },
                       borderRadius: 1,
-                      // py: 0.5,
                       position: "relative",
                       ...(isSelected(item.path) && {
                         "& .MuiListItemText-root": {
@@ -624,7 +626,7 @@ const Sidebar = () => {
             {menuGroups.map((group) =>
               group.items.map((item) => (
                 <ListItem
-                  button
+                  button={true}
                   key={item.text}
                   onClick={() => handleNavigation(item.path)}
                   sx={{
@@ -653,7 +655,6 @@ const Sidebar = () => {
         )}
       </Box>
 
-      {/* Fixed bottom section with white background */}
       <Box
         sx={{
           mt: "auto",
@@ -663,11 +664,10 @@ const Sidebar = () => {
           py: 1,
         }}
       >
-        {/* Bottom menu items */}
         <List sx={{ py: 0, px: 0 }}>
           {bottomMenuItems.map((item) => (
             <ListItem
-              button
+              button={true}
               key={item.text}
               onClick={() => handleNavigation(item.path)}
               sx={{
@@ -678,7 +678,6 @@ const Sidebar = () => {
                 justifyContent: collapsed ? "center" : "flex-start",
                 minHeight: 35,
                 color: GREEN_COLOR,
-
                 position: "relative",
                 ...(isSelected(item.path) && {
                   "& .MuiListItemText-root": {
@@ -730,19 +729,24 @@ const Sidebar = () => {
         </List>
 
         {/* Powered by section */}
-        <Box sx={collapsed ? { p: 0.5 } : { p: 0 }}>
+        <Box
+          sx={collapsed ? { p: 0 } : { p: 0, mt: 3 }}
+          bgcolor={AQUA}
+          borderRadius={collapsed ? "8px" : "8px"}
+        >
           <img
             src={
-              collapsed ? "./Images/Wordmark.png" : "./Images/NuralFootLogo.png"
+              collapsed ? "./Images/Wordmark.svg" : "./Images/NuralFootLogo.png"
             }
             alt="Powered by Nural"
             style={{
               borderRadius: collapsed ? "0px" : "8px",
-              marginTop: "1rem",
+              marginTop: "8px",
+              marginBottom: "5px",
               marginLeft: "auto",
               marginRight: "auto",
-              width: collapsed ? "100%" : "100%",
-              height: collapsed ? "40%" : "50px",
+              width: collapsed ? "85%" : "100%",
+              height: collapsed ? "40%" : "30px", 
               objectFit: collapsed ? "contain" : "cover",
             }}
           />
@@ -754,14 +758,18 @@ const Sidebar = () => {
   return (
     <Drawer
       variant="permanent"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      sx={{
+      sx={(theme) => ({
         width: isExpanded ? expandedWidth : collapsedWidth,
-        transition: "width 0.3s",
+        transition: theme.transitions.create('width', {
+          easing: theme.transitions.easing.easeInOut,
+          duration: theme.transitions.duration.standard,
+        }),
         "& .MuiDrawer-paper": {
           width: isExpanded ? expandedWidth : collapsedWidth,
-          transition: "width 0.3s",
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.easeInOut,
+            duration: theme.transitions.duration.standard,
+          }),
           boxSizing: "border-box",
           backgroundColor: WHITE,
           color: SECONDARY_BLUE,
@@ -769,7 +777,7 @@ const Sidebar = () => {
           overflowY: "hidden",
           border: "none",
         },
-      }}
+      })}
     >
       {renderSidebarContent(!isExpanded)}
     </Drawer>

@@ -7,14 +7,10 @@ import {
   AQUA,
   AQUA_DARK,
   DARK_BLUE,
-  DARK_PURPLE,
   LIGHT_GRAY2,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
 } from "../../../Common/colors";
-import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
+
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import {
@@ -25,18 +21,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+
 import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 import { useNavigate } from "react-router-dom";
@@ -44,9 +30,6 @@ import { fetchIMEIList } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 // Import skeleton components
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
-
-
-
 
 const UnblockFinance = () => {
   const [tableData, setTableData] = useState([]);
@@ -59,22 +42,20 @@ const UnblockFinance = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [openUnblockDialog, setOpenUnblockDialog] = useState(false);
   const [errors, setErrors] = useState({
-    serialNumber: ""
+    serialNumber: "",
   });
   // Add loading state variables
   const [formLoading, setFormLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
-  
+
   const getIMEIList = async () => {
     try {
-      // Set table loading to true before fetching
       setTableLoading(true);
-      
+
       const response = await fetchIMEIList(searchParams);
       if (response.statusCode == 200) {
         setTableData(response.financeIMEIlist);
-      }
-      else{
+      } else {
         setTitle(response.statusMessage);
         setStatus(response.statusCode);
       }
@@ -83,11 +64,10 @@ const UnblockFinance = () => {
       setTitle(error.statusMessage);
       setStatus(error.statusCode);
     } finally {
-      // Set table loading to false when fetching completes (success or error)
       setTableLoading(false);
     }
   };
-  
+
   const validateSerialNumber = (value) => {
     if (!value || value.trim() === "") {
       return "Serial Number is required";
@@ -100,63 +80,74 @@ const UnblockFinance = () => {
     }
     return "";
   };
-  
+
   const handleSearch = () => {
+    setTableData([]);
+    setOpenUnblockDialog(false);
     setStatus(null);
-    setTitle(""); 
-    
+    setTitle("");
+
     const serialNumberError = validateSerialNumber(searchParams.serialNumber);
     if (serialNumberError) {
-      setErrors({...errors, serialNumber: serialNumberError});
+      setErrors({ ...errors, serialNumber: serialNumberError });
       return;
     }
-    
+
     setHasSearched(true);
-    setTableLoading(true); // Ensure loading state is set before making the API call
     getIMEIList();
   };
-  
+
   const handleReset = () => {
     setSearchParams({
       serialNumber: "",
-      type: 0
+      type: 0,
     });
     setHasSearched(false);
     setTableData([]);
-    setErrors({serialNumber: ""});
+    setErrors({ serialNumber: "" });
     setTitle("");
     setStatus(null);
   };
-  
+
   const handleSerialNumberChange = (event) => {
     const value = event.target.value;
-    
+
     if (value && value.length > 15) {
       // Truncate to 15 characters
       setSearchParams({
         ...searchParams,
-        serialNumber: value.substring(0, 15)
+        serialNumber: value.substring(0, 15),
       });
-      setErrors({...errors, serialNumber: "Serial Number cannot exceed 15 characters"});
+      setErrors({
+        ...errors,
+        serialNumber: "Serial Number cannot exceed 15 characters",
+      });
       return;
     }
-    
+
     if (value && !/^[a-zA-Z0-9]*$/.test(value)) {
-      setErrors({...errors, serialNumber: "Serial Number can only contain alphanumeric characters (no spaces)"});
+      setErrors({
+        ...errors,
+        serialNumber:
+          "Serial Number can only contain alphanumeric characters (no spaces)",
+      });
       return;
     }
-    
+
     setSearchParams({
       ...searchParams,
-      serialNumber: value
+      serialNumber: value,
     });
-    
+
     if (value.trim() === "") {
-      setErrors({...errors, serialNumber: "Serial Number is required"});
+      setErrors({ ...errors, serialNumber: "Serial Number is required" });
     } else if (value.length < 4) {
-      setErrors({...errors, serialNumber: "Serial Number must be at least 4 characters"});
+      setErrors({
+        ...errors,
+        serialNumber: "Serial Number must be at least 4 characters",
+      });
     } else {
-      setErrors({...errors, serialNumber: ""});
+      setErrors({ ...errors, serialNumber: "" });
     }
   };
 
@@ -173,58 +164,9 @@ const UnblockFinance = () => {
     fontWeight: 400,
   };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
-  };
-
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const statuses = ["Pending", "Approved", "Rejected"];
-    const requestTypes = ["Finance Block", "Theft Block", "Customer Request"];
-    const userNames = ["John D.", "Sarah M.", "Mike R.", "Emma S.", "Alex P."];
-   
-    return Array(2)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        serialNumber: `IMEI${Math.floor(Math.random() * 1000000000)}`,
-        serialNumber2: `SN${Math.floor(Math.random() * 100000)}`,
-        skuCode: `SKU${Math.floor(Math.random() * 10000)}`,
-        skuName: `Product ${Math.floor(Math.random() * 100)}`,
-        userName: userNames[Math.floor(Math.random() * userNames.length)],
-        requestType:
-          requestTypes[Math.floor(Math.random() * requestTypes.length)],
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        requestDate: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-      }));
-  };
-
-  const [rows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  // Add search/filter functionality
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
-    };
-    handleSearch(searchValues);
   };
 
   const handleUnblockClick = () => {
@@ -233,53 +175,55 @@ const UnblockFinance = () => {
 
   const handleConfirmUnblock = async () => {
     try {
-      // Set loading state for the unblock operation
       setTableLoading(true);
-      
-      // Update type to 1 for unblock IMEI
+
       const unblockParams = {
         ...searchParams,
-        type: 1
+        type: 1,
       };
-      
+
       const response = await fetchIMEIList(unblockParams);
-      
-      // Update status based on response
-      setTitle(response.statusMessage);
-      setStatus(response.statusCode);
-      
-      // Hide the confirmation buttons
-      setOpenUnblockDialog(false);
-      
-      // If successful, refresh the data
-      if (response.statusCode === 200) {
+
+      if (response.statusCode == 200) {
+        setTitle(response.statusMessage);
+        setStatus(response.statusCode);
+        setTimeout(() => {
+          setTitle("");
+          setStatus(null);
+        }, 5000);
+        setOpenUnblockDialog(false);
         getIMEIList();
       } else {
-        setTableLoading(false); // Turn off loading if not refreshing the data
+        setTitle(response.statusMessage);
+        setStatus(response.statusCode);
       }
     } catch (error) {
       console.error("Error unblocking IMEI:", error);
       setTitle(error.statusMessage || "Failed to unblock IMEI");
       setStatus(error.statusCode || 500);
       setOpenUnblockDialog(false);
-      setTableLoading(false); // Make sure to turn off loading in error case
+      setTableLoading(false);
+    } finally {
+      setTableLoading(false);
     }
   };
 
   const handleCancelUnblock = () => {
     setOpenUnblockDialog(false);
+    setTitle("");
+    setStatus("");
   };
 
   // Add useEffect to simulate initial form loading when component mounts
   useEffect(() => {
     // Simulate initial form loading
     setFormLoading(true);
-    
+
     // Simulate delay then set form as loaded
     const timer = setTimeout(() => {
       setFormLoading(false);
     }, 800); // 800ms delay for loading effect
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -297,11 +241,11 @@ const UnblockFinance = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Others" />
         </Grid>
 
-        <Grid item xs={12} ml={1}>
+        <Grid item xs={12} ml={0}>
           <TabsBar
             tabs={tabs}
             activeTab={activeTab}
@@ -309,7 +253,6 @@ const UnblockFinance = () => {
           />
         </Grid>
       </Grid>
-
       {/* Rest of the content */}
       <Grid
         container
@@ -353,10 +296,20 @@ const UnblockFinance = () => {
                         onChange={handleSerialNumberChange}
                         error={!!errors.serialNumber}
                         onBlur={() => {
-                          if (!searchParams.serialNumber || searchParams.serialNumber.trim() === "") {
-                            setErrors({...errors, serialNumber: "Serial Number is required"});
+                          if (
+                            !searchParams.serialNumber ||
+                            searchParams.serialNumber.trim() === ""
+                          ) {
+                            setErrors({
+                              ...errors,
+                              serialNumber: "Serial Number is required",
+                            });
                           } else if (searchParams.serialNumber.length < 4) {
-                            setErrors({...errors, serialNumber: "Serial Number must be at least 4 characters"});
+                            setErrors({
+                              ...errors,
+                              serialNumber:
+                                "Serial Number must be at least 4 characters",
+                            });
                           }
                         }}
                       />
@@ -414,26 +367,32 @@ const UnblockFinance = () => {
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, marginRight: "10px" } }}>
-        {status && (
+      {status && (
+        <Grid
+          item
+          xs={12}
+          mt={-2}
+          sx={{ p: { xs: 1, sm: 2, marginRight: "10px" } }}
+        >
           <StatusModel
             width="100%"
             status={status}
             title={title}
             onClose={() => setStatus(null)}
           />
-        )}
-      </Grid>
+        </Grid>
+      )}
       {/* Add this after the NuralAccordion2 component */}
-      {hasSearched && (tableLoading || status === 200 || status === null) && (
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+      {hasSearched && (
+        <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
           <TableContainer
             component={Paper}
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 300px)", 
+              maxHeight: "calc(100vh - 50px)",
               overflow: "auto",
+              boxShadow: "none",
             }}
           >
             <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
@@ -522,21 +481,38 @@ const UnblockFinance = () => {
                       >
                         {index + 1}
                       </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.serialNumber || row.imei}</TableCell>
                       <TableCell sx={{ ...rowstyle }}>
-                        {row.serialNumber2 || '-'}
+                        {row.serialNumber || row.imei}
                       </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.skuCode || '-'}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.skuName || '-'}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.userName || '-'}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.requestType || '-'}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.status || '-'}</TableCell>
-                      <TableCell sx={{ ...rowstyle }}>{row.requestDate || '-'}</TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.serialNumber2 || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.skuCode || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.skuName || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.userName || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.requestType || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.status || "-"}
+                      </TableCell>
+                      <TableCell sx={{ ...rowstyle }}>
+                        {row.requestDate || "-"}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} sx={{ textAlign: 'center', padding: '20px' }}>
+                    <TableCell
+                      colSpan={9}
+                      sx={{ textAlign: "center", padding: "20px" }}
+                    >
                       No data found
                     </TableCell>
                   </TableRow>
@@ -546,9 +522,9 @@ const UnblockFinance = () => {
           </TableContainer>
         </Grid>
       )}
-
-      {hasSearched && !tableLoading && status == 200 && tableData.length > 0 && (
-        <Grid item xs={12} sm={12} md={12} lg={12} sx={{ p: { xs: 1, sm: 2 } }}>
+      {/* Unblock Button Section */}
+      {tableData.length > 0 && (
+        <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
           {!openUnblockDialog ? (
             <NuralButton
               text="CLICK TO UNBLOCK"
@@ -566,26 +542,26 @@ const UnblockFinance = () => {
                 <NuralButton
                   text="CONFIRM"
                   variant="contained"
-                  backgroundColor="#00BCD4"
-                  color="#FFFFFF"
+                  backgroundColor={AQUA}
+                  color={AQUA_DARK}
                   fontSize="14px"
                   height="48px"
                   width="100%"
                   onClick={handleConfirmUnblock}
-                  disabled={tableLoading} // Disable while loading
+                  disabled={tableLoading}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <NuralButton
                   text="CANCEL"
                   variant="outlined"
-                  color="#2E3192"
-                  borderColor="#2E3192"
+                  color={PRIMARY_BLUE2}
+                  borderColor={PRIMARY_BLUE2}
                   fontSize="14px"
                   height="48px"
                   width="100%"
                   onClick={handleCancelUnblock}
-                  disabled={tableLoading} // Disable while loading
+                  disabled={tableLoading}
                 />
               </Grid>
             </Grid>

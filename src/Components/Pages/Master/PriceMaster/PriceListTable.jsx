@@ -11,6 +11,7 @@ import {
   Grid,
   Typography,
   Button,
+  Switch,
 } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
@@ -18,7 +19,12 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import EditIcon from "@mui/icons-material/Edit";
 import { LIGHT_GRAY2, PRIMARY_BLUE2 } from "../../../Common/colors";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  tablePaginationStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import { TableRowSkeleton } from "../../../Common/Skeletons";
 
 const SKELETON_ROWS = 10;
@@ -37,6 +43,7 @@ const PriceListTable = ({
   handleJumpToPage,
   jumpToPage,
   setJumpToPage,
+  onStatusChange,
 }) => {
   return (
     <TableContainer
@@ -44,7 +51,7 @@ const PriceListTable = ({
       sx={{
         backgroundColor: LIGHT_GRAY2,
         color: PRIMARY_BLUE2,
-        maxHeight: "calc(320vh - 100px)",
+        maxHeight: "calc(100vh - 200px)",
         overflow: "auto",
         position: "relative",
         "& .MuiTable-root": {
@@ -61,7 +68,7 @@ const PriceListTable = ({
         <TableHead>
           <TableRow>
             <TableCell
-              colSpan={6}
+              colSpan={7}
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 position: "sticky",
@@ -111,9 +118,9 @@ const PriceListTable = ({
             </TableCell>
             {[
               { key: "priceListName", label: "Price List" },
-              { key: "country", label: "Country" },
-              { key: "state", label: "State" },
-              { key: "status", label: "Status",noSort: true  },
+              { key: "countryName", label: "Country" },
+              { key: "stateName", label: "State" },
+              { key: "status", label: "Status", noSort: true },
               { key: "edit", label: "Edit", noSort: true },
             ].map((column) => (
               <TableCell
@@ -182,7 +189,7 @@ const PriceListTable = ({
             ))}
           </TableRow>
         </TableHead>
-     
+
         <TableBody>
           {isSearchLoading
             ? Array(SKELETON_ROWS)
@@ -223,11 +230,27 @@ const PriceListTable = ({
                     {row.stateName}
                   </TableCell>
                   <TableCell sx={{ ...rowstyle }}>
-                    {row.status === 1 ? "Active" : "Inactive"}
+                    <Switch
+                      checked={row.status}
+                      onChange={() => onStatusChange(row.priceListID)}
+                      sx={{
+                        ...toggleSectionStyle,
+                        "& .MuiSwitch-thumb": {
+                          backgroundColor: row.status
+                            ? PRIMARY_BLUE2
+                            : DARK_PURPLE,
+                        },
+                      }}
+                    />
                   </TableCell>
-                  <TableCell>
-                    <IconButton>
-                      <EditIcon />
+                  <TableCell
+                    sx={{
+                      ...rowstyle,
+                      color: PRIMARY_BLUE2,
+                    }}
+                  >
+                    <IconButton onClick={() => handleEdit(row.priceMasterID)}>
+                      <EditIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -239,13 +262,14 @@ const PriceListTable = ({
       <Grid
         container
         sx={{
-          p: 1,
-          alignItems: "center",
-          justifyContent: "space-between",
+          ...tablePaginationStyle,
           position: "sticky",
           bottom: 0,
           backgroundColor: LIGHT_GRAY2,
           zIndex: 1000,
+          padding: "12px 16px",
+          borderTop: "1px solid #e0e0e0",
+          boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
         }}
       >
         <Grid item>
@@ -354,8 +378,8 @@ const PriceListTable = ({
           >
             JUMP TO FIRST
           </Typography>
-          <IconButton 
-            onClick={handlePreviousPage} 
+          <IconButton
+            onClick={handlePreviousPage}
             disabled={page <= 1}
             sx={{
               outline: "none",

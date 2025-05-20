@@ -132,6 +132,12 @@ const CompetitonSalesReport = () => {
   // Add this state to track total records
   const [totalRecords, setTotalRecords] = React.useState(0);
 
+  // Add loading states for dropdowns
+  const [isBrandLoading, setIsBrandLoading] = useState(false);
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isISPLoading, setIsISPLoading] = useState(false);
+
   useEffect(() => {
     setDefaultLoading(true);
 
@@ -149,7 +155,15 @@ const CompetitonSalesReport = () => {
 
   const handleSearchChange = async (name, value) => {
     if (name === "brandId") {
+      setCompetitionModelData([]);
+      setIsCategoryLoading(true);
       // Clear dependent fields when brand changes
+      setSearchParams((prev) => ({
+        ...prev,
+        brandId: value,
+        categoryId: 0,
+        modelId: 0,
+      }));
 
       if (value) {
         try {
@@ -170,20 +184,22 @@ const CompetitonSalesReport = () => {
         } catch (error) {
           console.error("Error fetching categories:", error);
           setCompetitionCategoryData([]);
+        } finally {
+          setIsCategoryLoading(false);
         }
       } else {
-        setSearchParams((prev) => ({
-          ...prev,
-
-          categoryId: 0,
-          modelId: 0,
-        }));
-
         setCompetitionModelData([]);
         setCompetitionCategoryData([]);
+        setIsCategoryLoading(false);
       }
     } else if (name === "categoryId") {
+      setIsModelLoading(true);
       // Clear model when category changes
+      setSearchParams((prev) => ({
+        ...prev,
+        categoryId: value,
+        modelId: 0,
+      }));
 
       if (value) {
         try {
@@ -205,24 +221,23 @@ const CompetitonSalesReport = () => {
         } catch (error) {
           console.error("Error fetching models:", error);
           setCompetitionModelData([]);
+        } finally {
+          setIsModelLoading(false);
         }
       } else {
-        setSearchParams((prev) => ({
-          ...prev,
-          [name]: value,
-          modelId: 0,
-        }));
         setCompetitionModelData([]);
+        setIsModelLoading(false);
       }
+    } else {
+      setSearchParams((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
-
-    setSearchParams((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   const fetchCompetitionBrand = async () => {
+    setIsBrandLoading(true);
     let body = {
       dateFrom: null,
       dateTo: null,
@@ -239,16 +254,23 @@ const CompetitonSalesReport = () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsBrandLoading(false);
     }
   };
 
   const fetchISPForBindDropDown = async () => {
+    setIsISPLoading(true);
     try {
       let res = await ISPForBindDropDown();
       if (res.statusCode == 200) {
         setIspDropDown(res.ispForBindDropDownMasterList);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsISPLoading(false);
+    }
   };
 
   // Replace the existing generateDummyData function
@@ -708,6 +730,7 @@ const CompetitonSalesReport = () => {
                         }
                         placeholder="SELECT"
                         width="100%"
+                        loading={isISPLoading}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -740,6 +763,7 @@ const CompetitonSalesReport = () => {
                         }
                         placeholder="SELECT"
                         width="100%"
+                        loading={isBrandLoading}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -772,6 +796,7 @@ const CompetitonSalesReport = () => {
                               category.categoryId === searchParams.categoryId
                           ) || null
                         }
+                        loading={isCategoryLoading}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -799,9 +824,10 @@ const CompetitonSalesReport = () => {
                         value={competitionModelData.find(
                           (model) =>
                             model.competitionModelId == searchParams.modelId
-                        )}
+                        ) || null}
                         getOptionLabel={(option) => option.competitionModelName}
                         placeholder="SELECT"
+                        loading={isModelLoading}
                       />
                     </Grid>
 
@@ -927,7 +953,7 @@ const CompetitonSalesReport = () => {
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 320px)",
+              maxHeight: "calc(100vh - 50px)",
               overflow: "auto",
               position: "relative",
             }}

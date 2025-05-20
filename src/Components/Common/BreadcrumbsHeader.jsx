@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Breadcrumbs, Typography, Link, Stack, Grid, Divider } from "@mui/material";
+import {
+  Box,
+  Breadcrumbs,
+  Typography,
+  Link,
+  Stack,
+  Grid,
+  Divider,
+} from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { useLocation, Link as RouterLink } from "react-router-dom";
@@ -9,11 +17,11 @@ const formatBreadcrumbName = (name) => {
   // Convert camelCase or kebab-case to separate words and capitalize each word
   return name
     .split(/[-_]|(?=[A-Z])/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };
 
-const BreadcrumbsHeader = ({pageTitle}) => {
+const BreadcrumbsHeader = ({ pageTitle }) => {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
@@ -36,7 +44,11 @@ const BreadcrumbsHeader = ({pageTitle}) => {
             "&:hover": { textDecoration: "underline" },
           }}
         >
-          <img src={'./Icons/home.svg'} alt="logo" style={{ width: 15, height: 20 }} />
+          <img
+            src={"./Icons/home.svg"}
+            alt="logo"
+            style={{ width: 15, height: 20 }}
+          />
         </Link>
         {pathnames.map((name, index) => {
           const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
@@ -73,25 +85,26 @@ const BreadcrumbsHeader = ({pageTitle}) => {
           );
         })}
       </Breadcrumbs>
-      <Grid item xs={12} md={12} lg={12} mt={2}>
-          <Stack direction="row" spacing={0}>
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                fontFamily: "Manrope",
-                fontWeight: 700,
-                fontSize: "24px",
-                lineHeight: "28px",
-                letterSpacing: "0%",
-              }}
-              color={DARK_PURPLE}
-            >
-                {pageTitle}
-            </Typography>
-          </Stack>
-        </Grid>
-        <Divider sx={{ mt: 1 }} />
+      
+      <Grid item xs={12} md={12} lg={12} mt={1}>
+        <Stack direction="row" spacing={0}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontFamily: "Manrope",
+              fontWeight: 700,
+              fontSize: "24px",
+              lineHeight: "28px",
+              letterSpacing: "0%",
+            }}
+            color={DARK_PURPLE}
+          >
+            {pageTitle}
+          </Typography>
+        </Stack>
+      </Grid>
+      <Divider sx={{ mt: 1 }} />
     </Box>
   );
 };

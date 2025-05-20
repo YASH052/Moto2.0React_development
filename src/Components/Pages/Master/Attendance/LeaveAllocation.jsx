@@ -1,5 +1,11 @@
-import { Grid, Typography, Button, FormHelperText } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import {
+  Grid,
+  Typography,
+  Button,
+  FormHelperText,
+  Skeleton,
+} from "@mui/material";
+import React, { useEffect, useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -47,6 +53,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import { TableRowSkeleton } from "../../../Common/Skeletons";
 
 const LeaveAllocation = () => {
+  const detailTableRef = useRef(null);
+  const [isEditMode, setIsEditMode] = React.useState(false);
   // Define table columns
 
   const [activeTab, setActiveTab] = React.useState("leave-allocation");
@@ -57,6 +65,8 @@ const LeaveAllocation = () => {
   const [title, setTitle] = React.useState("");
   const [leaveTypeDrop, setLeaveTypeDrop] = React.useState([]);
   const [accordionExpanded, setAccordionExpanded] = React.useState(true);
+  const [viewAccordionExpanded, setViewAccordionExpanded] =
+    React.useState(false);
   const [isTableLoading, setIsTableLoading] = React.useState(false);
   const [errors, setErrors] = React.useState({});
   const validateField = (name, value) => {
@@ -82,6 +92,8 @@ const LeaveAllocation = () => {
 
     { label: "Leave Type", value: "leave-type" },
     { label: "Leave Allocation", value: "leave-allocation" },
+    { label: "Manage", value: "manage" },
+    { label: "IMEI Binding", value: "imei-binding" },
   ];
   const [searchParams, setSearchParams] = useState({
     roleId: 0,
@@ -123,7 +135,7 @@ const LeaveAllocation = () => {
   // Replace the existing dummy data with this more realistic data
 
   const [rows, setRows] = React.useState([]);
-  const [filteredRows, setFilteredRows] = React.useState(rows);
+  const [filteredRows, setFilteredRows] = React.useState([]);
 
   const handleChangePage = (event, newPage) => {
     setSearchParams((prev) => ({
@@ -155,14 +167,15 @@ const LeaveAllocation = () => {
       } else {
         // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...rows]); // Reset to original data
         return;
       }
     }
 
     setSortConfig({ key: columnName, direction });
 
-    const sortedRows = [...filteredRows].sort((a, b) => {
+    const sortedRows = [...rows].sort((a, b) => {
+      if (!a[columnName] && !b[columnName]) return 0;
       if (!a[columnName]) return 1;
       if (!b[columnName]) return -1;
 
@@ -179,6 +192,22 @@ const LeaveAllocation = () => {
     });
 
     setFilteredRows(sortedRows);
+  };
+
+  const TableSkeleton = ({ columns }) => {
+    return Array(1)
+      .fill(0)
+      .map((_, rowIndex) => (
+        <TableRow key={rowIndex}>
+          {Array(columns)
+            .fill(0)
+            .map((_, colIndex) => (
+              <TableCell key={colIndex}>
+                <Skeleton animation="wave" height={"35px"} />
+              </TableCell>
+            ))}
+        </TableRow>
+      ));
   };
 
   // Update the search button click handler
@@ -199,12 +228,63 @@ const LeaveAllocation = () => {
   const fetchData = async (body) => {
     setIsTableLoading(true);
     try {
-      // Clear existing data before fetching new data
-
       let res = await GetAllotedLeaveList(body);
       if (res.statusCode == 200) {
-        setRows(res.allottedLeaveList || []);
-        setFilteredRows(res.allottedLeaveList || []);
+        if (body.pageIndex === 1) {
+          // If it's the first page, replace the data
+          setRows(res.allottedLeaveList || []);
+          // Apply current sort if exists
+          if (sortConfig.key) {
+            const sortedData = [...(res.allottedLeaveList || [])].sort(
+              (a, b) => {
+                if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
+                if (!a[sortConfig.key]) return 1;
+                if (!b[sortConfig.key]) return -1;
+
+                const aValue = a[sortConfig.key].toString().toLowerCase();
+                const bValue = b[sortConfig.key].toString().toLowerCase();
+
+                if (aValue < bValue) {
+                  return sortConfig.direction === "asc" ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                  return sortConfig.direction === "asc" ? 1 : -1;
+                }
+                return 0;
+              }
+            );
+            setFilteredRows(sortedData);
+          } else {
+            setFilteredRows(res.allottedLeaveList || []);
+          }
+        } else {
+          // For subsequent pages, append the new data
+          setRows(res.allottedLeaveList);
+          // Apply current sort if exists
+          if (sortConfig.key) {
+            const sortedData = [...(res.allottedLeaveList || [])].sort(
+              (a, b) => {
+                if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
+                if (!a[sortConfig.key]) return 1;
+                if (!b[sortConfig.key]) return -1;
+
+                const aValue = a[sortConfig.key].toString().toLowerCase();
+                const bValue = b[sortConfig.key].toString().toLowerCase();
+
+                if (aValue < bValue) {
+                  return sortConfig.direction === "asc" ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                  return sortConfig.direction === "asc" ? 1 : -1;
+                }
+                return 0;
+              }
+            );
+            setFilteredRows(sortedData);
+          } else {
+            setFilteredRows(res.allottedLeaveList);
+          }
+        }
         setTotalRecords(res.totalRecords || 0);
       } else {
         setShowStatus(true);
@@ -244,7 +324,11 @@ const LeaveAllocation = () => {
     try {
       let res = await GetRoleList();
       if (res.statusCode == 200) {
-        setRoleDrop(res.roleList || []);
+        // Filter for ISP roles only
+        const ispRoles = res.roleList.filter((role) =>
+          role.roleName.toLowerCase().includes("isp")
+        );
+        setRoleDrop(ispRoles || []);
       } else {
         setRoleDrop([]);
       }
@@ -258,7 +342,10 @@ const LeaveAllocation = () => {
     // Only allow numbers for leave type fields
     if (leaveTypeDrop.some((lt) => lt.leaveTypeCode === field)) {
       const numericValue = value.replace(/[^0-9]/g, "");
-      setFormData({ ...formData, [field]: numericValue });
+      // Limit to 3 digits
+      if (numericValue.length <= 3) {
+        setFormData({ ...formData, [field]: numericValue });
+      }
     } else {
       setFormData({ ...formData, [field]: value });
     }
@@ -280,10 +367,17 @@ const LeaveAllocation = () => {
       newErrors.roleId = "Please select a role";
     }
 
-    // Validate Leave Types
+    // Validate at least one leave type is selected
+    const hasLeaveType = leaveTypeDrop.some((leaveType) => {
+      const value = formData[leaveType.leaveTypeCode];
+      return value && parseInt(value) > 0;
+    });
+
+    if (!hasLeaveType) {
+      newErrors.leaveTypes = "Please enter at least one leave type";
+    }
 
     setErrors(newErrors);
-    console.log("newErrors", newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -316,6 +410,15 @@ const LeaveAllocation = () => {
         setTitle(res.statusMessage);
         handleCancel();
         setErrors({}); // Clear errors on successful submission
+
+        // Refresh the table data
+        const currentPage = page;
+        const body = {
+          roleId: searchParams.roleId,
+          pageIndex: currentPage,
+          pageSize: searchParams.pageSize,
+        };
+        fetchData(body);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -341,7 +444,8 @@ const LeaveAllocation = () => {
         return acc;
       }, {}),
     });
-    setErrors({}); // Clear errors when canceling
+    setErrors({});
+    setIsEditMode(false);
   };
 
   const handleClearStatus = () => {
@@ -374,6 +478,11 @@ const LeaveAllocation = () => {
       pageIndex: 1,
       pageSize: 10,
     });
+    setSearchParams({
+      roleId: 0,
+      pageIndex: 1,
+      pageSize: 10,
+    });
   };
 
   // Add state for jump to page input
@@ -396,6 +505,21 @@ const LeaveAllocation = () => {
     }
   };
 
+  // Replace the accordion expansion handlers with these new ones
+  const handleCreateAccordionChange = (event, expanded) => {
+    setAccordionExpanded(expanded);
+    if (expanded) {
+      setViewAccordionExpanded(false);
+    }
+  };
+
+  const handleViewAccordionChange = (event, expanded) => {
+    setViewAccordionExpanded(expanded);
+    if (expanded) {
+      setAccordionExpanded(false);
+    }
+  };
+
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
       {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
@@ -410,11 +534,11 @@ const LeaveAllocation = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Attendance" />
         </Grid>
 
-        <Grid item xs={12} ml={1}>
+        <Grid item xs={12} ml={0}>
           <TabsBar
             tabs={tabs}
             activeTab={activeTab}
@@ -435,11 +559,12 @@ const LeaveAllocation = () => {
           <Grid container spacing={2} direction="column">
             <Grid item>
               <NuralAccordion2
-                title="create"
+                ref={detailTableRef}
+                title="Create"
                 backgroundColor={LIGHT_GRAY2}
                 controlled={true}
                 expanded={accordionExpanded}
-                onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                onChange={handleCreateAccordionChange}
               >
                 {/* First Row - 3 NuralAutocomplete */}
                 <Grid
@@ -451,7 +576,7 @@ const LeaveAllocation = () => {
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
-                  <Grid item xs={12} sm={6} md={12} lg={12}>
+                  <Grid item xs={12} sm={6} md={12} lg={12} ref={detailTableRef}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -542,6 +667,19 @@ const LeaveAllocation = () => {
                       />
                     </Grid>
                   ))}
+                  {errors.leaveTypes && (
+                    <Grid item xs={12}>
+                      <FormHelperText
+                        sx={{
+                          color: "error.main",
+                          marginLeft: 0,
+                          fontSize: "10px",
+                        }}
+                      >
+                        {errors.leaveTypes}
+                      </FormHelperText>
+                    </Grid>
+                  )}
                 </Grid>
 
                 {/* Second Row */}
@@ -573,7 +711,7 @@ const LeaveAllocation = () => {
                   </Grid>
                   <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
-                      text="SAVE"
+                      text={isEditMode ? "UPDATE" : "SAVE"}
                       variant="contained"
                       color={AQUA_DARK}
                       height="36px"
@@ -601,8 +739,14 @@ const LeaveAllocation = () => {
       </Grid>
 
       {/* Add this after the NuralAccordion2 component */}
-      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-        <NuralAccordion2 title="View" backgroundColor={"white"} padding={"0px"}>
+      <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } ,mt:-2}}>
+        <NuralAccordion2
+          title="View"
+          controlled={true}
+          padding={"0px"}
+          expanded={viewAccordionExpanded}
+          onChange={handleViewAccordionChange}
+        >
           <Grid
             container
             spacing={2}
@@ -671,13 +815,15 @@ const LeaveAllocation = () => {
               </NuralTextButton>
             </Grid>
           </Grid>
+        </NuralAccordion2>
+        {viewAccordionExpanded && (
           <Grid item xs={12}>
             <TableContainer
               component={Paper}
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+                maxHeight: "calc(100vh - 50px)", // Add max height for scrolling
                 overflow: "auto",
               }}
             >
@@ -690,7 +836,7 @@ const LeaveAllocation = () => {
                         backgroundColor: LIGHT_GRAY2,
                         position: "sticky",
                         top: 0,
-                        zIndex: 1100,
+                        zIndex: 110,
                         borderBottom: "none",
                       }}
                     >
@@ -717,7 +863,7 @@ const LeaveAllocation = () => {
                         position: "sticky",
                         top: "48px",
                         backgroundColor: LIGHT_GRAY2,
-                        zIndex: 1100,
+                        zIndex: 100,
                       }}
                     >
                       <Grid container alignItems="center" spacing={1}>
@@ -728,27 +874,27 @@ const LeaveAllocation = () => {
                       (header, index) => (
                         <TableCell
                           key={header}
-                          onClick={() =>
-                            handleSort(
-                              header === "ROLE"
-                                ? "roleName"
-                                : header === "LEAVE TYPE"
-                                ? "leaveTypeName"
-                                : "noOfLeave"
-                            )
-                          }
+                          // onClick={() =>
+                          //   handleSort(
+                          //     header === "ROLE"
+                          //       ? "roleName"
+                          //       : header === "LEAVE TYPE"
+                          //       ? "leaveTypeName"
+                          //       : "noOfLeave"
+                          //   )
+                          // }
                           sx={{
                             ...tableHeaderStyle,
                             cursor: "pointer",
                             position: "sticky",
                             top: "48px",
                             backgroundColor: LIGHT_GRAY2,
-                            zIndex: 1100,
+                            zIndex: 100,
                           }}
                         >
                           <Grid container alignItems="center" spacing={1}>
                             <Grid item>{header}</Grid>
-                            <Grid
+                            {/* <Grid
                               item
                               sx={{ display: "flex", alignItems: "center" }}
                             >
@@ -782,7 +928,7 @@ const LeaveAllocation = () => {
                                   />
                                 </Grid>
                               )}
-                            </Grid>
+                            </Grid> */}
                           </Grid>
                         </TableCell>
                       )
@@ -793,7 +939,7 @@ const LeaveAllocation = () => {
                         position: "sticky",
                         top: "48px",
                         backgroundColor: LIGHT_GRAY2,
-                        zIndex: 1100,
+                        zIndex: 100,
                       }}
                     >
                       <Grid container alignItems="center" spacing={1}>
@@ -804,18 +950,7 @@ const LeaveAllocation = () => {
                 </TableHead>
                 <TableBody>
                   {isTableLoading ? (
-                    <Typography
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        textAlign: "center",
-                      }}
-                    >
-                      loading....
-                    </Typography>
+                    <TableSkeleton columns={5} />
                   ) : filteredRows.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
@@ -861,7 +996,13 @@ const LeaveAllocation = () => {
                         >
                           {row.noOfLeave}
                         </TableCell>
-                        <TableCell>
+                        <TableCell
+                          sx={{
+                            ...rowstyle,
+                            color: PRIMARY_BLUE2,
+                            fontWeight: 400,
+                          }}
+                        >
                           <IconButton
                             size="small"
                             onClick={() => {
@@ -870,9 +1011,18 @@ const LeaveAllocation = () => {
                                 [row.leaveTypeCode]: row.noOfLeave.toString(),
                               });
                               setAccordionExpanded(true);
+                              setIsEditMode(true);
+                              setTimeout(() => {
+                                detailTableRef.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center"
+                                });
+                              }, 300);
                             }}
                           >
-                            <EditIcon sx={{ color: PRIMARY_BLUE2 }} />
+                            <EditIcon
+                              sx={{ color: PRIMARY_BLUE2, fontSize: 16 }}
+                            />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -1079,7 +1229,7 @@ const LeaveAllocation = () => {
               </Grid>
             </TableContainer>
           </Grid>
-        </NuralAccordion2>
+        )}
       </Grid>
     </Grid>
   );

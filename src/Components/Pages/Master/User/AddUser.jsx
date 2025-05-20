@@ -1,7 +1,6 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
-import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
-import TabsBar from "../../../Common/TabsBar";
+import { Grid, Typography } from "@mui/material";
+import React, { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import {
   AQUA,
@@ -10,215 +9,413 @@ import {
   LIGHT_GRAY2,
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
   WHITE,
 } from "../../../Common/colors";
 import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
+
 import NuralButton from "../../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
-  IconButton,
-  Checkbox,
-} from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+
+import { Checkbox } from "@mui/material";
+
 import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
+
 import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
-import { useNavigate } from "react-router-dom";
+
 import StatusModel from "../../../Common/StatusModel";
+import useHttp from "../../../../hooks.js/use-http";
+import { UserMasterAPI } from "../Competiton/api";
+import Required from "../../../Common/Required";
 
 const radioOptions = [
   { value: "yes", label: "Interface" },
   { value: "no", label: "Batch" },
 ];
+const labelStyle = {
+  fontSize: "10px",
+  lineHeight: "13.66px",
+  letterSpacing: "4%",
+  color: PRIMARY_BLUE2,
+  marginBottom: "5px",
+  fontWeight: 400,
+};
 
-const AddUser = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = React.useState("add-user");
-  const [selectedValue, setSelectedValue] = React.useState(null);
-  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
-  const tabbs = [
-    { label: "Add Location", value: "add-location" },
-    { label: "View Location", value: "view-location" },
-    { label: "Add User", value: "add-user" },
-    { label: "View User", value: "view-user" },
-  ];
-
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: PRIMARY_BLUE2,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
-
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
-
-  const options2 = [
-    "LOCATION 1",
-    "LOCATION 2",
-    "LOCATION 3",
-    "LOCATION 4",
-    "LOCATION 5",
-  ];
-
-  // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
+const AddUser = ({
+  editingUser,
+  onCancelEdit,
+  onCreationSuccess,
+  isExpanded,
+  onAccordionChange,
+}) => {
+  const [status, setStatus] = React.useState(null);
+  const [statusMessage, setStatusMessage] = React.useState(null);
+  const statusTimerRef = useRef(null);
+  const [roleList, setRoleList] = React.useState([]);
+  const [locationList, setLocationList] = React.useState([]);
+  const api = useHttp();
+  const [userFormData, setUserFormData] = React.useState({
+    newUserId: 0,
+    userLoginName: "",
+    password: "",
+    userRoleId: 0,
+    firstName: "",
+    lastName: "",
+    displayName: "",
+    emailId: "",
+    status: 1,
+    selectedRegions: "",
+    isUserMapped: 1,
+    allowAllHierarchy: 0,
+    mobileNumber: "",
+    AltmobileNumber: "",
   });
 
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const regions = ["North", "South", "East", "West", "Central"];
-    const states = [
-      "Maharashtra",
-      "Gujarat",
-      "Karnataka",
-      "Tamil Nadu",
-      "Delhi",
-    ];
-    const saleTypes = ["Direct", "Distributor", "Online", "Retail"];
-    const serialTypes = ["A123", "B456", "C789", "D012", "E345"];
+  const [errors, setErrors] = React.useState({
+    firstName: "",
+    mobileNumber: "",
+    AltmobileNumber: "",
+    emailId: "",
+    userLoginName: "",
+    password: "",
+  });
 
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        column1: saleTypes[Math.floor(Math.random() * saleTypes.length)],
-        column2: regions[Math.floor(Math.random() * regions.length)],
-        column3: states[Math.floor(Math.random() * states.length)],
-        column4: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-        column5: Math.floor(Math.random() * 10000000),
-        column6: serialTypes[Math.floor(Math.random() * serialTypes.length)],
-        column7: `Product-${Math.floor(Math.random() * 100)}`,
-        column8: Math.floor(Math.random() * 100),
-        column9: `Status-${Math.floor(Math.random() * 3)}`,
-      }));
+  const [selectedLocations, setSelectedLocations] = React.useState([]);
+
+  const handleLocationToggle = (location) => {
+    if (location.status === 0) {
+      setSelectedLocations((prev) => {
+        if (prev.includes(location.orgnhierarchyID)) {
+          return prev.filter((id) => id !== location.orgnhierarchyID);
+        } else {
+          return [...prev, location.orgnhierarchyID];
+        }
+      });
+    }
   };
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
+  const validateField = (field, value) => {
+    const newErrors = { ...errors };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    switch (field) {
+      case "firstName":
+        if (!value) {
+          newErrors.firstName = "Name is required";
+        } else if (value.length > 20) {
+          newErrors.firstName = "Name cannot exceed 20 characters";
+        } else if (!/^[a-zA-Z\s]+$/.test(value)) {
+          newErrors.firstName = "Name can only contain alphabets and spaces";
+        } else {
+          newErrors.firstName = "";
+        }
+        break;
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+      case "mobileNumber":
+        if (!value) {
+          newErrors.mobileNumber = "Mobile number is required";
+        } else if (!/^\d{10}$/.test(value)) {
+          newErrors.mobileNumber = "Mobile number must be 10 digits";
+        } else {
+          newErrors.mobileNumber = "";
+        }
+        break;
 
-  // Enhanced sorting function
-  const handleSort = (columnName) => {
-    let direction = "asc";
+      case "AltmobileNumber":
+        if (value && !/^\d{10}$/.test(value)) {
+          newErrors.AltmobileNumber =
+            "Alternate mobile number must be 10 digits";
+        } else {
+          newErrors.AltmobileNumber = "";
+        }
+        break;
 
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
-      }
+      case "emailId":
+        if (!value) {
+          newErrors.emailId = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          newErrors.emailId = "Please enter a valid email address";
+        } else {
+          newErrors.emailId = "";
+        }
+        break;
+
+      case "userLoginName":
+        if (!value) {
+          newErrors.userLoginName = "Login ID is required";
+        } else if (/\s/.test(value)) {
+          newErrors.userLoginName = "Login ID cannot contain spaces";
+        } else {
+          newErrors.userLoginName = "";
+        }
+        break;
+
+      case "password":
+        if (!value) {
+          newErrors.password = "Password is required";
+        } else if (/\s/.test(value)) {
+          newErrors.password = "Password cannot contain spaces";
+        } else {
+          newErrors.password = "";
+        }
+        break;
+
+      default:
+        break;
     }
 
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-    setFilteredRows(sortedRows);
+    setErrors(newErrors);
+    return newErrors[field] === "";
   };
 
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
+  const handleInputChange = (field, value) => {
+    setUserFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    validateField(field, value);
+  };
+
+  useEffect(() => {
+    api.sendRequest(
+      UserMasterAPI.roleDropdown,
+      (response) => {
+        console.log("Role response:", response.roleList);
+        if (response.statusCode === "200") {
+          setRoleList(response.roleList || []);
+        } else {
+          setRoleList([]);
+        }
+      },
+      null,
+      null,
+      (error) => {
+        console.error("Error fetching hierarchy data:", error);
+        setRoleList([]);
+      }
+    );
+  }, []);
+  useEffect(() => {
+    api.sendRequest(
+      UserMasterAPI.locationCheckList,
+      (response) => {
+        console.log("Role response:", response.availedLocationsList);
+        if (response.statusCode === "200") {
+          setLocationList(response.availedLocationsList || []);
+        } else {
+          setLocationList([]);
+        }
+      },
+      {
+        countryId: 0, //
+        roleId: userFormData.userRoleId,
+        selectionMode: 0, // 1= to get location list to edit
+        forUserId: 0, //send userId whose location list to get
+      },
+      null,
+      (error) => {
+        console.error("Error fetching hierarchy data:", error);
+        setLocationList([]);
+
+        const preCheckedIds = locationList
+          .filter((loc) => loc.status === 1)
+          .map((loc) => loc.orgnhierarchyID);
+        setSelectedLocations(preCheckedIds);
+      }
+    );
+  }, [userFormData.userRoleId]);
+
+  useEffect(() => {
+    if (editingUser) {
+      setUserFormData({
+        newUserId: editingUser.userID || 0,
+        userLoginName: editingUser.loginName || "",
+        password: editingUser.password || "", // Don't pre-fill password for security
+        userRoleId: editingUser.roleID || 0,
+        firstName: editingUser.firstName || "",
+        lastName: editingUser.lastName || "",
+        displayName: editingUser.displayName || "",
+        emailId: editingUser.email || "",
+        status: editingUser.status === "A" ? 1 : 0,
+        selectedRegions: editingUser.selectedRegions || "",
+        isUserMapped: editingUser.isUserMapped || 1,
+        allowAllHierarchy: editingUser.allowAllHierarchy || 0,
+        mobileNumber: editingUser.mobileNo || "",
+        AltmobileNumber: editingUser.AltmobileNo || "",
+      });
+      // TODO: Fetch and set selectedLocations based on editingUser
+      // This might require another API call or parsing existing data if available
+    }
+  }, [editingUser]);
+
+  const handlePostRequest = async () => {
+    // Validate all required fields
+    const newErrors = {};
+
+    // Validate name
+    if (!userFormData.firstName) {
+      newErrors.firstName = "Name is required";
+    } else if (userFormData.firstName.length > 20) {
+      newErrors.firstName = "Name cannot exceed 20 characters";
+    } else if (!/^[a-zA-Z\s]+$/.test(userFormData.firstName)) {
+      newErrors.firstName = "Name can only contain alphabets and spaces";
+    }
+
+    // Validate mobile number
+    if (!userFormData.mobileNumber) {
+      newErrors.mobileNumber = "Mobile number is required";
+    } else if (!/^\d{10}$/.test(userFormData.mobileNumber)) {
+      newErrors.mobileNumber = "Mobile number must be 10 digits";
+    }
+
+    // Validate alternate mobile number if provided
+    if (
+      userFormData.AltmobileNumber &&
+      !/^\d{10}$/.test(userFormData.AltmobileNumber)
+    ) {
+      newErrors.AltmobileNumber = "Alternate mobile number must be 10 digits";
+    }
+
+    // Validate email
+    if (!userFormData.emailId) {
+      newErrors.emailId = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userFormData.emailId)) {
+      newErrors.emailId = "Please enter a valid email address";
+    }
+
+    // Validate login ID
+    if (!userFormData.userLoginName) {
+      newErrors.userLoginName = "Login ID is required";
+    } else if (/\s/.test(userFormData.userLoginName)) {
+      newErrors.userLoginName = "Login ID cannot contain spaces";
+    }
+
+    // Validate password
+    if (!userFormData.password) {
+      newErrors.password = "Password is required";
+    } else if (/\s/.test(userFormData.password)) {
+      newErrors.password = "Password cannot contain spaces";
+    }
+
+    // Validate role
+    if (!userFormData.userRoleId) {
+      newErrors.userRoleId = "User role is required";
+    }
+
+    // Set errors if any validation failed
+    setErrors(newErrors);
+
+    // If there are no errors, proceed with the API call
+    if (Object.keys(newErrors).length === 0) {
+      const xmlData = selectedLocations
+        .map((id) => `<tblData><Value>${id}</Value></tblData>`)
+        .join("");
+      const selectedRegionsXML = `<DocumentElement>${xmlData}</DocumentElement>`;
+
+      const isCreating = !editingUser; // Check if creating before API call
+      const updatedFormData = {
+        ...userFormData,
+        selectedRegions: selectedRegionsXML,
+        newUserId: editingUser ? editingUser.userID : 0, // Use userID for update
+      };
+
+      api.sendRequest(
+        UserMasterAPI.saveUpdateUser,
+        (response) => {
+          console.log("Save User Response:", response);
+          setStatus(response.statusCode);
+          setStatusMessage(
+            response.statusMessage || "An unknown response occurred."
+          );
+
+          if (response.statusCode === "200") {
+            // Clear form data on success
+            setUserFormData({
+              newUserId: 0,
+              userLoginName: "",
+              password: "",
+              userRoleId: 0, // Reset role dropdown correctly
+              firstName: "",
+              lastName: "",
+              displayName: "",
+              emailId: "",
+              status: 1,
+              selectedRegions: "",
+              isUserMapped: 1,
+              allowAllHierarchy: 0,
+              mobileNumber: "",
+              AltmobileNumber: "",
+            });
+            setSelectedLocations([]);
+            setErrors({});
+            // Notify parent to clear editing state
+            if (onCancelEdit) {
+              onCancelEdit();
+            }
+            if (isCreating && onCreationSuccess) {
+              onCreationSuccess(); // Call refresh trigger only on create
+            }
+          }
+        },
+        updatedFormData, // Pass the formatted data
+        null,
+        (error) => {
+          console.error("Error saving user:", error);
+          setStatus("500");
+          setStatusMessage(error.message || "An error occurred while saving.");
+        }
       );
+    }
+  };
+
+  const handleCancel = (notifyParent = true) => {
+    setUserFormData({
+      newUserId: 0,
+      userLoginName: "",
+      password: "",
+      userRoleId: 0,
+      firstName: "",
+      lastName: "",
+      displayName: "",
+      emailId: "",
+      status: 1,
+      selectedRegions: "",
+      isUserMapped: 1,
+      allowAllHierarchy: 0,
+      mobileNumber: "",
+      AltmobileNumber: "",
     });
-
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
+    setSelectedLocations([]);
+    setErrors({});
+    setStatus(null);
+    setStatusMessage(null);
+    // Notify parent to clear editing state
+    if (notifyParent && onCancelEdit) {
+      onCancelEdit();
+    }
+    // Location list will automatically clear/update due to useEffect dependency on userRoleId
   };
 
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
+  // Add useEffect to handle auto-dismiss for success messages
+  useEffect(() => {
+    // Only set timer for success messages (status code 200)
+    if (status === "200") {
+      // Clear any existing timer
+      if (statusTimerRef.current) {
+        clearTimeout(statusTimerRef.current);
+      }
+
+      // Set new timer to clear status after 5 seconds
+      statusTimerRef.current = setTimeout(() => {
+        setStatus(null);
+        setStatusMessage(null);
+      }, 5000); // 5000ms = 5 seconds
+    }
+
+    // Cleanup function to clear timer when component unmounts or status changes
+    return () => {
+      if (statusTimerRef.current) {
+        clearTimeout(statusTimerRef.current);
+      }
     };
-    handleSearch(searchValues);
-  };
+  }, [status]); // Only run effect when status changes
 
   return (
     <Grid container spacing={2} sx={{ position: "relative" }}>
@@ -234,11 +431,11 @@ const AddUser = () => {
           <Grid container spacing={2} direction="column">
             <Grid item>
               <Grid item xs={12} sm={12} md={12} lg={12} mt={0.5}>
-                <NuralAccordion2 
+                <NuralAccordion2
                   title="Create User"
                   controlled={true}
-                  expanded={accordionExpanded}
-                  onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                  expanded={isExpanded}
+                  onChange={onAccordionChange}
                 >
                   <Typography
                     variant="h6"
@@ -295,82 +492,181 @@ const AddUser = () => {
                       >
                         USER ROLE
                       </Typography>
+
+                      {/*   {
+            "roleId": 90,
+            "roleName": "AccXchange"
+        }, 
+        
+                        <NuralAutocomplete
+                      options={hierarchyList}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.hierarchyLevelID === value?.hierarchyLevelID
+                      }
+                      getOptionLabel={(option) =>
+                        option?.hierarchyLevelName || ""
+                      }
+                      value={
+                        hierarchyList.find(
+                          (hierarchy) =>
+                            hierarchy.hierarchyLevelID ===
+                            orgFormData.hierarchyLevelID
+                        ) || null
+                      }
+                      onChange={(event, value) => {
+                        handleChange("hierarchyLevelID", value);
+                      }}
+                      label="Hierarchy"
+                      placeholder="SELECT"
+                      error={!!errors.hierarchyLevelID}
+                    />
+                    {errors.hierarchyLevelID && (
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ fontSize: "0.75rem" }}
+                      >
+                        {errors.hierarchyLevelID}
+                      </Typography>
+                    )}
+        
+        
+        
+        */}
                       <NuralAutocomplete
+                        options={roleList}
+                        isOptionEqualToValue={(option, value) =>
+                          option?.roleId === value?.roleId
+                        }
+                        getOptionLabel={(option) => option?.roleName || ""}
+                        value={
+                          roleList.find(
+                            (role) => role.roleId === userFormData.userRoleId
+                          ) || null
+                        }
+                        onChange={(event, value) => {
+                          setUserFormData({
+                            ...userFormData,
+                            userRoleId: value?.roleId,
+                          });
+                        }}
                         width="100%"
                         label="User Role"
-                        options={options}
                         placeholder="SELECT"
                       />
-                    </Grid>
-                    <Grid
-                      container
-                      spacing={2}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                       
-                        mt: 1,
-                        // ml: "2px",
-                      }}
-                    >
-                      {options2.map((option, index) => (
-                        <Grid
-                          item
-                          xs={12}
-                          md={3}
-                          lg={3}
-                          key={index}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            // gap: 1,
-                          }}
+                      {errors.userRoleId && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
                         >
-                          {/* Checkbox */}
-                          <Checkbox
-                            checked={selectedValue === option}
-                            onChange={() => setSelectedValue(option)}
-                            sx={{
-                              "&.Mui-checked": {},
-                              borderRadius: "8px",
-                            }}
-                          />
+                          {errors.userRoleId}
+                        </Typography>
+                      )}
+                    </Grid>
 
-                          {/* Country Name with Blue Background When Selected */}
-                          <Typography
-                            sx={{
-                              color: selectedValue === option ? WHITE : BLACK,
-                              backgroundColor:
-                                selectedValue === option
-                                  ? PRIMARY_BLUE
-                                  : "transparent",
-                              padding: "8px",
-                              paddingLeft: "10px",
-                              borderRadius: "8px",
-                              fontSize: "12px",
-                              fontWeight: 500,
-                              width: {
-                                xs: "100%",
-                                md: "226px",
-                              },
+                    {/* Conditional rendering for the location checklist */}
+                    {(() => {
+                      // Determine the list to render based on edit mode
+                      const listToRender = editingUser 
+                        ? locationList 
+                        : locationList.filter(loc => loc.status === 0);
 
-                              // height: "30px",
-                              textAlign: "left",
+                      // Only render the Grid container if there are items to show OR if editingUser is true (to show empty state if applicable)
+                      if (editingUser || listToRender.length > 0) {
+                        return (
+                          <Grid
+                            container
+                            spacing={2}
+                            sx={{
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              mt: 1,
                             }}
                           >
-                            {option}
-                          </Typography>
-                        </Grid>
-                      ))}
-                    </Grid>
+                            {listToRender.map((option, index) => (
+                              <Grid
+                                item
+                                xs={12}
+                                md={3}
+                                lg={3}
+                                key={index}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Checkbox
+                                  checked={
+                                    option.status === 1 ||
+                                    selectedLocations.includes(option.orgnhierarchyID)
+                                  }
+                                  disabled={option.status === 1}
+                                  onChange={() => handleLocationToggle(option)}
+                                  sx={{
+                                    "&.Mui-checked": {},
+                                    borderRadius: "8px",
+                                  }}
+                                />
+
+                                <Typography
+                                  sx={{
+                                    color:
+                                      option.status === 1 ||
+                                      selectedLocations.includes(
+                                        option.orgnhierarchyID
+                                      )
+                                        ? WHITE
+                                        : BLACK,
+                                    backgroundColor:
+                                      option.status === 1 ||
+                                      selectedLocations.includes(
+                                        option.orgnhierarchyID
+                                      )
+                                        ? PRIMARY_BLUE
+                                        : "transparent",
+                                    padding: "8px",
+                                    paddingLeft: "10px",
+                                    borderRadius: "8px",
+                                    fontSize: "12px",
+                                    fontWeight: 500,
+                                    width: {
+                                      xs: "100%",
+                                      md: "226px",
+                                    },
+                                    textAlign: "left",
+                                    opacity: option.status === 1 ? 0.5 : 1,
+                                  }}
+                                >
+                                  {option.locationName}
+                                </Typography>
+                              </Grid>
+                            ))}
+                          </Grid>
+                        );
+                      }
+                      return null; // Return null if no items and not in edit mode
+                    })()}
                   </Grid>
                 </NuralAccordion2>
               </Grid>
 
-            { accordionExpanded &&  <Grid item xs={12} sm={12} md={12} lg={12} mt={2} p={2} borderRadius={2} backgroundColor={LIGHT_GRAY2} border={`1px solid ${LIGHT_GRAY2}`} >
-                {/* <NuralAccordion2 title="User Details"> */}
-                <Typography
+              {isExpanded && selectedLocations.length > 0 && (
+                <Grid
+                  item
+                  xs={12}
+                  sm={12}
+                  md={12}
+                  lg={12}
+                  mt={2}
+                  p={2}
+                  borderRadius={2}
+                  backgroundColor={LIGHT_GRAY2}
+                  border={`1px solid ${LIGHT_GRAY2}`}
+                >
+                  {/* <NuralAccordion2 title="User Details"> */}
+                  <Typography
                     variant="h6"
                     sx={{
                       fontFamily: "Manrope",
@@ -388,7 +684,7 @@ const AddUser = () => {
                   >
                     User Details
                   </Typography>
-                  <Grid container spacing={4} pl={0}  >
+                  <Grid container spacing={4} pl={0}>
                     <Grid item xs={12} sm={6} md={4} lg={4}>
                       <Typography
                         variant="body1"
@@ -398,9 +694,26 @@ const AddUser = () => {
                         }}
                         fontWeight={600}
                       >
-                        NAME
+                        NAME <Required />
                       </Typography>
-                      <NuralTextField placeholder="Enter Name" width="100%" />
+                      <NuralTextField
+                        placeholder="Enter Name"
+                        width="100%"
+                        value={userFormData.firstName}
+                        onChange={(e) =>
+                          handleInputChange("firstName", e.target.value)
+                        }
+                        error={!!errors.firstName}
+                      />
+                      {errors.firstName && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.firstName}
+                        </Typography>
+                      )}
                     </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={4}>
                       <Typography
@@ -411,13 +724,27 @@ const AddUser = () => {
                         }}
                         fontWeight={600}
                       >
-                        MOBILE NO.
+                        MOBILE NO. <Required />
                       </Typography>
                       <NuralTextField
                         placeholder="Enter Mobile No."
                         width="100%"
+                        value={userFormData.mobileNumber}
+                        onChange={(e) =>
+                          handleInputChange("mobileNumber", e.target.value)
+                        }
+                        error={!!errors.mobileNumber}
                       />
-                    </Grid>{" "}
+                      {errors.mobileNumber && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.mobileNumber}
+                        </Typography>
+                      )}
+                    </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={4}>
                       <Typography
                         variant="body1"
@@ -432,8 +759,22 @@ const AddUser = () => {
                       <NuralTextField
                         placeholder="Enter Alternate Mobile No."
                         width="100%"
+                        value={userFormData.AltmobileNumber}
+                        onChange={(e) =>
+                          handleInputChange("AltmobileNumber", e.target.value)
+                        }
+                        error={!!errors.AltmobileNumber}
                       />
-                    </Grid>{" "}
+                      {errors.AltmobileNumber && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.AltmobileNumber}
+                        </Typography>
+                      )}
+                    </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={4} mt={-2}>
                       <Typography
                         variant="body1"
@@ -443,13 +784,27 @@ const AddUser = () => {
                         }}
                         fontWeight={600}
                       >
-                        EMAIL ID
+                        EMAIL ID <Required />
                       </Typography>
                       <NuralTextField
                         placeholder="Enter Email ID"
                         width="100%"
+                        value={userFormData.emailId}
+                        onChange={(e) =>
+                          handleInputChange("emailId", e.target.value)
+                        }
+                        error={!!errors.emailId}
                       />
-                    </Grid>{" "}
+                      {errors.emailId && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.emailId}
+                        </Typography>
+                      )}
+                    </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={4} mt={-2}>
                       <Typography
                         variant="body1"
@@ -459,13 +814,27 @@ const AddUser = () => {
                         }}
                         fontWeight={600}
                       >
-                        LOGIN ID
+                        LOGIN ID <Required />
                       </Typography>
                       <NuralTextField
                         placeholder="Enter Login ID"
                         width="100%"
+                        value={userFormData.userLoginName}
+                        onChange={(e) =>
+                          handleInputChange("userLoginName", e.target.value)
+                        }
+                        error={!!errors.userLoginName}
                       />
-                    </Grid>{" "}
+                      {errors.userLoginName && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.userLoginName}
+                        </Typography>
+                      )}
+                    </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={4} mt={-2}>
                       <Typography
                         variant="body1"
@@ -475,30 +844,72 @@ const AddUser = () => {
                         }}
                         fontWeight={600}
                       >
-                        PASSWORD
+                        PASSWORD <Required />
                       </Typography>
-                      <NuralTextField
+                      {/* <NuralTextField
                         placeholder="Enter Password"
                         width="100%"
+                        value={userFormData.password}
+                        onChange={(e) =>
+                          handleInputChange("password", e.target.value)
+                        }
+                        error={!!errors.password}
                       />
+                      {errors.password && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {errors.password}
+                        </Typography>
+                      )}
+                       */}
+                      <NuralTextField
+                        value={userFormData.password}
+                        onChange={(e) =>
+                          handleInputChange("password", e.target.value)
+                        }
+                        width="100%"
+                        placeholder="ENTER PASSWORD"
+                        error={!!errors.password}
+                        type="password"
+                      />
+                      {errors.password && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{
+                            fontSize: "0.75rem",
+                            mt: 0.5,
+                            display: "block",
+                          }}
+                        >
+                          {errors.password}
+                        </Typography>
+                      )}
                     </Grid>
                   </Grid>
 
-                  
-                 
-                  
-                {/* </NuralAccordion2> */}
-              </Grid>}
+                  {/* </NuralAccordion2> */}
+                </Grid>
+              )}
 
               <Grid item xs={12} sm={12} md={12} lg={12} pr={2} mt={0.5}>
-                <StatusModel
-                  width="100%"
-                  status="200"
-                  title="New Upload Verified"
-                />
+                {status && (
+                  <StatusModel
+                    width="100%"
+                    status={status}
+                    title={statusMessage}
+                    onClose={() => {
+                      setStatus(null);
+                      setStatusMessage("");
+                    }}
+                  />
+                )}
               </Grid>
 
-              {accordionExpanded && (
+              {isExpanded && selectedLocations.length > 0 && (
                 <Grid
                   container
                   spacing={1}
@@ -516,19 +927,19 @@ const AddUser = () => {
                       fontSize="12px"
                       height="36px"
                       borderColor={PRIMARY_BLUE2}
-                      onClick={() => console.log("Upload clicked")}
+                      onClick={() => handleCancel(true)}
                       width="100%"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={6}>
                     <NuralButton
-                      text="SAVE"
+                      text={editingUser ? "UPDATE" : "SAVE"}
                       variant="contained"
                       color={PRIMARY_BLUE2}
                       fontSize="12px"
                       height="36px"
                       backgroundColor={AQUA}
-                      onClick={() => console.log("Upload clicked")}
+                      onClick={handlePostRequest}
                       width="100%"
                     />
                   </Grid>
@@ -540,6 +951,18 @@ const AddUser = () => {
       </Grid>
     </Grid>
   );
+};
+
+AddUser.propTypes = {
+  editingUser: PropTypes.object,
+  onCancelEdit: PropTypes.func.isRequired,
+  onCreationSuccess: PropTypes.func.isRequired,
+  isExpanded: PropTypes.bool.isRequired,
+  onAccordionChange: PropTypes.func.isRequired,
+};
+
+AddUser.defaultProps = {
+  editingUser: null,
 };
 
 export default AddUser;

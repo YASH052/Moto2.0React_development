@@ -53,8 +53,8 @@ const StockAdjustmentReason = () => {
   const tabbs = [
     { label: "GRN", value: "grn" },
     { label: "Stock Adjustment Reason", value: "stock-adjustment-reason" },
-    { label: "Serial No. Movement", value: "serial-no-moment" },
     { label: "AI Norms", value: "ai-norms" },
+    { label: "Demo Conversion", value: "demo-conversion" },
   ];
   const navigate = useNavigate();
   const labelStyle = {

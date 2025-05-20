@@ -28,6 +28,7 @@ import secureLocalStorage from "react-secure-storage";
 import { MenuConstants } from "../../../Common/MenuConstants";
 import { UploadContentSkeleton } from "../../../Common/SkeletonComponents";
 import { templateUrl } from "../../../Common/urls";
+
 const options = [
   { value: "interface", label: "Interface" },
   { value: "batch", label: "Batch" },
@@ -37,6 +38,7 @@ const log = JSON.parse(localStorage.getItem("log")) || {};
 
 const SalesExcel = () => {
   const [activeTab, setActiveTab] = React.useState("add-sales-channel");
+  const [showStatus, setShowStatus] = React.useState(false);
   const navigate = useNavigate();
   const [status, setStatus] = React.useState(null);
   const [title, setTitle] = React.useState(null);
@@ -44,6 +46,8 @@ const SalesExcel = () => {
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [resetFile, setResetFile] = React.useState(false);
+
   const tabs = [
     { label: "Add", value: "add-sales-channel" },
     { label: "Search", value: "sales-channel-view" },
@@ -52,12 +56,17 @@ const SalesExcel = () => {
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Download Sales channel template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
         setIsLoading(true);
         setTimeout(() => {
           window.location.href = `${templateUrl}UploadSalesChannel.xlsx`;
+          setShowStatus(true);
+          setStatus("200");
+          setTitle("Template downloaded successfully");
+          setTimeout(handleClearStatus, 5000);
+
           setIsLoading(false);
         }, 1000);
       },
@@ -73,9 +82,9 @@ const SalesExcel = () => {
     console.log("Selected value:", value);
     setSelectedFormat(value);
     if (value === "interface") {
-      navigate("#");
+      navigate("/add-sales-channel");
     } else if (value === "batch") {
-      navigate("#");
+      navigate("/sales-excel");
     }
   };
 
@@ -85,13 +94,17 @@ const SalesExcel = () => {
       let res = await GetStockBinTypeInfo();
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(handleClearStatus, 5000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
@@ -110,13 +123,17 @@ const SalesExcel = () => {
       let res = await getSalesChannelExcelReferenceDataLink(body);
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(handleClearStatus, 5000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.statusCode);
       setTitle(error.statusMessage);
       console.log(error);
@@ -129,6 +146,7 @@ const SalesExcel = () => {
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
+      setShowStatus(true);
       setStatus(String(400));
       setTitle("Please select a file to upload");
       return;
@@ -143,19 +161,24 @@ const SalesExcel = () => {
     try {
       let res = await UploadSalesChannelMasterMoto(formData);
       if (res.statusCode == 200) {
-        fileInput.value = "";
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(() => {
+          handleClearStatus();
+        }, 5000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(String(error.status));
       setTitle(MenuConstants.somethingWentWrong);
       console.log(error);
@@ -166,8 +189,16 @@ const SalesExcel = () => {
   };
 
   const handleClearStatus = () => {
+    setShowStatus(false);
     setStatus(null);
     setTitle(null);
+    setResetFile(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
   };
 
   React.useEffect(() => {
@@ -178,10 +209,6 @@ const SalesExcel = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // if (isLoading) {
-  //   return <UploadContentSkeleton />;
-  // }
-
   return (
     <Grid container spacing={0}>
       <Grid
@@ -189,7 +216,7 @@ const SalesExcel = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",
@@ -232,7 +259,6 @@ const SalesExcel = () => {
                   width="100%"
                   onClickBin={handleBinCodeClick}
                   onClickReference={handleReferenceClick}
-                  // referenceIcon1={"./Icons/downloadIcon.svg"}
                   referenceIcon2={"./Icons/downloadIcon.svg"}
                   title="Templates"
                   templates={templates}
@@ -252,10 +278,11 @@ const SalesExcel = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
+                {showStatus && (
                   <StatusModel
                     width="100%"
                     status={status}
@@ -266,7 +293,7 @@ const SalesExcel = () => {
               </Grid>
               <Grid item>
                 <Grid container spacing={1}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
@@ -276,7 +303,7 @@ const SalesExcel = () => {
                       disabled={isUploading}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
                       text={isUploading ? "UPLOADING..." : "PROCEED"}
                       backgroundColor={AQUA}

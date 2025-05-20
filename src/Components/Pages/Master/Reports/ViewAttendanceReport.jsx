@@ -668,7 +668,7 @@ const ViewAttendanceReport = () => {
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 200px)", // Adjusted to account for headers
+                maxHeight: "calc(100vh - 50px)", // Adjusted to account for headers
                 overflow: "auto",
                 position: "relative",
                 "& .MuiTable-root": {

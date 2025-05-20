@@ -1,4 +1,11 @@
-import { Box, /*Button,*/ Checkbox, Grid, Typography, Switch, Skeleton } from "@mui/material";
+import {
+  Box,
+  /*Button,*/ Checkbox,
+  Grid,
+  Typography,
+  Switch,
+  Skeleton,
+} from "@mui/material";
 import React, { useState, useEffect, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
@@ -26,8 +33,16 @@ import NuralButton from "../../NuralCustomComponents/NuralButton";
 // import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"; // Unused
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle, toggleSectionStyle } from "../../../Common/commonstyles";
-import { getbrandlist, GetCategoryList, ManageProductCategory } from "../../../Api/Api";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
+import {
+  getbrandlist,
+  GetCategoryList,
+  ManageProductCategory,
+} from "../../../Api/Api";
 // Add imports for activity panel and export
 import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
 import NuralExport from "../../NuralCustomComponents/NuralExport";
@@ -36,7 +51,7 @@ const tabs = [
   { label: "Upload", value: "product-bulk-upload" },
   { label: "Brand", value: "brand" },
   { label: "Category", value: "category" },
-  { label: "Sub Category", value: "sub-category" },   
+  { label: "Sub Category", value: "sub-category" },
   { label: "Model", value: "model" },
   { label: "Color", value: "color" },
   { label: "SKU", value: "sku" },
@@ -115,14 +130,15 @@ const CategoryPage = () => {
   // Add form validation
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Category Name validation
     if (!formData.categoryName || formData.categoryName.trim() === "") {
       newErrors.categoryName = "Category Name is required";
     } else if (formData.categoryName.length > 50) {
       newErrors.categoryName = "Category Name cannot exceed 50 characters";
     } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.categoryName)) {
-      newErrors.categoryName = "Category Name can only contain alphanumeric characters and spaces";
+      newErrors.categoryName =
+        "Category Name can only contain alphanumeric characters and spaces";
     }
 
     // Category Code validation
@@ -131,7 +147,8 @@ const CategoryPage = () => {
     } else if (formData.categoryDesc.length > 50) {
       newErrors.categoryDesc = "Category Code cannot exceed 50 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.categoryDesc)) {
-      newErrors.categoryDesc = "Category Code can only contain alphanumeric characters (no spaces)";
+      newErrors.categoryDesc =
+        "Category Code can only contain alphanumeric characters (no spaces)";
     }
 
     // Brand selection validation
@@ -146,11 +163,11 @@ const CategoryPage = () => {
   // Add new state for selected brands
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [tableLoading, setTableLoading] = useState(false);
-  const [status,setStatus] = useState(null);
-  const [title,setTitle] = useState(null);
-  const [searchStatus,setSearchStatus] = useState(null);
-  const [searchTitle,setSearchTitle] = useState(null);
-  const [totalRecords,setTotalRecords] = useState(0);
+  const [status, setStatus] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [searchStatus, setSearchStatus] = useState(null);
+  const [searchTitle, setSearchTitle] = useState(null);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Add new state variables at the top with other state declarations
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
@@ -180,7 +197,7 @@ const CategoryPage = () => {
     });
     // Clear brand error when a brand is selected
     if (errors.brands) {
-      setErrors(prev => ({ ...prev, brands: undefined }));
+      setErrors((prev) => ({ ...prev, brands: undefined }));
     }
   };
 
@@ -342,9 +359,11 @@ const CategoryPage = () => {
       pageIndex: 1,
       pageSize: 10,
     };
-    Promise.all([getCategoryList(defaultParams), getBrandDropdown()]).finally(() => {
-      setSearchFormLoading(false);
-    });
+    Promise.all([getCategoryList(defaultParams), getBrandDropdown()]).finally(
+      () => {
+        setSearchFormLoading(false);
+      }
+    );
   };
 
   // Update useEffect to initialize data
@@ -368,7 +387,7 @@ const CategoryPage = () => {
       getCategoryDropdown();
     } else {
       setCategoryList([]);
-      setSearchParams(prev => ({ ...prev, categoryID: 0 }));
+      setSearchParams((prev) => ({ ...prev, categoryID: 0 }));
     }
   }, [searchParams.brandID]);
 
@@ -445,7 +464,9 @@ const CategoryPage = () => {
       if (response.statusCode === "200") {
         window.location.href = response?.reportLink;
         setSearchStatus(response.statusCode);
-        setSearchTitle(response.statusMessage || "File downloaded successfully");
+        setSearchTitle(
+          response.statusMessage || "File downloaded successfully"
+        );
         setTimeout(() => {
           setSearchStatus(null);
           setSearchTitle(null);
@@ -479,29 +500,33 @@ const CategoryPage = () => {
         const requestData = {
           categoryName: formData.categoryName,
           categoryDesc: formData.categoryDesc,
-          brandID: selectedBrands.map(brand => brand.brandID).join(','),
+          brandID: selectedBrands.map((brand) => brand.brandID).join(","),
           active: formData.active || 1,
           callType: formData.callType,
-          categoryID: formData.categoryID
+          categoryID: formData.categoryID,
         };
 
         const response = await ManageProductCategory(requestData);
-        
+
         if (response.statusCode === "200") {
-          setStatus(response.statusCode);
-          setTitle(response.statusMessage || (formData.callType === 1 ? "Category updated successfully" : "Category created successfully"));
+          setStatus(response.statusCode || "200");
+          setTitle(response.statusMessage || "Category created successfully");
           setTimeout(() => {
             setStatus(null);
             setTitle("");
           }, 5000);
-          
+
           handleClearForm();
           // Use handleClearSearch to reset parameters and fetch the list
-          handleClearSearch(); 
-
+          handleClearSearch();
         } else {
           setStatus(response.statusCode);
-          setTitle(response.statusMessage || (formData.callType === 1 ? "Failed to update category" : "Failed to create category"));
+          setTitle(
+            response.statusMessage ||
+              (formData.callType === 1
+                ? "Failed to update category"
+                : "Failed to create category")
+          );
         }
       } catch (error) {
         console.log(error);
@@ -524,25 +549,24 @@ const CategoryPage = () => {
       brandID: "",
       active: 1,
       callType: 0,
-      categoryID: 0
+      categoryID: 0,
     });
     setSelectedBrands([]);
     setErrors({});
     setIsEditMode(false);
     // Clear API status messages for the form
-    setStatus(null);
-    setTitle(null);
+
     // Clear API status messages for the search/table section
     setSearchStatus(null);
     setSearchTitle(null);
     // Optional: Close accordion on clear if desired, otherwise keep it open
-    // setAccordionExpanded(false); 
+    // setAccordionExpanded(false);
     setTimeout(() => {
       // Fetch brand dropdown again if needed after form clear
       Promise.all([getBrandDropdown()]).finally(() => {
         setFormLoading(false);
       });
-    }, 500); 
+    }, 500);
   };
 
   // Update handleStatus to show loading state
@@ -578,7 +602,9 @@ const CategoryPage = () => {
         setSearchStatus(response.statusCode);
         setSearchTitle(response.statusMessage || "Something went wrong");
         const newRows = [...filteredRows];
-        const rowIndex = newRows.findIndex((r) => r.productCategoryID === row.productCategoryID);
+        const rowIndex = newRows.findIndex(
+          (r) => r.productCategoryID === row.productCategoryID
+        );
         if (rowIndex !== -1) {
           newRows[rowIndex] = {
             ...newRows[rowIndex],
@@ -592,7 +618,9 @@ const CategoryPage = () => {
       setSearchStatus("500");
       setSearchTitle(error.message || "Something went wrong");
       const newRows = [...filteredRows];
-      const rowIndex = newRows.findIndex((r) => r.productCategoryID === row.productCategoryID);
+      const rowIndex = newRows.findIndex(
+        (r) => r.productCategoryID === row.productCategoryID
+      );
       if (rowIndex !== -1) {
         newRows[rowIndex] = {
           ...newRows[rowIndex],
@@ -615,11 +643,11 @@ const CategoryPage = () => {
       callType: 1,
       categoryDesc: row.categoryDesc,
       categoryID: row.productCategoryID || 0,
-      categoryName: row.category
+      categoryName: row.category,
     });
 
-    const selectedBrandIds = row.brandID.toString().split(',');
-    const selectedBrandObjects = brandList.filter(brand => 
+    const selectedBrandIds = row.brandID.toString().split(",");
+    const selectedBrandObjects = brandList.filter((brand) =>
       selectedBrandIds.includes(brand.brandID.toString())
     );
     setSelectedBrands(selectedBrandObjects);
@@ -628,7 +656,10 @@ const CategoryPage = () => {
     setSearchAccordionExpanded(false); // Explicitly close search accordion
     // Use setTimeout and scrollIntoView on the ref
     setTimeout(() => {
-        formAccordionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      formAccordionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }, 100);
   };
 
@@ -664,8 +695,8 @@ const CategoryPage = () => {
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1 },
-          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
+          pl: { xs: 1, sm: 1, md: 0 },
+          pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Adjust right padding for activity panel
           isolation: "isolate",
         }}
       >
@@ -681,11 +712,11 @@ const CategoryPage = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0}>
             <BreadcrumbsHeader pageTitle="Product" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -740,23 +771,31 @@ const CategoryPage = () => {
                                   }));
                                   setErrors((prev) => ({
                                     ...prev,
-                                    categoryName: "Category Name cannot exceed 20 characters",
+                                    categoryName:
+                                      "Category Name cannot exceed 20 characters",
                                   }));
                                   return; // Don't continue with normal update
                                 }
 
                                 // If input contains non-alphanumeric-space characters, don't update
-                                if (newValue && !/^[a-zA-Z0-9 ]*$/.test(newValue)) {
+                                if (
+                                  newValue &&
+                                  !/^[a-zA-Z0-9 ]*$/.test(newValue)
+                                ) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    categoryName: "Category Name can only contain alphanumeric characters and spaces",
+                                    categoryName:
+                                      "Category Name can only contain alphanumeric characters and spaces",
                                   }));
                                   return; // Don't update the form data
                                 }
 
                                 // Clear errors for valid input
                                 if (newValue.trim() !== "") {
-                                  setErrors((prev) => ({ ...prev, categoryName: "" }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryName: "",
+                                  }));
                                 } else {
                                   setErrors((prev) => ({
                                     ...prev,
@@ -766,8 +805,8 @@ const CategoryPage = () => {
 
                                 handleChange("categoryName", newValue);
                               }}
-                              placeholder="Enter Category Name"
-                              backgroundColor={LIGHT_BLUE}
+                              placeholder="ENTER CATEGORY NAME"
+                              // backgroundColor={LIGHT_BLUE}
                               error={!!errors.categoryName}
                             />
                             {errors.categoryName && (
@@ -797,7 +836,7 @@ const CategoryPage = () => {
                                 mb: 1,
                               }}
                             >
-                              CATEGORY CODE <Required />  
+                              CATEGORY CODE <Required />
                             </Typography>
                             <NuralTextField
                               width="100%"
@@ -812,23 +851,31 @@ const CategoryPage = () => {
                                   }));
                                   setErrors((prev) => ({
                                     ...prev,
-                                    categoryDesc: "Category Code cannot exceed 20 characters",
+                                    categoryDesc:
+                                      "Category Code cannot exceed 20 characters",
                                   }));
                                   return; // Don't continue with normal update
                                 }
 
                                 // If input contains non-alphanumeric characters, don't update
-                                if (newValue && !/^[a-zA-Z0-9]*$/.test(newValue)) {
+                                if (
+                                  newValue &&
+                                  !/^[a-zA-Z0-9]*$/.test(newValue)
+                                ) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    categoryDesc: "Category Code can only contain alphanumeric characters (no spaces)",
+                                    categoryDesc:
+                                      "Category Code can only contain alphanumeric characters (no spaces)",
                                   }));
                                   return; // Don't update the form data
                                 }
 
                                 // Clear errors for valid input
                                 if (newValue.trim() !== "") {
-                                  setErrors((prev) => ({ ...prev, categoryDesc: "" }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    categoryDesc: "",
+                                  }));
                                 } else {
                                   setErrors((prev) => ({
                                     ...prev,
@@ -838,8 +885,8 @@ const CategoryPage = () => {
 
                                 handleChange("categoryDesc", newValue);
                               }}
-                              placeholder="Enter Category Code"
-                              backgroundColor={LIGHT_BLUE}
+                              placeholder="ENTER CATEGORY CODE"
+                              // backgroundColor={LIGHT_BLUE}
                               error={!!errors.categoryDesc}
                             />
                             {errors.categoryDesc && (
@@ -902,7 +949,9 @@ const CategoryPage = () => {
                                     cursor: "pointer",
                                   }}
                                 >
-                                  {selectedBrands.length === brandList.length ? "DESELECT ALL" : "SELECT ALL"}
+                                  {selectedBrands.length === brandList.length
+                                    ? "DESELECT ALL"
+                                    : "SELECT ALL"}
                                 </Typography>
                               </Box>
 
@@ -921,8 +970,8 @@ const CategoryPage = () => {
                                   <Grid
                                     item
                                     xs={12}
-                                    md={3}
-                                    lg={3}
+                                    md={2}
+                                    lg={2}
                                     key={brand.brandID}
                                     sx={{
                                       display: "flex",
@@ -933,7 +982,9 @@ const CategoryPage = () => {
                                       checked={selectedBrands.some(
                                         (b) => b.brandID === brand.brandID
                                       )}
-                                      onChange={() => handleBrandSelection(brand)}
+                                      onChange={() =>
+                                        handleBrandSelection(brand)
+                                      }
                                       sx={{
                                         "&.Mui-checked": {},
                                         borderRadius: "8px",
@@ -986,7 +1037,6 @@ const CategoryPage = () => {
                             )}
                           </Grid>
                         </Grid>
-                       
                       </NuralAccordion2>
                     </div>
 
@@ -1010,8 +1060,12 @@ const CategoryPage = () => {
                             text="CANCEL"
                             variant="outlined"
                             borderColor={PRIMARY_BLUE2}
-                            onClick={handleClearForm}
-                            width="97%"
+                            onClick={() => {
+                              handleClearForm();
+                              setStatus(null);
+                              setTitle(null);
+                            }}
+                            width="100%"
                           />
                         </Grid>
                         <Grid item xs={12} md={6} lg={6}>
@@ -1020,7 +1074,7 @@ const CategoryPage = () => {
                             backgroundColor={AQUA}
                             variant="contained"
                             onClick={handlePost}
-                            width="97%"
+                            width="100%"
                           />
                         </Grid>
                       </Grid>
@@ -1074,7 +1128,7 @@ const CategoryPage = () => {
                           onChange={handleBrandChange}
                           placeholder="SELECT"
                           width="100%"
-                          backgroundColor={LIGHT_BLUE}
+                          // backgroundColor={LIGHT_BLUE}
                           loading={isLoading}
                         />
                       </Grid>
@@ -1097,11 +1151,14 @@ const CategoryPage = () => {
                           options={categoryList}
                           getOptionLabel={(option) => option.category || ""}
                           isOptionEqualToValue={(option, value) =>
-                            option?.productCategoryID === value?.productCategoryID
+                            option?.productCategoryID ===
+                            value?.productCategoryID
                           }
                           value={
                             categoryList.find(
-                              (item) => item.productCategoryID === searchParams.categoryID
+                              (item) =>
+                                item.productCategoryID ===
+                                searchParams.categoryID
                             ) || null
                           }
                           onChange={(event, newValue) => {
@@ -1112,7 +1169,7 @@ const CategoryPage = () => {
                           }}
                           placeholder="SELECT"
                           width="100%"
-                          backgroundColor={LIGHT_BLUE}
+                          // backgroundColor={LIGHT_BLUE}
                           loading={isLoading}
                           disabled={searchParams.brandID === 0}
                         />
@@ -1156,265 +1213,272 @@ const CategoryPage = () => {
             </Grid>
           </Grid>
         </>
-        <Grid container mt={1} mb={1}>
-        {searchStatus && (
-          <StatusModel
-            width="100%"
-            status={searchStatus}
-            title={searchTitle}
-            onClose={() => {
-              setSearchStatus(null);
-              setSearchTitle(null);
-            }}
-            autoDismiss={searchStatus === "200"}
-          />
-        )}
-      </Grid>
-        <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: LIGHT_GRAY2,
-              color: PRIMARY_BLUE2,
-              maxHeight: "calc(120vh - 180px)", // Adjusted to account for headers
-              overflow: "auto",
-              position: "relative",
-              "& .MuiTable-root": {
-                borderCollapse: "separate",
-                borderSpacing: 0,
-              },
-            }}
-          >
-            <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 100,
-                      borderBottom: "none",
-                      boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <Grid
-                      container
-                      justifyContent="space-between"
-                      alignItems="center"
+        <Grid container mt={1} pr={2} mb={1}>
+          {searchStatus && (
+            <StatusModel
+              width="100%"
+              status={searchStatus}
+              title={searchTitle}
+              onClose={() => {
+                setSearchStatus(null);
+                setSearchTitle(null);
+              }}
+              autoDismiss={searchStatus === "200"}
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
+          {searchAccordionExpanded && (
+            <TableContainer
+              component={Paper}
+              sx={{
+                backgroundColor: LIGHT_GRAY2,
+                color: PRIMARY_BLUE2,
+                maxHeight: "calc(100vh - 50px)", // Adjusted to account for headers
+                overflow: "auto",
+                position: "relative",
+                "& .MuiTable-root": {
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                },
+              }}
+            >
+              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      sx={{
+                        backgroundColor: LIGHT_GRAY2,
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 100,
+                        borderBottom: "none",
+                        boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
+                      }}
                     >
-                      <Grid item>
-                        <Typography
-                          variant="body1"
+                      <Grid
+                        container
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Grid item>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontFamily: "Manrope",
+                              fontWeight: 700,
+                              fontSize: "14px",
+                              lineHeight: "19.12px",
+                              letterSpacing: "0%",
+                              color: PRIMARY_BLUE2,
+                              p: 1,
+                            }}
+                          >
+                            List
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
                           sx={{
-                            fontFamily: "Manrope",
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            lineHeight: "19.12px",
-                            letterSpacing: "0%",
-                            color: PRIMARY_BLUE2,
-                            p: 1,
+                            cursor: "pointer",
                           }}
                         >
-                          List
-                        </Typography>
+                          {/* Remove the old export icon */}
+                        </Grid>
                       </Grid>
-                      <Grid
-                        item
-                        sx={{
-                          cursor: "pointer",
-                        }}
-                      >
-                        {/* Remove the old export icon */}
-                      </Grid>
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                  <TableCell
-                    sx={{
-                      ...tableHeaderStyle,
-                      position: "sticky",
-                      top: "45px",
-                      backgroundColor: LIGHT_GRAY2,
-                      zIndex: 100,
-                      width: "50px",
-                      padding: "8px 16px",
-                    }}
-                  >
-                    S.NO
-                  </TableCell>
-                  {[
-                    { label: "BRAND NAME", key: "brandName" },
-                    { label: "CATEGORY NAME", key: "category" },
-                    { label: "CATEGORY CODE", key: "categoryDesc" },
-                    { label: "STATUS", sortable: false },
-                    { label: "EDIT", sortable: false },
-                  ].map((header) => (
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
                     <TableCell
-                      key={header.label}
-                      onClick={() =>
-                        header.sortable !== false && handleSort(header.key)
-                      }
                       sx={{
                         ...tableHeaderStyle,
-                        cursor:
-                          header.sortable !== false ? "pointer" : "default",
                         position: "sticky",
                         top: "45px",
                         backgroundColor: LIGHT_GRAY2,
                         zIndex: 100,
+                        width: "50px",
                         padding: "8px 16px",
-                        minWidth: header.label === "EDIT" ? "60px" : "100px",
                       }}
                     >
-                      <Grid container alignItems="center" spacing={1}>
-                        <Grid item>{header.label}</Grid>
-                        {header.sortable !== false && (
-                          <Grid item>
-                            {sortConfig.key === header.key ? (
-                              sortConfig.direction === "asc" ? (
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              ) : (
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: PRIMARY_BLUE2,
-                                  }}
-                                />
-                              )
-                            ) : (
-                              <Grid
-                                container
-                                direction="column"
-                                alignItems="center"
-                                sx={{ height: 16, width: 16 }}
-                              >
-                                <ArrowUpwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                                <ArrowDownwardIcon
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "grey.400",
-                                  }}
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        )}
-                      </Grid>
+                      S.NO
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableLoading || statusUpdateLoading || isTableUpdating ? (
+                    {[
+                      { label: "BRAND NAME", key: "brandName" },
+                      { label: "CATEGORY NAME", key: "category" },
+                      { label: "CATEGORY CODE", key: "categoryDesc" },
+                      { label: "STATUS", sortable: false },
+                      { label: "EDIT", sortable: false },
+                    ].map((header) => (
+                      <TableCell
+                        key={header.label}
+                        onClick={() =>
+                          header.sortable !== false && handleSort(header.key)
+                        }
+                        sx={{
+                          ...tableHeaderStyle,
+                          cursor:
+                            header.sortable !== false ? "pointer" : "default",
+                          position: "sticky",
+                          top: "45px",
+                          backgroundColor: LIGHT_GRAY2,
+                          zIndex: 100,
+                          padding: "8px 16px",
+                          minWidth: header.label === "EDIT" ? "60px" : "100px",
+                        }}
+                      >
+                        <Grid container alignItems="center" spacing={1}>
+                          <Grid item>{header.label}</Grid>
+                          {header.sortable !== false && (
+                            <Grid item>
+                              {sortConfig.key === header.key ? (
+                                sortConfig.direction === "asc" ? (
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                ) : (
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  />
+                                )
+                              ) : (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  alignItems="center"
+                                  sx={{ height: 16, width: 16 }}
+                                >
+                                  <ArrowUpwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                  <ArrowDownwardIcon
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey.400",
+                                    }}
+                                  />
+                                </Grid>
+                              )}
+                            </Grid>
+                          )}
+                        </Grid>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {tableLoading || statusUpdateLoading || isTableUpdating ? (
                     Array.from({ length: rowsPerPage }).map((_, rowIndex) => (
                       <TableRow key={`skeleton-row-${rowIndex}`}>
-                        {Array.from({ length: 5 }).map((_, cellIndex) => (
-                          <TableCell key={`skeleton-cell-${rowIndex}-${cellIndex}`} sx={{ ...rowstyle }}>
+                        {Array.from({ length: 6 }).map((_, cellIndex) => (
+                          <TableCell
+                            key={`skeleton-cell-${rowIndex}-${cellIndex}`}
+                            sx={{ ...rowstyle }}
+                          >
                             <Skeleton animation="wave" height={20} />
                           </TableCell>
                         ))}
                       </TableRow>
                     ))
-                ) : filteredRows.length > 0 ? (
-                  filteredRows.map((row) => (
-                    <TableRow
-                      key={row.sNo}
-                      sx={{
-                        fontSize: "10px",
-                       
-                        "& td": {
-                          borderBottom: `1px solid #C6CEED`,
-                        },
-                      }}
-                    >
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.sNo}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.brandName}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.category}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        {row.categoryDesc}
-                      </TableCell>
-                      <TableCell sx={{ ...rowstyle }}>
-                        <Switch
-                          checked={row.status === 1}
-                          onChange={() => {
-                            const newRows = [...filteredRows];
-                            const rowIndex = newRows.findIndex(
-                              (r) => r.productCategoryID === row.productCategoryID
-                            );
-                            if (rowIndex !== -1) {
-                              newRows[rowIndex] = {
-                                ...newRows[rowIndex],
-                                status: row.status === 1 ? 0 : 1,
-                              };
-                              setFilteredRows(newRows);
-                              handleStatus(newRows[rowIndex]);
-                            }
-                          }}
-                          size="small"
-                          disabled={statusUpdateLoading && updatingRowId === row.productCategoryID}
-                          sx={toggleSectionStyle}
-                        />
-                      </TableCell>
-                      <TableCell
+                  ) : filteredRows.length > 0 ? (
+                    filteredRows.map((row) => (
+                      <TableRow
+                        key={row.sNo}
                         sx={{
-                          padding: "8px 16px",
                           fontSize: "10px",
-                          textAlign: "left",
-                          minWidth: "60px",
+
+                          "& td": {
+                            borderBottom: `1px solid #C6CEED`,
+                          },
                         }}
                       >
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleEdit(row)}
-                        >
-                          <EditIcon
-                            sx={{
-                              fontSize: 16,
-                              color: PRIMARY_BLUE2,
+                        <TableCell sx={{ ...rowstyle }}>{row.sNo}</TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.brandName}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.category}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          {row.categoryDesc}
+                        </TableCell>
+                        <TableCell sx={{ ...rowstyle }}>
+                          <Switch
+                            checked={row.status == 1}
+                            onChange={() => {
+                              const newRows = [...filteredRows];
+                              const rowIndex = newRows.findIndex(
+                                (r) =>
+                                  r.productCategoryID === row.productCategoryID
+                              );
+                              if (rowIndex !== -1) {
+                                newRows[rowIndex] = {
+                                  ...newRows[rowIndex],
+                                  status: row.status == 1 ? 0 : 1,
+                                };
+                                setFilteredRows(newRows);
+                                handleStatus(newRows[rowIndex]);
+                              }
                             }}
+                            size="small"
+                            disabled={
+                              statusUpdateLoading &&
+                              updatingRowId === row.productCategoryID
+                            }
+                            sx={toggleSectionStyle}
                           />
-                        </IconButton>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            padding: "8px 16px",
+                            fontSize: "10px",
+                            textAlign: "left",
+                            minWidth: "60px",
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(row)}
+                          >
+                            <EditIcon
+                              sx={{
+                                fontSize: 16,
+                                color: PRIMARY_BLUE2,
+                              }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        No data available
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      No data available
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
 
-            {/* Custom Pagination */}
-            <NuralPagination
-              key={`pagination-${page}-${rowsPerPage}`}
-              totalRecords={totalRecords}
-              initialPage={page}
-              initialRowsPerPage={rowsPerPage}
-              onPaginationChange={handlePaginationChange}
-            />
-          </TableContainer>
+              {/* Custom Pagination */}
+              <NuralPagination
+                key={`pagination-${page}-${rowsPerPage}`}
+                totalRecords={totalRecords}
+                initialPage={page}
+                initialRowsPerPage={rowsPerPage}
+                onPaginationChange={handlePaginationChange}
+              />
+            </TableContainer>
+          )}
         </Grid>
       </Grid>
 

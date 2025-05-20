@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
 import { AQUA, DARK_PURPLE, PRIMARY_BLUE2 } from "../../../Common/colors";
@@ -25,7 +25,7 @@ const labelStyle = {
   fontWeight: 400,
 };
 
-const CreateCategory = () => {
+const CreateCategory = ({ onRecordAdded, editData }) => {
   const [loading, setLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     issueCategoryCode: "",
@@ -43,6 +43,19 @@ const CreateCategory = () => {
   const [showModel, setShowModel] = React.useState(false);
   const [status, setStatus] = React.useState(0);
   const [title, setTitle] = React.useState("");
+
+  useEffect(() => {
+    console.log("editData", editData);
+    if (editData) {
+      setFormData({
+        issueCategoryCode: editData.code,
+        issueCategoryName: editData.name,
+        issueCategoryId: editData.id,
+        status: editData.status ? 1 : 0,
+        callType: 1,
+      });
+    }
+  }, [editData]);
 
   const validateForm = () => {
     let isValid = true;
@@ -99,6 +112,9 @@ const CreateCategory = () => {
         setShowModel(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        if (onRecordAdded) {
+          onRecordAdded();
+        }
         setTimeout(() => {
           setShowModel(false);
         }, 3000);
@@ -137,9 +153,8 @@ const CreateCategory = () => {
   };
 
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
-      {/* Rest of the content */}
-      <Grid container spacing={0} lg={12} mt={1} sx={{ zIndex: 1 }}>
+   
+     
         <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
           <Grid container spacing={2} direction="column">
             {loading ? (
@@ -294,8 +309,10 @@ const CreateCategory = () => {
             )}
           </Grid>
         </Grid>
-      </Grid>
-    </Grid>
+    
+
+
+   
   );
 };
 

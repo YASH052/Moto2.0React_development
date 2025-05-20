@@ -255,6 +255,8 @@ const ReturnRequest = () => {
                         <Grid item xs={12} md={6} lg={6}>
                           <NuralButton
                             text="CANCEL"
+                      color={PRIMARY_BLUE2}
+
                             variant="outlined"
                             borderColor={PRIMARY_BLUE2}
                             onClick={handleCancel}

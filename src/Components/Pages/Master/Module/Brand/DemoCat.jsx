@@ -50,17 +50,13 @@ import { SCRCategoryList, GetModelListForDropdown, GetSKUListForDropdown, Manage
 import StatusModel from "../../../../Common/StatusModel";
 import { TableRowSkeleton } from "../../../../Common/Skeletons";
 const DemoCat = () => {
-  const [activeTab, setActiveTab] = React.useState("demo-categorization");
+  const [activeTab, setActiveTab] = React.useState("demo-planogram");
 
   const [tabbs, setTabbs] = React.useState([
-    { label: "Demo Planogram", value: "demo-categorization" },
+    { label: "Demo Planogram", value: "demo-planogram" },
     { label: "Manage Audit", value: "manage-audit" },
-
-    // { label: "MEZ Audit", value: "mez-audit" },
-    // { label: "ISP Audit", value: "isp-audit" },
-    // { label: "Visibility Audit", value: "visibility-audit" },
-    // { label: "Store Ops", value: "store-ops" },
     { label: "L1L2 Issue", value: "l1l2-issue" },
+    { label: "RI Weightage", value: "ri-weightage" },
   ]);
 
   const navigate = useNavigate();
@@ -105,6 +101,7 @@ const DemoCat = () => {
 
   const [title, setTitle] = React.useState(null);
   const [status, setStatus] = React.useState(null);
+  const [isDownloadLoading, setIsDownloadLoading] = React.useState(false);
   const [searchStatus, setSearchStatus] = React.useState(null);
   const [searchTitle, setSearchTitle] = React.useState(null);
   const [filteredRows, setFilteredRows] = React.useState([]);
@@ -133,19 +130,29 @@ const DemoCat = () => {
 
   });
 
-  // Column definitions for the table header
-  const columns = [
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [editRowId, setEditRowId] = React.useState(null);
+
+  const maxUnits = Math.max(...filteredRows.map(row => row.noOfUnits || 0), 0);
+
+  const unitColumns = Array.from({ length: maxUnits }, (_, i) => ({
+    id: `unit${i + 1}`,
+    label: `UNIT ${i + 1}`,
+    minWidth: 120,
+  }));
+
+  const baseColumns = [
     { id: "sNo", label: "S.NO", minWidth: 60 },
     { id: "storeCategory", label: "STORE CATEGORY", minWidth: 130 },
     { id: "demoType", label: "DEMO TYPE", minWidth: 130 },
-    { id: "unit1", label: "UNIT 1", minWidth: 120 },
-    { id: "unit2", label: "UNIT 2", minWidth: 120 },
-    { id: "unit3", label: "UNIT 3", minWidth: 120 },
-    { id: "unit4", label: "UNIT 4", minWidth: 120 },
-    { id: "unit5", label: "UNIT 5", minWidth: 120 },
+  ];
+
+  const endColumns = [
     { id: "status", label: "STATUS", minWidth: 100 },
     { id: "edit", label: "EDIT", minWidth: 80 },
   ];
+
+  const columns = [...baseColumns, ...unitColumns, ...endColumns];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -258,8 +265,28 @@ const DemoCat = () => {
   };
 
   const handleEdit = (row) => {
-    console.log("Edit row:", row);
-    // Add your edit logic here
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setFormData({
+      scrCategoryID: row.scrCategoryID,
+      scrCategoryName: row.scrCategoryName || "",
+      planogramType: row.planogramType,
+      planogramID: row.planogramID,
+      noOfUnits: row.noOfUnits,
+      status: row.status,
+      callType: 1, // For update
+      baseIdList: row.storeDetailList.map(unit => ({
+        baseID: unit.baseID
+      }))
+    });
+
+    // If needed, fetch dropdown data for the correct type
+    if (row.planogramType === 1) fetchDropdownData(1);
+    if (row.planogramType === 2) fetchDropdownData(2);
+
+    setIsEditMode(true);
+    setEditRowId(row.planogramID);
   };
 
   // Function to reset the form
@@ -267,17 +294,19 @@ const DemoCat = () => {
     setFormData({
       scrCategoryID: "",
       scrCategoryName: "",
-      planogramType: 0, // Reset to initial/default state
+      planogramType: 0,
       planogramID: 0,
-      noOfUnits: 1, // Reset to 1
+      noOfUnits: 1,
       status: 1,
       callType: 0,
-      baseIdList: [{ baseID: null }], // Reset to one item
+      baseIdList: [{ baseID: null }],
     });
-    setDropdownList([]); // Clear the unit dropdown list if needed
+    setDropdownList([]);
     setErrors({});
     setStatus(null);
     setTitle(null);
+    setIsEditMode(false);
+    setEditRowId(null);
   };
 
   const handleSearchCancel = () => {
@@ -441,7 +470,7 @@ const DemoCat = () => {
       console.error("Error fetching storeList:", error);
       setTotalRecords(0);
       setSearchStatus(error.response.data.statusCode);
-      setSearchTitle  (error.response.data.statusMessage);
+      setSearchTitle(error.response.data.statusMessage);
     }
     finally {
       setIsLoading(false); // Set loading false
@@ -455,7 +484,7 @@ const DemoCat = () => {
 
   useEffect(() => {
     fetchGetStoreList()
-  }, [page,rowsPerPage])
+  }, [page, rowsPerPage])
 
   // Effect to synchronize baseIdList with noOfUnits
   useEffect(() => {
@@ -599,6 +628,10 @@ const DemoCat = () => {
       // Add error feedback to the user
     } finally {
       setIsLoading(false); // Stop loading regardless of outcome
+      setTimeout(() => {
+        setStatus(null);
+        setTitle(null);
+      }, 2000);
     }
   };
 
@@ -642,6 +675,113 @@ const DemoCat = () => {
     handlePageChange(page + 1);
   };
 
+  const handleStatusToggle = async (row) => {
+    // Toggle the status (1 <-> 0)
+    const newStatus = row.status === 1 ? 0 : 1;
+
+    // Build the payload as per your structure
+    const payload = {
+      scrCategoryID: row.scrCategoryID,
+      scrCategoryName: row.scrCategoryName || "",
+      planogramID: row.planogramID,
+      noOfUnits: row.noOfUnits,
+      status: newStatus,
+      callType: 2, // 2 for status update
+      baseIdList: row.storeDetailList.map(unit => ({
+        baseID: unit.baseID
+      }))
+    };
+
+    setIsLoading(true);
+    try {
+      const response = await ManageStoreCategoryAPI(payload);
+      if (response?.statusCode == "200" || response?.statusCode == 200) {
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Status updated successfully");
+        fetchGetStoreList(); // Refresh the table
+      } else {
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Something went wrong");
+      }
+    } catch (error) {
+      setStatus(error?.response?.data?.statusCode || "Error");
+      setTitle(error?.response?.data?.statusMessage || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        setStatus(null);
+        setTitle(null);
+      }, 2000);
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        callType: 1, // 2 for update
+      };
+      const response = await ManageStoreCategoryAPI(payload);
+      if (response?.statusCode === "200" || response?.statusCode === 200) {
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Updated successfully");
+        setFormData({
+          scrCategoryID: "",
+          scrCategoryName: "",
+          planogramType: 0,
+          planogramID: 0,
+          noOfUnits: 1,
+          status: 1,
+          callType: 0,
+          baseIdList: [{ baseID: null }],
+        });
+        setDropdownList([]);
+        setIsEditMode(false);
+        setEditRowId(null);
+        fetchGetStoreList();
+      } else {
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Something went wrong");
+      }
+    } catch (error) {
+      setStatus(error?.response?.data?.statusCode || "Error");
+      setTitle(error?.response?.data?.statusMessage || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        setStatus(null);
+        setTitle(null);
+      }, 2000);
+    }
+  };
+
+  const downloadExcel = async () => {
+    let body = {
+      ...searchParams,
+      pageIndex: -1,
+    };
+    setIsDownloadLoading(true);
+    try {
+      let res = await getStoreList(body);
+      if (res.statusCode == 200 && res.reportLink) {
+        window.location.href = res.reportLink;
+      } else {
+        // setShowStatus(true);
+        setTitle(res.statusMessage || "Failed to generate export.");
+        setStatus(String(res.statusCode || "500"));
+      }
+    } catch (error) {
+      // setShowStatus(true);
+      setTitle(error.statusMessage || "Internal Server Error during export");
+      setStatus(String(error.status || "500"));
+    } finally {
+      setIsDownloadLoading(false);
+    }
+  };
+
   return (
     <>
       <Grid
@@ -664,11 +804,11 @@ const DemoCat = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={0} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0}>
             <BreadcrumbsHeader pageTitle="Brand" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabbs}
               activeTab={activeTab}
@@ -923,7 +1063,7 @@ const DemoCat = () => {
                   </Grid>
                 </NuralAccordion2>
 
-                <Grid container spacing={1} m={2}>
+                <Grid container spacing={1} m={0} mb={4} pr={2}>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
@@ -935,11 +1075,11 @@ const DemoCat = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text="PROCEED"
+                      text={isEditMode ? "EDIT" : "PROCEED"}
                       backgroundColor={AQUA}
                       variant="contained"
                       width="100%"
-                      onClick={handleProceed}
+                      onClick={isEditMode ? handleEditSubmit : handleProceed}
                       disabled={isLoading}
                     />
                   </Grid>
@@ -1041,344 +1181,329 @@ const DemoCat = () => {
                     </Grid>
                   </Grid>
                 </NuralAccordion2>
+
               </Grid>
             </Grid>
           </Grid>
           {/* Conditional Rendering for Table or StatusModel */}
           {filteredRows.length > 0 ? (
-            <Grid item xs={12} mt={"-5rem"} sx={{ p: { xs: 1, sm: 2 } }}>
-            <TableContainer
-              component={Paper}
-              sx={{
-                backgroundColor: LIGHT_GRAY2,
-                color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 300px)",
-                overflow: "auto",
-                "& .MuiTableCell-root": {
-                  borderBottom: `1px solid ${LIGHT_GRAY2}`,
-                },
-              }}
-            >
-              <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      sx={{
-                        backgroundColor: LIGHT_GRAY2,
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1100,
-                        borderBottom: "none",
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
+            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2, }, mt: "-5rem" }}>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  backgroundColor: LIGHT_GRAY2,
+                  color: PRIMARY_BLUE2,
+                  maxHeight: "calc(100vh - 100px)",
+                  overflow: "auto",
+                  "& .MuiTableCell-root": {
+                    borderBottom: `1px solid ${LIGHT_GRAY2}`,
+                  },
+                }}
+              >
+                <Table sx={{ minWidth: 750 }} size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        colSpan={10}
                         sx={{
-                          fontFamily: "Manrope",
-                          fontWeight: 700,
-                          fontSize: "14px",
-                          lineHeight: "19.12px",
-                          letterSpacing: "0%",
-                          color: PRIMARY_BLUE2,
-                          p: 1,
+                          backgroundColor: LIGHT_GRAY2,
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1100,
+                          borderBottom: "none",
                         }}
                       >
-                        List
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                    <TableCell sx={{ ...tableHeaderStyle }}>S.NO</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>
-                      STORE CATEGORY
-                    </TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>
-                      DEMO TYPE
-                    </TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>UNIT 1</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>UNIT 2</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>UNIT 3</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>UNIT 4</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>UNIT 5</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>STATUS</TableCell>
-                    <TableCell sx={{ ...tableHeaderStyle }}>EDIT</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {isLoading ? (
-                    // Show skeletons while loading
-                    Array.from(new Array(rowsPerPage)).map((_, index) => (
-                      <TableRowSkeleton key={index} columns={columns.length} />
-                    ))
-                  ) : (
-                    // Show data rows when not loading
-                    filteredRows.map((row, index) => {
-                      const statusColor = getStatusColor(row.status);
-                      const serialNumber = (page - 1) * rowsPerPage + index + 1;
-                      return (
-                        <TableRow key={row.scrCategoryID}>
-                          <TableCell sx={{ ...rowstyle }}>{serialNumber}</TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.scrCategoryName}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.planogramTypeName}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.unit1}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.unit2}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.unit3}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.unit4}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            {row.unit5}
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            <Switch
-                              checked={row.status === 1}
-                              sx={{
-                                ...toggleSectionStyle,
-                                "& .MuiSwitch-thumb": {
-                                  backgroundColor: PRIMARY_BLUE2,
-                                },
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ ...rowstyle }}>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEdit(row)}
-                              sx={{
-                                color: PRIMARY_BLUE2,
-                                "&:hover": {
-                                  backgroundColor: "rgba(0, 0, 0, 0.04)",
-                                },
-                              }}
-                            >
-                              <EditIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "14px",
+                            lineHeight: "19.12px",
+                            letterSpacing: "0%",
+                            color: PRIMARY_BLUE2,
+                            p: 1,
+                          }}
+                        >
+                          List
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow sx={{
+                      backgroundColor: LIGHT_GRAY2,
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1100,
+                      borderBottom: "none",
+                    }}>
+                      {columns.map((column) => (
+                        <TableCell key={column.id} sx={{ ...tableHeaderStyle }}>
+                          {column.label}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {isLoading ? (
+                      // Show skeletons while loading
+                      Array.from(new Array(rowsPerPage)).map((_, index) => (
+                        <TableRowSkeleton key={index} columns={columns.length} />
+                      ))
+                    ) : (
+                      // Show data rows when not loading
+                      filteredRows.map((row, index) => {
+                        const statusColor = getStatusColor(row.status);
+                        const serialNumber = (page - 1) * rowsPerPage + index + 1;
+                        return (
+                          <TableRow key={row.scrCategoryID}>
+                            <TableCell sx={{ ...rowstyle }}>{serialNumber}</TableCell>
+                            <TableCell sx={{ ...rowstyle }}>
+                              {row.scrCategoryName}
+                            </TableCell>
+                            <TableCell sx={{ ...rowstyle }}>
+                              {row.planogramTypeName}
+                            </TableCell>
+                            {row.storeDetailList.map((unit, unitIndex) => (
+                              <TableCell key={unitIndex} sx={{ ...rowstyle }}>
+                                {unit.demoUnits}
+                              </TableCell>
+                            ))}
+                            {Array.from({ length: maxUnits - row.storeDetailList.length }).map((_, i) => (
+                              <TableCell key={`blank-${i}`} sx={{ ...rowstyle }} />
+                            ))}
+                            <TableCell sx={{ ...rowstyle }}>
+                              <Switch
+                                checked={row.status === 1}
+                                onChange={() => handleStatusToggle(row)}
+                                sx={{
+                                  ...toggleSectionStyle,
+                                  "& .MuiSwitch-thumb": {
+                                    backgroundColor: PRIMARY_BLUE2,
+                                  },
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ ...rowstyle }}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEdit(row)}
+                                sx={{
+                                  color: PRIMARY_BLUE2,
+                                  "&:hover": {
+                                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                                  },
+                                }}
+                              >
+                                <EditIcon sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
 
-              {/* Custom Pagination */}
+                {/* Custom Pagination */}
+
+              </TableContainer>
               <Grid
-              container
-              sx={{
-                p: 2,
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "sticky",
-                bottom: 0,
-                backgroundColor: LIGHT_GRAY2,
-                borderTop: `1px solid ${PRIMARY_LIGHT_GRAY}`,
-                zIndex: 1200,
-                boxShadow: "0px -2px 4px rgba(0, 0, 0, 0.05)",
-                minHeight: "40px",
-              }}
-            >
-              <Grid item>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 400,
-                    fontSize: "10px",
-                    lineHeight: "13.66px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                  }}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  TOTAL RECORDS:{" "}
-                  <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                    {totalRecords} /{" "}
-                    {Math.ceil(totalRecords / searchParams.pageSize)} PAGES
-                  </span>
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Grid
-                  container
-                  spacing={1}
-                  sx={{
-                    maxWidth: 300,
-                    ml: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+                width={"100%"}
+                container
+                sx={tablePaginationStyle}
+              >
+                <Grid item>
                   <Typography
-                    variant="body2"
                     sx={{
-                      mt: 1,
+                      fontFamily: "Manrope",
+                      fontWeight: 400,
                       fontSize: "10px",
-                      color: PRIMARY_BLUE2,
-                      fontWeight: 600,
+                      lineHeight: "13.66px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                    }}
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    TOTAL RECORDS:{" "}
+                    <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
+                      {totalRecords} /{" "}
+                      {Math.ceil(totalRecords / searchParams.pageSize)} PAGES
+                    </span>
+                  </Typography>
+                </Grid>
+
+                <Grid item>
+                  <Grid
+                    container
+                    spacing={1}
+                    sx={{
+                      maxWidth: 300,
+                      ml: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    SHOW :
-                  </Typography>
-                  {[10, 25, 50, 100].map((value) => (
-                    <Grid item key={value}>
-                      <Button
-                        onClick={() =>
-                          handleChangeRowsPerPage({ target: { value } })
-                        }
-                        sx={{
-                          minWidth: "25px",
-                          height: "24px",
-                          padding: "4px",
-                          borderRadius: "50%",
-                          backgroundColor:
-                            rowsPerPage === value
-                              ? PRIMARY_BLUE2
-                              : "transparent",
-                          color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                          fontSize: "12px",
-                          "&:hover": {
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 1,
+                        fontSize: "10px",
+                        color: PRIMARY_BLUE2,
+                        fontWeight: 600,
+                      }}
+                    >
+                      SHOW :
+                    </Typography>
+                    {[10, 25, 50, 100].map((value) => (
+                      <Grid item key={value}>
+                        <Button
+                          onClick={() =>
+                            handleChangeRowsPerPage({ target: { value } })
+                          }
+                          sx={{
+                            minWidth: "25px",
+                            height: "24px",
+                            padding: "4px",
+                            borderRadius: "50%",
                             backgroundColor:
                               rowsPerPage === value
                                 ? PRIMARY_BLUE2
                                 : "transparent",
-                          },
-                          mx: 0.5,
-                        }}
-                      >
-                        {value}
-                      </Button>
-                    </Grid>
-                  ))}
+                            color: rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
+                            fontSize: "12px",
+                            "&:hover": {
+                              backgroundColor:
+                                rowsPerPage === value
+                                  ? PRIMARY_BLUE2
+                                  : "transparent",
+                            },
+                            mx: 0.5,
+                          }}
+                        >
+                          {value}
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Grid>
-              </Grid>
 
-              <Grid item sx={{ display: "flex", alignItems: "center", gap: 2, color: PRIMARY_BLUE2 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                    cursor: "pointer"
-                  }}
-                  onClick={handleFirstPage}
-                >
-                  JUMP TO FIRST
-                </Typography>
+                <Grid item sx={{ display: "flex", alignItems: "center", gap: 2, color: PRIMARY_BLUE2 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "Manrope",
+                      fontWeight: 700,
+                      fontSize: "8px",
+                      lineHeight: "10.93px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                      cursor: "pointer"
+                    }}
+                    onClick={handleFirstPage}
+                  >
+                    JUMP TO FIRST
+                  </Typography>
 
-                <IconButton
-                  onClick={handlePrevPage}
-                  disabled={page <= 1}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
+                  <IconButton
+                    onClick={handlePrevPage}
+                    disabled={page <= 1}
+                  >
+                    <NavigateBeforeIcon />
+                  </IconButton>
 
-                <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
-                  PAGE {page}
-                </Typography>
+                  <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
+                    PAGE {page}
+                  </Typography>
 
-                <IconButton
-                  onClick={handleNextPage}
-                  disabled={page >= Math.ceil(totalRecords / rowsPerPage)}
-                >
-                  <NavigateNextIcon />
-                </IconButton>
+                  <IconButton
+                    onClick={handleNextPage}
+                    disabled={page >= Math.ceil(totalRecords / rowsPerPage)}
+                  >
+                    <NavigateNextIcon />
+                  </IconButton>
 
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "10.93px",
-                    letterSpacing: "4%",
-                    textAlign: "center",
-                    cursor: "pointer"
-                  }}
-                  variant="body2"
-                  onClick={handleLastPage}
-                >
-                  JUMP TO LAST
-                </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "Manrope",
+                      fontWeight: 700,
+                      fontSize: "8px",
+                      lineHeight: "10.93px",
+                      letterSpacing: "4%",
+                      textAlign: "center",
+                      cursor: "pointer"
+                    }}
+                    variant="body2"
+                    onClick={handleLastPage}
+                  >
+                    JUMP TO LAST
+                  </Typography>
 
-                <input
-                  type="number"
-                  placeholder="Jump to page"
-                  min={1}
-                  max={Math.ceil(totalRecords / searchParams.pageSize)}
-                  onChange={(e) => {
-                    // Just store the value, don't trigger page change
-                    const value = e.target.value;
-                    e.target.dataset.pageValue = value;
-                  }}
-                  style={{
-                    width: "100px",
-                    height: "24px",
-                    fontSize: "10px",
-                    paddingRight: "8px",
-                    paddingLeft: "8px",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    borderWidth: "1px",
-                    border: `1px solid ${PRIMARY_BLUE2}`,
-                    backgroundColor: LIGHT_GRAY2,
-                    "&::placeholder": {},
-                    outline: "none",
-                    "&:focus": {
+                  <input
+                    type="number"
+                    placeholder="Jump to page"
+                    min={1}
+                    max={Math.ceil(totalRecords / searchParams.pageSize)}
+                    onChange={(e) => {
+                      // Just store the value, don't trigger page change
+                      const value = e.target.value;
+                      e.target.dataset.pageValue = value;
+                    }}
+                    style={{
+                      width: "100px",
+                      height: "24px",
+                      fontSize: "10px",
+                      paddingRight: "8px",
+                      paddingLeft: "8px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      borderWidth: "1px",
+                      border: `1px solid ${PRIMARY_BLUE2}`,
+                      backgroundColor: LIGHT_GRAY2,
+                      "&::placeholder": {},
                       outline: "none",
-                    },
-                  }}
-                />
-                <Grid
-                  mt={1}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousSibling;
-                    const pageValue = parseInt(input.value, 10);
-                    if (
-                      pageValue >= 1 &&
-                      pageValue <= Math.ceil(totalRecords / searchParams.pageSize)
-                    ) {
-                      handlePageChange(pageValue);
-                      // input.value = ''; 
-                    }
-                  }}
-                >
-                  <img src="./Icons/footerSearch.svg" alt="arrow" />
+                      "&:focus": {
+                        outline: "none",
+                      },
+                    }}
+                  />
+                  <Grid
+                    mt={1}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={(e) => {
+                      const input = e.currentTarget.previousSibling;
+                      const pageValue = parseInt(input.value, 10);
+                      if (
+                        pageValue >= 1 &&
+                        pageValue <= Math.ceil(totalRecords / searchParams.pageSize)
+                      ) {
+                        handlePageChange(pageValue);
+                        // input.value = ''; 
+                      }
+                    }}
+                  >
+                    <img src="./Icons/footerSearch.svg" alt="arrow" />
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
-            </TableContainer>
-          </Grid>
           ) : searchStatus ? (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 },mt:"-5rem",display: 'flex', justifyContent: 'center' }}>
-                <StatusModel
-                    width="100%" // Adjust width as needed
-                    status={searchStatus}
-                    title={searchTitle}
-                    onClose={() => setSearchStatus(null)}
-                 />
+            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: "-5rem", display: 'flex', justifyContent: 'center' }}>
+              <StatusModel
+                width="100%" // Adjust width as needed
+                status={searchStatus}
+                title={searchTitle}
+                onClose={() => setSearchStatus(null)}
+              />
             </Grid>
-          ) : null /* Render nothing if no rows and no search status */ }
+          ) : null /* Render nothing if no rows and no search status */}
+
         </Grid>
 
         {/* Add this after the NuralAccordion2 component */}
       </Grid>
+
       <Grid
         item
         xs={12}
@@ -1428,8 +1553,8 @@ const DemoCat = () => {
             <NuralExport
               title="Export"
               views={""}
-            //   downloadExcel={downloadExcel}
-            //   isDownloadLoading={isDownloadLoading}
+              downloadExcel={downloadExcel}
+              isDownloadLoading={isDownloadLoading}
             />
           </Grid>
         </NuralActivityPanel>

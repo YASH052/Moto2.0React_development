@@ -49,6 +49,7 @@ const PrimarySaleReturn = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [selectedUserId, setSelectedUserId] = useState(2); // New state for userId
+  const [resetFile, setResetFile] = useState(false);
 
   // console.log("selectedUserId", selectedDate);
   const today = new Date();
@@ -243,8 +244,12 @@ const PrimarySaleReturn = () => {
     // console.log(fileInputRef, "===========");
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = null;
+      fileInputRef.current.value = "";
     }
+    setResetFile(true);
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
     setStatus(null);
     setTitle(null);
     setSelectedDate(getTodayDate());
@@ -264,7 +269,7 @@ const PrimarySaleReturn = () => {
 
   return (
     <Grid container spacing={0} >
-   
+
       <Grid
         item
         xs={12}
@@ -276,7 +281,7 @@ const PrimarySaleReturn = () => {
           position: "sticky",
           top: 0,
           ml: 1,
-        
+
         }}
       >
         <BreadcrumbsHeader pageTitle="Sales Return" />
@@ -338,6 +343,7 @@ const PrimarySaleReturn = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
@@ -355,6 +361,8 @@ const PrimarySaleReturn = () => {
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
+                      color={PRIMARY_BLUE2}
+
                       variant="outlined"
                       borderColor={PRIMARY_BLUE2}
                       onClick={handleClearStatus}

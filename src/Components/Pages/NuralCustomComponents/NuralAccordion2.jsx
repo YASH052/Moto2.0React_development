@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -80,11 +80,23 @@ const NuralAccordion2 = ({
   defaultExpanded = true,
   expanded: externalExpanded,
   onChange: externalOnChange,
-  ...props
+
+  backgroundColor,
+  expandedBackgroundColor,
+  expandedFontColor,
+  onLastFieldFilled,
+  ...props 
+
 }) => {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
 
   const isExpanded = controlled ? externalExpanded : internalExpanded;
+
+  useEffect(() => {
+    if (controlled) {
+      setInternalExpanded(externalExpanded);
+    }
+  }, [externalExpanded, controlled]);
 
   const handleChange = (event, expanded) => {
     if (controlled) {
@@ -94,11 +106,23 @@ const NuralAccordion2 = ({
     }
   };
 
+  // Check if all fields in the current accordion are filled
+  const checkFieldsFilled = () => {
+    if (onLastFieldFilled) {
+      onLastFieldFilled();
+    }
+  };
+
   return (
     <StyledAccordion
-      expanded={isExpanded}
+      expanded={controlled ? externalExpanded : isExpanded}
       onChange={handleChange}
-      isExpanded={isExpanded}
+
+      isExpanded={controlled ? externalExpanded : isExpanded}
+      backgroundColor={backgroundColor}
+      expandedBackgroundColor={expandedBackgroundColor}
+      expandedFontColor={expandedFontColor}
+
       sx={{
         // Size
         width: props.width,
@@ -149,11 +173,17 @@ const NuralAccordion2 = ({
           {title}
         </Typography>
       </StyledAccordionSummary>
-      <StyledAccordionDetails
-        backgroundColor={props.backgroundColor}
-        padding={props.padding}
-      >
-        {children}
+
+      <StyledAccordionDetails backgroundColor={backgroundColor} padding={props.padding}>
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, {
+              onLastFieldFilled: checkFieldsFilled,
+            });
+          }
+          return child;
+        })}
+
       </StyledAccordionDetails>
     </StyledAccordion>
   );

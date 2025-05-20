@@ -47,15 +47,9 @@ import TabsBar from "../../../../Common/TabsBar";
 import NuralAccordion2 from "../../../NuralCustomComponents/NuralAccordion2";
 import NuralTextField from "../../../NuralCustomComponents/NuralTextField";
 import NuralTextButton from "../../../NuralCustomComponents/NuralTextButton";
-import NuralRadioButton from "../../../NuralCustomComponents/NuralRadioButton";
-import NuralUploadFormat from "../../../NuralCustomComponents/NuralUploadFormat";
-import NuralFileUpload from "../../../NuralCustomComponents/NuralFileUpload";
-import NuralUploadStatus from "../../../NuralCustomComponents/NuralUploadStatus";
-import { AddIcCallOutlined } from "@mui/icons-material";
-import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
-import SelectionCheckboxItem from "../../../NuralCustomComponents/SelectionCheckboxItem";
+
 import { styled } from "@mui/system";
-import ISPZeroSaleTable from "../../../Dashboard/ISPZeroSaleTable";
+
 
 const Gtn = () => {
   const [page, setPage] = React.useState(0);
@@ -65,28 +59,7 @@ const Gtn = () => {
   const [selected, setSelected] = React.useState("");
   const views = ["Role 1", "Role 2", "Role 3", "Role 4"];
 
-  const templates = [
-    {
-      name: "Template 1",
-      onView: () => console.log("View Template 1"),
-      onDownload: () => console.log("Download Template 1"),
-    },
-    {
-      name: "Template 2",
-      onView: () => console.log("View Template 2"),
-      onDownload: () => console.log("Download Template 2"),
-    },
-    {
-      name: "Template 3",
-      onView: () => console.log("View Template 3"),
-      onDownload: () => console.log("Download Template 3"),
-    },
-    {
-      name: "Template 4",
-      onView: () => console.log("View Template 4"),
-      onDownload: () => console.log("Download Template 4"),
-    },
-  ];
+ 
   const labelStyle = {
     fontSize: "10px",
     lineHeight: "13.66px",
@@ -105,39 +78,12 @@ const Gtn = () => {
   ];
   const [activeTab, setActiveTab] = React.useState("gtn");
   const navigate = useNavigate();
-
-  const StyledInput = styled(InputBase)(({ theme }) => ({
-    marginLeft: "25px",
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    borderRadius: "8px",
-    maxHeight: "40px",
-    padding: "4px 12px",
-    fontSize: "14px",
-    width: "60px",
-    textAlign: "center",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-  }));
-
-  const StyledSelect = styled(Select)(({ theme }) => ({
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    maxHeight: "40px",
-    borderRadius: "8px",
-    paddingLeft: "12px",
-    fontSize: "14px",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-    ".MuiSelect-icon": {
-      color: "#5f74be",
-    },
-  }));
-
+  
  const tabs = [
    { label: "Finance Api Block", value: "finance-api-block" },
    { label: "Servity Amount", value: "servify-offer" },
    { label: "GTN", value: "gtn" },
+   { label: "GTN Payout Report", value: "gtn-payout-report" },
  ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

@@ -20,7 +20,11 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import EditIcon from "@mui/icons-material/Edit";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  toggleSectionStyle,
+} from "../../../Common/commonstyles";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 
 const tabs = [
@@ -170,6 +174,7 @@ const Model = () => {
   // Add accordion state
   const [accordionExpanded, setAccordionExpanded] = useState(true);
   const [searchAccordionExpanded, setSearchAccordionExpanded] = useState(false);
+  const [tableVisible, setTableVisible] = useState(false);
 
   // Add accordion change handlers
   const handleAccordionChange = (event, expanded) => {
@@ -177,10 +182,12 @@ const Model = () => {
       // Closing this accordion closes both
       setAccordionExpanded(false);
       setSearchAccordionExpanded(false);
+      setTableVisible(false);
     } else {
       // Opening this accordion closes the other
       setAccordionExpanded(true);
       setSearchAccordionExpanded(false);
+      setTableVisible(false);
     }
   };
 
@@ -189,10 +196,12 @@ const Model = () => {
       // Closing this accordion closes both
       setAccordionExpanded(false);
       setSearchAccordionExpanded(false);
+      setTableVisible(false);
     } else {
       // Opening this accordion closes the other
       setSearchAccordionExpanded(true);
       setAccordionExpanded(false);
+      setTableVisible(true);
     }
   };
 
@@ -515,7 +524,7 @@ const Model = () => {
       } else if (field === "subCategoryID") {
         // Clear model options
         setModelListForDropdown([]);
-        
+
         // Just update form data
         setSearchFormData((prev) => ({
           ...prev,
@@ -625,14 +634,14 @@ const Model = () => {
         modelCode: "",
         selectedModel: null,
       }));
-      
+
       // Clear model options when category changes
       setModelListForDropdown([]);
     } else if (field === "subCategoryID") {
       // Load models for the selected subcategory
       console.log("Loading models for subCategoryID:", newValue);
       getModelListForDropdown(newValue);
-      
+
       // Clear model selection
       setSearchFormData((prev) => ({
         ...prev,
@@ -644,7 +653,7 @@ const Model = () => {
     }
   };
 
-  // Update handleClearSearch to clear model dropdown data
+  // Update handleClearSearch to hide table when search is cleared
   const handleClearSearch = () => {
     setSearchFormLoading(true);
     // First reset pagination state
@@ -653,7 +662,6 @@ const Model = () => {
     setSearchStatus(null);
     setSearchTitle("");
     // Reset search form data with a completely fresh object
-    // This ensures we don't carry over any references
     setSearchFormData({
       brandID: 0,
       categoryID: 0,
@@ -674,8 +682,8 @@ const Model = () => {
       subCategoryID: 0,
       modelName: "",
       modelCode: "",
-      pageIndex: 1, // Reset to first page
-      pageSize: 10, // Set page size to 10
+      pageIndex: 1,
+      pageSize: 10,
     };
 
     // Update search params for API
@@ -692,7 +700,7 @@ const Model = () => {
     getModelList();
     getBrand();
     getSearchBrandList(); // Load brands for search filter
-    
+
     // Load categories if brandID is set
     if (formData.brandID) {
       getCategory(formData.brandID);
@@ -721,14 +729,17 @@ const Model = () => {
   const scrollToTop = (elementRef = null) => {
     if (elementRef && elementRef.current) {
       // If element ref is provided, scroll to that element
-      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      elementRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     } else {
       // Otherwise scroll to top of page
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  // Update validateForm to scroll to the form when validation fails
+  // Update validateForm to use correct character limit
   const validateForm = () => {
     const newErrors = {};
 
@@ -772,7 +783,7 @@ const Model = () => {
     }
 
     setErrors(newErrors);
-    
+
     // If there are errors, make sure the accordion is expanded
     if (Object.keys(newErrors).length > 0) {
       setAccordionExpanded(true);
@@ -781,7 +792,7 @@ const Model = () => {
         scrollToTop(createAccordionRef);
       }, 100);
     }
-    
+
     return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
@@ -952,15 +963,15 @@ const Model = () => {
         }
       } else if (field === "modelCode") {
         // Check length first - display error but allow typing to continue
-        if (newValue.length > 50) {
+        if (newValue.length > 20) {
           setFormData((prev) => ({
             ...prev,
-            [field]: newValue.substring(0, 50), // Truncate to 50 chars
+            [field]: newValue.substring(0, 20), // Truncate to 20 chars
           }));
 
           setErrors((prev) => ({
             ...prev,
-            modelCode: "Model Code cannot exceed 50 characters",
+            modelCode: "Model Code cannot exceed 20 characters",
           }));
           return; // Don't continue with normal update
         }
@@ -1073,7 +1084,6 @@ const Model = () => {
   };
 
   const handleCancel = () => {
-    setFormLoading(true);
     const updatedForm = {
       ...formData,
       modelName: "",
@@ -1088,7 +1098,7 @@ const Model = () => {
       callType: 1, // Reset to Insert mode
     };
     setFormData(updatedForm);
-
+    
     // Reset edit mode
     setIsEditMode(false);
 
@@ -1097,11 +1107,6 @@ const Model = () => {
 
     // Keep accordion expanded for better UX
     setAccordionExpanded(true);
-
-    setTimeout(() => {
-      getModelList();
-      setFormLoading(false);
-    }, 500);
   };
 
   const handlePostRequest = async () => {
@@ -1131,13 +1136,13 @@ const Model = () => {
 
         // Refresh the model list
         getModelList();
-        
+
         // Scroll to top to show success message
         scrollToTop();
       } else {
         setCreateStatus(response.statusCode);
         setCreateTitle(response.statusMessage);
-        
+
         // Scroll to form to show error message
         scrollToTop(createAccordionRef);
       }
@@ -1145,7 +1150,7 @@ const Model = () => {
       setCreateStatus(error.statusCode);
       setCreateTitle(error.statusMessage);
       console.log(error);
-      
+
       // Scroll to form to show error message
       scrollToTop(createAccordionRef);
     }
@@ -1180,22 +1185,25 @@ const Model = () => {
       console.log(`response :`, response);
       if (response.statusCode === "200") {
         // Show success message
-        setStatus(response.statusCode);
-        setTitle(response.statusMessage || "Status updated successfully");
-
+         setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Status updated successfully");
+        setTimeout(() => {
+          setSearchStatus(null);
+          setSearchTitle("");
+        }, 5000);
         // Add delay before refreshing the table
         setTimeout(() => {
           getModelList();
         }, 500); // Reduced to 500ms for better UX
       } else {
         // Show error message
-        setStatus(response.statusCode);
-        setTitle(response.statusMessage || "Failed to update status");
+        setSearchStatus(response.statusCode);
+        setSearchTitle(response.statusMessage || "Failed to update status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      setStatus(error.statusCode || 500);
-      setTitle(
+      setSearchStatus(error.statusCode || 500);
+      setSearchTitle(
         error.statusMessage || "An error occurred while updating status"
       );
     } finally {
@@ -1249,20 +1257,23 @@ const Model = () => {
     // Update search params for API
     setSearchParams(updatedParams);
 
+    // Show table when search is performed
+    setTableVisible(true);
+
     // Fetch data with the updated parameters
     getModelList(updatedParams);
   };
 
   return (
     <>
-       <Grid
+      <Grid
         container
         spacing={2}
         sx={{
           position: "relative",
-          pl: { xs: 1, sm: 1 },
-          pr: { xs: 0, sm: 0, md: "240px", lg: "270px" }, // Adjust right padding for activity panel
-          isolation: "isolate",
+          pl: { xs: 1, sm: 1, md: 0 },
+          pr: { xs: 0, sm: 0, md: "180px", lg: "270px" }, // Adjust right padding for activity panel
+          // isolation: "isolate",
         }}
       >
         {/* Breadcrumbs Header */}
@@ -1272,17 +1283,16 @@ const Model = () => {
           sx={{
             position: "sticky",
             top: 0,
-            zIndex: 1100,
+            zIndex: 10000,
             backgroundColor: "#fff",
             paddingBottom: 1,
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)", // Add shadow for visual separation
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} pr={-3}>
             <BreadcrumbsHeader pageTitle="Model" />
           </Grid>
 
-          <Grid item xs={12} ml={1} overflow={"auto"}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -1298,7 +1308,10 @@ const Model = () => {
                   <FormSkeleton />
                 ) : (
                   <>
-                    <div ref={createAccordionRef} style={{ position: 'relative', zIndex: 1000 }}>
+                    <div
+                      ref={createAccordionRef}
+                      style={{ position: "relative", zIndex: 1000 }}
+                    >
                       <NuralAccordion2
                         title={isEditMode ? "Update Model" : "Create Model"}
                         backgroundColor={LIGHT_GRAY2}
@@ -1376,7 +1389,8 @@ const Model = () => {
                               }
                               value={
                                 categoryList.find(
-                                  (item) => item.categoryID == formData.categoryID
+                                  (item) =>
+                                    item.categoryID == formData.categoryID
                                 ) || null
                               }
                               onChange={(event, newValue) => {
@@ -1388,14 +1402,6 @@ const Model = () => {
                               error={!!errors.categoryID}
                               errorMessage={errors.categoryID}
                               loading={categoryLoading}
-                              onBlur={() => {
-                                if (!formData.categoryID) {
-                                  setErrors((prev) => ({
-                                    ...prev,
-                                    categoryID: "Category is required",
-                                  }));
-                                }
-                              }}
                             />
                             {errors.categoryID && (
                               <Typography
@@ -1424,7 +1430,9 @@ const Model = () => {
                             </Typography>
                             <NuralAutocomplete
                               options={subCategoryList}
-                              getOptionLabel={(option) => option.subCategoryName}
+                              getOptionLabel={(option) =>
+                                option.subCategoryName
+                              }
                               isOptionEqualToValue={(option, value) =>
                                 option?.subCategoryID === value?.subCategoryID
                               }
@@ -1443,14 +1451,6 @@ const Model = () => {
                               error={!!errors.subCategoryID}
                               errorMessage={errors.subCategoryID}
                               loading={subCategoryLoading}
-                              onBlur={() => {
-                                if (!formData.subCategoryID) {
-                                  setErrors((prev) => ({
-                                    ...prev,
-                                    subCategoryID: "Sub-Category is required",
-                                  }));
-                                }
-                              }}
                             />
                             {errors.subCategoryID && (
                               <Typography
@@ -1498,14 +1498,6 @@ const Model = () => {
                               error={!!errors.modelType}
                               errorMessage={errors.modelType}
                               loading={false}
-                              onBlur={() => {
-                                if (!formData.modelType) {
-                                  setErrors((prev) => ({
-                                    ...prev,
-                                    modelType: "Model Type is required",
-                                  }));
-                                }
-                              }}
                             />
                             {errors.modelType && (
                               <Typography
@@ -1552,14 +1544,6 @@ const Model = () => {
                               error={!!errors.modelMode}
                               errorMessage={errors.modelMode}
                               loading={false}
-                              onBlur={() => {
-                                if (!formData.modelMode) {
-                                  setErrors((prev) => ({
-                                    ...prev,
-                                    modelMode: "Model Mode is required",
-                                  }));
-                                }
-                              }}
                             />
                             {errors.modelMode && (
                               <Typography
@@ -1666,17 +1650,17 @@ const Model = () => {
                                     ...prev,
                                     modelCode: "Model Code is required",
                                   }));
-                                } else if (formData.modelCode.length > 50) {
+                                } else if (formData.modelCode.length > 20) {
                                   setErrors((prev) => ({
                                     ...prev,
                                     modelCode:
-                                      "Model Code cannot exceed 50 characters",
+                                      "Model Code cannot exceed 20 characters",
                                   }));
                                   setFormData((prev) => ({
                                     ...prev,
                                     modelCode: formData.modelCode.substring(
                                       0,
-                                      50
+                                      20
                                     ),
                                   }));
                                 } else if (
@@ -1696,7 +1680,7 @@ const Model = () => {
                     </div>
 
                     {accordionExpanded && (
-                      <Grid container spacing={1} pr={1.5}>
+                      <Grid container spacing={1} pr={0}>
                         <Grid container sx={{ width: "100%", mt: "16px" }}>
                           {createStatus && (
                             <StatusModel
@@ -1897,7 +1881,9 @@ const Model = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={searchFormData.subCategoryID && tableLoading}
+                            loading={
+                              searchFormData.subCategoryID && tableLoading
+                            }
                             disabled={!searchFormData.subCategoryID}
                           />
                         </Grid>
@@ -1934,7 +1920,9 @@ const Model = () => {
                             placeholder="SELECT"
                             width="100%"
                             backgroundColor={LIGHT_GRAY2}
-                            loading={searchFormData.subCategoryID && tableLoading}
+                            loading={
+                              searchFormData.subCategoryID && tableLoading
+                            }
                             disabled={!searchFormData.subCategoryID}
                           />
                         </Grid>
@@ -1975,21 +1963,7 @@ const Model = () => {
             </Grid>
           </Grid>
         </>{" "}
-        <Grid
-          container
-          sx={{ width: "100%", margin: "16px", marginBottom: "0" }}
-        >
-          {status && (
-            <StatusModel
-              width="100%"
-              status={status}
-              title={title}
-              onClose={() => {
-                setStatus(null);
-                setTitle("");
-              }}
-            />
-          )}
+        <Grid container sx={{ width: "100%", margin: "16px", mb: 4 }}>
           {searchStatus && (
             <StatusModel
               width="100%"
@@ -1998,28 +1972,44 @@ const Model = () => {
               onClose={() => setSearchStatus(null)}
             />
           )}
+          {/* {searchStatus && (
+          )}
+          {/* {searchStatus && (
+            <StatusModel
+              width="100%"
+              status={searchStatus}
+              title={searchTitle}
+              onClose={() => setSearchStatus(null)}
+            />
+          )} */}
         </Grid>
-        {(!searchStatus || searchStatus === 200) && (
-          <Grid 
-            item 
-            xs={12} 
-            mt={1} 
-            sx={{ 
-              p: { xs: 1, sm: 2 },
-              position: 'relative',
-              zIndex: 900,
-              overflow: 'hidden'
-            }}
+        { tableVisible && (
+          <Grid
+            item
+            xs={12}
+            mt={-4}
+            pr={1.5}
+
+            // sx={{
+            //   p: { xs: 1, sm: 2,md:1.5 },
+            //   position: "relative",
+            //   zIndex: 900,
+            //   overflow: "hidden",
+            //   transition: "all 0.3s ease-in-out",
+            //   opacity: tableVisible ? 1 : 0,
+            //   transform: tableVisible ? "translateY(0)" : "translateY(-10px)",
+            // }}
           >
             <TableContainer
               component={Paper}
               sx={{
                 backgroundColor: LIGHT_GRAY2,
                 color: PRIMARY_BLUE2,
-                maxHeight: "calc(100vh - 90px)", // Adjusted to account for headers
+                maxHeight: "calc(100vh - 50px)",
                 overflow: "auto",
                 position: "relative",
-                zIndex: 900, // Lower than header z-index 
+                zIndex: 900,
+                transition: "all 0.3s ease-in-out",
                 "& .MuiTable-root": {
                   borderCollapse: "separate",
                   borderSpacing: 0,
@@ -2169,12 +2159,16 @@ const Model = () => {
                 </TableHead>
                 <TableBody>
                   {tableLoading || statusUpdateLoading ? (
-                    <TableRowSkeleton
-                      columns={10} // 10 columns to match your table
-                      rows={10} // Show 10 skeleton rows
-                      imagePath="./Icons/emptyFile.svg"
-                      sx={{ height: "calc(100vh - 420px)" }}
-                    />
+                    <TableRow pr={2}>
+                      <TableCell colSpan={10} align="center">
+                        <TableRowSkeleton
+                          columns={10} // 10 columns to match your table
+                          rows={10} // Show 10 skeleton rows
+                          imagePath="./Icons/emptyFile.svg"
+                          // sx={{ height: "calc(100vh - 50px)" }}
+                        />
+                      </TableCell>
+                    </TableRow>
                   ) : Array.isArray(filteredRows) && filteredRows.length > 0 ? (
                     filteredRows.map((row, index) => (
                       <TableRow key={row.id}>
@@ -2216,28 +2210,19 @@ const Model = () => {
                               // Only pass the intended new status to handleStatus
                               handleStatus(row, e.target.checked);
                             }}
-                            size="small"
-                            disabled={statusUpdateLoading && updatingRowId === row.modelID}
                             sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: PRIMARY_BLUE2,
+                              ...toggleSectionStyle,
+                              "& .MuiSwitch-thumb": {
+                                backgroundColor:
+                                  row.status === 1
+                                    ? PRIMARY_BLUE2
+                                    : DARK_PURPLE,
                               },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: DARK_PURPLE,
-                                },
                             }}
                           />
                         </TableCell>
-                        <TableCell
-                          sx={{
-                            padding: "8px 16px",
-                            fontSize: "10px",
-                            textAlign: "left",
-                            minWidth: "60px",
-                          }}
-                        >
-                            <IconButton
+                        <TableCell sx={rowstyle}>
+                          <IconButton
                             size="small"
                             onClick={() => handleEdit(row)}
                             disabled={statusUpdateLoading}

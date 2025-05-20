@@ -3,7 +3,7 @@ import { Grid, Typography, Button, IconButton } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import { PRIMARY_BLUE2, LIGHT_GRAY2 } from "../Common/colors";
-import { jumpToPageStyle } from "./commonstyles";
+import { jumpToPageStyle, tablePaginationStyle } from "./commonstyles";
 
 const NuralPagination = ({
   totalRecords,
@@ -18,13 +18,14 @@ const NuralPagination = ({
   const totalPages = Math.ceil(totalRecords / rowsPerPage);
 
   // Notify parent of pagination changes
-  const notifyParent = (newPage, newRowsPerPage) => {
+  const notifyParent = (newPage, newRowsPerPage, type) => {
     if (onPaginationChange) {
       onPaginationChange({
         page: newPage,
         rowsPerPage: newRowsPerPage,
         pageIndex: newPage + 1,
         pageSize: newRowsPerPage,
+        type: type
       });
     }
   };
@@ -32,7 +33,7 @@ const NuralPagination = ({
   const handleChangePage = (event, newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       setPage(newPage);
-      notifyParent(newPage, rowsPerPage);
+      notifyParent(newPage, rowsPerPage, 'pageChange');
     }
   };
 
@@ -41,19 +42,19 @@ const NuralPagination = ({
     const newPage = 0; // Reset to first page when changing rows per page
     setRowsPerPage(newRowsPerPage);
     setPage(newPage);
-    notifyParent(newPage, newRowsPerPage);
+    notifyParent(newPage, newRowsPerPage, 'rowsPerPageChange');
   };
 
   const handleJumpToFirst = () => {
     setPage(0);
-    notifyParent(0, rowsPerPage);
+    notifyParent(0, rowsPerPage, 'jumpToFirst');
   };
 
   const handleJumpToLast = () => {
     const lastPage = totalPages - 1;
     if (lastPage >= 0) {
       setPage(lastPage);
-      notifyParent(lastPage, rowsPerPage);
+      notifyParent(lastPage, rowsPerPage, 'jumpToLast');
     }
   };
 
@@ -72,7 +73,7 @@ const NuralPagination = ({
     if (pageNumber && pageNumber >= 1 && pageNumber <= totalPages) {
       const newPage = pageNumber - 1;
       setPage(newPage);
-      notifyParent(newPage, rowsPerPage);
+      notifyParent(newPage, rowsPerPage, 'pageSearch');
       setCustomPageInput("");
     }
   };
@@ -80,15 +81,7 @@ const NuralPagination = ({
   return (
     <Grid
       container
-      sx={{
-        p: 1,
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: "sticky",
-        bottom: 0,
-        backgroundColor: LIGHT_GRAY2,
-        zIndex: 1000,
-      }}
+      sx={tablePaginationStyle}
     >
       <Grid item>
         <Typography

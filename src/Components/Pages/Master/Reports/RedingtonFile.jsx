@@ -30,6 +30,8 @@ import NuralPagination from "../../../Common/NuralPagination";
 import Required from "../../../Common/Required";
 import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
+import { getFirstDayOfMonth, getToday } from "../../../Common/commonFunction";
+import { useNavigate } from "react-router-dom";
 
 // Add column mapping for sorting
 const columnMapping = {
@@ -43,8 +45,15 @@ const columnMapping = {
 };
 
 const RedingtonFile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState("redington-file");
-  const tabs = [{ label: "SAP Integration File", value: "redington-file" }];
+  const tabs = [
+    { label: "Activation File Received", value: "activation-file-received" },
+    { label: "SAP Integration", value: "redington-file" },
+    { label: "Reliance API Status", value: "rel-api-status" },
+    { label: "Log Report", value: "Log Report" },
+  ];
+
   const [processList, setProcessList] = useState([]);
   const [processStatus, setProcessStatus] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,19 +69,21 @@ const RedingtonFile = () => {
   };
 
   // Fix the order of state declarations
-  const [searchParams, setSearchParams] = useState({
-    service_network_id: 0,
-    interfaceMasterID: 0,
-    processStatusId: -1,
-    uploadFromDate: "",
-    uploadToDate: "",
-    export: 0,
-    exportType: 1,
-    interfaceFileID: 0,
-    poNumber: "",
-    pageIndex: 1,
-    pageSize: 10,
-    callType: 1,
+  const [searchParams, setSearchParams] = useState(() => {
+    return {
+      service_network_id: 0,
+      interfaceMasterID: 0,
+      processStatusId: -1,
+      uploadFromDate: getFirstDayOfMonth(),
+      uploadToDate: getToday(),
+      export: 0,
+      exportType: 1,
+      interfaceFileID: 0,
+      poNumber: "",
+      pageIndex: 1,
+      pageSize: 10,
+      callType: 2,
+    };
   });
 
   // These should come after searchParams declaration
@@ -92,6 +103,7 @@ const RedingtonFile = () => {
   const [fromDateError, setFromDateError] = useState("");
   const [toDateError, setToDateError] = useState("");
   const [defaultLoading, setDefaultLoading] = useState(false);
+  const [processTypeError, setProcessTypeError] = useState("");
 
   // Create these date validation handlers
   const handleFromDateChange = (newValue) => {
@@ -204,6 +216,14 @@ const RedingtonFile = () => {
   const handleSearchClick = () => {
     setStatus(false);
     setTitle("");
+    setProcessTypeError("");
+
+    // Validate process type
+    if (!searchParams.interfaceMasterID) {
+      setProcessTypeError("Please select Process Type");
+      return;
+    }
+
     // Check if dates are empty
     if (!searchParams.uploadFromDate || !searchParams.uploadToDate) {
       setFromDateError("From Date is mandatory");
@@ -263,14 +283,15 @@ const RedingtonFile = () => {
     setTitle("");
     setFromDateError("");
     setToDateError("");
+    setProcessTypeError("");
 
     // Reset search parameters to default values
     const defaultParams = {
       service_network_id: 0,
       interfaceMasterID: 0,
       processStatusId: -1,
-      uploadFromDate: "",
-      uploadToDate: "",
+      uploadFromDate: getFirstDayOfMonth(),
+      uploadToDate: getToday(),
       export: 0,
       exportType: 1,
       interfaceFileID: 0,
@@ -464,6 +485,7 @@ const RedingtonFile = () => {
   // Add the missing tab change handler function
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    navigate(`/${newValue}`);
   };
 
   return (
@@ -471,9 +493,14 @@ const RedingtonFile = () => {
       {defaultLoading ? (
         <FormSkeleton />
       ) : (
-        <Grid container spacing={2} sx={{ position: "relative", 
-          pointerEvents: loading ? "none" : "auto",
-         }}>
+        <Grid
+          container
+          spacing={2}
+          sx={{
+            position: "relative",
+            pointerEvents: loading ? "none" : "auto",
+          }}
+        >
           {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
           <Grid
             item
@@ -486,11 +513,11 @@ const RedingtonFile = () => {
               paddingBottom: 1,
             }}
           >
-            <Grid item xs={12} mt={1} mb={0} ml={1}>
-              <BreadcrumbsHeader pageTitle="Reports" />
+            <Grid item xs={12} mt={0} mb={0} ml={0}>
+              <BreadcrumbsHeader pageTitle="Misc" />
             </Grid>
 
-            <Grid item xs={12} ml={1}>
+            <Grid item xs={12} ml={0}>
               <TabsBar
                 tabs={tabs}
                 activeTab={activeTab}
@@ -542,15 +569,19 @@ const RedingtonFile = () => {
                         <NuralAutocomplete
                           label="Process Type"
                           options={processList}
-                          getOptionLabel={(option) => option.interfaceName || ""}
+                          getOptionLabel={(option) =>
+                            option.interfaceName || ""
+                          }
                           isOptionEqualToValue={(option, value) =>
-                            option?.interfaceMasterID === value?.interfaceMasterID
+                            option?.interfaceMasterID ===
+                            value?.interfaceMasterID
                           }
                           onChange={(event, newValue) => {
                             handleSearchChange(
                               "processType",
                               newValue?.interfaceMasterID || 0
                             );
+                            setProcessTypeError(""); // Clear error when value changes
                           }}
                           value={
                             processList.find(
@@ -561,7 +592,17 @@ const RedingtonFile = () => {
                           }
                           placeholder="SELECT"
                           width="100%"
+                          error={!!processTypeError}
+                          // helperText={processTypeError}
                         />
+                        {processTypeError && (
+                          <Typography
+                            color="error"
+                            sx={{ fontSize: "12px", mt: 0.5 }}
+                          >
+                            {processTypeError}
+                          </Typography>
+                        )}
                       </Grid>
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography
@@ -580,14 +621,18 @@ const RedingtonFile = () => {
                         <NuralAutocomplete
                           label="Process Status"
                           options={processStatus}
-                          getOptionLabel={(option) => option.processStatus || ""}
+                          getOptionLabel={(option) =>
+                            option.processStatus || ""
+                          }
                           isOptionEqualToValue={(option, value) =>
                             option?.processStatusId === value?.processStatusId
                           }
                           onChange={(event, newValue) => {
                             handleSearchChange(
                               "processStatus",
-                              newValue?.processStatusId || -1
+                              newValue?.processStatusId !== undefined
+                                ? newValue.processStatusId
+                                : -1
                             );
                           }}
                           value={
@@ -599,6 +644,9 @@ const RedingtonFile = () => {
                           }
                           placeholder="SELECT"
                           width="100%"
+                          disabled={
+                            !searchParams.interfaceMasterID || defaultLoading
+                          }
                         />
                       </Grid>
                       <Grid item xs={12} sm={6} md={3}>
@@ -614,7 +662,7 @@ const RedingtonFile = () => {
                         </Typography>
                         <NuralCalendar
                           width="100%"
-                          placeholder="SELECT"
+                          placeholder="DD/MMM/YYYY"
                           onChange={handleFromDateChange}
                           value={searchParams.uploadFromDate}
                           error={!!fromDateError}
@@ -645,7 +693,7 @@ const RedingtonFile = () => {
                         </Typography>
                         <NuralCalendar
                           width="100%"
-                          placeholder="DD/MM/YY"
+                          placeholder="DD/MMM/YYYY"
                           onChange={handleToDateChange}
                           value={searchParams.uploadToDate}
                           error={!!toDateError}
@@ -709,7 +757,7 @@ const RedingtonFile = () => {
             </Grid>
           </Grid>
           {status && (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+            <Grid item xs={12} mt={-2} pr={4}>
               <StatusModel
                 status={status}
                 title={title}
@@ -719,14 +767,14 @@ const RedingtonFile = () => {
             </Grid>
           )}
           {/* Add this after the NuralAccordion2 component */}
-          <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
+          <Grid item xs={12} mt={-2} sx={{ p: { xs: 1, sm: 2 } }}>
             {searchClicked && (
               <TableContainer
                 component={Paper}
                 sx={{
                   backgroundColor: LIGHT_GRAY2,
                   color: PRIMARY_BLUE2,
-                  maxHeight: "calc(100vh - 320px)",
+                  maxHeight: "calc(100vh - 50px)",
                   overflow: "auto",
                   position: "relative",
                   "& .MuiTable-root": {
@@ -744,7 +792,7 @@ const RedingtonFile = () => {
                           backgroundColor: LIGHT_GRAY2,
                           position: "sticky",
                           top: 0,
-                          zIndex: 1100,
+                          zIndex: 100,
                           borderBottom: "none",
                           boxShadow: "0 2px 2px rgba(0,0,0,0.05)",
                         }}
@@ -772,7 +820,7 @@ const RedingtonFile = () => {
                           position: "sticky",
                           top: "45px",
                           backgroundColor: LIGHT_GRAY2,
-                          zIndex: 1000,
+                          zIndex: 100,
                           "&::after": {
                             content: '""',
                             position: "absolute",
@@ -791,32 +839,32 @@ const RedingtonFile = () => {
                         "FILE",
                         "FILE ERRORS",
                         "UPLOAD STATUS",
-                        "UPLOAD RECORDS",
+                        "TOTAL RECORDS",
                         "PROCESSED RECORDS",
                         "INVALID RECORDS",
                         "PROCESSED ON",
-                        "INVALID DOWNLOAD",
+                        "DOWNLOAD",
                       ].map((header, index) => (
                         <TableCell
                           key={`column${index + 1}`}
                           onClick={() => {
-                            if (header !== "INVALID DOWNLOAD") {
+                            if (header !== "DOWNLOAD") {
                               handleSort(header);
                             }
                           }}
                           sx={{
                             ...tableHeaderStyle,
                             cursor:
-                              header !== "INVALID DOWNLOAD" ? "pointer" : "default",
+                              header !== "DOWNLOAD" ? "pointer" : "default",
                             position: "sticky",
                             top: "45px",
                             backgroundColor: LIGHT_GRAY2,
-                            zIndex: 1000,
+                            zIndex: 100,
                           }}
                         >
                           <Grid container alignItems="center" spacing={1}>
                             <Grid item>{header}</Grid>
-                            {header !== "INVALID DOWNLOAD" && (
+                            {header !== "DOWNLOAD" && (
                               <Grid
                                 item
                                 sx={{ display: "flex", alignItems: "center" }}
@@ -824,11 +872,17 @@ const RedingtonFile = () => {
                                 {sortConfig.key === columnMapping[header] ? (
                                   sortConfig.direction === "asc" ? (
                                     <ArrowUpwardIcon
-                                      sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                      sx={{
+                                        fontSize: 16,
+                                        color: PRIMARY_BLUE2,
+                                      }}
                                     />
                                   ) : (
                                     <ArrowDownwardIcon
-                                      sx={{ fontSize: 16, color: PRIMARY_BLUE2 }}
+                                      sx={{
+                                        fontSize: 16,
+                                        color: PRIMARY_BLUE2,
+                                      }}
                                     />
                                   )
                                 ) : (
@@ -855,10 +909,10 @@ const RedingtonFile = () => {
                   </TableHead>
                   <TableBody>
                     {loading ? (
-                      <TableRowSkeleton 
-                        columns={8} 
-                        imagePath="./Icons/emptyFile.svg" 
-                        sx={{ height: "calc(100vh - 420px)" }}
+                      <TableRowSkeleton
+                        columns={8}
+                        imagePath="./Icons/emptyFile.svg"
+                        sx={{ height: "calc(100vh - 50px)" }}
                       />
                     ) : tableData.length === 0 ? (
                       <TableRow>
@@ -933,31 +987,25 @@ const RedingtonFile = () => {
                             <TableCell sx={{ ...rowstyle }}>
                               {row.createdOn}
                             </TableCell>
-                            <TableCell sx={{ ...rowstyle }}>
-                              <Button
-                                variant="text"
-                                disabled={!row.existingFilePath}
+                            <TableCell
+                              sx={{
+                                ...rowstyle,
+                                textAlign: "left",
+                                width: "80px",
+                                cursor: "pointer",
+                                "&:hover": {
+                                  color: DARK_PURPLE,
+                                },
+                              }}
+                            >
+                              <img
                                 onClick={() => handleInvalidDownload(row)}
-                                sx={{
-                                  color: PRIMARY_BLUE2,
-                                  textTransform: "none",
-                                  fontSize: "12px",
-                                  outline: "none",
-                                  border: "none",
-                                  "&:focus": {
-                                    outline: "none",
-                                  },
-                                  "&.Mui-focusVisible": {
-                                    outline: "none",
-                                  },
-                                  "&.Mui-disabled": {
-                                    opacity: 0.5,
-                                  },
-                                }}
-                                component="button"
-                              >
-                                <img src="./Icons/down.svg" alt="download" />
-                              </Button>
+                                width="100px"
+                                height="100%"
+                                cursor="pointer"
+                                src="./Icons/down.svg"
+                                alt="download"
+                              />
                             </TableCell>
                           </TableRow>
                         ))

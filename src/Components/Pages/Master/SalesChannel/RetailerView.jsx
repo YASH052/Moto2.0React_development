@@ -1,5 +1,13 @@
-import { Grid, Typography, Button, Switch, Box } from "@mui/material";
-import React, { useEffect } from "react";
+import {
+  Grid,
+  Typography,
+  Button,
+  Switch,
+  Box,
+  CircularProgress,
+  IconButton,
+} from "@mui/material";
+import React, { useEffect, useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -15,6 +23,8 @@ import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
 import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 import {
   Table,
   TableBody,
@@ -24,7 +34,6 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  IconButton,
 } from "@mui/material";
 
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
@@ -41,6 +50,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Edit } from "@mui/icons-material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   BindEntityList,
   GetCityListForDropdown,
@@ -49,16 +59,20 @@ import {
   GetStateListForDropdown,
   RetailerStatusUpdate,
   SalesChannelListWithRetailer,
+  getRetailerlistinfo,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 import { createFilterOptions } from "@mui/material/Autocomplete";
 import { setRetailerID } from "../../../Redux/action";
 import { useDispatch } from "react-redux";
+
 const RetailerView = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = React.useState("view-retailer");
+  const [isDownloadLoading, setIsDownloadLoading] = React.useState(false);
   const [stateDropDownData, setStateDropDownData] = React.useState([]);
+  const [selectedRowId, setSelectedRowId] = React.useState(null);
   const log = JSON.parse(localStorage.getItem("log"));
   const tabs = [
     { label: "Add Retailer", value: "add-retailer" },
@@ -75,6 +89,15 @@ const RetailerView = () => {
     marginBottom: "5px",
     fontWeight: 400,
   };
+  const listStyle = {
+    fontFamily: "Manrope",
+    fontWeight: 700,
+    fontSize: "14px",
+    lineHeight: "19.12px",
+    letterSpacing: "0%",
+    color: PRIMARY_BLUE2,
+    p: 1,
+  };
 
   const options = [
     { label: "All", value: 2 },
@@ -82,35 +105,11 @@ const RetailerView = () => {
     { label: "InActive", value: 0 },
   ];
 
-  // const leaveTypeOptions = [
-  //   {
-  //     leaveTypeID: 1,
-  //     leaveTypeName: "Casual Leave",
-  //     leaveTypeCode: "CL",
-  //   },
-  //   {
-  //     leaveTypeID: 2,
-  //     leaveTypeName: "Leave Without Pay",
-  //     leaveTypeCode: "LWP",
-  //   },
-  //   {
-  //     leaveTypeID: 3,
-  //     leaveTypeName: "Paid Leave",
-  //     leaveTypeCode: "PL",
-  //   },
-  //   {
-  //     leaveTypeID: 4,
-  //     leaveTypeName: "Sick Leave",
-  //     leaveTypeCode: "SL",
-  //   },
-  // ];
-
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [ndDropDownData, setNdDropDownData] = React.useState([]);
@@ -121,7 +120,6 @@ const RetailerView = () => {
     React.useState([]);
 
   const [retailerDropDownData, setRetailerDropDownData] = React.useState([]);
-  // Add these states for sorting
   const [sortConfig, setSortConfig] = React.useState({
     key: null,
     direction: null,
@@ -154,14 +152,123 @@ const RetailerView = () => {
   const [filteredRows, setFilteredRows] = React.useState([]);
   const [hasSearched, setHasSearched] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isTableLoading, setIsTableLoading] = React.useState(false);
-  const SKELETON_ROWS = 10; // Number of skeleton rows to show while loading
+  const [isListLoading, setIsListLoading] = React.useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [selectedRetailerDetails, setSelectedRetailerDetails] = useState(null);
 
   const filterOptions = createFilterOptions({
     matchFrom: "any",
     limit: 100,
     stringify: (option) => option.retailerCode + " " + option.retailerName,
   });
+
+  // Define the dummy data structure based on the API response
+  const dummyApiData = {
+    retailerCode: "RTL45143",
+    groupParentRetailerId: 0,
+    retailerName: "Dummy Retailer", // Changed for clarity
+    retailerTypeId: 20,
+    retailerTypeName: "General Trade (Dummy)", // Changed for clarity
+    isIspOnCounter: 0,
+    ispOnCounter: "No",
+    retailerId: 314452,
+    areaName: "Dummy Area",
+    stateName: "Dummy State",
+    countryName: "Dummy Country",
+    regionName: "East",
+    zoneName: "",
+    countryId: 1,
+    cityName: "Dummy City",
+    districtName: "Dummy District",
+    salesmanCode: "FS458",
+    salesmanName: "Dummy Salesman",
+    salesmanId: 458,
+    contactPerson: "Dummy Contact",
+    address1: "Dummy Address Line 1",
+    address2: "",
+    statusValue: "Active",
+    pinCode: "000000",
+    areaId: 0,
+    cityId: 4169,
+    salesChannelId: 2437,
+    stateId: 121,
+    status: 1,
+    counterSize: 9999,
+    districtId: 0,
+    email: "dummy@example.com",
+    mobileNumber: "9999999999",
+    phoneNumber: "8888888888",
+    tinNumber: "DUMMYVAT123",
+    salesChannelName: "Dummy PAI INTERNATIONAL ELECTRONICS LTD",
+    salesChannelCode: "700378",
+    retailerSalesChannelId: 2437,
+    mappedOrgnhierarchyId: 0,
+    dob: "01-01-1990",
+    approval: 1,
+    approvalRemarks: "Auto Approve by Head Office",
+    bankName: "",
+    accountHolder: "",
+    accountNumber: "",
+    ifscCode: "",
+    branchLocation: "",
+    panNo: "",
+    counterValue: 9999, // Use counterValue
+    tehsilName: "",
+    tehsilId: 0,
+    orgnhierarchyId: 0,
+    retailer: "Dummy Retailer ( RTL45143 ) ",
+    loginName: "",
+    password: "",
+    parentRetailerName: "",
+    passwordSalt: "",
+    userStatus: 1,
+    locationName: "",
+    isOpeningStockEnteredForRetailer: true,
+    openingStockDate: "23-04-2024 00:00:00",
+    openingStockEntryDate: "23-04-2025 14:00:43",
+    referanceCode: "",
+    scrCategoryID: 1,
+    scrCategoryName: "A",
+  };
+
+  // Helper function to map API data (real or dummy) to display format
+  const mapApiDataToDisplay = (details) => {
+    if (!details) return null; // Handle null input
+
+    return {
+      id: details.retailerId, // Keep ID internally if needed
+      "Retailer Type": details.retailerTypeName || "N/A",
+      "Retailer Code": details.retailerCode || "N/A",
+      "Retailer Name": details.retailerName || "N/A",
+      "SCR Category": details.scrCategoryName || "N/A",
+      "Sales Channel Name": details.salesChannelName || "N/A",
+      "Salesman Name": details.salesmanName || "N/A",
+      Address: details.address1 || "N/A",
+      Country: details.countryName || "N/A",
+      State: details.stateName || "N/A",
+      City: details.cityName || "N/A",
+      District: details.districtName || "N/A",
+      Area: details.areaName || "N/A",
+      "Pin Code": details.pinCode || "N/A",
+      "Contact Person": details.contactPerson || "N/A",
+      "Phone No": details.phoneNumber || "N/A",
+      Mobile: details.mobileNumber || "N/A",
+      "Counter Potential in Volume": details.counterValue ?? "N/A",
+      EMail: details.email || "N/A",
+      "VAT No": details.tinNumber || "N/A",
+      "CSA on Counter": details.ispOnCounter || "N/A",
+      "Date of Birth": details.dob || "N/A",
+      // Bank Details
+      "Bank Name": details.bankName || "N/A",
+      "Account Holder": details.accountHolder || "N/A",
+      "Account Number": details.accountNumber || "N/A",
+      "IFSC Code": details.ifscCode || "N/A",
+      "Branch Location": details.branchLocation || "N/A",
+      "PAN Number": details.panNo || "N/A",
+    };
+  };
+
+  const detailTableRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -236,9 +343,9 @@ const RetailerView = () => {
   const fetchNdDropDownData = async () => {
     let body = {
       salesChannelTypeID: 0,
-      activeStatus: 255, //for all pass 255 otherwise selected status
-      otherEntityTypeID: log.baseEntityTypeID, //Selected User baseentitytypeid
-      getND: 1, //will pass only 1
+      activeStatus: 255,
+      otherEntityTypeID: log.baseEntityTypeID,
+      getND: 1,
       countryID: 0,
     };
 
@@ -247,7 +354,6 @@ const RetailerView = () => {
       let res = await SalesChannelListWithRetailer(body);
       if (res.statusCode == 200) {
         setNdDropDownData(res.getSalesChannelListWithRetailerList);
-        setTotalRecords(res.totalRecords);
       } else {
         // alert("error");
       }
@@ -257,7 +363,7 @@ const RetailerView = () => {
       console.log(error);
     }
   };
-  // Update the column definitions
+
   const tableColumns = [
     { id: "retailerCode", label: "RETAILER CODE", sortable: true },
     { id: "name", label: "NAME", sortable: true },
@@ -276,7 +382,8 @@ const RetailerView = () => {
   ];
 
   const handleChangePage = async (event, newPage) => {
-    setIsTableLoading(true);
+    setSelectedRetailerDetails(null);
+    setIsListLoading(true);
     try {
       const updatedParams = {
         ...searchParams,
@@ -311,19 +418,27 @@ const RetailerView = () => {
         setShowStatus(true);
         setTitle(res.statusMessage);
         setStatus(String(res.statusCode));
+        setRows([]);
+        setFilteredRows([]);
+        setTotalRecords(0);
       }
     } catch (error) {
       setShowStatus(true);
       setTitle(error.statusMessage || "Internal Server Error");
       setStatus(String(error.status));
+      setRows([]);
+      setFilteredRows([]);
+      setTotalRecords(0);
     } finally {
-      setIsTableLoading(false);
+      setIsListLoading(false);
     }
   };
 
   const handleChangeRowsPerPage = async (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
-    setIsTableLoading(true);
+    setSelectedRetailerDetails(null);
+    setIsListLoading(true);
+    setPage(0);
     try {
       const updatedParams = {
         ...searchParams,
@@ -360,23 +475,29 @@ const RetailerView = () => {
         setShowStatus(true);
         setTitle(res.statusMessage);
         setStatus(String(res.statusCode));
+        setRows([]);
+        setFilteredRows([]);
+        setTotalRecords(0);
       }
     } catch (error) {
       setShowStatus(true);
       setTitle(error.statusMessage || "Internal Server Error");
       setStatus(String(error.status));
+      setRows([]);
+      setFilteredRows([]);
+      setTotalRecords(0);
     } finally {
-      setIsTableLoading(false);
+      setIsListLoading(false);
     }
   };
 
-  // Add function to handle jump to page
   const handleJumpToPage = async (pageNumber) => {
     if (
       pageNumber >= 1 &&
       pageNumber <= Math.ceil(totalRecords / rowsPerPage)
     ) {
-      setIsTableLoading(true);
+      setSelectedRetailerDetails(null);
+      setIsListLoading(true);
       try {
         const updatedParams = {
           ...searchParams,
@@ -406,7 +527,7 @@ const RetailerView = () => {
           }));
           setRows(transformedData);
           setFilteredRows(transformedData);
-          setPage(pageNumber - 1); // Convert to 0-based index for MUI
+          setPage(pageNumber - 1);
         } else {
           setShowStatus(true);
           setTitle(res.statusMessage);
@@ -417,23 +538,20 @@ const RetailerView = () => {
         setTitle(error.statusMessage || "Internal Server Error");
         setStatus(String(error.status));
       } finally {
-        setIsTableLoading(false);
+        setIsListLoading(false);
       }
     }
   };
 
-  // Enhanced sorting function
   const handleSort = (columnName) => {
     let direction = "asc";
 
-    // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
         direction = "desc";
       } else {
-        // Reset sorting if already in desc order
         setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
+        setFilteredRows([...rows]);
         return;
       }
     }
@@ -459,23 +577,22 @@ const RetailerView = () => {
     setFilteredRows(sortedRows);
   };
 
-  // Update the search button click handler
   const handleSearchClick = async () => {
+    setShowStatus(false);
     setHasSearched(true);
-    // console.log("searchParams", searchParams);
-    setIsLoading(true);
-    setPage(1);
+    setSelectedRetailerDetails(null);
+    setIsListLoading(true);
+    setPage(0);
     let searchBody = {
       ...searchParams,
       pageIndex: 1,
+      pageSize: rowsPerPage,
     };
     try {
       let res = await getRetailer(searchBody);
       if (res.statusCode == 200) {
         setTotalRecords(res.totalRecords);
         setShowStatus(false);
-
-        // Transform API data to match table structure
         const transformedData = res.getRetailerList.map((item) => ({
           id: item.retailerID,
           retailerCode: item.retailerCode,
@@ -493,8 +610,6 @@ const RetailerView = () => {
           status: item.status,
           edit: "✎",
         }));
-        console.log("transformedData", transformedData);
-
         setRows(transformedData);
         setFilteredRows(transformedData);
         setPage(0);
@@ -502,19 +617,19 @@ const RetailerView = () => {
         setShowStatus(true);
         setTitle(res.statusMessage);
         setStatus(String(res.statusCode));
-        // Clear the table data if there's an error
         setRows([]);
         setFilteredRows([]);
+        setTotalRecords(0);
       }
     } catch (error) {
       setShowStatus(true);
       setTitle(error.statusMessage || "Internal Server Error");
-      setStatus(String(error.status));
-      // Clear the table data if there's an error
+      setStatus(String(error.status) || 500);
       setRows([]);
       setFilteredRows([]);
+      setTotalRecords(0);
     } finally {
-      setIsLoading(false);
+      setIsListLoading(false);
     }
   };
 
@@ -535,26 +650,34 @@ const RetailerView = () => {
     setShowStatus(false);
     setStatus(false);
     setTitle("");
+    setSelectedRetailerDetails(null);
+    setSortConfig({ key: null, direction: null });
   };
 
   const handleStatusChange = async (retailerID) => {
-    // alert(retailerID);
+    const currentSelectedId = selectedRetailerDetails?.id;
     try {
-      setIsTableLoading(true);
-      let body = {
-        retailerID: retailerID,
-        // Toggle between 1 and 0
-      };
+      setFilteredRows((prevRows) =>
+        prevRows.map((row) =>
+          row.id === retailerID ? { ...row, status: !row.status } : row
+        )
+      );
+      if (currentSelectedId === retailerID) {
+        setSelectedRetailerDetails((prev) =>
+          prev ? { ...prev, Status: !prev["Status"] } : null
+        );
+      }
 
+      setIsListLoading(true);
+      let body = { retailerID: retailerID };
       let res = await RetailerStatusUpdate(body);
+
       if (res.statusCode == 200) {
         setShowStatus(true);
         setTitle(res.statusMessage);
         setStatus(String(res.statusCode));
-        const updatedParams = {
-          ...searchParams,
-          pageIndex: page + 1,
-        };
+
+        const updatedParams = { ...searchParams, pageIndex: page + 1 };
         let refreshRes = await getRetailer(updatedParams);
         if (refreshRes.statusCode == 200) {
           const transformedData = refreshRes.getRetailerList.map((item) => ({
@@ -576,44 +699,191 @@ const RetailerView = () => {
           }));
           setRows(transformedData);
           setFilteredRows(transformedData);
+          if (currentSelectedId === retailerID) {
+            handleViewDetails(retailerID);
+          }
+        } else {
+          setShowStatus(true);
+          setTitle(
+            `Status updated, but list refresh failed: ${refreshRes.statusMessage}`
+          );
+          setStatus(String(refreshRes.statusCode));
         }
       } else {
         setShowStatus(true);
         setTitle(res.statusMessage || "Failed to update status");
         setStatus(String(res.statusCode));
+        setFilteredRows((prevRows) =>
+          prevRows.map((row) =>
+            row.id === retailerID ? { ...row, status: !row.status } : row
+          )
+        );
+        if (currentSelectedId === retailerID) {
+          setSelectedRetailerDetails((prev) =>
+            prev ? { ...prev, Status: !prev["Status"] } : null
+          );
+        }
       }
     } catch (error) {
       setShowStatus(true);
       setTitle(error.message || "Error updating status");
       setStatus("500");
+      setFilteredRows((prevRows) =>
+        prevRows.map((row) =>
+          row.id === retailerID ? { ...row, status: !row.status } : row
+        )
+      );
+      if (currentSelectedId === retailerID) {
+        setSelectedRetailerDetails((prev) =>
+          prev ? { ...prev, Status: !prev["Status"] } : null
+        );
+      }
     } finally {
-      setIsTableLoading(false);
-      // Hide status message after 3 seconds
+      setIsListLoading(false);
       setTimeout(() => {
         setShowStatus(false);
       }, 3000);
     }
   };
+
   const handleEdit = (retailerID) => {
     dispatch(setRetailerID(retailerID));
     navigate("/add-retailer");
   };
 
+  const downloadExcel = async () => {
+    let body = {
+      ...searchParams,
+      pageIndex: -1,
+    };
+    setIsDownloadLoading(true);
+    try {
+      let res = await getRetailer(body);
+      if (res.statusCode == 200 && res.reportLink) {
+        window.location.href = res.reportLink;
+      } else {
+        setShowStatus(true);
+        setTitle(res.statusMessage || "Failed to generate export.");
+        setStatus(String(res.statusCode || "500"));
+      }
+    } catch (error) {
+      setShowStatus(true);
+      setTitle(error.statusMessage || "Internal Server Error during export");
+      setStatus(String(error.status || "500"));
+    } finally {
+      setIsDownloadLoading(false);
+    }
+  };
+
+  const handleViewDetails = async (retailerID) => {
+    setIsListLoading(true);
+    setSelectedRetailerDetails(null);
+    setSelectedRowId(retailerID);
+    console.log("Fetching details for retailer ID:", retailerID);
+
+    let detailParams = {
+      retailerID: retailerID,
+      retailerName: "",
+      salesChannelId: 0,
+      Type: 0,
+      salesmanName: "",
+      salesmaniD: 0,
+    };
+
+    try {
+      let res = await getRetailerlistinfo(detailParams);
+      console.log("API Response from getRetailerlistinfo:", res);
+
+      if (
+        res.statusCode == 200 &&
+        res.getRetailerListinfo &&
+        res.getRetailerListinfo.length > 0
+      ) {
+        const details = res.getRetailerListinfo[0];
+        setSelectedRetailerDetails(mapApiDataToDisplay(details));
+        setTimeout(() => {
+          detailTableRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      } else {
+        console.warn(
+          `Failed to fetch details or no details found (Status: ${res.statusCode}). Displaying dummy data.`
+        );
+        setSelectedRetailerDetails(mapApiDataToDisplay(dummyApiData));
+        setTimeout(() => {
+          detailTableRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching retailer details:",
+        error,
+        ". Displaying dummy data."
+      );
+      setSelectedRetailerDetails(mapApiDataToDisplay(dummyApiData));
+      setTimeout(() => {
+        detailTableRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    } finally {
+      setIsListLoading(false);
+    }
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedRetailerDetails(null);
+    setSelectedRowId(null);
+  };
+
+  const detailLabelCellStyle = {
+    fontWeight: "bold",
+    color: "#555",
+    backgroundColor: LIGHT_GRAY2,
+    padding: "8px 12px",
+    border: "1px solid #ddd",
+    fontSize: "12px",
+    width: "30%",
+  };
+
+  const detailValueCellStyle = {
+    color: "#333",
+    backgroundColor: LIGHT_GRAY2,
+
+    padding: "8px 12px",
+    border: "1px solid #ddd",
+    fontSize: "12px",
+    width: "70%",
+  };
+
   return (
-    <Grid container spacing={2} sx={{ position: "relative" }}>
-      {/* Breadcrumbs Grid - Make it sticky with higher z-index */}
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        position: "relative",
+        pr: { xs: 0, sm: 0, md: "240px", lg: "260px", xl: "270px" },
+        pb: 2,
+      }}
+    >
       <Grid
         item
         xs={12}
         sx={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 10000,
           backgroundColor: "#fff",
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={0} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={1} pr={4}>
           <BreadcrumbsHeader pageTitle="Retailer" />
         </Grid>
 
@@ -626,7 +896,6 @@ const RetailerView = () => {
         </Grid>
       </Grid>
 
-      {/* Show FormSkeleton during initial load */}
       {isLoading ? (
         <Grid container spacing={0} lg={12} mt={1}>
           <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 } }}>
@@ -635,7 +904,6 @@ const RetailerView = () => {
         </Grid>
       ) : (
         <>
-          {/* Rest of the content */}
           <Grid
             container
             spacing={0}
@@ -647,7 +915,6 @@ const RetailerView = () => {
               <Grid container spacing={2} direction="column">
                 <Grid item>
                   <NuralAccordion2 title="Search" backgroundColor={LIGHT_GRAY2}>
-                    {/* First Row - 3 NuralAutocomplete */}
                     <Grid
                       container
                       spacing={2}
@@ -874,58 +1141,13 @@ const RetailerView = () => {
                           }
                         />
                       </Grid>
-                      {/* <Grid item xs={12} sm={6} md={4} lg={4} mt={1}>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            ...labelStyle,
-                            fontSize: { xs: "12px", sm: "10px" },
-                          }}
-                          fontWeight={600}
-                        >
-                          LEAVE TYPE
-                        </Typography>
-                        <NuralAutocomplete
-                          label="Leave Type"
-                          options={leaveTypeOptions}
-                          placeholder="SELECT"
-                          width="100%"
-                          getOptionLabel={(option) =>
-                            `${option.leaveTypeCode} - ${option.leaveTypeName}`
-                          }
-                          isOptionEqualToValue={(option, value) =>
-                            option?.leaveTypeID === value?.leaveTypeID
-                          }
-                          onChange={(event, newValue) => {
-                            handleSearchChange(
-                              "leaveTypeID",
-                              newValue?.leaveTypeID || 0,
-                              newValue
-                            );
-                          }}
-                          value={
-                            leaveTypeOptions.find(
-                              (option) =>
-                                option.leaveTypeID === searchParams.leaveTypeID
-                            ) || null
-                          }
-                          filterOptions={createFilterOptions({
-                            matchFrom: "any",
-                            limit: 10,
-                            stringify: (option) =>
-                              `${option.leaveTypeCode} ${option.leaveTypeName}`,
-                          })}
-                        />
-                      </Grid> */}
                     </Grid>
 
-                    {/* Second Row - Buttons */}
                     <Grid
                       container
                       spacing={2}
                       sx={{
                         flexDirection: { xs: "column", sm: "row" },
-                        // gap: { xs: 2, sm: 2 },
                       }}
                     >
                       <Grid item xs={12} sm={3} md={1}>
@@ -965,177 +1187,215 @@ const RetailerView = () => {
               <StatusModel width="100%" status={status} title={title} />
             )}
           </Grid>
-          {filteredRows.length && (
-            <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: 1 }}>
-              <TableContainer
-                component={Paper}
-                sx={{
-                  backgroundColor: LIGHT_GRAY2,
-                  color: PRIMARY_BLUE2,
-                  height: "calc(120vh - 400px)",
-                  position: "relative",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <Box sx={{ overflow: "auto", flex: 1 }}>
-                  <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          colSpan={15}
-                          sx={{
-                            backgroundColor: LIGHT_GRAY2,
-                            position: "sticky",
-                            top: 0,
-                            zIndex: 1100,
-                            borderBottom: "none",
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
+          {hasSearched &&
+            !isLoading &&
+            (filteredRows.length > 0 || isListLoading) && (
+              <Grid item xs={12} sx={{ p: { xs: 1, sm: 2 }, mt: -4 }}>
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    backgroundColor: LIGHT_GRAY2,
+                    color: PRIMARY_BLUE2,
+                    maxHeight: "calc(100vh - 45px)",
+                    minHeight: "200px",
+                    position: "relative",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Box sx={{ overflow: "auto", flex: 1 }}>
+                    <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            colSpan={tableColumns.length + 1}
                             sx={{
-                              fontFamily: "Manrope",
-                              fontWeight: 700,
-                              fontSize: "14px",
-                              lineHeight: "19.12px",
-                              letterSpacing: "0%",
-                              color: PRIMARY_BLUE2,
-                              p: 1,
+                              backgroundColor: LIGHT_GRAY2,
+                              position: "sticky",
+                              top: 0,
+                              zIndex: 1050,
+                              borderBottom: "none",
                             }}
                           >
-                            List
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
-                        <TableCell
-                          sx={{
-                            ...tableHeaderStyle,
-                            position: "sticky",
-                            top: "47px",
-                            backgroundColor: LIGHT_GRAY2,
-                            zIndex: 1100,
-                          }}
-                        >
-                          <Grid container alignItems="center" spacing={1}>
-                            <Grid item>S.NO</Grid>
-                          </Grid>
-                        </TableCell>
-                        {tableColumns.map((column) => (
+                            <Typography
+                              variant="body1"
+                              sx={{ ...listStyle, ml: -1.5 }}
+                            >
+                              Retailer List
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow sx={{ backgroundColor: LIGHT_GRAY2 }}>
                           <TableCell
-                            key={column.id}
-                            onClick={() =>
-                              column.sortable && handleSort(column.id)
-                            }
                             sx={{
                               ...tableHeaderStyle,
-                              cursor: column.sortable ? "pointer" : "default",
                               position: "sticky",
                               top: "47px",
                               backgroundColor: LIGHT_GRAY2,
-                              zIndex: 1100,
+                              zIndex: 1050,
                             }}
                           >
-                            <Grid container alignItems="center" spacing={1}>
-                              <Grid item>{column.label}</Grid>
-                              {column.sortable && (
-                                <Grid
-                                  item
-                                  sx={{ display: "flex", alignItems: "center" }}
-                                >
-                                  {sortConfig.key === column.id ? (
-                                    sortConfig.direction === "asc" ? (
-                                      <ArrowUpwardIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: PRIMARY_BLUE2,
-                                        }}
-                                      />
-                                    ) : (
-                                      <ArrowDownwardIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: PRIMARY_BLUE2,
-                                        }}
-                                      />
-                                    )
-                                  ) : (
-                                    <Grid
-                                      container
-                                      direction="column"
-                                      alignItems="center"
-                                      sx={{ height: 16, width: 16 }}
-                                    >
-                                      <ArrowUpwardIcon
-                                        sx={{ fontSize: 12, color: "grey.400" }}
-                                      />
-                                      <ArrowDownwardIcon
-                                        sx={{ fontSize: 12, color: "grey.400" }}
-                                      />
-                                    </Grid>
-                                  )}
-                                </Grid>
-                              )}
-                            </Grid>
+                            S.NO
                           </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {isTableLoading
-                        ? // Show skeleton rows while loading
+                          {tableColumns.map((column) => (
+                            <TableCell
+                              key={column.id}
+                              onClick={() =>
+                                column.sortable && handleSort(column.id)
+                              }
+                              sx={{
+                                ...tableHeaderStyle,
+                                cursor: column.sortable ? "pointer" : "default",
+                                position: "sticky",
+                                top: "47px",
+                                backgroundColor: LIGHT_GRAY2,
+                                zIndex: 1050,
+                              }}
+                            >
+                              <Grid container alignItems="center" spacing={1}>
+                                <Grid item>{column.label}</Grid>
+                                {column.sortable && (
+                                  <Grid
+                                    item
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {sortConfig.key === column.id ? (
+                                      sortConfig.direction === "asc" ? (
+                                        <ArrowUpwardIcon
+                                          sx={{
+                                            fontSize: 16,
+                                            color: PRIMARY_BLUE2,
+                                          }}
+                                        />
+                                      ) : (
+                                        <ArrowDownwardIcon
+                                          sx={{
+                                            fontSize: 16,
+                                            color: PRIMARY_BLUE2,
+                                          }}
+                                        />
+                                      )
+                                    ) : (
+                                      <Grid
+                                        container
+                                        direction="column"
+                                        alignItems="center"
+                                        sx={{ height: 16, width: 16 }}
+                                      >
+                                        <ArrowUpwardIcon
+                                          sx={{
+                                            fontSize: 12,
+                                            color: "grey.400",
+                                          }}
+                                        />
+                                        <ArrowDownwardIcon
+                                          sx={{
+                                            fontSize: 12,
+                                            color: "grey.400",
+                                          }}
+                                        />
+                                      </Grid>
+                                    )}
+                                  </Grid>
+                                )}
+                              </Grid>
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {isListLoading ? (
                           Array(rowsPerPage)
                             .fill(0)
                             .map((_, index) => (
                               <TableRowSkeleton
                                 key={index}
-                                columns={tableColumns.length + 1} // +1 for S.NO column
+                                columns={tableColumns.length + 1}
                               />
                             ))
-                        : // : filteredRows.length === 0 ? (
-                          //   <TableRow>
-                          //     <TableCell
-                          //       colSpan={tableColumns.length + 1}
-                          //       align="center"
-                          //     >
-                          //       No records found
-                          //     </TableCell>
-                          //   </TableRow>
-                          // )
+                        ) : filteredRows.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={tableColumns.length + 1}
+                              align="center"
+                              sx={{ ...rowstyle }}
+                            >
+                              No records found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
                           filteredRows.map((row, index) => (
-                            <TableRow key={row.id}>
+                            <TableRow
+                              key={row.id}
+                              sx={{
+                                ...rowstyle,
+                                color:
+                                  row.id === selectedRowId
+                                    ? "#fff"
+                                    : "inherit",
+                                backgroundColor:
+                                  row.id === selectedRowId
+                                    ? PRIMARY_BLUE2
+                                    : "inherit",
+                                "&:hover": {
+                                  backgroundColor:
+                                    row.id === selectedRowId
+                                      ? DARK_PURPLE
+                                      : "rgba(0, 0, 0, 0.04)",
+                                },
+                              }}
+                            >
                               <TableCell
                                 sx={{
                                   ...rowstyle,
-                                  color: PRIMARY_BLUE2,
+                                  color: row.id === selectedRowId ? "#fff" : PRIMARY_BLUE2,
                                   fontWeight: 600,
                                 }}
                               >
                                 {page * rowsPerPage + index + 1}
                               </TableCell>
                               {tableColumns.map((column) => (
-                                <TableCell key={column.id} sx={{ ...rowstyle }}>
+                                <TableCell 
+                                  key={column.id} 
+                                  sx={{ 
+                                    ...rowstyle,
+                                    color: row.id === selectedRowId ? "#fff" : "inherit",
+                                    "& .MuiIconButton-root": {
+                                      color: row.id === selectedRowId ? "#fff" : DARK_PURPLE,
+                                    },
+                                    "& .MuiTypography-root": {
+                                      color: row.id === selectedRowId ? "#fff" : DARK_PURPLE,
+                                    },
+                                  }}
+                                >
                                   {column.id === "details" ? (
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleViewDetails(row.id)}
+                                      sx={{
+                                        color: DARK_PURPLE,
+                                        p: "4px",
+                                        "&:focus": { outline: "none" },
                                       }}
+                                      title="View Details"
                                     >
-                                      <span>{row[column.id]}</span>
-                                      <span
-                                        style={{
-                                          fontSize: "10px",
-                                          fontWeight: "600",
-                                          marginLeft: "5px",
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
                                           color: DARK_PURPLE,
+                                          fontSize: "10px",
+                                          fontWeight: 400,
                                         }}
                                       >
-                                        <VisibilityIcon fontSize="small" />
-                                      </span>
-                                    </div>
+                                        View
+                                      </Typography>{" "}
+                                      &nbsp;
+                                      <VisibilityIcon fontSize="small" />
+                                    </IconButton>
                                   ) : column.id === "status" ? (
                                     <Switch
                                       checked={row.status}
@@ -1152,216 +1412,366 @@ const RetailerView = () => {
                                       }}
                                     />
                                   ) : column.id === "edit" ? (
-                                    <Edit
-                                      sx={{ color: DARK_PURPLE }}
-                                      fontSize="small"
+                                    <IconButton
+                                      size="small"
                                       onClick={() => handleEdit(row.id)}
-                                    />
+                                      sx={{
+                                        color: DARK_PURPLE,
+                                        p: "4px",
+                                        "&:focus": { outline: "none" },
+                                      }}
+                                      title="Edit Retailer"
+                                    >
+                                      <Edit fontSize="small" />
+                                    </IconButton>
                                   ) : (
                                     row[column.id]
                                   )}
                                 </TableCell>
                               ))}
                             </TableRow>
-                          ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-                {/* Custom Pagination */}
-                <Grid container sx={tablePaginationStyle}>
-                  <Grid item>
-                    <Typography
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        textAlign: "center",
-                      }}
-                      variant="body2"
-                      color="text.secondary"
-                    >
-                      TOTAL RECORDS:{" "}
-                      <span style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}>
-                        {totalRecords} / {Math.ceil(totalRecords / rowsPerPage)}{" "}
-                        PAGES
-                      </span>
-                    </Typography>
-                  </Grid>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                  {totalRecords > 0 && !isListLoading && (
+                    <Grid container sx={tablePaginationStyle}>
+                      <Grid item>
+                        <Typography
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 400,
+                            fontSize: "10px",
+                            lineHeight: "13.66px",
+                            letterSpacing: "4%",
+                            textAlign: "center",
+                          }}
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          TOTAL RECORDS:{" "}
+                          <span
+                            style={{ fontWeight: 700, color: PRIMARY_BLUE2 }}
+                          >
+                            {totalRecords} /{" "}
+                            {Math.ceil(totalRecords / rowsPerPage)} PAGES
+                          </span>
+                        </Typography>
+                      </Grid>
 
-                  <Grid item>
-                    <Grid
-                      container
-                      spacing={1}
-                      sx={{
-                        maxWidth: 300,
-                        ml: 1,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        //   gap: 1,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          mt: 1,
-                          fontSize: "10px",
-                          color: PRIMARY_BLUE2,
-                          fontWeight: 600,
-                        }}
-                      >
-                        SHOW :
-                      </Typography>
-                      {[10, 25, 50, 100].map((value) => (
-                        <Grid item key={value}>
-                          <Button
-                            onClick={() =>
-                              handleChangeRowsPerPage({ target: { value } })
-                            }
+                      <Grid item>
+                        <Grid
+                          container
+                          spacing={1}
+                          sx={{
+                            maxWidth: 300,
+                            ml: 1,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
                             sx={{
-                              minWidth: "25px",
-                              height: "24px",
-                              padding: "4px",
-                              borderRadius: "50%",
-                              backgroundColor:
-                                rowsPerPage === value
-                                  ? PRIMARY_BLUE2
-                                  : "transparent",
-                              color:
-                                rowsPerPage === value ? "#fff" : PRIMARY_BLUE2,
-                              fontSize: "12px",
-                              "&:hover": {
-                                backgroundColor:
-                                  rowsPerPage === value
-                                    ? PRIMARY_BLUE2
-                                    : "transparent",
-                              },
-                              "&:focus": {
-                                outline: "none",
-                              },
-                              mx: 0.5,
+                              mt: 1,
+                              fontSize: "10px",
+                              color: PRIMARY_BLUE2,
+                              fontWeight: 600,
                             }}
                           >
-                            {value}
-                          </Button>
+                            SHOW :
+                          </Typography>
+                          {[10, 25, 50, 100].map((value) => (
+                            <Grid item key={value}>
+                              <Button
+                                onClick={() =>
+                                  handleChangeRowsPerPage({ target: { value } })
+                                }
+                                sx={{
+                                  minWidth: "25px",
+                                  height: "24px",
+                                  padding: "4px",
+                                  borderRadius: "50%",
+                                  backgroundColor:
+                                    rowsPerPage === value
+                                      ? PRIMARY_BLUE2
+                                      : "transparent",
+                                  color:
+                                    rowsPerPage === value
+                                      ? "#fff"
+                                      : PRIMARY_BLUE2,
+                                  fontSize: "12px",
+                                  "&:hover": {
+                                    backgroundColor:
+                                      rowsPerPage === value
+                                        ? PRIMARY_BLUE2
+                                        : "transparent",
+                                  },
+                                  "&:focus": {
+                                    outline: "none",
+                                  },
+                                  mx: 0.5,
+                                }}
+                              >
+                                {value}
+                              </Button>
+                            </Grid>
+                          ))}
                         </Grid>
-                      ))}
+                      </Grid>
+
+                      <Grid
+                        item
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          color: PRIMARY_BLUE2,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "8px",
+                            lineHeight: "10.93px",
+                            letterSpacing: "4%",
+                            textAlign: "center",
+                          }}
+                          onClick={() => handleJumpToPage(1)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          JUMP TO FIRST
+                        </Typography>
+                        <IconButton
+                          onClick={() => handleChangePage(null, page - 1)}
+                          disabled={page === 0}
+                          sx={{
+                            "&:focus": {
+                              outline: "none",
+                            },
+                          }}
+                        >
+                          <NavigateBeforeIcon />
+                        </IconButton>
+
+                        <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
+                          PAGE {page + 1}
+                        </Typography>
+
+                        <IconButton
+                          onClick={() => handleChangePage(null, page + 1)}
+                          disabled={
+                            page >= Math.ceil(totalRecords / rowsPerPage) - 1
+                          }
+                          sx={{
+                            "&:focus": {
+                              outline: "none",
+                            },
+                          }}
+                        >
+                          <NavigateNextIcon />
+                        </IconButton>
+
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontFamily: "Manrope",
+                            fontWeight: 700,
+                            fontSize: "8px",
+                            lineHeight: "10.93px",
+                            letterSpacing: "4%",
+                            textAlign: "center",
+                            cursor: "pointer",
+                            "&:focus": {
+                              outline: "none",
+                            },
+                          }}
+                          onClick={() =>
+                            handleJumpToPage(
+                              Math.ceil(totalRecords / rowsPerPage)
+                            )
+                          }
+                        >
+                          JUMP TO LAST
+                        </Typography>
+                        <input
+                          type="number"
+                          placeholder="Jump to page"
+                          min={1}
+                          max={Math.ceil(totalRecords / rowsPerPage)}
+                          onChange={(e) => {
+                            const pageNumber = parseInt(e.target.value, 10);
+                            setJumpToPageNumber(pageNumber);
+                          }}
+                          style={jumpToPageStyle}
+                        />
+                        <IconButton
+                          onClick={() => {
+                            if (jumpToPageNumber) {
+                              handleJumpToPage(jumpToPageNumber);
+                            }
+                          }}
+                          sx={{
+                            ml: 1,
+                            p: 0,
+                            "&:hover": {
+                              backgroundColor: "transparent",
+                            },
+                            "&:focus": {
+                              outline: "none",
+                            },
+                          }}
+                        >
+                          <img src="./Icons/footerSearch.svg" alt="search" />
+                        </IconButton>
+                      </Grid>
                     </Grid>
-                  </Grid>
+                  )}
+                </TableContainer>
+              </Grid>
+            )}
 
-                  <Grid
-                    item
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      color: PRIMARY_BLUE2,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "8px",
-                        lineHeight: "10.93px",
-                        letterSpacing: "4%",
-                        textAlign: "center",
-                      }}
-                      onClick={() => handleJumpToPage(1)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      JUMP TO FIRST
-                    </Typography>
-                    <IconButton
-                      onClick={() => handleChangePage(null, page - 1)}
-                      disabled={page === 0}
-                      sx={{
-                        "&:focus": {
-                          outline: "none",
-                        },
-                      }}
-                    >
-                      <NavigateBeforeIcon />
-                    </IconButton>
-
-                    <Typography sx={{ fontSize: "10px", fontWeight: 700 }}>
-                      PAGE {page + 1}
-                    </Typography>
-
-                    <IconButton
-                      onClick={() => handleChangePage(null, page + 1)}
-                      disabled={
-                        page >= Math.ceil(totalRecords / rowsPerPage) - 1
-                      }
-                      sx={{
-                        "&:focus": {
-                          outline: "none",
-                        },
-                      }}
-                    >
-                      <NavigateNextIcon />
-                    </IconButton>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "8px",
-                        lineHeight: "10.93px",
-                        letterSpacing: "4%",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        "&:focus": {
-                          outline: "none",
-                        },
-                      }}
-                      onClick={() =>
-                        handleJumpToPage(Math.ceil(totalRecords / rowsPerPage))
-                      }
-                    >
-                      JUMP TO LAST
-                    </Typography>
-                    <input
-                      type="number"
-                      placeholder="Jump to page"
-                      min={1}
-                      max={Math.ceil(totalRecords / rowsPerPage)}
-                      onChange={(e) => {
-                        const pageNumber = parseInt(e.target.value, 10);
-                        setJumpToPageNumber(pageNumber);
-                      }}
-                      style={jumpToPageStyle}
-                    />
-                    <IconButton
-                      onClick={() => {
-                        if (jumpToPageNumber) {
-                          handleJumpToPage(jumpToPageNumber);
-                        }
-                      }}
-                      sx={{
-                        ml: 1,
-                        p: 0,
-                        "&:hover": {
-                          backgroundColor: "transparent",
-                        },
-                        "&:focus": {
-                          outline: "none",
-                        },
-                      }}
-                    >
-                      <img src="./Icons/footerSearch.svg" alt="search" />
-                    </IconButton>
-                  </Grid>
-                </Grid>
+          {selectedRetailerDetails && (
+            <Grid
+              item
+              xs={12}
+              sx={{ p: { xs: 1, sm: 2 }, mt: -2 }}
+              ref={detailTableRef}
+            >
+              <TableContainer
+                component={Paper}
+                sx={{ backgroundColor: LIGHT_GRAY2, color: PRIMARY_BLUE2 }}
+              >
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        sx={{
+                          ...tableHeaderStyle,
+                          backgroundColor: LIGHT_GRAY2,
+                          position: "relative",
+                          padding: "16px",
+                        }}
+                      >
+                        <Grid
+                          container
+                          justifyContent="space-between"
+                          alignItems="center"
+                        >
+                          <Grid item>
+                            <Typography
+                              variant="h6"
+                              sx={{ ...listStyle, ml: -1.5 }}
+                            >
+                              Retailer Detail
+                            </Typography>
+                          </Grid>
+                          <Grid item>
+                            <IconButton
+                              onClick={handleCloseDetails}
+                              size="small"
+                              sx={{
+                                color: PRIMARY_BLUE2,
+                                "&:hover": {
+                                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                                },
+                              }}
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {isDetailLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={2} align="center" sx={{ py: 5 }}>
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      Object.entries(selectedRetailerDetails)
+                        .filter(([key]) => key !== "id")
+                        .map(([key, value]) => (
+                          <TableRow
+                            key={key}
+                            sx={{
+                              "&:last-child td, &:last-child th": { border: 0 },
+                              bgcolor: LIGHT_GRAY2,
+                            }}
+                          >
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              sx={detailLabelCellStyle}
+                            >
+                              {key}
+                            </TableCell>
+                            <TableCell sx={detailValueCellStyle}>
+                              {value}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </Table>
               </TableContainer>
             </Grid>
           )}
         </>
       )}
+
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={2}
+        lg={3}
+        mt={0}
+        position={"fixed"}
+        right={{
+          xs: 0,
+          sm: 5,
+          md: 5,
+          lg: 10,
+        }}
+        sx={{
+          zIndex: 10000,
+          top: "0px",
+          height: "calc(100vh - 0px)",
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": { marginBottom: "16px" },
+          "& .export-button": { filter: "none !important" },
+        }}
+      >
+        <NuralActivityPanel>
+          <Grid
+            item
+            xs={12}
+            md={12}
+            lg={12}
+            xl={12}
+            mt={2}
+            mb={2}
+            className="export-button"
+          >
+            <NuralExport
+              title="Export"
+              views={""}
+              downloadExcel={downloadExcel}
+              isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
+      </Grid>
     </Grid>
   );
 };

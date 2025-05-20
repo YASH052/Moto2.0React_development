@@ -96,7 +96,7 @@ const CreateScheme = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={1}>
             <BreadcrumbsHeader pageTitle="Scheme" />
           </Grid>
 

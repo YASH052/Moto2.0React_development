@@ -21,6 +21,7 @@ import {
   WHITE,
   BLACK,
   MEDIUM_BLUE,
+  RED,
 } from "../../../Common/colors";
 import NuralButton from "../../NuralCustomComponents/NuralButton";
 import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
@@ -42,10 +43,7 @@ import {
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import { UploadPageSkeleton } from "../../../Common/SkeletonComponents";
-const options = [
-  { value: "all", label: "ALL" },
-  { value: "custom", label: "CUSTOM" },
-];
+import { templateUrl } from "../../../Common/urls";
 
 const targetTypeOptions = [
   { value: 1, label: "QTY" },
@@ -60,8 +58,9 @@ const targetBasedOnOptions = [
 const targetCategoryOptions = [
   { value: 1, label: "SKU" },
   { value: 2, label: "BRAND" },
-  { value: 3, label: "PRODUCT CATEGORY (SUBCATEGORY)" },
-  { value: 4, label: "PRODUCT (CATEGORY)" },
+  { value: 4, label: "PRODUCT CATEGORY" },
+  { value: 3, label: "PRODUCT  SUBCATEGORY" },
+
   { value: 5, label: "CONSOLIDATED" },
 ];
 
@@ -70,13 +69,8 @@ const tabs = [
   { label: "Search", value: "view-target" },
 ];
 
-const templates = [
-  {
-    name: "Template 1",
-    onView: () => console.log("Reference Data 1"),
-    onDownload: () => console.log("Download Reference Data 1"),
-  },
-];
+const Required = () => <span style={{ color: RED }}>*</span>;
+
 const Target = () => {
   const [activeTab, setActiveTab] = React.useState("target");
   const [showStatus, setShowStatus] = useState(false);
@@ -96,7 +90,7 @@ const Target = () => {
     state: false,
     city: false,
     upload: false,
-    reference: false
+    reference: false,
   });
   const [errors, setErrors] = useState({
     targetName: "",
@@ -110,6 +104,28 @@ const Target = () => {
     targetFrom: "",
     targetTo: "",
   });
+  const templates = [
+    {
+      name: "Download Target Template",
+      onView: () => console.log("Reference Data 1"),
+      onDownload: () => {
+        setLoading((prev) => ({ ...prev, reference: true }));
+
+        setTimeout(() => {
+          window.location.href = `${templateUrl}UploadTargetTemplate.xlsx`;
+          setShowStatus(true);
+          setStatus(200);
+          setTitle("Template downloaded successfully");
+          setTimeout(() => {
+            setShowStatus(false);
+            setStatus(null);
+            setTitle(null);
+          }, 3000);
+          setLoading((prev) => ({ ...prev, reference: false }));
+        }, 1000);
+      },
+    },
+  ];
 
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
@@ -233,11 +249,12 @@ const Target = () => {
         setCityDrop([]);
         setFormData((prev) => ({
           ...prev,
-          stateID: null,
-          cityID: null,
+          stateID: 0,
+          cityID: 0,
         }));
       }
     }
+
     if (field === "stateID") {
       if (value) {
         getCityListForDropdown(value);
@@ -245,7 +262,7 @@ const Target = () => {
         setCityDrop([]);
         setFormData((prev) => ({
           ...prev,
-          cityID: null,
+          cityID: 0,
         }));
       }
     }
@@ -254,14 +271,15 @@ const Target = () => {
     if (field === "targetFrom" || field === "targetTo") {
       const fromDate = field === "targetFrom" ? value : formData.targetFrom;
       const toDate = field === "targetTo" ? value : formData.targetTo;
-      
+
       if (fromDate && toDate) {
         const from = new Date(fromDate);
         const to = new Date(toDate);
         if (from > to) {
           setErrors((prev) => ({
             ...prev,
-            targetFrom: "Target From date cannot be greater than Target To date",
+            targetFrom:
+              "Target From date cannot be greater than Target To date",
           }));
         }
       }
@@ -286,16 +304,31 @@ const Target = () => {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       }
     } catch (error) {
       setShowStatus(true);
       setStatus(error.status);
       setTitle(error.statusMessage);
       console.error("Error in handleReference:", error);
+      setTimeout(() => {
+        setShowStatus(false);
+        setStatus(null);
+        setTitle(null);
+      }, 3000);
     } finally {
       setLoading((prev) => ({ ...prev, reference: false }));
     }
@@ -332,21 +365,6 @@ const Target = () => {
       isValid = false;
     }
 
-    if (!formData.regionID) {
-      newErrors.regionID = "Region is required";
-      isValid = false;
-    }
-
-    if (!formData.stateID) {
-      newErrors.stateID = "State is required";
-      isValid = false;
-    }
-
-    if (!formData.cityID) {
-      newErrors.cityID = "City is required";
-      isValid = false;
-    }
-
     if (!formData.targetType) {
       newErrors.targetType = "Target Type is required";
       isValid = false;
@@ -372,7 +390,8 @@ const Target = () => {
       const fromDate = new Date(formData.targetFrom);
       const toDate = new Date(formData.targetTo);
       if (fromDate > toDate) {
-        newErrors.targetFrom = "Target From date cannot be greater than Target To date";
+        newErrors.targetFrom =
+          "Target From date cannot be greater than Target To date";
         isValid = false;
       }
     }
@@ -420,12 +439,11 @@ const Target = () => {
     setCityDrop([]);
   };
 
+  const statusModelRef = React.useRef(null);
+
   const handlePostClick = async () => {
     // First validate the form
     if (!validateForm()) {
-      setShowStatus(true);
-      setStatus(400);
-      setTitle("Please fill all required fields correctly");
       return;
     }
 
@@ -440,30 +458,54 @@ const Target = () => {
 
     setLoading((prev) => ({ ...prev, upload: true }));
     const file = fileInput.files[0];
+    const body = {
+      ...formData,
+      targetUserTypeID: 4,
+    };
 
     try {
-      let res = await UploadTarget(formData, file);
+      let res = await UploadTarget(body, file);
 
       if (res.statusCode == 200) {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         handleCancel(); // Reset form on success
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(() => {
+          setShowStatus(false);
+          setStatus(null);
+          setTitle(null);
+        }, 3000);
       }
     } catch (error) {
       setShowStatus(true);
       setStatus(error.status);
       setTitle(error.statusMessage);
       console.error("Upload error:", error);
+      setTimeout(() => {
+        setShowStatus(false);
+        setStatus(null);
+        setTitle(null);
+      }, 3000);
     } finally {
       setLoading((prev) => ({ ...prev, upload: false }));
     }
@@ -477,6 +519,15 @@ const Target = () => {
       setTitle("");
     }
   };
+
+  useEffect(() => {
+    if (showStatus && statusModelRef.current) {
+      statusModelRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [showStatus]);
 
   return (
     <>
@@ -493,11 +544,11 @@ const Target = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={0}>
             <BreadcrumbsHeader pageTitle="Target" />
           </Grid>
 
-          <Grid item xs={12} ml={1}>
+          <Grid item xs={12} ml={0}>
             <TabsBar
               tabs={tabs}
               activeTab={activeTab}
@@ -505,7 +556,7 @@ const Target = () => {
             />
           </Grid>
         </Grid>
-        {Object.values(loading).some(value => value) ? (
+        {loading.upload || loading.reference ? (
           <UploadPageSkeleton />
         ) : (
           <Grid container spacing={2} p={2}>
@@ -531,7 +582,7 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET NAME
+                          TARGET NAME <Required />
                         </Typography>
                         <NuralTextField
                           width="100%"
@@ -562,7 +613,7 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET FOR
+                          TARGET FOR <Required />
                         </Typography>
                         <NuralAutocomplete
                           label="TARGET FOR"
@@ -583,7 +634,8 @@ const Target = () => {
                           value={
                             targetForDrop.find(
                               (option) =>
-                                option.entityTypeID === formData.targetUserTypeID
+                                option.entityTypeID ===
+                                formData.targetUserTypeID
                             ) || null
                           }
                           error={!!errors.targetUserTypeID}
@@ -607,7 +659,7 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET CATEGORY
+                          TARGET CATEGORY <Required />
                         </Typography>
                         <NuralAutocomplete
                           placeholder="SELECT"
@@ -622,7 +674,8 @@ const Target = () => {
                           }}
                           value={
                             targetCategoryOptions.find(
-                              (option) => option.value === formData.targetCategory
+                              (option) =>
+                                option.value === formData.targetCategory
                             ) || null
                           }
                           error={!!errors.targetCategory}
@@ -659,7 +712,7 @@ const Target = () => {
                           loading={loading.region}
                           getOptionLabel={(option) => option.regionName || ""}
                           onChange={(event, newValue) => {
-                            handleChange("regionID", newValue?.regionID || null);
+                            handleChange("regionID", newValue?.regionID || 0);
                           }}
                           value={
                             regionDrop.find(
@@ -668,9 +721,6 @@ const Target = () => {
                           }
                           error={!!errors.regionID}
                         />
-                        {errors.regionID && (
-                          <FormHelperText error>{errors.regionID}</FormHelperText>
-                        )}
                       </Grid>
                       <Grid item xs={12} md={4}>
                         <Typography
@@ -694,7 +744,7 @@ const Target = () => {
                           loading={loading.state}
                           getOptionLabel={(option) => option.stateName || ""}
                           onChange={(event, newValue) => {
-                            handleChange("stateID", newValue?.stateID || null);
+                            handleChange("stateID", newValue?.stateID || 0);
                           }}
                           value={
                             stateDrop.find(
@@ -703,9 +753,6 @@ const Target = () => {
                           }
                           error={!!errors.stateID}
                         />
-                        {errors.stateID && (
-                          <FormHelperText error>{errors.stateID}</FormHelperText>
-                        )}
                       </Grid>
                       <Grid item xs={12} md={4}>
                         <Typography
@@ -729,7 +776,7 @@ const Target = () => {
                           loading={loading.city}
                           getOptionLabel={(option) => option.cityName || ""}
                           onChange={(event, newValue) => {
-                            handleChange("cityID", newValue?.cityID || null);
+                            handleChange("cityID", newValue?.cityID || 0);
                           }}
                           value={
                             cityDrop.find(
@@ -738,9 +785,6 @@ const Target = () => {
                           }
                           error={!!errors.cityID}
                         />
-                        {errors.cityID && (
-                          <FormHelperText error>{errors.cityID}</FormHelperText>
-                        )}
                       </Grid>
                     </Grid>
 
@@ -759,7 +803,7 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET TYPE
+                          TARGET TYPE <Required />
                         </Typography>
                         <NuralAutocomplete
                           placeholder="SELECT"
@@ -795,7 +839,7 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET BASED ON
+                          TARGET BASED ON <Required />
                         </Typography>
                         <NuralAutocomplete
                           placeholder="SELECT"
@@ -810,7 +854,8 @@ const Target = () => {
                           }}
                           value={
                             targetBasedOnOptions.find(
-                              (option) => option.value === formData.targetBasedOn
+                              (option) =>
+                                option.value === formData.targetBasedOn
                             ) || null
                           }
                           error={!!errors.targetBasedOn}
@@ -834,10 +879,11 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET FROM
+                          TARGET FROM <Required />
                         </Typography>
                         <NuralCalendar
                           width="100%"
+                          disableFutureDates={false}
                           value={formData.targetFrom}
                           onChange={(date) => {
                             const formattedDate = date
@@ -868,10 +914,12 @@ const Target = () => {
                             mb: 1,
                           }}
                         >
-                          TARGET TO
+                          TARGET TO <Required />
                         </Typography>
                         <NuralCalendar
                           width="100%"
+                          disableFutureDates={false}
+
                           value={formData.targetTo}
                           onChange={(date) => {
                             const formattedDate = date
@@ -884,7 +932,9 @@ const Target = () => {
                           error={!!errors.targetTo}
                         />
                         {errors.targetTo && (
-                          <FormHelperText error>{errors.targetTo}</FormHelperText>
+                          <FormHelperText error>
+                            {errors.targetTo}
+                          </FormHelperText>
                         )}
                       </Grid>
                     </Grid>
@@ -898,7 +948,6 @@ const Target = () => {
                         buttonBg={MEDIUM_BLUE}
                         backgroundColor={LIGHT_GRAY2}
                         width="100%"
-                        // referenceIcon1={"./Icons/downloadIcon.svg"}
                         referenceIcon2={"./Icons/downloadIcon.svg"}
                         title="Templates"
                         onClickReference={handleReference}
@@ -912,7 +961,6 @@ const Target = () => {
                     <Grid item xs={12} md={6} lg={6}>
                       <Grid item>
                         <NuralFileUpload
-                          mandatory
                           backgroundColor={LIGHT_GRAY2}
                           fileRef={fileInputRef}
                           accept=".xlsx,.xls,.csv"
@@ -921,21 +969,23 @@ const Target = () => {
                         />
                       </Grid>
                       <Grid item xs={12} md={12} lg={12} mt={2} pr={2}>
-                        {showStatus && (
-                          <StatusModel
-                            width="100%"
-                            status={status}
-                            title={title}
-                          />
-                        )}
+                        <div ref={statusModelRef}>
+                          {showStatus && (
+                            <StatusModel
+                              width="100%"
+                              status={status}
+                              title={title}
+                            />
+                          )}
+                        </div>
                       </Grid>
-                      <Grid container spacing={1} mt={1} mb={2}>
+                      <Grid container spacing={1} mt={0} mb={2}>
                         <Grid item xs={12} md={6} lg={6}>
                           <NuralButton
                             text="CANCEL"
                             variant="outlined"
                             borderColor={PRIMARY_BLUE2}
-                            onClick={()=>{
+                            onClick={() => {
                               handleCancel();
                               setShowStatus(false);
                               setStatus(0);

@@ -43,6 +43,10 @@ const ImeiBinding = () => {
   const [activeTab, setActiveTab] = React.useState("imei-binding");
   const [selectedFormat, setSelectedFormat] = React.useState("interface");
   const tabs = [
+    { label: "Attendance Upload", value: "attendance-upload" },
+
+    { label: "Leave Type", value: "leave-type" },
+    { label: "Leave Allocation", value: "leave-allocation" },
     { label: "Manage", value: "manage" },
     { label: "IMEI Binding", value: "imei-binding" },
   ];

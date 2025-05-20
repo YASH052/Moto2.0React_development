@@ -1,218 +1,73 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import { Grid } from "@mui/material";
+import React, { useState, useRef } from "react";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
 import TabsBar from "../../../Common/TabsBar";
-import NuralAccordion2 from "../../NuralCustomComponents/NuralAccordion2";
-import {
-  AQUA,
-  DARK_PURPLE,
-  LIGHT_GRAY2,
-  PRIMARY_BLUE2,
-  PRIMARY_LIGHT_GRAY,
-} from "../../../Common/colors";
-import NuralAutocomplete from "../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../NuralCustomComponents/NuralCalendar";
-import NuralButton from "../../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
-  IconButton,
-} from "@mui/material";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
-import NuralTextField from "../../NuralCustomComponents/NuralTextField";
-import NuralUploadStatus from "../../NuralCustomComponents/NuralUploadStatus";
-import NuralRadioButton from "../../NuralCustomComponents/NuralRadioButton";
+
 import { useNavigate } from "react-router-dom";
-import StatusModel from "../../../Common/StatusModel";
+
 import AddUser from "../User/AddUser";
 import AddLocation from "../User/AddLocation";
 import ViewUser from "../User/ViewUser";
-import ViewLocation from "../User/ViewLocation";
-
-const radioOptions = [
-  { value: "yes", label: "Interface" },
-  { value: "no", label: "Batch" },
-];
+import NuralActivityPanel from "../../NuralCustomComponents/NuralActivityPanel";
+import NuralExport from "../../NuralCustomComponents/NuralExport";
 
 const AddOrganisation = () => {
   const navigate = useNavigate();
-  const [showModel, setShowModel] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("org-people");
-  const [tabbs, setTabbs] = React.useState([
+  const [tabbs] = React.useState([
     { label: "Org People", value: "org-people" },
     { label: "ISP", value: "add-isp" },
     { label: "Ranking Weightage", value: "ranking-weightage" },
     { label: "Salesman", value: "add-salesman" },
   ]);
 
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
+  const [editingLocationItem, setEditingLocationItem] = useState(null);
+  const [editingUserItem, setEditingUserItem] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [expandedAccordion, setExpandedAccordion] = useState("location");
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
+  const addLocationRef = useRef(null);
+  const addUserRef = useRef(null);
+
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
     navigate(`/${newValue}`);
   };
 
-  // Add these states for pagination
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Add these states for sorting
-  const [sortConfig, setSortConfig] = React.useState({
-    key: null,
-    direction: null,
-  });
-
-  // Replace the existing dummy data with this more realistic data
-  const generateDummyData = () => {
-    const regions = ["North", "South", "East", "West", "Central"];
-    const states = [
-      "Maharashtra",
-      "Gujarat",
-      "Karnataka",
-      "Tamil Nadu",
-      "Delhi",
-    ];
-    const saleTypes = ["Direct", "Distributor", "Online", "Retail"];
-    const serialTypes = ["A123", "B456", "C789", "D012", "E345"];
-
-    return Array(50)
-      .fill()
-      .map((_, index) => ({
-        id: `${1000 + index}`,
-        column1: saleTypes[Math.floor(Math.random() * saleTypes.length)],
-        column2: regions[Math.floor(Math.random() * regions.length)],
-        column3: states[Math.floor(Math.random() * states.length)],
-        column4: new Date(
-          2024,
-          Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
-        ).toLocaleDateString(),
-        column5: Math.floor(Math.random() * 10000000),
-        column6: serialTypes[Math.floor(Math.random() * serialTypes.length)],
-        column7: `Product-${Math.floor(Math.random() * 100)}`,
-        column8: Math.floor(Math.random() * 100),
-        column9: `Status-${Math.floor(Math.random() * 3)}`,
-      }));
+  const handleCreationSuccess = () => {
+    console.log("Creation success, incrementing refresh key");
+    setRefreshKey((prevKey) => prevKey + 1);
   };
 
-  const [rows, setRows] = React.useState(generateDummyData());
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  const handleAccordionToggle = (panel) => {
+    setExpandedAccordion((prev) => (prev === panel ? null : panel));
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Enhanced sorting function
-  const handleSort = (columnName) => {
-    let direction = "asc";
-
-    // If clicking the same column
-    if (sortConfig.key === columnName) {
-      if (sortConfig.direction === "asc") {
-        direction = "desc";
-      } else {
-        // Reset sorting if already in desc order
-        setSortConfig({ key: null, direction: null });
-        setFilteredRows([...rows]); // Reset to original order
-        return;
-      }
-    }
-
-    setSortConfig({ key: columnName, direction });
-
-    const sortedRows = [...filteredRows].sort((a, b) => {
-      if (!a[columnName]) return 1;
-      if (!b[columnName]) return -1;
-
-      const aValue = a[columnName].toString().toLowerCase();
-      const bValue = b[columnName].toString().toLowerCase();
-
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
-      return 0;
+  const handleEditLocation = (item) => {
+    setEditingLocationItem(item);
+    setEditingUserItem(null);
+    setExpandedAccordion("location");
+    addLocationRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
     });
-
-    setFilteredRows(sortedRows);
   };
 
-  // Add search/filter functionality
-  const handleSearch = (searchValues) => {
-    const filtered = rows.filter((row) => {
-      return (
-        (!searchValues.saleType ||
-          row.column1
-            .toLowerCase()
-            .includes(searchValues.saleType.toLowerCase())) &&
-        (!searchValues.region ||
-          row.column2
-            .toLowerCase()
-            .includes(searchValues.region.toLowerCase())) &&
-        (!searchValues.state ||
-          row.column3
-            .toLowerCase()
-            .includes(searchValues.state.toLowerCase())) &&
-        (!searchValues.fromDate ||
-          new Date(row.column4) >= new Date(searchValues.fromDate)) &&
-        (!searchValues.toDate ||
-          new Date(row.column4) <= new Date(searchValues.toDate)) &&
-        (!searchValues.serialType ||
-          row.column6
-            .toLowerCase()
-            .includes(searchValues.serialType.toLowerCase()))
-      );
-    });
-
-    setFilteredRows(filtered);
-    setPage(0); // Reset to first page when filtering
+  const handleEditUser = (item) => {
+    setEditingUserItem(item);
+    setEditingLocationItem(null);
+    setExpandedAccordion("user");
+    addUserRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Update the search button click handler
-  const handleSearchClick = () => {
-    const searchValues = {
-      saleType: document.querySelector('[name="saleType"]')?.value || "",
-      region: document.querySelector('[name="region"]')?.value || "",
-      state: document.querySelector('[name="state"]')?.value || "",
-      fromDate: document.querySelector('[name="fromDate"]')?.value || "",
-      toDate: document.querySelector('[name="toDate"]')?.value || "",
-      serialType: document.querySelector('[name="serialType"]')?.value || "",
-    };
-    handleSearch(searchValues);
+  const handleCancelEdit = () => {
+    setEditingLocationItem(null);
+    setEditingUserItem(null);
+  };
+
+  const handleExport = () => {
+    console.log("Export clicked in AddOrganisation");
+    // Add export logic here later
   };
 
   return (
@@ -242,24 +97,98 @@ const AddOrganisation = () => {
         </Grid>
       </Grid>
 
-      {/* Rest of the content */}
+      {/* Main Content Area with Right Padding */}
       <Grid
-        container
-        spacing={0}
-        lg={12}
-        mt={1}
-        sx={{ position: "relative", zIndex: 1 }}
+        item
+        xs={12} // Takes full width initially
+        sx={{
+          mt: 1,
+          zIndex: 1,
+          pr: { lg: '270px' }, // Add padding on large screens to avoid overlap with fixed sidebar
+          width: '100%' // Ensure it tries to use full width before padding
+        }}
       >
-        <Grid
-          item
-          xs={12}
-          sx={{ p: { xs: 2, sm: 2 }, pl: { xs: 3 }, pr: { xs: 0 } }}
-        >
-          <AddLocation />
-          <AddUser />
-          <ViewUser />
-          <ViewLocation />
+        <Grid container spacing={0} >
+          <Grid
+            item
+            xs={12}
+            sx={{ p: { xs: 2, sm: 2 }, pl: { xs: 3 }, pr: { xs: 0 } }}
+          >
+            {activeTab === "org-people" && (
+              <>
+                <div ref={addLocationRef}>
+                  <AddLocation
+                    editingLocation={editingLocationItem}
+                    onCancelEdit={handleCancelEdit}
+                    onCreationSuccess={handleCreationSuccess}
+                    isExpanded={expandedAccordion === "location"}
+                    onAccordionChange={() => handleAccordionToggle("location")}
+                  />
+                </div>
+                <div ref={addUserRef}>
+                  <AddUser
+                    editingUser={editingUserItem}
+                    onCancelEdit={handleCancelEdit}
+                    onCreationSuccess={handleCreationSuccess}
+                    isExpanded={expandedAccordion === "user"}
+                    onAccordionChange={() => handleAccordionToggle("user")}
+                  />
+                </div>
+                <ViewUser
+                  onEditLocation={handleEditLocation}
+                  onEditUser={handleEditUser}
+                  refreshKey={refreshKey}
+                  isSearchExpanded={expandedAccordion === "search"}
+                  onSearchAccordionChange={() => handleAccordionToggle("search")}
+                />
+              </>
+            )}
+          </Grid>
         </Grid>
+      </Grid>
+
+      {/* Fixed Sidebar */}
+      <Grid
+        item
+        xs={12}
+        sm={3}
+        md={3}
+        lg={3}
+        mt={0}
+        mr={0}
+        position={"fixed"} // Re-applied fixed position
+        right={{ // Positioned to the right
+          xs: 0,
+          sm: 5,
+          md: 5,
+          lg: 0,
+        }}
+        sx={{
+          zIndex: 1000, // Ensure it's above content but below header potentially?
+          top: "0px", // Position below the sticky header (adjust as needed)
+          right: "1rem", // Spacing from the right edge
+          height: "calc(100vh - 10px)", // Fill height below header
+          overflowY: "auto",
+          paddingBottom: "20px",
+          "& > *": {
+            marginBottom: "16px",
+            transition: "filter 0.3s ease",
+          },
+          "& .export-button": {
+            filter: "none !important",
+          },
+        }}
+      >
+        <NuralActivityPanel height="100%"> {/* Panel takes full height of its container */}
+          <Grid item xs={12} md={12} lg={12} xl={12} mt={2}>
+            <NuralExport
+               title="Export "
+               views={{}}
+               downloadExcel={handleExport} // Connect the handler
+              //  isDownloadLoading={isDownloadLoading}
+            />
+          </Grid>
+        </NuralActivityPanel>
       </Grid>
     </Grid>
   );

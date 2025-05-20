@@ -7,16 +7,20 @@ const inventoryTypes = [
   { title: "AI NORMS", link: "/ai-norms" },
   { title: "STOCK ADJUSTMENT REASON", link: "/stock-adjustment-reason" },
   { title: "GRN", link: "/grn" },
+  { title: "DEMO CONVERSION", link: "/demo-conversion" },
 ];
 
 const financeTypes = [
   { title: "FINANCE API BLOCK ACCESS", link: "/finance-api-block" },
   { title: "SERVIFY OFFER", link: "/servify-offer" },
+  { title: "GTN", link: "/gtn" },
+  { title: "GTN PAYOUT REPORT", link: "/gtn-payout-report" },
 ];
 
 const attendanceTypes = [
   { title: "LEAVE TYPE", link: "/leave-type" },
   { title: "LEAVE ALLOCATION", link: "/leave-allocation" },
+  { title: "MANAGE", link: "/manage" },
 ];
 
 const merchandizingTypes = [
@@ -28,20 +32,24 @@ const competitionTypes = [
   { title: "BRAND", link: "/competition-brand" },
   { title: "CATEGORY", link: "/competition-category" },
   { title: "MODEL", link: "/competition-model" },
-  { title: "PRICE BAND", link: "/price-band" },
-  { title: "UPLOAD", link: "/competition-upload" },
+  { title: "PRICE BAND", link: "/competition-price-band" },
+  { title: "UPLOAD", link: "/competiton-upload" },
 ];
 
 const brandTypes = [
-  { title: "DEMO CATEGORIZATION", link: "/demo-categorization" },
+  { title: "DEMO PLANOGRAM", link: "/demo-planogram" },
   { title: "L1/L2 ISSUE", link: "/l1l2-issue" },
-  { title: "MEZ AUDIT", link: "/mez-audit" },
-  { title: "ISP AUDIT", link: "/isp-audit" },
-  { title: "VISIBILITY AUDIT", link: "/visibility-audit" },
-  { title: "STORE OPS", link: "/store-ops" },
+  { title: "MANAGE AUDIT", link: "/manage-audit" },
+  // { title: "MEZ AUDIT", link: "/mez-audit" },
+  // { title: "ISP AUDIT", link: "/isp-audit" },
+  // { title: "VISIBILITY AUDIT", link: "/visibility-audit" },
+  // { title: "STORE OPS", link: "/store-ops" },
 ];
 
-const lndTypes = [{ title: "CATEGORY", link: "/lnd-category" }];
+const lndTypes = [
+  { title: "CATEGORY", link: "/lnd-category" },
+  { title: "ASSESSMENT", link: "/lnd-assessment-report" },
+];
 
 const Module = () => {
   return (

@@ -1,12 +1,15 @@
 import React from "react";
-import { Card, Typography, Box } from "@mui/material";
+import { Card, Typography, Box, colors } from "@mui/material";
 import {
+  AQUA_DARK2,
   DARK_PURPLE,
+  GREEN_COLOR,
   LIGHT_GRAY2,
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
 
 const AttendanceCard = ({
+  growth,
   mt,
   title = "ISPs Present Yesterday",
   present = 115,
@@ -37,27 +40,26 @@ const AttendanceCard = ({
   },
   percentageStyles = {
     fontFamily: "Manrope",
+    color:AQUA_DARK2,
     fontWeight: 700,
     fontSize: "8px",
     lineHeight: "13.66px",
     letterSpacing: "0.04em",
   },
 }) => {
-  const percentage = Math.round((present / total) * 100);
-
   return (
     <Card sx={{ ...cardStyles, backgroundColor, mt }}>
       <Box sx={{ p: 0.5 }}>
         <Typography sx={{ ...titleStyles, color: titleColor }}>
-          {title.toUpperCase()}
+          {title}
         </Typography>
 
         <Typography sx={{ ...valueStyles, color: valueColor }}>
-          {present}/{total}
+          {present}
         </Typography>
 
-        <Typography sx={{ ...percentageStyles, color: percentageColor }}>
-          {percentage}% ATTENDANCE
+        <Typography sx={{ ...percentageStyles }}>
+          {growth}% ATTENDANCE
         </Typography>
       </Box>
     </Card>

@@ -1,140 +1,74 @@
 import { Grid, Typography, Button, Stack, Paper, Box } from "@mui/material";
-import React from "react";
-import ISPZeroSaleTable from "./ISPZeroSaleTable";
-
+import React, { use, useEffect, useState } from "react";
+import ISPPerformanceTable from "./ISPPerformanceTable";
 import {
-  AQUA,
   AQUA_DARK2,
   DARK_PURPLE,
   LIGHT_GRAY2,
-  LIGHTAQUA,
-  MEDIUM_BLUE,
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
-  BORDER_BOTTOM,
-  WHITE,
+  WHITE
 } from "../../Common/colors";
-
 import { useNavigate } from "react-router-dom";
-import BreadcrumbsHeader from "../../Common/BreadcrumbsHeader";
 import TabsBar from "../../Common/TabsBar";
-import NuralAccordion2 from "../NuralCustomComponents/NuralAccordion2";
 import NuralAutocomplete from "../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../NuralCustomComponents/NuralCalendar";
-import NuralButton from "../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../NuralCustomComponents/NuralTextButton";
 import SalesTrendGraph from "../NuralCustomComponents/DashboardWidgets/SalesTrendGraph";
-import TargetAchievement from "../NuralCustomComponents/DashboardWidgets/TargetAchievement";
-import AttendanceChart from "../NuralCustomComponents/DashboardWidgets/AttendanceChart.jsx";
-import AttendanceCard from "../NuralCustomComponents/DashboardWidgets/AttendanceCard.jsx";
-import CounterShare from "../NuralCustomComponents/DashboardWidgets/CounterShare";
-import {
-  weeklyData,
-  monthlyData,
-  yearlyData,
-  rankings,
-} from "../NuralCustomComponents/TestCompo.jsx";
+import { GetDropdownHierarchyList, GetTargetDashboard } from "../../Api/Api";
+import { DashboardExportButton } from "../../Common/DashboardExportButton.jsx";
+import GreetingHeader from "../../Common/GreetingHeader";
 
-import SalesMetricsGrid from "../NuralCustomComponents/DashboardWidgets/SalesMetricsGrid";
-import RankingNSM from "../NuralCustomComponents/DashboardWidgets/RankingNSM.jsx";
-import RankingCard from "../NuralCustomComponents/DashboardWidgets/RankingCard.jsx";
 
-import FocusModelPerformance from "../../Common/NuralCustomComponents/DashboardWidgets/FocusModelPerformance.jsx";
-import DistributorInventoryChart from "../NuralCustomComponents/DashboardWidgets/DistributorInventoryChart.jsx";
-import styled from "styled-components";
-import RetailerSalesChart from "../NuralCustomComponents/DashboardWidgets/RetailerSalesChart.jsx";
-import GraphWithTable from "../NuralCustomComponents/DashboardWidgets/GraphWithTable.jsx";
-import AttendanceChartWithData from "../NuralCustomComponents/DashboardWidgets/AttendanceChartwithData.jsx";
-import SalesDonutChart from "../NuralCustomComponents/DashboardWidgets/SalesDonutChart.jsx";
-import TargetChart from "../NuralCustomComponents/DashboardWidgets/TargetChart.jsx";
-const data = [
-  { date: "14/03", total: 3000, nsm: 2000 },
-  { date: "15/03", total: 9000, nsm: 8000 },
-  { date: "16/03", total: 4000, nsm: 7000 },
-  { date: "17/03", total: 6000, nsm: 8000 },
-  { date: "18/03", total: 8000, nsm: 4000 },
-  { date: "19/03", total: 9000, nsm: 7000 },
-  { date: "20/03", total: 8500, nsm: 8000 },
-];
+const currentDate = new Date().toLocaleDateString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric'
+}).toUpperCase()
+const log = JSON.parse(localStorage.getItem("log"));
+const userType = log?.userType; ///It can be RSM ASM TSM or ISP so now on the basis of userType we will show the dropdowns if userType is RSM then we will show the ASM TSM and ISP dropdowns if userType is ASM then we will show the TSM and ISP dropdowns if userType is TSM then we will show the ISP dropdowns if userType is ISP then we will not show the dropdowns
+console.log(log, "log");
 
-const salesMetrics = [
-  {
-    title: "Yesterday Sales",
-    value: "₹14,200",
-    trend: 5.2,
-    comparedTo: "VS PREV. DAY",
-    backgroundColor: "#F8F7FF",
-  },
-
-  {
-    title: "MTD Sales",
-    value: "₹2,85,400",
-    trend: -12.3,
-    comparedTo: "VS PREV. MONTH",
-    backgroundColor: "#F8F7FF",
-  },
-  {
-    title: "YTD Sales",
-    value: "₹14.85Cr",
-    trend: -2.7,
-    comparedTo: "VS PREV. YEAR",
-    backgroundColor: "#FFF1F1",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "115/124",
-    trend: 92,
-    comparedTo: "ATTENDANCE",
-    subtitle: "93% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-  {
-    title: "ISPs Present Yesterday",
-    value: "78/124",
-    trend: 56,
-    comparedTo: "ATTENDANCE",
-    subtitle: "89% ATTENDANCE",
-    backgroundColor: "#FFFFFF",
-  },
-];
 const RATTarget = () => {
-  const [activeTab, setActiveTab] = React.useState("target");
+  const [activeTab, setActiveTab] = React.useState("rat-target");
+  const [flag, setFlag] = useState(false);
+  const [asmList, setAsmList] = useState([]);
+  const [tsmList, setTsmList] = useState([]);
+  const [ispList, setIspList] = useState([]);
+  const [targetDashboard, setTargetDashboard] = useState([]);
+  const [targetDashboardBottom10, setTargetDashboardBottom10] = useState([]);
 
+  const [searchParams, setSearchParams] = React.useState({
+    asmID: 0,
+    tsmID: 0,
+    ispID: 0,
+    topBottom: 0 /*0=TOP,1=BOTTOM*/,
+    callType: 0 /*1=Export*/,
+  });
+
+  const {
+    monthlyValueList,
+    monthlyVolumeList,
+    yearlyValueList,
+    yearlyVolumeList,
+    monthlyGraphList,
+    targetISPPerformanceList,
+  } = targetDashboard;
+  console.log(searchParams, "searchParams");
+  // console.log(tsmList, "tsmList");
+  // console.log(ispList, "ispList");
   const tabs = [
-    { label: "Business", value: "business" },
-    { label: "Channels", value: "channels" },
-    { label: "Availability", value: "availability" },
-
-    { label: "Brand", value: "brand" },
-    { label: "Attendance", value: "attendance" },
-    { label: "Inventory", value: "inventory" },
-    { label: "Target", value: "target" },
-    { label: "Incentive", value: "incentive" },
+    { label: "Business", value: "dashboard" },
+    { label: "Channels", value: "channels-dashboard" },
+    { label: "Availability", value: "availability-dashboard" },
+    { label: "Brand", value: "brand-dashboard" },
+    { label: "Inventory", value: "inventory-dashboard" },
+    { label: "Attendance", value: "rat-attendance" },
+    { label: "Target", value: "rat-target" },
+    { label: "Incentive", value: "rat-incentive" },
   ];
-  const tabRoutes = {
-    business: "/business-dashboard",
-    channels: "/channel-performance",
-    availability: "/availability-overview",
-    attendance: "/rat-attendance",
-    inventory: "/rat-inventory-dashboard",
-    brand: "/brand-monitor",
-    target: "/rat-target",
-    incentive: "/rat-incentive",
-  };
+
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    const route = tabRoutes[newValue];
-    if (route) {
-      navigate(route);
-    }
+    navigate(`/${newValue}`);
   };
   {
     tabs.map((tab) => (
@@ -150,29 +84,28 @@ const RATTarget = () => {
   const dataCards = [
     {
       title: "Total Volume",
-      value: "930/1500 Units",
-      subText: "62% OF TARGET",
+      value: `${yearlyVolumeList?.[0]?.ytdVolume || "0/0"} Units`,
+      subText: `${yearlyVolumeList?.[0]?.ytdVolumeAch?.toFixed(2) || 0
+        }% OF TARGET`,
     },
     {
       title: "Monthly Volume",
-      value: "930/1500 Units",
-      subText: "62% OF TARGET",
+      value: `${monthlyVolumeList?.[0]?.mtdVolume || "0/0"} Units`,
+      subText: `${monthlyVolumeList?.[0]?.mtdVolumeAch?.toFixed(2) || 0
+        }% OF TARGET`,
     },
     {
       title: "Total Value",
-      value: "₹2.6L/4.5L",
-      subText: "58% OF TARGET",
+      value: `₹${yearlyValueList?.[0]?.ytdValue || "0/0"}`,
+      subText: `${yearlyValueList?.[0]?.ytdValueAch?.toFixed(2) || 0
+        }% OF TARGET`,
     },
     {
       title: "Monthly Value",
-      value: "₹2.6L/4.5L",
-      subText: "58% OF TARGET",
+      value: `₹${monthlyValueList?.[0]?.mtdValue || "0/0"}`,
+      subText: `${monthlyValueList?.[0]?.mtdValueAch?.toFixed(2) || 0
+        }% OF TARGET`,
     },
-  ];
-  const autocompleteOptions = [
-    { label: "Wearables", value: "Wearables" },
-    { label: "Option 2", value: "option2" },
-    { label: "Option 3", value: "option3" },
   ];
   const navigate = useNavigate();
   const labelStyle = {
@@ -183,34 +116,210 @@ const RATTarget = () => {
     marginBottom: "5px",
     fontWeight: 400,
   };
+  const handlePostAsmList = async (value) => {
+    const body = {
+      orgnHierarchyID: value,
+    };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
+    const response = await GetDropdownHierarchyList(body);
+    console.log(response, "ASM response");
+    try {
+      if (response.statusCode == 200) {
+        setAsmList(response.hierarchyDropdownList);
+      } else {
+        setAsmList([]);
+      }
+    } catch (error) {
+      console.log(error, "error fetching ASM list");
+      setAsmList([]);
+    }
+  };
+  const handlePostTsmList = async (asmId) => {
+    if (!asmId) {
+      setTsmList([]);
+      return;
+    }
+    const body = {
+      orgnHierarchyID: asmId,
+    };
 
-  const CenterText = styled("div")({
-    position: "absolute",
-    top: "50%",
-    left: "45%",
-    transform: "translate(-50%, -50%)",
-    textAlign: "center",
-    "& h2": {
-      margin: 0,
-      fontSize: "24px",
-      fontWeight: "bold",
-      color: DARK_PURPLE,
-    },
-    "& p": {
-      margin: 0,
-      fontSize: "12px",
-      color: DARK_PURPLE,
-      opacity: 0.7,
-    },
-  });
+    const response = await GetDropdownHierarchyList(body);
+    console.log(response, "TSM response");
+    try {
+      if (response.statusCode == 200) {
+        setTsmList(response.hierarchyDropdownList);
+      } else {
+        setTsmList([]);
+      }
+    } catch (error) {
+      console.log(error, "error fetching TSM list");
+      setTsmList([]);
+    }
+  };
+
+  const handlePostIspList = async (tsmId) => {
+    if (!tsmId) {
+      setIspList([]);
+      return;
+    }
+    const body = {
+      orgnHierarchyID: tsmId,
+    };
+
+    const response = await GetDropdownHierarchyList(body);
+    console.log(response, "ISP response");
+    try {
+      if (response.statusCode == 200) {
+        setIspList(response.hierarchyDropdownList);
+      } else {
+        setIspList([]);
+      }
+    } catch (error) {
+      console.log(error, "error fetching ISP list");
+      setIspList([]);
+    }
+  };
+
+  const handleGetTargetDashboard = async () => {
+    try {
+      const response = await GetTargetDashboard(searchParams);
+      if (response.statusCode == 200) {
+        setTargetDashboard(response);
+        console.log(response, "target dashboard response");
+      } else {
+        console.log(response, "error fetching target dashboard");
+      }
+    } catch (error) {
+      console.log(error, "error fetching target dashboard");
+    }
+  };
+  const handleGetTargetDashboardBottom10 = async () => {
+    try {
+      const response = await GetTargetDashboard({
+        ...searchParams,
+        topBottom: 1
+      });
+      if (response.statusCode == 200) {
+        setTargetDashboardBottom10(response.targetISPPerformanceList);
+        console.log(response, "target dashboard response");
+      } else {
+        console.log(response, "error fetching target dashboard");
+      }
+    } catch (error) {
+      console.log(error, "error fetching target dashboard");
+    }
+  };
+  const handleGetTargetDashboardExport = async () => {
+    try {
+      const exportParams = {
+        ...searchParams,
+        callType: 1,
+      };
+
+      console.log('Export params:', exportParams); // For debugging
+
+      const response = await GetTargetDashboard(exportParams);
+      if (response.statusCode == 200) {
+        if (response.reportLink) {
+          window.location.href = response.reportLink;
+        } else {
+          console.error('No report link in response');
+        }
+      } else {
+        console.error('Error in export response:', response);
+      }
+    } catch (error) {
+      console.error("Error fetching target dashboard excel:", error);
+    }
+  };
+
+  // Initial ASM list load
+  useEffect(() => {
+
+    handleGetTargetDashboard();
+  }, [flag]);
+
+  useEffect(() => {
+    if (log?.entityId) {
+      handlePostAsmList(log.entityId);
+    }
+
+  }, []);
+
+
+  // Handle ASM selection
+  const handleAsmChange = async (value) => {
+    // First, update the statealer
+    // alert(value);
+    setIspList([]);
+
+    // Fetch TSM list for selected ASM if value exists
+    if (value) {
+      setSearchParams(prev => ({
+        ...prev,
+        asmID: value,
+        tsmID: 0,
+        ispID: 0
+
+      }));
+      handlePostTsmList(value);
+      setFlag(!flag)
+    } else {
+      setTsmList([]);
+      setSearchParams(prev => ({
+        ...prev,
+        asmID: 0,
+        tsmID: 0,
+        ispID: 0
+      }));
+      setFlag(!flag)
+    }
+  };
+
+  // Handle TSM selection
+  const handleTsmChange = async (value) => {
+
+    if (value) {
+      setSearchParams(prev => ({
+        ...prev,
+        tsmID: value,
+        // Reset ISP
+      }));
+      handlePostIspList(value);
+      setFlag(!flag)
+      // Fetch dashboard with new TSM
+    } else {
+      setIspList([]);
+      setSearchParams(prev => ({
+        ...prev,
+        tsmID: 0,
+        ispID: 0
+      }));
+      setFlag(!flag)
+      // If no TSM selected, fetch dashboard with default param
+    }
+  };
+
+  // Handle ISP selection
+  const handleIspChange = async (value) => {
+    // Update state first
+    setSearchParams(prev => ({
+      ...prev,
+      ispID: value || 0
+    }));
+
+    if (value) {
+
+      setFlag(!flag)
+    } else {
+
+      setSearchParams(prev => ({
+        ...prev,
+        ispID: 0
+      }));
+      setFlag(!flag)
+    }
+  };
 
   return (
     <>
@@ -232,42 +341,10 @@ const RATTarget = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
-            <Grid item xs={12} md={12} lg={12} mt={2}>
-              <Stack direction="row" spacing={0}>
-                <Typography
-                  variant="h6"
-                  component="div"
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "24px",
-                    lineHeight: "28px",
-                    letterSpacing: "0%",
-                  }}
-                  color={DARK_PURPLE}
-                >
-                  Good Afternoon Name Surname
-                </Typography>
-              </Stack>
-              <Stack>
-                <Typography
-                  sx={{
-                    fontFamily: "Manrope",
-                    fontWeight: 700,
-                    fontSize: "8px",
-                    lineHeight: "100%",
-                    letterSpacing: "4%",
-                    textTransform: "uppercase",
-                    color: SECONDARY_BLUE,
-                    m: 1,
-                  }}
-                >
-                  LAST LOGIN : 120:05 PM, 20 MARCH 2025
-                </Typography>
-              </Stack>
-            </Grid>
-          </Grid>
+          <GreetingHeader
+            userName={log?.userName}
+            lastLogin={log?.lastLogin || currentDate} // You can pass actual last login time here
+          />
 
           <Grid item xs={12} ml={1}>
             <TabsBar
@@ -293,52 +370,109 @@ const RATTarget = () => {
                 <Grid
                   container
                   spacing={2}
-                  mb={2}
                   sx={{
                     gap: { xs: 2, sm: 0, md: 0, lg: 0 },
                     flexDirection: { xs: "column", sm: "row" },
+                    alignItems: "center",
                   }}
                 >
                   <Grid item xs={12} sm={6} md={3} lg={3}>
                     <NuralAutocomplete
+                      label="ASM Name"
+                      options={asmList}
+                      placeholder="SELECT ASM"
                       width="100%"
-                      label="All ASM"
-                      options={options}
-                      placeholder="ALL ASM"
-                      backgroundColor={WHITE}
+                      getOptionLabel={(option) => option.locationName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.locationID === value?.locationID
+                      }
+                      onChange={(event, newValue) => {
+                        handleAsmChange(newValue?.locationID || null);
+                      }}
+                      value={
+                        asmList.find(
+                          (option) => option.locationID === searchParams.asmID
+                        ) || null
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
                     <NuralAutocomplete
+                      label="All TSM"
+                      options={tsmList}
+                      placeholder="SELECT TSM"
                       width="100%"
-                      label="ALL TSM"
-                      options={options}
-                      backgroundColor={WHITE}
-                      placeholder="ALL TSM"
+                      disabled={!searchParams.asmID}
+                      getOptionLabel={(option) => option.locationName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.locationID === value?.locationID
+                      }
+                      onChange={(event, newValue) => {
+                        handleTsmChange(newValue?.locationID || null);
+                      }}
+                      value={
+                        tsmList.find(
+                          (option) => option.locationID === searchParams.tsmID
+                        ) || null
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3} lg={3}>
                     <NuralAutocomplete
                       width="100%"
                       label="ALL ISP"
-                      options={options}
+                      options={ispList}
+                      disabled={!searchParams.tsmID}
                       backgroundColor={WHITE}
                       placeholder="ALL ISP"
+                      getOptionLabel={(option) => option.locationName || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        option?.locationID === value?.locationID
+                      }
+                      onChange={(event, newValue) => {
+                        handleIspChange(newValue?.locationID || null);
+                      }}
+                      value={
+                        ispList.find(
+                          (option) => option.locationID === searchParams.ispID
+                        ) || null
+                      }
                     />
                   </Grid>
                 </Grid>
+
                 <Grid
+                  container
                   sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
+                    // mt: 2,
+                    // mb: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
                   }}
                 >
-                  <img src="/Images/Frame7.png" alt="Frame 7" />
-                  <img src="/Images/Frame 7.png" alt="Frame 7" />
-                </Grid>
+                  <Grid item>
+                    <Typography
+                      sx={{
+                        fontFamily: "Manrope",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        color: SECONDARY_BLUE,
+                        mb: 1,
+                        mt: -3,
+                        mr: 2
+                      }}
+                    >
+                      {currentDate}
+                    </Typography>
+                  </Grid>
 
-                {/* Third Row - Buttons */}
+                  <Grid item>
+                    <DashboardExportButton
+                      handleExportExcel={handleGetTargetDashboardExport}
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
@@ -393,84 +527,29 @@ const RATTarget = () => {
                 </Grid>
               ))}
             </Grid>
-            <Grid item xs={12} md={6} lg={5} xl={6} marginLeft={1} mt={1}>
+            <Grid item xs={12} md={6} lg={6} xl={6} marginLeft={1} mt={1}>
               <SalesTrendGraph
                 height="255px"
                 paperBgColor={LIGHT_GRAY2}
                 gap="15px"
                 borderRadius="8px"
-                data={monthlyData}
+                data={monthlyGraphList}
                 title="Sales Trend [Month]"
                 subtitle="LAST 3 MONTHS TENDS"
                 period="month"
-                showLegend={false}
+                showLegend={true}
+                caseType="target"
               />
             </Grid>
           </Grid>
 
-          {/* <Grid container sx={{ marginTop: 3 }}>
-            <Grid
-              item
-              xs={12}
-              md={3}
-              lg={3}
-              xl={3}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                paddingInlineStart: 2,
-              }}
-            >
-              <TargetChart title="Daily Target" />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              md={3}
-              lg={3}
-              xl={3}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                paddingInlineStart: 2,
-              }}
-            >
-              <TargetChart title="Monthly Target" />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              md={3}
-              lg={3}
-              xl={3}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                paddingInlineStart: 2,
-              }}
-            >
-              <TargetChart title="Quarterly Target" />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              md={3}
-              lg={3}
-              xl={3}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                paddingInlineStart: 2,
-                paddingInlineEnd: 2,
-              }}
-            >
-              <TargetChart title="Yearly Target" />
-            </Grid>
-          </Grid> */}
-
           <Grid container spacing={0} ml={2} mt={2} pr={2} mb={2}>
             <Grid item xs={12}>
-              <ISPZeroSaleTable />
+              <ISPPerformanceTable
+                targetISPPerformanceList={targetISPPerformanceList}
+                targetDashboardBottom10={targetDashboardBottom10}
+                handleGetTargetDashboardBottom10={handleGetTargetDashboardBottom10}
+              />
             </Grid>
           </Grid>
         </Grid>
@@ -480,3 +559,4 @@ const RATTarget = () => {
 };
 
 export default RATTarget;
+

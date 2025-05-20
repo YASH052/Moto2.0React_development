@@ -13,10 +13,7 @@ import {
 import NuralLoginTextField from "../../../NuralCustomComponents/NuralLoginTextField";
 import NuralButton from "../../../NuralCustomComponents/NuralButton";
 import {
-  fetchRankingWeightage,
-  GetRIScoreWeightageListMoto,
-  manageRankingWeightage,
-  SaveRIScoreWeightageMoto,
+  GetRIScoreWeightageListMoto, SaveRIScoreWeightageMoto,
 } from "../../../../Api/Api";
 import StatusModel from "../../../../Common/StatusModel";
 import { FormSkeleton } from "../../../../Common/Skeletons";
@@ -26,8 +23,8 @@ export const RIAuditUpdate = () => {
   const navigate = useNavigate();
   const [tabbs, setTabbs] = React.useState([
     { label: "Demo Planogram", value: "demo-planogram" },
-    { label: "Manage Audit", value: "manage" },
-    { label: "L1/L2 Issue", value: "create-salesman" },
+    { label: "Manage Audit", value: "manage-audit" },
+    { label: "L1L2 Issue", value: "l1l2-issue" },
     { label: "RI Weightage", value: "ri-weightage" },
   ]);
 
@@ -120,10 +117,10 @@ export const RIAuditUpdate = () => {
       setTotalWeightageError(
         `Total weightage (${newTotal.toFixed(2)}%) exceeds 100%`
       );
-    } else if (newTotal < 100) {
-      setTotalWeightageError(
-        `Total weightage (${(100 - newTotal).toFixed(2)}%) Less than 100%`
-      );
+    // } else if (newTotal < 100) {
+    //   setTotalWeightageError(
+    //     `Total weightage (${(100 - newTotal).toFixed(2)}%) Less than 100%`
+    //   );
     } else {
       setTotalWeightageError("");
     }
@@ -159,7 +156,7 @@ export const RIAuditUpdate = () => {
               <Box fontSize={"10px"} color="error.main" mt="4px">
                 {
                   validationErrors[
-                    item.riScoreWeightageConfigIdriScoreWeightageConfigId
+                  item.riScoreWeightageConfigIdriScoreWeightageConfigId
                   ]
                 }
               </Box>
@@ -276,7 +273,7 @@ export const RIAuditUpdate = () => {
         setStatus(itemError.statusCode || 500);
         setTitle(
           itemError.statusMessage ||
-            `Error updating ${editedItem.riScoreWeightageName}`
+          `Error updating ${editedItem.riScoreWeightageName}`
         );
         // Keep the item in edit mode on failure
       }
@@ -340,7 +337,7 @@ export const RIAuditUpdate = () => {
       <Grid
         item
         xs={12}
-        md={6}
+        md={12}
         lg={12}
         sx={{
           // position: "sticky",
@@ -364,9 +361,9 @@ export const RIAuditUpdate = () => {
             // marginTop={"1rem"}
             borderRadius={"12px"}
             p={"1rem"}
-            // sx={{
-            //   marginTop: "12px",
-            // }}
+          // sx={{
+          //   marginTop: "12px",
+          // }}
           >
             <Box
               fontWeight={"700"}
@@ -431,7 +428,7 @@ export const RIAuditUpdate = () => {
             variant="contained"
             onClick={handlePostRequest}
             width="100%"
-            disabled={formLoading || calculateTotalWeightage() !== 100}
+            disabled={formLoading || calculateTotalWeightage() >100}
           />
         </Grid>
       </Grid>

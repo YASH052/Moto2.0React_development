@@ -54,7 +54,7 @@ const tabs = [
 
 import NuralTextButton from "../../NuralCustomComponents/NuralTextButton";
 import { useNavigate } from "react-router-dom";
-import { GetPriceBandMasterList,ManagePricebandmaster,} from "../../../Api/Api";
+import { GetPriceBandMasterList, ManagePricebandmaster, } from "../../../Api/Api";
 
 
 const PriceBand = () => {
@@ -69,19 +69,20 @@ const PriceBand = () => {
     direction: null,
   });
   const [formData, setFormData] = React.useState({
-    priceBranCode:"",
-    priceFrom:"",
-    priceTo:"",
-    priceStatus:1,//0-Deactive, 1-Active
-    selectionMode:0,//0-when inserted & update ,1-status update
-});
-
+    priceBranCode: "",
+    priceFrom: "",
+    priceTo: "",
+    priceStatus: 1,//0-Deactive, 1-Active
+    selectionMode: 0,//0-when inserted & update ,1-status update
+  });
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [loading, setLoading] = React.useState(false);
   // const [error, setError] = React.useState(null);
   const [errors, setErrors] = React.useState({});
   const [status, setStatus] = useState(null);
   const [tittle, setTittle] = useState(null);
   const SKELETON_ROWS = 6;
+
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -90,7 +91,7 @@ const PriceBand = () => {
 
   const handleSort = (columnName) => {
     let direction = "asc";
-    console.log("columnName",columnName);
+    console.log("columnName", columnName);
     // If clicking the same column
     if (sortConfig.key === columnName) {
       if (sortConfig.direction === "asc") {
@@ -112,7 +113,7 @@ const PriceBand = () => {
         const bValue = b[columnName] || 0;
         return direction === "asc" ? aValue - bValue : bValue - aValue;
       }
-      
+
       // Handle string fields
       const aValue = (a[columnName] || "").toString().toLowerCase();
       const bValue = (b[columnName] || "").toString().toLowerCase();
@@ -173,6 +174,7 @@ const PriceBand = () => {
   };
 
   const exportPriceBandMasterList = async () => {
+    setIsDownloadLoading(true);
     try {
       // setLoading(true);
       // setError(null);
@@ -199,7 +201,8 @@ const PriceBand = () => {
       setStatus(response.statusCode);
       setTittle(response.statusMessage || "Something went wrong");
     } finally {
-      setLoading(false);
+      // setLoading(false);
+      setIsDownloadLoading(false);
     }
   };
 
@@ -209,8 +212,8 @@ const PriceBand = () => {
       // setError(null);
       let body = {
         ...formData,
-        priceFrom:0,
-        priceTo:0,
+        priceFrom: 0,
+        priceTo: 0,
         priceBandID: priceBandID,
         priceStatus: status,
         selectionMode: 1,
@@ -219,19 +222,19 @@ const PriceBand = () => {
       const response = await ManagePricebandmaster(body);
       setStatus(response.statusCode);
       setTittle(response.statusMessage || "Something went wrong");
-      
+
       if (response.statusCode == 200) {
         await fetchPriceBandMasterList();
         setTimeout(() => {
           setTittle(null);
           setStatus(null);
         }, 2000);
-      }else{
+      } else {
         setTimeout(() => {
           setTittle(null);
           setStatus(null);
         }, 2000);
-        
+
       }
     } catch (error) {
       setStatus("error");
@@ -269,7 +272,7 @@ const PriceBand = () => {
           setStatus(null);
           setTittle(null);
         }, 2000);
-      }else{
+      } else {
         setTimeout(() => {
           setErrors({});
           setStatus(null);
@@ -283,23 +286,23 @@ const PriceBand = () => {
       setLoading(false);
     }
   };
-  
+
   const validateField = (name, value) => {
     switch (name) {
       case "priceBranCode":
         return !value ? "Price Band Code is required" : "";
       case "priceFrom":
-          return !value
-            ? "Price From is required"
-            : !/^[0-9]+$/.test(value)
+        return !value
+          ? "Price From is required"
+          : !/^[0-9]+$/.test(value)
             ? "Price From should be a number"
             : "";
       case "priceTo":
         return !value
           ? "Price To is required"
           : !/^[0-9]+$/.test(value)
-          ? "Price To should be a number"
-          : "";
+            ? "Price To should be a number"
+            : "";
       default:
         return "";
     }
@@ -355,7 +358,7 @@ const PriceBand = () => {
       const response = await ManagePricebandmaster(body);
       setStatus(response.statusCode);
       setTittle(response.statusMessage || "Something went wrong");
-      
+
       if (response.statusCode == 200) {
         await fetchPriceBandMasterList();
         setFormData({
@@ -370,8 +373,8 @@ const PriceBand = () => {
           setStatus(null);
           setTittle(null);
         }, 2000);
-      }else{
-        setTimeout(() => {  
+      } else {
+        setTimeout(() => {
           setErrors({});
           setStatus(null);
           setTittle(null);
@@ -399,13 +402,33 @@ const PriceBand = () => {
     setPage(lastPage);
   };
 
+  const handlePageChange = (newPage) => {
+    // Ensure page is within valid bounds
+    const maxPage = Math.ceil(totalRecords / rowsPerPage);
+    const validPage = Math.max(1, Math.min(newPage, maxPage));
+
+    setPage(validPage);
+    // setSearchData(prev => ({
+    //   ...prev,
+    //   pageIndex: validPage
+    // }));
+  };
+
+  const handlePrevPage = () => {
+    handlePageChange(page - 1);
+  };
+
+  const handleNextPage = () => {
+    handlePageChange(page + 1);
+  };
+
   return (
     <>
       <Grid container spacing={2} id="top-container"
-       sx={{
-        position: "relative",
-        pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
-      }}>
+        sx={{
+          position: "relative",
+          pr: { xs: 0, sm: 0, md: "240px", lg: "260px" }, // Add padding to make space for activity panel
+        }}>
         {/* Breadcrumbs Header */}
         <Grid
           item
@@ -539,10 +562,10 @@ const PriceBand = () => {
                         text={formData.priceBandID ? "UPDATE" : "SAVE"}
                         backgroundColor={AQUA}
                         variant="contained"
-                        onClick={formData.priceBandID  ? updatePriceBandMaster : handlePost}
+                        onClick={formData.priceBandID ? updatePriceBandMaster : handlePost}
                         width="99%"
                       />
-                    </Grid>                  
+                    </Grid>
                   </Grid>
                 )}
               </Grid>
@@ -550,17 +573,17 @@ const PriceBand = () => {
           </Grid>
 
           {/* Add error message here, above the View component */}
-          
-            <Grid item xs={12} md={12} lg={12} pr={4} mt={1}>
+
+          <Grid item xs={12} md={12} lg={12} pr={4} mt={1}>
             {status && (
-              <StatusModel width="100%" 
-              status={status}
-              title={tittle}
-              onClose={() => setStatus(null)}
+              <StatusModel width="100%"
+                status={status}
+                title={tittle}
+                onClose={() => setStatus(null)}
               />
             )}
           </Grid>
-         
+
 
           <Grid item xs={12} pr={1.5}>
             <Grid container spacing={2} direction="column">
@@ -573,10 +596,10 @@ const PriceBand = () => {
                     item
                     xs={12}
                     sx={{
-                      p: { xs: 1, sm: 2 },
-                      height: "calc(100vh - 180px)",
-                      minHeight: "650px",
-                      overflow: "hidden"
+                      p: { xs: 1, sm: 0 },
+                      // height: "calc(100vh - 180px)",
+                      // minHeight: "650px",
+                      // overflow: "hidden"
                     }}
                   >
                     <TableContainer
@@ -585,7 +608,7 @@ const PriceBand = () => {
                         backgroundColor: LIGHT_GRAY2,
                         color: PRIMARY_BLUE2,
                         maxHeight: "100%",
-                        minHeight: "650px",
+                        // minHeight: "650px",
                         display: "flex",
                         flexDirection: "column",
                         overflow: "auto",
@@ -786,7 +809,8 @@ const PriceBand = () => {
                                       checked={row.active}
                                       onChange={() => {
                                         document.getElementById('top-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        updatePriceBandMasterStatus(row.priceBandID, row.active ? 0 : 1)}}
+                                        updatePriceBandMasterStatus(row.priceBandID, row.active ? 0 : 1)
+                                      }}
                                       size="small"
                                       sx={{
                                         "& .MuiSwitch-switchBase.Mui-checked": {
@@ -823,7 +847,7 @@ const PriceBand = () => {
                                   </TableCell>
                                 </TableRow>
                               ))}
-                              {filteredRows.length < 10 && 
+                              {filteredRows.length < 10 &&
                                 Array(10 - filteredRows.length)
                                   .fill(0)
                                   .map((_, index) => (
@@ -836,7 +860,7 @@ const PriceBand = () => {
                           )}
 
                           {/* Pagination row */}
-                          <TableRow>
+                          {/* <TableRow>
                             <TableCell
                               colSpan={6}
                               sx={{
@@ -1010,11 +1034,254 @@ const PriceBand = () => {
                                 </Grid>
                               </Grid>
                             </TableCell>
-                          </TableRow>
+                          </TableRow> */}
+
+                 
+
+
+
+
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    
                   </Grid>
+                           {/* Custom Pagination */}
+                           {filteredRows.length > 0 && (
+                            <Grid
+                            xs={12}
+                              container
+                              sx={{
+                                p: 1,
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                position: "sticky",
+                                bottom: 0,
+                                backgroundColor: LIGHT_GRAY2,
+                                zIndex: 1000,
+                                // border: "1px solid red",
+                              }}
+                            >
+                              <Grid item>
+                                <Typography
+                                  sx={{
+                                    fontFamily: "Manrope",
+                                    fontWeight: 400,
+                                    fontSize: "10px",
+                                    lineHeight: "13.66px",
+                                    letterSpacing: "4%",
+                                    textAlign: "center",
+                                  }}
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  TOTAL RECORDS:{" "}
+                                  <span
+                                    style={{
+                                      fontWeight: 700,
+                                      color: PRIMARY_BLUE2,
+                                    }}
+                                  >
+                                    {totalRecords} /{" "}
+                                    {Math.ceil(totalRecords / rowsPerPage)} PAGES
+                                  </span>
+                                </Typography>
+                              </Grid>
+
+                              <Grid item>
+                                <Grid
+                                  container
+                                  spacing={1}
+                                  sx={{
+                                    maxWidth: 300,
+                                    ml: 1,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    //   gap: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      mt: 1,
+                                      fontSize: "10px",
+                                      color: PRIMARY_BLUE2,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    SHOW :
+                                  </Typography>
+                                  {[10, 25, 50, 100].map((value) => (
+                                    <Grid item key={value}>
+                                      <Button
+                                        onClick={() =>
+                                          handleChangeRowsPerPage({
+                                            target: { value },
+                                          })
+                                        }
+                                        sx={{
+                                          minWidth: "25px",
+                                          height: "24px",
+                                          padding: "4px",
+                                          borderRadius: "50%",
+                                          backgroundColor:
+                                            rowsPerPage === value
+                                              ? PRIMARY_BLUE2
+                                              : "transparent",
+                                          color:
+                                            rowsPerPage === value
+                                              ? "#fff"
+                                              : PRIMARY_BLUE2,
+                                          fontSize: "12px",
+                                          "&:hover": {
+                                            backgroundColor:
+                                              rowsPerPage === value
+                                                ? PRIMARY_BLUE2
+                                                : "transparent",
+                                          },
+                                          mx: 0.5,
+                                          "&:focus": {
+                                            outline: "none",
+                                          },
+                                        }}
+                                      >
+                                        {value}
+                                      </Button>
+                                    </Grid>
+                                  ))}
+                                </Grid>
+                              </Grid>
+
+                              <Grid
+                                item
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 2,
+                                  color: PRIMARY_BLUE2,
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontFamily: "Manrope",
+                                    fontWeight: 700,
+                                    fontSize: "8px",
+                                    lineHeight: "10.93px",
+                                    letterSpacing: "4%",
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={handleJumpToFirst}
+                                >
+                                  JUMP TO FIRST
+                                </Typography>
+                                <IconButton
+                                  onClick={() => handlePrevPage()}
+                                  disabled={page === 0}
+                                  sx={{
+                                    "&:focus": {
+                                      outline: "none",
+                                    },
+                                  }}
+                                >
+                                  <NavigateBeforeIcon />
+                                </IconButton>
+
+                                <Typography
+                                  sx={{
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  PAGE {page}
+                                </Typography>
+
+                                <IconButton
+                                  sx={{
+                                    cursor: "pointer",
+                                    "&:focus": {
+                                      outline: "none",
+                                    },
+                                  }}
+                                  onClick={() => handleNextPage()}
+                                  disabled={
+                                    page >
+                                    Math.ceil(totalRecords / rowsPerPage) - 1
+                                  }
+                                >
+                                  <NavigateNextIcon />
+                                </IconButton>
+
+                                <Typography
+                                  sx={{
+                                    fontFamily: "Manrope",
+                                    fontWeight: 700,
+                                    fontSize: "8px",
+                                    lineHeight: "10.93px",
+                                    letterSpacing: "4%",
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                    "&:focus": {
+                                      outline: "none",
+                                    },
+                                  }}
+                                  onClick={handleJumpToLast}
+                                  variant="body2"
+                                >
+                                  JUMP TO LAST
+                                </Typography>
+                                <input
+                                  type="number"
+                                  placeholder="JUMP TO PAGE"
+                                  min={1}
+                                  max={Math.ceil(totalRecords / rowsPerPage)}
+                                  // value={customPageInput}
+                                  // onChange={handleCustomPageInputChange}
+                                  // onKeyPress={handleCustomPageKeyPress}
+                                  style={{
+                                    width: "100px",
+                                    height: "24px",
+                                    fontSize: "8px",
+                                    paddingRight: "8px",
+                                    paddingLeft: "8px",
+                                    textAlign: "center",
+                                    borderRadius: "8px",
+                                    borderWidth: "1px",
+                                    border: `1px solid ${PRIMARY_BLUE2}`,
+                                    backgroundColor: LIGHT_GRAY2,
+                                    "&::placeholder": {},
+                                    outline: "none",
+                                    "&:focus": {
+                                      outline: "none",
+                                    },
+                                  }}
+                                />
+                                <Grid mt={1}
+                                onClick={(e) => {
+                                  const input = e.currentTarget.previousSibling;
+                                  const pageValue = parseInt(input.value, 10);
+                                  if (
+                                    pageValue >= 1 &&
+                                    pageValue <= Math.ceil(totalRecords / page)
+                                  ) {
+                                    handlePageChange(pageValue);
+                                    // input.value = ''; 
+                                  }
+                                }}
+                                 >
+                                  <img
+                                    src="./Icons/footerSearch.svg"
+                                    style={{ cursor: "pointer" }}
+                                    alt="arrow"
+                                  />
+                                </Grid>
+                              </Grid>
+                            </Grid>
+                          )}
+
+
                 </NuralAccordion2>
               </Grid>
             </Grid>
@@ -1071,7 +1338,7 @@ const PriceBand = () => {
               title="Export"
               views={""}
               downloadExcel={exportPriceBandMasterList}
-            //   isDownloadLoading={isDownloadLoading}
+              isDownloadLoading={isDownloadLoading}
             />
           </Grid>
         </NuralActivityPanel>

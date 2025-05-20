@@ -19,11 +19,13 @@ import {
   GetPriceMasterListV2,
   GetSKUListForDropdown,
   GetStateListForDropdown,
+  ManagePriceListWithMappingAPI,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import { FormSkeleton, TableRowSkeleton } from "../../../Common/Skeletons";
 import PriceListTable from "./PriceListTable";
 import PriceTable from "./PriceTable";
+import PriceListEdit from './PriceListEdit';
 
 const ListItemTwo = [
   {
@@ -37,7 +39,7 @@ const ListItemTwo = [
 ];
 
 const SKELETON_ROWS = 10;
-const PriceListView = () => {
+const PriceListView = ({ accordionExpanded = false, onAccordionChange }) => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState(ListItemTwo[0]);
 
@@ -45,13 +47,13 @@ const PriceListView = () => {
   const [pricePage, setPricePage] = React.useState(1);
   const [priceRowsPerPage, setPriceRowsPerPage] = React.useState(10);
   const [priceTotalRecords, setPriceTotalRecords] = React.useState(0);
-  const [priceJumpToPage, setPriceJumpToPage] = useState(1);
+  const [priceJumpToPage, setPriceJumpToPage] = useState(null);
 
   // Price list table pagination states
   const [priceListPage, setPriceListPage] = React.useState(1);
   const [priceListRowsPerPage, setPriceListRowsPerPage] = React.useState(10);
   const [priceListTotalRecords, setPriceListTotalRecords] = React.useState(0);
-  const [priceListJumpToPage, setPriceListJumpToPage] = useState(1);
+  const [priceListJumpToPage, setPriceListJumpToPage] = useState(null);
 
   const [priceData, setPriceData] = React.useState([]);
   const [priceListData, setPriceListData] = React.useState([]);
@@ -68,8 +70,12 @@ const PriceListView = () => {
   const [title, setTitle] = useState("");
   const [priceListNameDrop, setPriceListNameDrop] = React.useState([]);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const [accordionExpanded, setAccordionExpanded] = React.useState(true);
+  const [accordionExpanded2, setAccordionExpanded2] = React.useState(true);
   const [sortConfig, setSortConfig] = React.useState({
+    key: null,
+    direction: null,
+  });
+  const [priceListSortConfig, setPriceListSortConfig] = React.useState({
     key: null,
     direction: null,
   });
@@ -90,6 +96,19 @@ const PriceListView = () => {
     pageIndex: priceListPage,
     pageSize: priceListRowsPerPage,
   });
+
+  const [isSkuLoading, setIsSkuLoading] = useState(false);
+  const [isPriceListLoading, setIsPriceListLoading] = useState(false);
+  const [isCountryLoading, setIsCountryLoading] = useState(false);
+  const [isStateLoading, setIsStateLoading] = useState(false);
+
+  const [editData, setEditData] = useState({
+    priceListID: 0,
+    priceListName: "",
+    priceListType: 0,
+    priceMappingList: [],
+  });
+  const [isEditing, setIsEditing] = useState(false);
 
   const refreshTableData = async () => {
     if (selectedType.value === 0) {
@@ -123,6 +142,18 @@ const PriceListView = () => {
     fetchSkuDrop();
   }, []);
 
+  // Add event listener for price list creation
+  useEffect(() => {
+    const handlePriceListCreated = () => {
+      setPriceListFlag("refresh");
+    };
+
+    window.addEventListener("priceListCreated", handlePriceListCreated);
+    return () => {
+      window.removeEventListener("priceListCreated", handlePriceListCreated);
+    };
+  }, []);
+
   useEffect(() => {
     fetchPriceListDataWithMapping();
   }, [priceListPage, priceListRowsPerPage, priceListFlag]);
@@ -136,6 +167,7 @@ const PriceListView = () => {
   }, [priceListFlag]);
 
   const fetchCountryDrop = async () => {
+    setIsCountryLoading(true);
     let body = {
       CountryName: "",
       CallType: "1", // 0 = bind for table data, 1= active lists for dropdown*/
@@ -151,6 +183,9 @@ const PriceListView = () => {
       }
     } catch (error) {
       console.log(error);
+      setCountryDropdown([]);
+    } finally {
+      setIsCountryLoading(false);
     }
   };
   const handlePriceChangeRowsPerPage = (event) => {
@@ -203,6 +238,39 @@ const PriceListView = () => {
     setPriceData(sortedRows);
   };
 
+  const handlePriceListSort = (columnName) => {
+    let direction = "asc";
+
+    if (priceListSortConfig.key === columnName) {
+      if (priceListSortConfig.direction === "asc") {
+        direction = "desc";
+      } else {
+        setPriceListSortConfig({ key: null, direction: null });
+        return;
+      }
+    }
+
+    setPriceListSortConfig({ key: columnName, direction });
+
+    const sortedRows = [...priceListData].sort((a, b) => {
+      if (!a[columnName]) return 1;
+      if (!b[columnName]) return -1;
+
+      const aValue = a[columnName].toString().toLowerCase();
+      const bValue = b[columnName].toString().toLowerCase();
+
+      if (aValue < bValue) {
+        return direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    setPriceListData(sortedRows);
+  };
+
   const fetchPriceMasterList = async () => {
     setIsSearchLoading(true);
     let body = {
@@ -237,6 +305,7 @@ const PriceListView = () => {
   };
 
   const fetchSkuDrop = async () => {
+    setIsSkuLoading(true);
     let body = {
       skuID: 0,
       categoryID: 0 /*product CategoryID*/,
@@ -257,20 +326,9 @@ const PriceListView = () => {
       setSkuDropDown([]);
       setFilteredSkuDropDown([]);
       console.log(error);
+    } finally {
+      setIsSkuLoading(false);
     }
-  };
-
-  const handleSkuSearch = (searchText) => {
-    if (!searchText) {
-      setFilteredSkuDropDown(skuDropDown);
-      return;
-    }
-    const filtered = skuDropDown.filter(
-      (sku) =>
-        sku.skuCode?.toLowerCase().includes(searchText.toLowerCase()) ||
-        sku.skuName?.toLowerCase().includes(searchText.toLowerCase())
-    );
-    setFilteredSkuDropDown(filtered);
   };
 
   React.useEffect(() => {
@@ -338,6 +396,7 @@ const PriceListView = () => {
   };
 
   const fetchStateDrop = async (value) => {
+    setIsStateLoading(true);
     let body = {
       countryID: value,
       regionID: 0,
@@ -352,6 +411,9 @@ const PriceListView = () => {
       }
     } catch (error) {
       console.log(error);
+      setStateDropdown([]);
+    } finally {
+      setIsStateLoading(false);
     }
   };
 
@@ -377,20 +439,23 @@ const PriceListView = () => {
   };
 
   const fetchPriceListName = async () => {
+    setIsPriceListLoading(true);
     let body = {
       Status: 1,
       Condition: 0 /*0 for Active Price List */,
     };
-    setIsLoading(true);
     try {
       let res = await GetPriceListName(body);
       if (res.statusCode == 200) {
         setPriceListNameDrop(res.priceList);
+      } else {
+        setPriceListNameDrop([]);
       }
     } catch (error) {
       console.log(error);
+      setPriceListNameDrop([]);
     } finally {
-      setIsLoading(false);
+      setIsPriceListLoading(false);
     }
   };
 
@@ -594,7 +659,10 @@ const PriceListView = () => {
       ...searchParams,
       pageIndex: newPage,
     });
-    setPriceJumpToPage(newPage);
+    // Only update jumpToPage for custom navigation
+    if (action === "custom") {
+      setPriceJumpToPage(newPage);
+    }
     fetchPriceMasterList();
   };
 
@@ -669,7 +737,155 @@ const PriceListView = () => {
       ...priceListSearchParams,
       pageIndex: newPage || 1,
     });
-    setPriceListJumpToPage(newPage || 1);
+    // Only update jumpToPage for custom navigation
+    if (action === "custom") {
+      setPriceListJumpToPage(newPage || 1);
+    }
+  };
+
+  const handleTypeChange = (event, newValue) => {
+    setSelectedType(newValue || ListItemTwo[0]);
+
+    // Reset all search parameters based on type
+    if (newValue?.value === 0) {
+      // Reset price list search parameters
+      setPriceListSearchParams({
+        priceListName: "",
+        countryID: "0",
+        stateID: "0",
+        pageIndex: 1,
+        pageSize: 10,
+      });
+      setStateDropdown([]);
+      setPriceListPage(1);
+      setPriceListRowsPerPage(10);
+      setPriceListJumpToPage(1);
+    } else {
+      // Reset price search parameters
+      setSearchParams({
+        priceListID: 0,
+        skuID: null,
+        dateFrom: "",
+        dateTo: "",
+        condition: 0,
+        pageIndex: 1,
+        pageSize: 10,
+      });
+      setDateError("");
+      setPricePage(1);
+      setPriceRowsPerPage(10);
+      setPriceJumpToPage(1);
+    }
+
+    // Reset error states
+    setShow(false);
+    setStatus("");
+    setTitle("");
+  };
+
+  useEffect(() => {
+    if (!selectedType) {
+      setSelectedType(ListItemTwo[0]);
+    }
+  }, [selectedType]);
+
+  const handleStatusChange = async (priceListID) => {
+    console.log("priceMasterID", priceListID);
+    let body = {
+      type: 3 /* 1: Create, 2: Update, 3: Status Update */,
+      priceListType: 0 /* 1:Country, 2:State */,
+      priceListID: priceListID,
+      priceListName: "",
+      priceMappingList: [],
+    };
+
+    try {
+      const response = await ManagePriceListWithMappingAPI(body);
+
+      if (response.statusCode == 200) {
+        // Refresh the table data
+        await fetchPriceListDataWithMapping();
+      } else {
+        setShow(true);
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Failed to update status");
+      }
+    } catch (error) {
+      setShow(true);
+      setStatus(error.statusCode || 500);
+      setTitle(error.statusMessage || "Failed to update status");
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const handleEdit = async (priceListID) => {
+    // Find the price list data from the current list
+    const priceList = priceListData.find(item => item.priceMasterID === priceListID);
+    if (!priceList) return;
+
+    let body = {
+      type: 2, /* 1: Create, 2: Update, 3: Status Update */
+      priceListType: 0, /* 1:Country, 2:State */
+      priceListID: priceListID,
+      priceListName: priceList.priceListName || "",
+      priceMappingList: [], // You'll need to populate this based on your requirements
+    };
+
+    try {
+      const response = await ManagePriceListWithMappingAPI(body);
+      if (response.statusCode == 200) {
+        setEditData({
+          priceListID: priceListID,
+          priceListName: priceList.priceListName || "",
+          priceListType: 0,
+          priceMappingList: []
+        });
+        setIsEditing(true);
+        // You might want to open a modal or navigate to edit form here
+      } else {
+        setShow(true);
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Failed to load edit data");
+      }
+    } catch (error) {
+      setShow(true);
+      setStatus(error.statusCode || 500);
+      setTitle(error.statusMessage || "Failed to load edit data");
+      console.error("Error loading edit data:", error);
+    }
+  };
+
+  const handleSaveEdit = async (editedData) => {
+    try {
+      const response = await ManagePriceListWithMappingAPI(editedData);
+      if (response.statusCode == 200) {
+        setIsEditing(false);
+        // Refresh the table data
+        await fetchPriceListDataWithMapping();
+        setShow(true);
+        setStatus(response.statusCode);
+        setTitle("Price list updated successfully");
+      } else {
+        setShow(true);
+        setStatus(response.statusCode);
+        setTitle(response.statusMessage || "Failed to update price list");
+      }
+    } catch (error) {
+      setShow(true);
+      setStatus(error.statusCode || 500);
+      setTitle(error.statusMessage || "Failed to update price list");
+      console.error("Error updating price list:", error);
+    }
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditing(false);
+    setEditData({
+      priceListID: 0,
+      priceListName: "",
+      priceListType: 0,
+      priceMappingList: [],
+    });
   };
 
   return (
@@ -684,7 +900,7 @@ const PriceListView = () => {
                 title="Search"
                 controlled={true}
                 expanded={accordionExpanded}
-                onChange={(event, expanded) => setAccordionExpanded(expanded)}
+                onChange={onAccordionChange}
                 backgroundColor={LIGHT_GRAY2}
               >
                 <Grid container spacing={2} sx={{ width: "100%" }}>
@@ -708,18 +924,20 @@ const PriceListView = () => {
                       options={ListItemTwo}
                       placeholder="PRICE LIST"
                       backgroundColor={LIGHT_BLUE}
-                      value={selectedType}
-                      getOptionLabel={(option) => option.label || ""}
+                      value={selectedType || ListItemTwo[0]}
+                      getOptionLabel={(option) => option?.label || ""}
                       isOptionEqualToValue={(option, value) =>
                         option?.value === value?.value
                       }
-                      onChange={(event, newValue) => setSelectedType(newValue)}
+                      onChange={handleTypeChange}
+                      loading={false}
+                      disabled={isLoading}
                     />
                   </Grid>
 
                   {/* Second Row - Only for "PRICE" */}
 
-                  {selectedType.value == 1 && (
+                  {selectedType?.value === 1 && (
                     <>
                       <Grid item xs={12} md={4} sm={6}>
                         <Typography
@@ -741,7 +959,7 @@ const PriceListView = () => {
                           placeholder="SELECT"
                           width="100%"
                           getOptionLabel={(option) =>
-                            option.priceListName || ""
+                            option?.priceListName || ""
                           }
                           isOptionEqualToValue={(option, value) =>
                             option?.priceListID === value?.priceListID
@@ -758,6 +976,8 @@ const PriceListView = () => {
                                 option.priceListID === searchParams.priceListID
                             ) || null
                           }
+                          loading={isPriceListLoading}
+                          disabled={isPriceListLoading}
                         />
                       </Grid>
 
@@ -778,7 +998,7 @@ const PriceListView = () => {
                         <NuralAutocomplete
                           width="100%"
                           options={skuDropDown}
-                          getOptionLabel={(option) => option.skuCode || ""}
+                          getOptionLabel={(option) => option?.skuCode || ""}
                           isOptionEqualToValue={(option, value) =>
                             option?.skuID === value?.skuID
                           }
@@ -787,14 +1007,15 @@ const PriceListView = () => {
                               "skuID",
                               newValue?.skuID || null
                             );
-                            // Reset filtered options when an option is selected
                           }}
                           value={
                             skuDropDown.find(
                               (option) => option.skuID === searchParams.skuID
                             ) || null
                           }
-                          placeholder="ENTER SKU"
+                          placeholder="SELECT SKU"
+                          loading={isSkuLoading}
+                          disabled={isSkuLoading}
                         />
                       </Grid>
                       <Grid item xs={12} md={6} sm={6}>
@@ -812,6 +1033,7 @@ const PriceListView = () => {
                           FROM DATE
                         </Typography>
                         <NuralCalendar
+                          disableFutureDates={false}
                           width="100%"
                           value={searchParams.dateFrom}
                           onChange={handleFromDateChange}
@@ -834,6 +1056,7 @@ const PriceListView = () => {
                           TO DATE
                         </Typography>
                         <NuralCalendar
+                          disableFutureDates={false}
                           width="100%"
                           value={searchParams.dateTo}
                           onChange={handleToDateChange}
@@ -857,7 +1080,7 @@ const PriceListView = () => {
                     </>
                   )}
 
-                  {selectedType.value == 0 && (
+                  {selectedType?.value === 0 && accordionExpanded && (
                     <>
                       <Grid item xs={12} md={4} sm={6}>
                         <Typography
@@ -876,7 +1099,7 @@ const PriceListView = () => {
                         <NuralAutocomplete
                           width="100%"
                           options={countryDropdown}
-                          getOptionLabel={(option) => option.countryName || ""}
+                          getOptionLabel={(option) => option?.countryName || ""}
                           isOptionEqualToValue={(option, value) =>
                             option?.countryID === value?.countryID
                           }
@@ -894,9 +1117,11 @@ const PriceListView = () => {
                             ) || 0
                           }
                           placeholder="SELECT"
+                          loading={isCountryLoading}
+                          disabled={isCountryLoading}
                         />
                       </Grid>
-                      <Grid item xs={12} md={4} sm={6}>
+                      <Grid item xs={12} sm={12} md={4} lg={4}>
                         <Typography
                           sx={{
                             color: PRIMARY_BLUE2,
@@ -913,7 +1138,7 @@ const PriceListView = () => {
                         <NuralAutocomplete
                           width="100%"
                           options={stateDropdown}
-                          getOptionLabel={(option) => option.stateName || ""}
+                          getOptionLabel={(option) => option?.stateName || ""}
                           isOptionEqualToValue={(option, value) =>
                             option?.stateID === value?.stateID
                           }
@@ -930,19 +1155,22 @@ const PriceListView = () => {
                             ) || 0
                           }
                           placeholder="SELECT"
+                          loading={isStateLoading}
+                          disabled={isStateLoading}
                         />
                       </Grid>
                     </>
                   )}
                 </Grid>
                 {/* price list search */}
-                {selectedType.value == 0 && (
+                {selectedType?.value === 0 && (
                   <Grid container spacing={2} mt={1} pr={2} alignItems="center">
                     {/* First button - 20% width */}
-                    <Grid item xs={12} md={1} lg={1}>
+                    <Grid item xs={12} sm={2} md={1} lg={1}>
                       <NuralButton
                         text="CANCEL"
                         variant="outlined"
+                        color={PRIMARY_BLUE2}
                         borderColor={PRIMARY_BLUE2}
                         onClick={handleResetPriceList}
                         width="100%"
@@ -952,7 +1180,7 @@ const PriceListView = () => {
                     </Grid>
 
                     {/* Second button - 40% width */}
-                    <Grid item xs={12} md={11} lg={11}>
+                    <Grid item xs={12} sm={10} md={11} lg={11}>
                       <NuralTextButton
                         icon={"./Icons/searchIcon.svg"}
                         iconPosition="right"
@@ -971,7 +1199,7 @@ const PriceListView = () => {
                   </Grid>
                 )}
                 {/* price  search */}
-                {selectedType.value == 1 && (
+                {selectedType?.value === 1 && (
                   <Grid container spacing={2} mt={1} pr={2} alignItems="center">
                     {/* First button - 20% width */}
                     <Grid item xs={12} md={1} lg={1}>
@@ -1013,8 +1241,8 @@ const PriceListView = () => {
               </Grid>
             ) : (
               <>
-                {selectedType.value == 1 && (
-                  <Grid item xs={12} mt={3}>
+                {selectedType?.value === 1 && (
+                  <Grid item xs={12} mt={2}>
                     <PriceTable
                       priceData={priceData}
                       isSearchLoading={isSearchLoading}
@@ -1032,22 +1260,24 @@ const PriceListView = () => {
                     />
                   </Grid>
                 )}
-                {selectedType.value == 0 && accordionExpanded && (
-                  <Grid item xs={12} mt={3}>
+                {selectedType?.value === 0 && accordionExpanded && (
+                  <Grid item xs={12} mt={2}>
                     <PriceListTable
                       priceListData={priceListData}
                       isSearchLoading={isSearchLoading}
                       page={priceListPage}
                       rowsPerPage={priceListRowsPerPage}
                       totalRecords={priceListTotalRecords}
-                      sortConfig={sortConfig}
-                      handleSort={handleSort}
+                      sortConfig={priceListSortConfig}
+                      handleSort={handlePriceListSort}
                       handleChangeRowsPerPage={handlePriceListChangeRowsPerPage}
                       handlePreviousPage={handlePriceListPreviousPage}
                       handleNextPage={handlePriceListNextPage}
                       handleJumpToPage={handlePriceListJumpToPage}
                       jumpToPage={priceListJumpToPage}
                       setJumpToPage={setPriceListJumpToPage}
+                      onStatusChange={handleStatusChange}
+                      onEdit={handleEdit}
                     />
                   </Grid>
                 )}
@@ -1056,6 +1286,18 @@ const PriceListView = () => {
           </Grid>
         </Grid>
       </Grid>
+      
+      <PriceListEdit
+        open={isEditing}
+        onClose={handleCloseEdit}
+        editData={editData}
+        onSave={handleSaveEdit}
+        countryDropdown={countryDropdown}
+        stateDropdown={stateDropdown}
+        isCountryLoading={isCountryLoading}
+        isStateLoading={isStateLoading}
+        fetchStateDrop={fetchStateDrop}
+      />
     </Grid>
   );
 };

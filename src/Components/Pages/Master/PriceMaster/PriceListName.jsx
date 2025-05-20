@@ -30,9 +30,10 @@ import StatusModel from "../../../Common/StatusModel";
 import { UploadPageSkeleton } from "../../../Common/SkeletonComponents";
 import Required from "../../../Common/Required";
 
-const PriceListName = () => {
+const PriceListName = ({ accordionExpanded = false, onAccordionChange }) => {
   const [priceListDrop, setPriceListDrop] = useState([]);
   const fileInputRef = React.useRef(null);
+  const [resetFile, setResetFile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [status, setStatus] = useState("success");
@@ -57,7 +58,7 @@ const PriceListName = () => {
         setTitle("Download Successful");
         setTimeout(() => {
           setShowStatus(false);
-        }, 3000);
+        }, 5000);
       },
     },
   ];
@@ -71,14 +72,39 @@ const PriceListName = () => {
         return !value ? "Price List is required" : "";
       case "effectiveDate":
         return !value ? "Effective Date is required" : "";
-
+      case "file":
+        return !value ? "File is required" : "";
       default:
         return "";
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    newErrors.priceListID = validateField("priceListID", formData.priceListID);
+    newErrors.effectiveDate = validateField(
+      "effectiveDate",
+      formData.effectiveDate
+    );
+
+    // Don't set file error in errors state
+    const fileError = validateField("file", fileInputRef.current?.files?.[0]);
+    if (fileError) {
+      // Show file error in status modal instead
+      setShowStatus(true);
+      setStatus("400");
+      setTitle(fileError);
+      return false;
+    }
+
+    console.log(newErrors);
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
+
   const handleChange = (field, value) => {
     const error = validateField(field, value);
+    console.log(error);
     setErrors((prev) => ({
       ...prev,
       [field]: error,
@@ -111,7 +137,15 @@ const PriceListName = () => {
   };
 
   const handleUpload = async () => {
+    setShowStatus(false);
     setIsLoading(true);
+
+    // Validate all fields before proceeding
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
+
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
@@ -129,8 +163,12 @@ const PriceListName = () => {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
-        // Reset form
+        // Reset form only on success
         fileInput.value = "";
+        setResetFile(true);
+        setTimeout(() => {
+          setResetFile(false);
+        }, 100);
         setFormData({
           priceListID: null,
           effectiveDate: "",
@@ -140,29 +178,29 @@ const PriceListName = () => {
         });
         setTimeout(() => {
           setShowStatus(false);
-        }, 3000);
+        }, 5000);
         // Clear errors after successful upload
         setErrors({});
         // Trigger table refresh by dispatching a custom event
-        window.dispatchEvent(new CustomEvent('priceListUploaded'));
+        window.dispatchEvent(new CustomEvent("priceListUploaded"));
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         window.location.href = res.invalidDataLink;
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
-        setTimeout(() => {
-          setShowStatus(false);
-        }, 3000);
+        // Don't reset form on error
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        // Don't reset form on error
       }
     } catch (error) {
       setShowStatus(true);
       setStatus(error.statusCode || 500);
       setTitle(error.statusMessage || "Internal Server Error");
       console.error("Error uploading file:", error);
+      // Don't reset form on error
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +227,7 @@ const PriceListName = () => {
         window.location.href = res.referenceDataLink;
         setTimeout(() => {
           setShowStatus(false);
-        }, 3000);
+        }, 5000);
       } else {
         setShowStatus(true);
         setStatus(res.statusCode);
@@ -208,6 +246,14 @@ const PriceListName = () => {
   const handleCancel = () => {
     // Reset file
     setFile(null);
+    // Reset file input element
+    setResetFile(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
     setErrors({});
     // Reset form data
     setFormData({
@@ -219,10 +265,20 @@ const PriceListName = () => {
     });
     // Hide status model
     setShowStatus(false);
+
+    // Scroll to top of the page
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleFileSelect = () => {
-    setShowStatus(false);
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setErrors((prev) => ({ ...prev, file: "" }));
+      // Hide status modal when file is selected
+      setShowStatus(false);
+    }
+    handleChange("file", file);
   };
 
   return (
@@ -230,188 +286,198 @@ const PriceListName = () => {
       {isLoading ? (
         <UploadPageSkeleton />
       ) : (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={12} lg={12} sx={{ pr: 2 }} ml={2}>
-            <NuralAccordion2
-              title="Create Price List"
-              backgroundColor={WHITE}
-              width
-            >
-              <Grid container spacing={2} p={0}>
-                <Grid item xs={12} md={6} lg={6}>
-                  <Grid
-                    container
-                    sx={{
-                      backgroundColor: LIGHT_GRAY2,
-                      borderRadius: 2,
-                      p: 2,
-                      pb: 4,
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontFamily: "Manrope",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "100%",
-                        letterSpacing: "0%",
-                        color: DARK_PURPLE,
-                        mb: 3,
-                      }}
-                    >
-                      Add Price List
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
+        <Grid container spacing={0} mt={2} pl={2}>
+          <Grid item xs={12} md={12} lg={12} sx={{ pr: 2 }}>
+            <Grid container spacing={2} direction="column">
+              <Grid item>
+                <NuralAccordion2
+                  title="Upload Price List"
+                  backgroundColor={LIGHT_GRAY2}
+                  controlled={true}
+                  expanded={accordionExpanded}
+                  onChange={onAccordionChange}
+                >
+                  <Grid container spacing={2} p={0}>
+                    <Grid item xs={12} md={6} lg={6}>
+                      <Grid
+                        container
+                        sx={{
+                          backgroundColor: LIGHT_GRAY2,
+                          borderRadius: 2,
+                          p: 2,
+                          pb: 4,
+                        }}
+                      >
                         <Typography
                           variant="h6"
                           sx={{
-                            color: DARK_PURPLE,
                             fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
+                            fontWeight: 700,
+                            fontSize: "14px",
+                            lineHeight: "100%",
+                            letterSpacing: "0%",
+                            color: DARK_PURPLE,
+                            mb: 3,
                           }}
                         >
-                          PRICE LIST <Required />
+                          Add Price List
                         </Typography>
-                        <NuralAutocomplete
-                          width="100%"
-                          options={priceListDrop}
-                          getOptionLabel={(option) => option.priceListName}
-                          placeholder="SELECT"
-                          isOptionEqualToValue={(option, value) =>
-                            option?.priceListID === value?.priceListID
-                          }
-                          onChange={(event, newValue) => {
-                            handleChange(
-                              "priceListID",
-                              newValue?.priceListID || null,
-                              newValue
-                            );
-                          }}
-                          value={
-                            priceListDrop.find(
-                              (option) =>
-                                option.priceListID === formData.priceListID
-                            ) || null
-                          }
-                          error={!!errors.priceListID}
-                        />
-                        {errors.priceListID && (
-                          <FormHelperText error>
-                            {errors.priceListID}
-                          </FormHelperText>
-                        )}
-                      </Grid>
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              PRICE LIST <Required />
+                            </Typography>
+                            <NuralAutocomplete
+                              width="100%"
+                              options={priceListDrop}
+                              getOptionLabel={(option) => option.priceListName}
+                              placeholder="SELECT"
+                              isOptionEqualToValue={(option, value) =>
+                                option?.priceListID === value?.priceListID
+                              }
+                              onChange={(event, newValue) => {
+                                handleChange(
+                                  "priceListID",
+                                  newValue?.priceListID || null,
+                                  newValue
+                                );
+                              }}
+                              value={
+                                priceListDrop.find(
+                                  (option) =>
+                                    option.priceListID === formData.priceListID
+                                ) || null
+                              }
+                              error={!!errors.priceListID}
+                            />
+                            {errors.priceListID && (
+                              <FormHelperText error>
+                                {errors.priceListID}
+                              </FormHelperText>
+                            )}
+                          </Grid>
 
-                      <Grid item xs={6}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: DARK_PURPLE,
-                            fontFamily: "Manrope",
-                            fontWeight: 400,
-                            fontSize: "10px",
-                            lineHeight: "13.66px",
-                            letterSpacing: "4%",
-                            mb: 1,
-                          }}
-                        >
-                          EFFECTIVE DATE <Required />
-                        </Typography>
-                        <NuralCalendar
-                          width="100%"
-                          placeholder="DD/MMM/YYYY"
-                          backgroundColor={WHITE}
-                          value={formData.effectiveDate}
-                          onChange={(date) => {
-                            // Format date to YYYY-MM-DD
-                            const formattedDate = date
-                              ? new Date(date).toISOString().split("T")[0]
-                              : "";
-                            handleChange("effectiveDate", formattedDate);
-                          }}
-                          error={!!errors.effectiveDate}
-                        />
-                        {errors.effectiveDate && (
-                          <FormHelperText error>
-                            {errors.effectiveDate}
-                          </FormHelperText>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </Grid>
-
-                  <Grid item xs={12} mt={2}>
-                    <NuralAccordion
-                      titleColor={DARK_PURPLE}
-                      buttonColor={PRIMARY_BLUE2}
-                      buttonBg={MEDIUM_BLUE}
-                      backgroundColor={LIGHT_GRAY2}
-                      width="100%"
-                      // referenceIcon1={"./Icons/downloadIcon.svg"}
-                      referenceIcon2={"./Icons/downloadIcon.svg"}
-                      onClickReference={handleReferenceClick}
-                      title="Templates"
-                      templates={templates}
-                      buttons={true}
-                      eye={false}
-                    />
-                  </Grid>
-                </Grid>
-
-                <Grid item xs={12} md={6} lg={6}>
-                  <Grid container direction="column" spacing={2}>
-                    <Grid item xs={12}>
-                      <NuralFileUpload
-                        width="100%"
-                        fileRef={fileInputRef}
-                        accept=".xlsx,.xls"
-                        onFileSelect={handleFileSelect}
-                        mandatory={true}
-                      />
-                    </Grid>
-                    <Grid item pr={2}>
-                      {showStatus && (
-                        <StatusModel
-                          width="100%"
-                          height="160px"
-                          status={status}
-                          title={title}
-                        />
-                      )}
-                    </Grid>
-
-                    <Grid item>
-                      <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                          <NuralButton
-                            text="CANCEL"
-                            variant="outlined"
-                            borderColor={PRIMARY_BLUE2}
-                            onClick={handleCancel}
-                            width="100%"
-                          />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <NuralButton
-                            text="PROCEED"
-                            backgroundColor={AQUA}
-                            variant="contained"
-                            onClick={handleUpload}
-                            width="100%"
-                          />
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: DARK_PURPLE,
+                                fontFamily: "Manrope",
+                                fontWeight: 400,
+                                fontSize: "10px",
+                                lineHeight: "13.66px",
+                                letterSpacing: "4%",
+                                mb: 1,
+                              }}
+                            >
+                              EFFECTIVE DATE <Required />
+                            </Typography>
+                            <NuralCalendar
+                              width="100%"
+                              placeholder="DD/MMM/YYYY"
+                              backgroundColor={WHITE}
+                              value={formData.effectiveDate}
+                              disableFutureDates={false}
+                              onChange={(date) => {
+                                // Format date to YYYY-MM-DD
+                                const formattedDate = date
+                                  ? new Date(date).toISOString().split("T")[0]
+                                  : "";
+                                handleChange("effectiveDate", formattedDate);
+                              }}
+                              error={!!errors.effectiveDate}
+                            />
+                            {errors.effectiveDate && (
+                              <FormHelperText error>
+                                {errors.effectiveDate}
+                              </FormHelperText>
+                            )}
+                          </Grid>
                         </Grid>
                       </Grid>
+
+                      <Grid item xs={12} mt={2}>
+                        <NuralAccordion
+                          titleColor={DARK_PURPLE}
+                          buttonColor={PRIMARY_BLUE2}
+                          buttonBg={MEDIUM_BLUE}
+                          backgroundColor={LIGHT_GRAY2}
+                          width="100%"
+                          // referenceIcon1={"./Icons/downloadIcon.svg"}
+                          referenceIcon2={"./Icons/downloadIcon.svg"}
+                          onClickReference={handleReferenceClick}
+                          title="Templates"
+                          templates={templates}
+                          buttons={true}
+                          eye={false}
+                        />
+                      </Grid>
+                    </Grid>
+
+                    <Grid item xs={12} md={6} lg={6}>
+                      <Grid container direction="column" spacing={2}>
+                        <Grid item xs={12}>
+                          <NuralFileUpload
+                            width="100%"
+                            fileRef={fileInputRef}
+                            accept=".xlsx,.xls"
+                            onFileSelect={handleFileSelect}
+                            mandatory={true}
+                            resetFile={resetFile}
+                          />
+                        </Grid>
+                        <Grid item pr={2}>
+                          {showStatus && (
+                            <StatusModel
+                              width="100%"
+                              height="160px"
+                              status={status}
+                              title={title}
+                            />
+                          )}
+                        </Grid>
+
+                        <Grid item>
+                          <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                              <NuralButton
+                                text="CANCEL"
+                                color={PRIMARY_BLUE2}
+                                variant="outlined"
+                                borderColor={PRIMARY_BLUE2}
+                                onClick={handleCancel}
+                                width="100%"
+                                data-cancel-button="true"
+                              />
+                            </Grid>
+                            <Grid item xs={6}>
+                              <NuralButton
+                                text="SAVE"
+                                backgroundColor={AQUA}
+                                variant="contained"
+                                onClick={handleUpload}
+                                width="100%"
+                              />
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                      </Grid>
                     </Grid>
                   </Grid>
-                </Grid>
+                </NuralAccordion2>
               </Grid>
-            </NuralAccordion2>
+            </Grid>
           </Grid>
         </Grid>
       )}

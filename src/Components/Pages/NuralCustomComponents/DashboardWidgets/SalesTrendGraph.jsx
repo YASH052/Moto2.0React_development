@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Grid, Paper, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import {
   LineChart,
   Line,
@@ -13,30 +13,32 @@ import {
 } from "recharts";
 import {
   AQUA,
+  AQUA_DARK,
   DARK_PURPLE,
   LIGHT_GRAY2,
-  LIGHT_GRAY3,
   MEDIUM_BLUE,
   PRIMARY_BLUE2,
 } from "../../../Common/colors";
+import {
+  transformGraphData,
+  formatCurrencyValue,
+} from "../../../Common/utils/transformGraphData";
 
 const SalesTrendGraph = ({
-  // Data props
   data,
-  // Style props
   title,
   height,
   width,
-  paperBgColor = LIGHT_GRAY2, // LIGHT_GRAY2 default
-  titleColor = PRIMARY_BLUE2, // PRIMARY_BLUE2 default
+  paperBgColor = LIGHT_GRAY2,
+  titleColor = PRIMARY_BLUE2,
   titleSize = "10px",
-  tooltipBgColor = AQUA, // AQUA default
-  tooltipTextColor = "#0747A6",
+  tooltipBgColor = AQUA,
+  tooltipTextColor = AQUA_DARK,
   tooltipFontSize = "14px",
-  gridColor = MEDIUM_BLUE, // MEDIUM_BLUE default
+  gridColor = MEDIUM_BLUE,
   referenceLineColor = "#00D1D1",
   axisColor = PRIMARY_BLUE2,
-  axisFontSize = "8px", // LIGHT_GRAY3 default
+  axisFontSize = "8px",
   lineWidth = 2,
   dotColor = "#00D1D1",
   dotSize = "8px",
@@ -45,106 +47,101 @@ const SalesTrendGraph = ({
   indicatorTextSize = "12px",
   paperPadding = 2,
   paperBorderRadius = 2,
-  period = "week", // Add new prop for time period
-  showLegend = true, // Add new prop for legend visibility
+  period = "day",
+  showLegend = true,
   subtitle = "",
+  caseType = "",
 }) => {
   const [activeDate, setActiveDate] = React.useState(null);
 
-  // Add function to determine grid line intervals
-  const getGridConfig = () => {
-    switch (period) {
-      case "week":
-        return {
-          xTicks: 7, // Show 7 ticks for week view
-          yTicks: 5,
-          strokeDasharray: "3 3", // Dashed lines
-        };
-      case "month":
-        return {
-          xTicks: 4, // Show 4 ticks for month view (one per week)
-          yTicks: 5,
-          strokeDasharray: "3 3",
-        };
-      case "year":
-        return {
-          xTicks: 12, // Show 12 ticks for year view (one per month)
-          yTicks: 5,
-          strokeDasharray: "3 3",
-        };
-      default:
-        return {
-          xTicks: 7,
-          yTicks: 5,
-          strokeDasharray: "3 3",
-        };
-    }
-  };
+  const transformedData = transformGraphData(data, period, caseType);
 
-  const gridConfig = getGridConfig();
-
-  // Add formatting logic based on period
-  const formatXAxis = (value) => {
-    switch (period) {
-      case "week":
-        return `WEEK ${value}`;
-      case "month":
-        // Convert month number to short month name
-        const months = [
-          "JAN",
-          "FEB",
-          "MAR",
-          "APR",
-          "MAY",
-          "JUN",
-          "JUL",
-          "AUG",
-          "SEP",
-          "OCT",
-          "NOV",
-          "DEC",
-        ];
-        return months[value - 1] || value;
-      case "year":
-        return value;
-      default:
-        return value;
-    }
-  };
-
-  // Custom tooltip component with period-specific formatting
   const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length && payload[0].payload) {
+      const data = payload[0].payload;
       setActiveDate(label);
+
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear().toString().slice(-2);
+        return `${day}/${month}/${year}`;
+      };
+
       return (
         <Box
           sx={{
             backgroundColor: tooltipBgColor,
-            p: 1,
+            p: 1.5,
             borderRadius: "8px",
-            minWidth: "80px",
-            textAlign: "center",
-            transform: "translateY(-20px)",
+            minWidth: "150px",
           }}
         >
-          <Typography sx={{ fontSize: "12px" }}>
-            {formatXAxis(label)}
+          <Typography sx={{ fontSize: "12px", fontWeight: "700", mb: 1 }}>
+            {formatDate(data.date)}
           </Typography>
-          <Typography
-            sx={{
-              color: tooltipTextColor,
-              fontSize: tooltipFontSize,
-              fontWeight: 600,
-            }}
-          >
-            ₹{payload[0].value}
-          </Typography>
+          {caseType === "asp" ? (
+            <Typography sx={{ fontSize: "12px", color: tooltipTextColor }}>
+              {(data.asp || 0).toLocaleString()}
+            </Typography>
+          ) : (
+            <>
+              <Typography sx={{ fontSize: "12px", color: tooltipTextColor }}>
+                {formatCurrencyValue(data.sale)}
+              </Typography>
+            </>
+          )}
         </Box>
       );
     }
     setActiveDate(null);
     return null;
   };
+
+  // If no data or empty array, show empty state
+  if (!transformedData || transformedData.length === 0) {
+    return (
+      <Grid container>
+        <Grid item xs={12}>
+          <Grid
+            sx={{
+              p: paperPadding,
+              borderRadius: paperBorderRadius,
+              height: height,
+              width: width,
+              backgroundColor: paperBgColor,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: titleSize,
+                color: titleColor,
+                fontWeight: 700,
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "12px",
+                color: "gray",
+                mt: 2,
+              }}
+            >
+              No data available
+            </Typography>
+          </Grid>
+        </Grid>
+      </Grid>
+    );
+  }
 
   return (
     <Grid container>
@@ -160,7 +157,6 @@ const SalesTrendGraph = ({
         >
           <Grid container>
             <Grid item xs={12}>
-              {" "}
               <Typography
                 variant="h6"
                 sx={{
@@ -174,7 +170,6 @@ const SalesTrendGraph = ({
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              {" "}
               <Typography
                 variant="h6"
                 sx={{
@@ -195,16 +190,15 @@ const SalesTrendGraph = ({
 
           <ResponsiveContainer width="100%" height="95%">
             <LineChart
-              data={data}
-              margin={{ top: 0, right: 20, left: -20, bottom: 5 }}
+              data={transformedData}
+              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
               onMouseLeave={() => setActiveDate(null)}
             >
               <CartesianGrid
                 stroke={gridColor}
-                strokeDasharray={gridConfig.strokeDasharray}
+                strokeDasharray="3 3"
                 vertical={true}
                 horizontal={true}
-                tickCount={gridConfig.xTicks}
               />
               {activeDate && (
                 <ReferenceLine
@@ -218,39 +212,34 @@ const SalesTrendGraph = ({
                 axisLine={true}
                 tickLine={false}
                 tick={{ fill: axisColor, fontSize: axisFontSize }}
-                tickFormatter={formatXAxis}
                 interval={0}
-                tickCount={gridConfig.xTicks}
               />
               <YAxis
                 axisLine={true}
                 tickLine={false}
                 tick={{ fill: axisColor, fontSize: axisFontSize }}
-                tickFormatter={(value) => `${value / 1000}K`}
-                tickCount={gridConfig.yTicks}
+                tickFormatter={(value) => {
+                  if (caseType === "asp") {
+                    return `₹${value.toLocaleString()}`;
+                  } else {
+                    return formatCurrencyValue(value);
+                  }
+                }}
               />
               <Tooltip content={<CustomTooltip />} cursor={false} />
-              {data &&
-                data.length > 0 &&
-                Object.keys(data[0])
-                  .filter((key) => key !== "date")
-                  .map((key, index) => (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      name={key === "total" ? "TOTAL" : key.toUpperCase()}
-                      stroke={DARK_PURPLE}
-                      strokeWidth={lineWidth}
-                      dot={false}
-                      activeDot={{
-                        r: dotSize,
-                        fill: dotColor,
-                        stroke: dotColor,
-                        strokeWidth: 0,
-                      }}
-                    />
-                  ))}
+              <Line
+                type="monotone"
+                dataKey={caseType === "asp" ? "asp" : "sale"}
+                stroke={DARK_PURPLE}
+                strokeWidth={lineWidth}
+                dot={false}
+                activeDot={{
+                  r: dotSize,
+                  fill: dotColor,
+                  stroke: dotColor,
+                  strokeWidth: 0,
+                }}
+              />
               {showLegend && (
                 <Legend
                   verticalAlign="bottom"
@@ -259,7 +248,7 @@ const SalesTrendGraph = ({
                   iconSize={indicatorSize}
                   wrapperStyle={{
                     fontSize: indicatorTextSize,
-                    color: indicatorColor || DARK_PURPLE,
+                    color: indicatorColor,
                     paddingBottom: "10px",
                   }}
                 />

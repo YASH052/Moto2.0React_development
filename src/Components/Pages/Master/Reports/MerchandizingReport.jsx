@@ -43,11 +43,12 @@ const MerchandizingReport = () => {
   const [activeTab, setActiveTab] = React.useState("merchandizing-report");
 
   const tabs = [
+    { label: "L&D Assessment Report", value: "l-d-assessment-report" },
+    { label: "Feedback Report", value: "feedback-report" },
     { label: "Merchandizing Report", value: "merchandizing-report" },
-    // { label: "Add Saleschannel", value: "add-sales-channel" },
-    // { label: "Add Retailer", value: "add-retailer" },
-    // { label: "Search", value: "search" },
-    // { label: "Approve Saleschannel", value: "approveSaleschannel" },
+    { label: "Survey Report", value: "survey-report" },
+    { label: "Pre Booking Report", value: "pre-booking-report" },
+    { label: "Ranking Report", value: "ranking-report" },
   ];
   const navigate = useNavigate();
   const labelStyle = {
@@ -217,7 +218,7 @@ const MerchandizingReport = () => {
             paddingBottom: 1,
           }}
         >
-          <Grid item xs={12} mt={1} mb={0} ml={1}>
+          <Grid item xs={12} mt={0} mb={0} ml={1} pr={2}>
             <BreadcrumbsHeader pageTitle="App Reports" />
           </Grid>
 

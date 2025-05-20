@@ -34,7 +34,11 @@ import {
   PRIMARY_BLUE,
   PRIMARY_BLUE2,
 } from "../../../../Common/colors";
-import { tableHeaderStyle, rowstyle, headTitle } from "../../../../Common/commonstyles";
+import {
+  tableHeaderStyle,
+  rowstyle,
+  headTitle,
+} from "../../../../Common/commonstyles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -87,57 +91,15 @@ const FinanceApiBlock = () => {
       onDownload: () => console.log("Download Template 4"),
     },
   ];
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
 
-  const options = [
-    "Nural Network",
-    "Deep Learning",
-    "Machine Learning",
-    "Artificial Intelligence",
-    "Computer Vision",
-  ];
   const [activeTab, setActiveTab] = React.useState("finance-api-block");
   const navigate = useNavigate();
-
-  const StyledInput = styled(InputBase)(({ theme }) => ({
-    marginLeft: "25px",
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    borderRadius: "8px",
-    maxHeight: "40px",
-    padding: "4px 12px",
-    fontSize: "14px",
-    width: "60px",
-    textAlign: "center",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-  }));
-
-  const StyledSelect = styled(Select)(({ theme }) => ({
-    border: "1px solid #a1b0e5",
-    marginTop: "10px",
-    maxHeight: "40px",
-    borderRadius: "8px",
-    paddingLeft: "12px",
-    fontSize: "14px",
-    backgroundColor: "#eef1fc",
-    color: "#5f74be",
-    ".MuiSelect-icon": {
-      color: "#5f74be",
-    },
-  }));
 
   const tabs = [
     { label: "Finance Api Block", value: "finance-api-block" },
     { label: "Servity Amount", value: "servify-offer" },
     { label: "GTN", value: "gtn" },
+    { label: "GTN Payout Report", value: "gtn-payout-report" },
   ];
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -228,7 +190,7 @@ const FinanceApiBlock = () => {
     setSortConfig({ key: columnName, direction });
   };
   return (
-    <Grid container spacing={2} sx={{ padding: "20px" }}>
+    <Grid container spacing={2}>
       <Grid
         item
         xs={12}
@@ -240,7 +202,7 @@ const FinanceApiBlock = () => {
           paddingBottom: 1,
         }}
       >
-        <Box mt={1} mb={0} ml={1}>
+        <Box mt={0} mb={0} ml={0}>
           <BreadcrumbsHeader pageTitle="Finance" />
         </Box>
 
@@ -253,7 +215,7 @@ const FinanceApiBlock = () => {
         </Box>
       </Grid>
 
-      <Grid marginTop={2} xs={12}>
+      <Grid marginTop={2} xs={12} padding={2}>
         <Grid
           xs={12}
           borderRadius={2}
@@ -261,12 +223,7 @@ const FinanceApiBlock = () => {
           backgroundColor={LIGHT_GRAY2}
         >
           {/* First Row - 3 NuralAutocomplete */}
-          <Typography
-            
-            sx={headTitle}
-          >
-            API Request Type Mapping
-          </Typography>
+          <Typography sx={headTitle}>API Request Type Mapping</Typography>
           <Grid container spacing={2} marginTop={2}>
             {views.map((view) => (
               <Grid item xs={12} sm={3} md={3} key={view}>
@@ -305,13 +262,13 @@ const FinanceApiBlock = () => {
             />
           </Grid>
         </Grid>
-        <Grid xs={12} sm={12} md={12} lg={12} xl={12} xxl={12} marginTop={2}>
+        <Grid xs={12} s marginTop={2}>
           <TableContainer
             component={Paper}
             sx={{
               backgroundColor: LIGHT_GRAY2,
               color: PRIMARY_BLUE2,
-              maxHeight: "calc(100vh - 300px)", // Add max height for scrolling
+              maxHeight: "calc(100vh - 50px)", // Add max height for scrolling
               overflow: "auto",
               borderRadius: "8px",
             }}

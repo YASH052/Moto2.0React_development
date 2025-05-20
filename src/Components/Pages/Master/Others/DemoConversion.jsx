@@ -21,8 +21,9 @@ const DemoConversion = () => {
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const navigate = useNavigate();
   const tabs = [
-    { label: "Activation File Received", value: "activation-file-received" },
-    { label: "SAP Integration", value: "sap-integration" },
+    { label: "GRN", value: "grn" },
+    { label: "Stock Adjustment Reason", value: "stock-adjustment-reason" },
+    { label: "AI Norms", value: "ai-norms" },
     { label: "Demo Conversion", value: "demo-conversion" },
   ];
 
@@ -68,7 +69,7 @@ const DemoConversion = () => {
         }}
       >
         <Grid item xs={12} mt={2} mb={0} ml={1}>
-          <BreadcrumbsHeader pageTitle="Misc" />
+          <BreadcrumbsHeader pageTitle="Inventory" />
         </Grid>
 
         <Grid item xs={12} ml={1}>

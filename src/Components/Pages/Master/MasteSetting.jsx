@@ -4,23 +4,23 @@ import BreadcrumbsHeader from "../../Common/BreadcrumbsHeader";
 import TransationCard from "./Transaction/TransationCard";
 
 const appSettingsTypes = [
-  { title: "WEB", link: "/web" },
-  { title: "MOBILE", link: "/mobile" },
+  { title: "WEB", link: "/web-menu-setting" },
+  { title: "MOBILE", link: "/mobile-menu-setting" },
 ];
 
 const helpTypes = [
-  { title: "FEEDBACK", link: "/feedback" },
-  { title: "TUTORIAL", link: "/tutorial" },
-  { title: "PRODUCT DOCUMENTATION", link: "/product-documentation" },
+  { title: "FEEDBACK", link: "#" },
+  { title: "TUTORIAL", link: "#" },
+  { title: "PRODUCT DOCUMENTATION", link: "#" },
 ];
 
 const organizationTypes = [
-  { title: "COMPANY INFO", link: "/org-people" },
+  { title: "COMPANY INFO", link: "#" },
   { title: "AGENCY", link: "/add-agancy" },
   { title: "GEOGRAPHY", link: "/geography-bulk-upload" },
-  { title: "ANNOUNCEMENT", link: "/announcement" },
+  { title: "ANNOUNCEMENT", link: "/banner" },
   { title: "HIERARCHY", link: "/org-people" },
-  { title: "QUERY", link: "/query" },
+  { title: "QUERY", link: "#" },
 ];
 
 const channelTypes = [
@@ -50,10 +50,10 @@ const productTypes = [
 ];
 
 const moduleTypes = [
-  { title: "INVENTORY", link: "/stock-adjustment-report" },
+  { title: "INVENTORY", link: "/grn" },
   { title: "FINANCE", link: "/unblock-finance" },
   { title: "ATTENDANCE", link: "/view-attendance-report" },
-  { title: "MERCHANDIZING", link: "/merchandizing" },
+  { title: "MERCHANDIZING", link: "/merchandizing-report" },
   { title: "COMPETITION", link: "/competiton-upload" },
   { title: "L & D", link: "/lnd" },
   // { title: "BRAND", link: "/l1l2-issue" },
@@ -85,35 +85,35 @@ const MasterSetting = () => {
           paddingBottom: 1,
         }}
       >
-        <Grid item xs={12} mt={1} mb={0} ml={1}>
+        <Grid item xs={12} mt={0} mb={0} ml={1} pr={3}>
           <BreadcrumbsHeader pageTitle="Settings" />
         </Grid>
       </Grid>
 
       <Grid container spacing={0} p={1}>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={appSettingsTypes} title="App Settings" />
+          <TransationCard salesTypes={appSettingsTypes} title="App Settings" isClickable={false} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={helpTypes} title="Help" />
+          <TransationCard salesTypes={helpTypes} title="Help" isClickable={false} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={organizationTypes} title="Organization" />
+          <TransationCard salesTypes={organizationTypes} title="Organization" isClickable={true} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={channelTypes} title="Channel" />
+          <TransationCard salesTypes={channelTypes} title="Channel" isClickable={false} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={peopleTypes} title="People" />
+          <TransationCard salesTypes={peopleTypes} title="People" isClickable={false} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={productTypes} title="Product" />
+          <TransationCard salesTypes={productTypes} title="Product" isClickable={false} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={moduleTypes} title="Module" />
+          <TransationCard salesTypes={moduleTypes} title="Module" isClickable={true} />
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
-          <TransationCard salesTypes={reportTypes} title="Reports" />
+          <TransationCard salesTypes={reportTypes} title="Reports" isClickable={true} />
         </Grid>
       </Grid>
     </Grid>

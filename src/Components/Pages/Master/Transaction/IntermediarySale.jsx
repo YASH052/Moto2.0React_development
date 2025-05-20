@@ -39,7 +39,7 @@ const IntermediarySale = () => {
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-
+const [resetFile,setResetFile]=React.useState(false);
   const tabs = [
     { label: "Primary", value: "primary-transaction" },
     { label: "Intermediary", value: "intermediary-sale" },
@@ -183,9 +183,17 @@ const IntermediarySale = () => {
   };
 
   const handleClearStatus = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setResetFile(true);
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
     setStatus(null);
     setTitle(null);
-    
+    setSelectedDate(getTodayDate());
+
   };
 
   React.useEffect(() => {
@@ -268,6 +276,7 @@ const IntermediarySale = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
@@ -285,6 +294,8 @@ const IntermediarySale = () => {
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
+                      color={PRIMARY_BLUE2}
+
                       variant="outlined"
                       borderColor={PRIMARY_BLUE2}
                       onClick={handleClearStatus}

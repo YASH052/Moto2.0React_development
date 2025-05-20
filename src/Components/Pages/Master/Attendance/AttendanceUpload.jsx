@@ -47,6 +47,8 @@ const AttendanceUpload = () => {
 
     { label: "Leave Type", value: "leave-type" },
     { label: "Leave Allocation", value: "leave-allocation" },
+    { label: "Manage", value: "manage" },
+    { label: "IMEI Binding", value: "imei-binding" },
   ];
 
   const templates = [
@@ -189,25 +191,25 @@ const AttendanceUpload = () => {
       <Grid
         item
         xs={12}
-        md={6}
-        lg={12}
-        mt={3}
-        mb={0}
         sx={{
           position: "sticky",
           top: 0,
-          ml: 1,
+          zIndex: 1000,
+          backgroundColor: "#fff",
+          paddingBottom: 1,
         }}
       >
-        <BreadcrumbsHeader pageTitle="Attendance" />
-      </Grid>
+        <Grid item xs={12} mt={2} mb={0} ml={0} pr={2}>
+          <BreadcrumbsHeader pageTitle="Attendance " />
+        </Grid>
 
-      <Grid item xs={12} md={6} lg={12}>
-        <TabsBar
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
+        <Grid item xs={12} ml={0}>
+          <TabsBar
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </Grid>
       </Grid>
 
       {isLoading ? (

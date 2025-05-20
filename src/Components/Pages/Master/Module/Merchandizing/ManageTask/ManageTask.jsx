@@ -176,9 +176,11 @@ const ManageTask = () => {
         </Box>
       </Grid>
 
+
       <ADDTask/>
       <ViewTask/>
       <UpdateTask/>
+
       </Grid>
   );
 };

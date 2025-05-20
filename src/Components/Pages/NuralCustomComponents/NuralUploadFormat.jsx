@@ -69,7 +69,7 @@ const StyledAccordionSummary = styled(AccordionSummary)({
   },
 });
 
-const NuralUploadFormat = ({ title, onChange, value, showExpandIcon = true, ...props }) => {
+const NuralUploadFormat = ({ title, onChange, value, showExpandIcon = false, ...props }) => {
   const handleRadioChange = (newValue) => {
     console.log("Radio value changed:", newValue);
     if (onChange) {

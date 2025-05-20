@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -108,13 +108,13 @@ const DayCell = styled(Box)(({ isSelected, isToday, isCurrentMonth }) => ({
   borderRadius: "50%",
   cursor: isCurrentMonth ? "pointer" : "default",
   fontSize: "14px",
-  fontWeight: isToday ? 600 : 400,
-  backgroundColor: isToday ? AQUA : "transparent",
-  color: !isCurrentMonth ? "transparent" : isToday ? "#fff" : DARK_PURPLE,
+  fontWeight: isToday || isSelected ? 600 : 400,
+  backgroundColor: isSelected ? AQUA : isToday ? "#e0e0e0" : "transparent",
+  color: !isCurrentMonth ? "transparent" : isSelected ? "#fff" : isToday ? DARK_PURPLE : DARK_PURPLE,
   visibility: isCurrentMonth ? "visible" : "hidden",
   "&:hover": {
     backgroundColor: isCurrentMonth
-      ? isToday
+      ? isSelected
         ? AQUA
         : "rgba(198, 206, 237, 0.2)"
       : "transparent",
@@ -191,6 +191,7 @@ const NuralCalendar = ({
   maxDate,
   disabledDates,
   highlightedDates,
+  disableFutureDates = true,
   yearRange = {
     start: 2000,
     end: new Date().getFullYear(),
@@ -210,13 +211,58 @@ const NuralCalendar = ({
   error,
   ...props
 }) => {
-  const [currentDate, setCurrentDate] = useState(initialDate || new Date());
-  const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
+  // Ensure initialDate is a valid Date object
+  const getValidDate = (date) => {
+    if (!date) return new Date();
+    
+    // If it's already a Date object
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      return date;
+    }
+    
+    // If it's a string, try to parse it
+    try {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    } catch (e) {
+      console.warn("Invalid date format:", date);
+    }
+    
+    // Default to current date if invalid
+    return new Date();
+  };
+
+  // Initialize with valid Date objects
+  const [currentDate, setCurrentDate] = useState(getValidDate(initialDate));
+  const [selectedDate, setSelectedDate] = useState(getValidDate(value || initialDate));
   const [showYearGrid, setShowYearGrid] = useState(false);
   const [showMonthGrid, setShowMonthGrid] = useState(false);
   const [yearOffset, setYearOffset] = useState(0);
   const [openCalendar, setOpenCalendar] = useState(false);
   const anchorRef = useRef(null);
+
+  // Effect to update the current date when the calendar opens
+  useEffect(() => {
+    if (openCalendar) {
+      // If there's a value, open calendar to that date
+      // Otherwise use today's date
+      if (value) {
+        const valueDate = getValidDate(value);
+        setCurrentDate(valueDate);
+      } else {
+        setCurrentDate(new Date());
+      }
+    }
+  }, [openCalendar, value]);
+
+  // Effect to update selected date when value changes
+  useEffect(() => {
+    if (value) {
+      setSelectedDate(getValidDate(value));
+    }
+  }, [value]);
 
   const months = [
     "January",
@@ -247,33 +293,89 @@ const NuralCalendar = ({
   };
 
   const isDateDisabled = (date) => {
-    if (!date) return false;
-    if (!disabledDates) return false;
-    if (minDate && date < minDate) return true;
-    if (maxDate && date > maxDate) return true;
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if future dates are disabled
+    if (disableFutureDates) {
+      // Create date objects with time set to noon to avoid timezone issues
+      const dateToCheck = new Date(date.getTime());
+      dateToCheck.setHours(12, 0, 0, 0);
+      
+      const todayNoon = new Date(today.getTime());
+      todayNoon.setHours(12, 0, 0, 0);
+      
+      if (dateToCheck > todayNoon) return true;
+    }
+    
+    if (minDate && date < getValidDate(minDate)) return true;
+    if (maxDate && date > getValidDate(maxDate)) return true;
+    
+    if (!disabledDates || !Array.isArray(disabledDates)) return false;
+    
     return disabledDates.some(
-      (disabled) => disabled && date && disabled.getTime() === date.getTime()
+      (disabled) => {
+        if (!disabled) return false;
+        try {
+          const disabledDate = getValidDate(disabled);
+          return date.getTime() === disabledDate.getTime();
+        } catch (e) {
+          return false;
+        }
+      }
     );
   };
 
   const isDateHighlighted = (date) => {
-    if (!date || !highlightedDates) return false;
+    if (!date || !(date instanceof Date) || isNaN(date.getTime()) || !highlightedDates || !Array.isArray(highlightedDates)) return false;
+    
     return highlightedDates.some(
-      (highlighted) =>
-        highlighted && date && highlighted.getTime() === date.getTime()
+      (highlighted) => {
+        if (!highlighted) return false;
+        try {
+          const highlightedDate = getValidDate(highlighted);
+          return date.getTime() === highlightedDate.getTime();
+        } catch (e) {
+          return false;
+        }
+      }
     );
   };
 
   const handleYearClick = (year) => {
     // Allow selection up to the current year
     if (year <= yearRange.end) {
-      const newDate = new Date(selectedDate.getTime());
-      newDate.setFullYear(year);
-      setCurrentDate(newDate);
-      setSelectedDate(newDate);
-      setShowYearGrid(false);
-      onYearChange?.(newDate);
-      onDateSelect?.(newDate);
+      try {
+        const oldDate = new Date(selectedDate.getTime());
+        const oldDay = oldDate.getDate();
+        const oldMonth = oldDate.getMonth();
+        
+        // Create new date with the selected year but same month/day
+        const newDate = new Date(year, oldMonth, 1); // Start with 1st of month
+        
+        // Check if the original day is valid in the new month/year
+        // (handles cases like Feb 29 in non-leap years)
+        const lastDayOfMonth = new Date(year, oldMonth + 1, 0).getDate();
+        const validDay = Math.min(oldDay, lastDayOfMonth);
+        
+        // Set to the valid day (either original day or last day of month)
+        newDate.setDate(validDay);
+        
+        // Make sure it's a valid date
+        if (isNaN(newDate.getTime())) {
+          throw new Error("Invalid date");
+        }
+        
+        setCurrentDate(newDate);
+        setSelectedDate(newDate);
+        setShowYearGrid(false);
+        onYearChange?.(newDate);
+        onDateSelect?.(newDate);
+      } catch (e) {
+        console.error("Error creating new date with year", e);
+      }
     }
   };
 
@@ -290,6 +392,13 @@ const NuralCalendar = ({
   const toggleYearGrid = () => {
     setShowYearGrid(!showYearGrid);
     setShowMonthGrid(false);
+    
+    // When opening year grid, adjust the yearOffset to make sure current year is visible
+    if (!showYearGrid) {
+      const currentYear = new Date().getFullYear();
+      const offsetNeeded = Math.max(0, Math.floor((currentYear - yearRange.start) / 12) * 12);
+      setYearOffset(offsetNeeded);
+    }
   };
 
   const toggleMonthGrid = () => {
@@ -335,27 +444,63 @@ const NuralCalendar = ({
 
   const handleDateClick = (day, isCurrentMonth) => {
     if (isCurrentMonth) {
-      // Create date at start of day in local timezone
-      const newDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        day,
-        12  // Set to noon to avoid timezone issues
-      );
-      setCurrentDate(newDate);
-      setSelectedDate(newDate);
-      onChange?.(newDate);
-      setOpenCalendar(false);
+      try {
+        // Create date at start of day in local timezone
+        const newDate = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          day,
+          12  // Set to noon to avoid timezone issues
+        );
+        
+        // Make sure it's a valid date
+        if (isNaN(newDate.getTime())) {
+          throw new Error("Invalid date");
+        }
+        
+        // Check if the date is disabled (including future dates check)
+        if (isDateDisabled(newDate)) return;
+        
+        setCurrentDate(newDate);
+        setSelectedDate(newDate);
+        onChange?.(newDate);
+        setOpenCalendar(false);
+      } catch (e) {
+        console.error("Error creating new date", e);
+      }
     }
   };
 
   const isToday = (day) => {
-    const today = new Date();
-    return (
-      day === today.getDate() &&
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear()
-    );
+    if (!day) return false;
+    
+    try {
+      const today = new Date();
+      return (
+        day === today.getDate() &&
+        currentDate.getMonth() === today.getMonth() &&
+        currentDate.getFullYear() === today.getFullYear()
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const isSelected = (day) => {
+    if (!day || !selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
+      return false;
+    }
+    
+    try {
+      return (
+        day === selectedDate.getDate() &&
+        currentDate.getMonth() === selectedDate.getMonth() &&
+        currentDate.getFullYear() === selectedDate.getFullYear()
+      );
+    } catch (e) {
+      console.error("Error in isSelected", e);
+      return false;
+    }
   };
 
   const getDaysInMonth = (date) => {
@@ -400,31 +545,42 @@ const NuralCalendar = ({
   const formatDate = (date) => {
     if (!date) return "";
     
-    let dateObj;
-    if (typeof date === 'string') {
-      // Parse string date and set to noon to avoid timezone issues
-      dateObj = new Date(date);
-      dateObj.setHours(12, 0, 0, 0);
-    } else {
-      dateObj = new Date(date);
-      dateObj.setHours(12, 0, 0, 0);
+    try {
+      let dateObj;
+      if (typeof date === 'string') {
+        // Parse string date and set to noon to avoid timezone issues
+        dateObj = new Date(date);
+        dateObj.setHours(12, 0, 0, 0);
+      } else if (date instanceof Date) {
+        dateObj = new Date(date);
+        dateObj.setHours(12, 0, 0, 0);
+      } else {
+        return "";
+      }
+
+      if (isNaN(dateObj.getTime())) return "";
+
+      const day = dateObj.getDate().toString().padStart(2, "0");
+      const month = dateObj.toLocaleString("en-US", { month: "short" });
+      const year = dateObj.getFullYear();
+
+      return `${day}-${month}-${year}`;
+    } catch (e) {
+      console.error("Error formatting date", e);
+      return "";
     }
-
-    if (isNaN(dateObj.getTime())) return "";
-
-    const day = dateObj.getDate().toString().padStart(2, "0");
-    const month = dateObj.toLocaleString("en-US", { month: "short" });
-    const year = dateObj.getFullYear();
-
-    return `${day}-${month}-${year}`;
   };
 
   const handleCalendarOpen = () => {
+    // Reset to date view whenever calendar opens
+    setShowYearGrid(false);
+    setShowMonthGrid(false);
     setOpenCalendar(true);
   };
 
   const handleCalendarClose = () => {
     setOpenCalendar(false);
+    // No need to reset view state here as it will be reset on next open
   };
 
   return (
@@ -570,11 +726,11 @@ const NuralCalendar = ({
                         return (
                           <DayCell
                             key={index}
-                            isSelected={false}
+                            isSelected={isSelected(dateObj.day)}
                             isToday={isToday(dateObj.day)}
                             isCurrentMonth={dateObj.isCurrentMonth}
                             onClick={() =>
-                              dateObj.isCurrentMonth &&
+                              dateObj.isCurrentMonth && !isDisabled &&
                               handleDateClick(
                                 dateObj.day,
                                 dateObj.isCurrentMonth
@@ -582,9 +738,11 @@ const NuralCalendar = ({
                             }
                             sx={{
                               ...dayStyle,
-                              cursor: !dateObj.isCurrentMonth
+                              cursor: !dateObj.isCurrentMonth || isDisabled
                                 ? "default"
                                 : "pointer",
+                              opacity: isDisabled ? 0.5 : 1,
+                              textDecoration: isDisabled ? 'line-through' : 'none',
                             }}
                           >
                             {dateObj.day}

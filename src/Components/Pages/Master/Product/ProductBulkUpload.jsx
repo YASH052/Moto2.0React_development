@@ -31,6 +31,9 @@ const log = JSON.parse(localStorage.getItem("log")) || {};
 
 const ProductBulkUpload = () => {
   const [activeTab, setActiveTab] = React.useState("product-bulk-upload");
+  const [resetFile, setResetFile] = React.useState(false);
+
+  const [showStatus, setShowStatus] = React.useState(false);
   const navigate = useNavigate();
   const [status, setStatus] = React.useState(null);
   const [title, setTitle] = React.useState(null);
@@ -58,14 +61,16 @@ const ProductBulkUpload = () => {
         setIsLoading(true);
         setTimeout(() => {
           window.location.href = `${templateUrl}SingleUploadProductMaster.xlsx`;
+          setShowStatus(true);
           setStatus(200);
           setTitle("Template downloaded successfully.");
           setIsLoading(false);
         }, 1000);
         setTimeout(() => {
+          setShowStatus(false);
           setStatus(null);
           setTitle(null);
-        }, [3000]);
+        }, [5000]);
       },
     },
   ];
@@ -79,24 +84,29 @@ const ProductBulkUpload = () => {
     console.log("Selected value:", value);
     setSelectedFormat(value);
     if (value === "interface") {
-      navigate("#");
+      navigate("/brand");
     } else if (value === "batch") {
       navigate("#");
     }
   };
 
   const handleReferenceClick = async () => {
+    setIsLoading(true);
     try {
       let res = await ProductMasterUploadRefCode();
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(handleClearStatus, 5000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
@@ -106,6 +116,7 @@ const ProductBulkUpload = () => {
   };
 
   const handleUploadClick = async () => {
+    setShowStatus(true);
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
@@ -125,7 +136,7 @@ const ProductBulkUpload = () => {
         fileInput.value = "";
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(handleClearStatus, 5000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
         setStatus(String(res.statusCode));
         setTitle("Error in all records. Please check the invalid data file.");
@@ -145,8 +156,22 @@ const ProductBulkUpload = () => {
   };
 
   const handleClearStatus = () => {
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setStatus(null);
     setTitle(null);
+
+    setShowStatus(false);
+    setResetFile(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
+
   };
 
   React.useEffect(() => {
@@ -173,7 +198,7 @@ const ProductBulkUpload = () => {
         sx={{
           position: "sticky",
           top: 0,
-          ml: 1,
+          ml: 0,
         }}
       >
         <BreadcrumbsHeader pageTitle="Product" />
@@ -216,7 +241,7 @@ const ProductBulkUpload = () => {
                   title="Templates"
                   templates={templates}
                   buttons={true}
-                  // eye={false}
+                // eye={false}
                 />
               </Grid>
             </Grid>
@@ -226,13 +251,15 @@ const ProductBulkUpload = () => {
             <Grid container spacing={2} direction="column">
               <Grid item>
                 <NuralFileUpload
+                  mandatory
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
+                {showStatus && (
                   <StatusModel
                     width="100%"
                     status={status}
@@ -247,6 +274,7 @@ const ProductBulkUpload = () => {
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
+                      color={PRIMARY_BLUE2}
                       borderColor={PRIMARY_BLUE2}
                       onClick={handleClearStatus}
                       width="100%"
@@ -255,7 +283,7 @@ const ProductBulkUpload = () => {
                   </Grid>
                   <Grid item xs={12} md={6} lg={6}>
                     <NuralButton
-                      text={isUploading ? "UPLOADING..." : "PROCEED"}
+                      text={isUploading ? "UPLOADING..." : "SAVE"}
                       backgroundColor={AQUA}
                       variant="contained"
                       onClick={handleUploadClick}

@@ -39,11 +39,14 @@ const RATInventory = () => {
   const [activeTab, setActiveTab] = React.useState("inventory-dashboard");
 
   const tabs = [
-    { label: "Business", value: "ho-dashboard" },
+    { label: "Business", value: "dashboard" },
     { label: "Channels", value: "channels-dashboard" },
     { label: "Availability", value: "availability-dashboard" },
-    { label: "Brand", value: "brand" },
+    { label: "Brand", value: "brand-dashboard" },
     { label: "Inventory", value: "inventory-dashboard" },
+    { label: "Attendance", value: "rat-attendance" },
+    { label: "Target", value: "rat-target" },
+    { label: "Incentive", value: "rat-incentive" },
   ];
   const tabRoutes = {
     business: "/business-dashboard",
@@ -57,14 +60,6 @@ const RATInventory = () => {
   };
 
   const navigate = useNavigate();
-  const labelStyle = {
-    fontSize: "10px",
-    lineHeight: "13.66px",
-    letterSpacing: "4%",
-    color: DARK_PURPLE,
-    marginBottom: "5px",
-    fontWeight: 400,
-  };
 
   const options = [
     "Nural Network",
@@ -73,13 +68,12 @@ const RATInventory = () => {
     "Artificial Intelligence",
     "Computer Vision",
   ];
+  
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
-    const route = tabRoutes[newValue];
-    if (route) {
-      navigate(route);
-    }
+    navigate(`/${newValue}`);
   };
+
   {
     tabs.map((tab) => (
       <Button

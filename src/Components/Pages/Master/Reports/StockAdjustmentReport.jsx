@@ -729,7 +729,7 @@ const StockAdjustmentReport = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {isTableLoading ? (
+                   {isTableLoading ? (
                       Array(SKELETON_ROWS)
                         .fill(0)
                         .map((_, index) => (
@@ -737,7 +737,7 @@ const StockAdjustmentReport = () => {
                         <TableRowSkeleton  key={index} columns={10} />
                         
                         ))
-                    ) : (
+                    ) :  (
                       filteredRows
                         // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                         .map((row, index) => (

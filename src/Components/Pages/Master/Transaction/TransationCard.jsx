@@ -4,7 +4,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { DARK_PURPLE, LIGHT_GRAY2 } from "../../../Common/colors";
 import { Link, useNavigate } from "react-router-dom";
 
-const TransationCard = ({ salesTypes, title }) => {
+const TransationCard = ({ salesTypes, title, isClickable = false }) => {
   const navigate = useNavigate();
   return (
     <Grid item xs={12} md={12} lg={12} p={1}>
@@ -31,7 +31,7 @@ const TransationCard = ({ salesTypes, title }) => {
             variant="h6"
             component="div"
             color={DARK_PURPLE}
-            onClick={() => navigate(`/${title}`)}
+            onClick={() => isClickable && navigate(`/${title}`)}
             sx={{
               mb: 2,
               fontFamily: "Manrope",
@@ -39,7 +39,8 @@ const TransationCard = ({ salesTypes, title }) => {
               fontSize: "24px",
               lineHeight: "28px",
               letterSpacing: "0%",
-              cursor: "pointer",
+              cursor: isClickable ? "pointer" : "not-allowed",
+              // opacity: isClickable ? 1 : 0.7,
             }}
           >
             {title}
@@ -50,7 +51,6 @@ const TransationCard = ({ salesTypes, title }) => {
             mb={-3}
             sx={{
               display: "grid",
-
               gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
               gridAutoFlow: "column",
               gridTemplateRows: "repeat(3, auto)",

@@ -3,6 +3,8 @@ import {
   DARK_PURPLE,
   PRIMARY_BLUE2,
   PRIMARY_LIGHT_GRAY,
+  PRIMARY_BLUE,
+  WHITE,
 } from "./colors";
 
 export const rowstyle = {
@@ -14,7 +16,7 @@ export const rowstyle = {
   height: "29px",
   paddingTop: "4px",
   paddingBottom: "4px",
-  borderBottom: "1px solid #C6CEED",
+  borderBottom: "1px solid rgb(161, 175, 231)",
 };
 
 export const tableHeaderStyle = {
@@ -120,3 +122,60 @@ export const headTitle = {
   marginRight: "10px",
   mb: 3,
 };
+export const toggleButtonStyle = {
+  fontSize: "8px",
+  textTransform: "none",
+  border: "none",
+  padding: "4px", // Consistent padding
+  // width: "36px", // Consistent width
+  height: "27px", // Consistent height
+  boxSizing: "border-box", // Ensure padding/border are included in width/height
+  transition: "background-color 0.3s ease-in-out, color 0.3s ease-in-out",
+  "&.Mui-selected": {
+    backgroundColor: PRIMARY_BLUE,
+    color: WHITE,
+    borderRadius: "8px",
+    // Explicitly define dimensions and padding to ensure consistency
+    width: "36px",
+    height: "27px",
+    padding: "4px",
+    "&:hover": {
+      backgroundColor: PRIMARY_BLUE,
+    },
+  },
+  "&:not(.Mui-selected)": {
+    color: PRIMARY_BLUE,
+    backgroundColor: "transparent",
+    "&:hover": {
+      backgroundColor: "transparent",
+    },
+  },
+  "&:focus": {
+    outline: "none",
+  },
+};
+
+export const iconButtonStyle = {
+  fontSize: 16,
+  color: PRIMARY_BLUE2,
+  "&:focus": {
+    outline: "none",
+  },
+  size: "small",
+};
+
+export const checkboxStyle = {
+  width: '20px',
+  height: '20px',
+  cursor: 'pointer',
+  appearance: 'none',
+  border: 'none',
+  borderRadius: '6px',
+  backgroundColor: '#fff',
+  padding: 0,
+  margin: 0,
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  // boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)'
+}

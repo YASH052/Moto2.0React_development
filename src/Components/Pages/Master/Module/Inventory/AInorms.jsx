@@ -10,41 +10,11 @@ import {
   PRIMARY_BLUE2,
   SECONDARY_BLUE,
 } from "../../../../Common/colors";
-import NuralAutocomplete from "../../../NuralCustomComponents/NuralAutocomplete";
-import NuralCalendar from "../../../NuralCustomComponents/NuralCalendar";
 import NuralButton from "../../../NuralCustomComponents/NuralButton";
-import NuralTextButton from "../../../NuralCustomComponents/NuralTextButton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-} from "@mui/material";
 
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import {
-  jumpToPageStyle,
-  rowstyle,
-  tableHeaderStyle,
-  tablePaginationStyle,
-  titleStyle,
-  toggleSectionStyle,
-} from "../../../../Common/commonstyles";
+import { titleStyle } from "../../../../Common/commonstyles";
 import { useNavigate } from "react-router-dom";
-import SelectionPanel from "../../../NuralCustomComponents/SelectionPanel";
-import NuralReports from "../../../NuralCustomComponents/NuralReports";
-import NuralExport from "../../../NuralCustomComponents/NuralExport";
-import NuralActivityPanel from "../../../NuralCustomComponents/NuralActivityPanel";
-import RemoveIcon from "@mui/icons-material/Remove";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
+
 import NuralTextField from "../../../NuralCustomComponents/NuralTextField";
 import NPPInorms from "./NPPInorms";
 import SCRnorms from "./SCRnorms";
@@ -57,8 +27,8 @@ const AInorms = () => {
   const tabbs = [
     { label: "GRN", value: "grn" },
     { label: "Stock Adjustment Reason", value: "stock-adjustment-reason" },
-    { label: "Serial No. Movement", value: "serial-no-moment" },
     { label: "AI Norms", value: "ai-norms" },
+    { label: "Demo Conversion", value: "demo-conversion" },
   ];
   const navigate = useNavigate();
   const labelStyle = {

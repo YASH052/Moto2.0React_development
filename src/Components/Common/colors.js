@@ -55,3 +55,4 @@ export const RED = "#FF0000"; // or any other shade of red you prefer
 // Make sure you have a gray color defined
 export const lightGray = "#d3d3d3"; // or any gray shade you prefer
 export const FIELD_ERROR_COLOR = "#d96a70";
+export const BLACK2 = "#18244E";

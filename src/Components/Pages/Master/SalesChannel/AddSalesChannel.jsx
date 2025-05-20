@@ -1,4 +1,5 @@
-import { Grid, Typography } from "@mui/material";
+import { FormHelperText, Grid, Typography, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
 import NuralUploadFormat from "../../NuralCustomComponents/NuralUploadFormat";
 import BreadcrumbsHeader from "../../../Common/BreadcrumbsHeader";
@@ -28,12 +29,16 @@ import {
   GetCityListForDropdown,
   GetParentSalesChannel,
   GetReportingHierarchyList,
+  GetSalesChannelMasterList,
   GetSalesChannelType,
   GetStateListForDropdown,
   ManageSalesChannelMoto,
 } from "../../../Api/Api";
 import StatusModel from "../../../Common/StatusModel";
 import AddSalesChannelSkeleton from "../../../Common/AddSalesChannelSkeleton";
+import Required from "../../../Common/Required";
+import { useSelector, useDispatch } from "react-redux";
+import { setSalesChannelID } from "../../../Redux/action";
 
 const tabs = [
   { label: "Add", value: "add-sales-channel" },
@@ -50,6 +55,9 @@ const options2 = [
 ];
 
 const AddSalesChannel = () => {
+  const { salesChannelID } = useSelector((store) => store);
+  const dispatch = useDispatch();
+  console.log("salesChannelID", salesChannelID);
   const [activeTab, setActiveTab] = React.useState("add-sales-channel");
   const [selectedFormat, setSelectedFormat] = React.useState("interface");
   const [salesChannelTypeDrop, setSalesChannelTypeDrop] = React.useState([]);
@@ -65,7 +73,24 @@ const AddSalesChannel = () => {
   const [reportingHierarchyNameDrop, setReportingHierarchyNameDrop] =
     React.useState([]);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Loading states for individual dropdowns
+  const [isParentLoading, setIsParentLoading] = useState(false);
+  const [isReportingLoading, setIsReportingLoading] = useState(false);
+  const [isStateLoading, setIsStateLoading] = useState(false);
+  const [isCityLoading, setIsCityLoading] = useState(false);
+
+  // Add state for accordion expansion
+  const [organizationDetailsExpanded, setOrganizationDetailsExpanded] =
+    useState(true);
+  const [salesChannelDetailsExpanded, setSalesChannelDetailsExpanded] =
+    useState(true);
+  const [businessDetailsExpanded, setBusinessDetailsExpanded] = useState(true);
+  const [bankingDetailsExpanded, setBankingDetailsExpanded] = useState(true);
+  const [kycDetailsExpanded, setKycDetailsExpanded] = useState(true);
 
   const [formData, setFormData] = useState({
     parentSalesChannelID: 0,
@@ -85,11 +110,15 @@ const AddSalesChannel = () => {
     pinCode: "",
     address1: "",
     address2: "",
-    openingStockDate: "",
+    openingStockDate: new Date(
+      new Date().setFullYear(new Date().getFullYear() - 1)
+    )
+      .toISOString()
+      .split("T")[0],
     saveBankingDetails: 1,
     bankName: "",
     accountHolderName: "",
-    bankAccountNumber: "",
+    bankAccountNumber: 0,
     branchLocation: "",
     ifscCode: "",
     gstNumber: "",
@@ -98,36 +127,121 @@ const AddSalesChannel = () => {
     GstFilePath: null,
   });
 
+  const [fileInputKey, setFileInputKey] = useState(0);
+
   const fields = [
     {
       label: "GST NO.",
-      placeholder: "XXXXXXXXXXXXX",
+      placeholder: "ENTER GST NUMBER",
       name: "gst",
       value: formData.gstNumber || "",
       onChange: (e) => handleChange("gstNumber", e.target.value),
       fileName: formData.GstFilePath ? formData.GstFilePath.name : "File Name",
       onFileSelect: (fileData) => {
+        if (!fileData) {
+          handleChange("GstFilePath", null);
+          setErrors((prev) => ({
+            ...prev,
+            gstFile: "",
+          }));
+          return;
+        }
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        if (fileData.file.size > 5 * 1024 * 1024) {
+          setErrors((prev) => ({
+            ...prev,
+            gstFile: "File size should not exceed 5MB",
+          }));
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(fileData.file.type)) {
+          setErrors((prev) => ({
+            ...prev,
+            gstFile: "Only JPEG, PNG, and PDF files are allowed",
+          }));
+          return;
+        }
+
         handleChange("GstFilePath", fileData.path);
         handleChange("GstFilePath", fileData.file);
+        setErrors((prev) => ({
+          ...prev,
+          gstFile: "",
+        }));
       },
-      accept: ".pdf,.jpg,.jpeg,.png,.doc,.docx",
-      error: !!errors.gstNumber,
-      errorMessage: errors.gstNumber,
+      accept: ".pdf,.jpg,.jpeg,.png",
+      error: !!errors.gstFile,
+      errorMessage: errors.gstFile,
+      textFieldError: !!errors.gstNumber,
+      textFieldErrorMessage: errors.gstNumber,
+      key: `gst-${fileInputKey}`,
+      maxLength: 20,
+      onKeyPress: (e) => {
+        if (e.target.value.length >= 20) {
+          e.preventDefault();
+        }
+      },
+      onPaste: (e) => {
+        e.preventDefault();
+        const pastedText = e.clipboardData.getData("text");
+        const truncatedText = pastedText.slice(0, 20);
+        e.target.value = truncatedText;
+        handleChange("gstNumber", truncatedText);
+      },
     },
     {
       label: "PAN NO.",
-      placeholder: "XXXXXXXXXXXXX",
+      placeholder: "ENTER PAN NUMBER",
       name: "pan",
       value: formData.panNumber || "",
       onChange: (e) => handleChange("panNumber", e.target.value),
       fileName: formData.PanFilePath ? formData.PanFilePath.name : "File Name",
       onFileSelect: (fileData) => {
+        if (!fileData) {
+          handleChange("PanFilePath", null);
+          setErrors((prev) => ({
+            ...prev,
+            panFile: "",
+          }));
+          return;
+        }
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        if (fileData.file.size > 5 * 1024 * 1024) {
+          setErrors((prev) => ({
+            ...prev,
+            panFile: "File size should not exceed 5MB",
+          }));
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(fileData.file.type)) {
+          setErrors((prev) => ({
+            ...prev,
+            panFile: "Only JPEG, PNG, and PDF files are allowed",
+          }));
+          return;
+        }
+
         handleChange("PanFilePath", fileData.path);
         handleChange("PanFilePath", fileData.file);
+        setErrors((prev) => ({
+          ...prev,
+          panFile: "",
+        }));
       },
-      accept: ".pdf,.jpg,.jpeg,.png,.doc,.docx",
-      error: !!errors.panNumber,
-      errorMessage: errors.panNumber,
+      accept: ".pdf,.jpg,.jpeg,.png",
+      error: !!errors.panFile,
+      errorMessage: errors.panFile,
+      textFieldError: !!errors.panNumber,
+      textFieldErrorMessage: errors.panNumber,
+      key: `pan-${fileInputKey}`,
     },
   ];
 
@@ -169,6 +283,7 @@ const AddSalesChannel = () => {
       regionID: 0,
       stateID: 0,
     };
+    setIsStateLoading(true);
     try {
       let res = await GetStateListForDropdown(body);
       if (res.statusCode == 200) {
@@ -176,6 +291,8 @@ const AddSalesChannel = () => {
       }
     } catch (error) {
       console.error("Error in fetchStateDrop:", error);
+    } finally {
+      setIsStateLoading(false);
     }
   };
 
@@ -186,6 +303,7 @@ const AddSalesChannel = () => {
       pageIndex: 1 /*-1 for export to excel */,
       pageSize: 1000,
     };
+    setIsLoading(true);
     try {
       let res = await Countrymasterlist(body);
       if (res.statusCode == 200) {
@@ -193,6 +311,8 @@ const AddSalesChannel = () => {
       }
     } catch (error) {
       console.error("Error in fetchCountryDrop:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,6 +322,7 @@ const AddSalesChannel = () => {
       stateID: value,
       cityID: 0,
     };
+    setIsCityLoading(true);
     try {
       let res = await GetCityListForDropdown(body);
       if (res.statusCode == 200) {
@@ -209,16 +330,19 @@ const AddSalesChannel = () => {
       }
     } catch (error) {
       console.error("Error in fetchCityDrop:", error);
+    } finally {
+      setIsCityLoading(false);
     }
   };
 
   const fetchParentSalesChannelDrop = async (value) => {
     let body = {
-      salesChannelTypeid: value,
-      forApproval: 0,
-      loadRetailer: 0,
+      salesChannelID: 0,
+      salesChannelTypeID: value,
+      countryID: 0, // no filter
     };
 
+    setIsParentLoading(true);
     try {
       let res = await GetParentSalesChannel(body);
       if (res.statusCode == 200) {
@@ -226,6 +350,8 @@ const AddSalesChannel = () => {
       }
     } catch (error) {
       console.error("Error in fetchParentSalesChannelDrop:", error);
+    } finally {
+      setIsParentLoading(false);
     }
   };
 
@@ -247,10 +373,11 @@ const AddSalesChannel = () => {
 
   const fetchReportingHierarchyNameDrop = async (value) => {
     let body = {
-      salesChannelTypeID: formData.salesChannelTypeId,
-      parentSalesChannelID: value,
+      salesChannelTypeID: value == 14 ? value : formData.salesChannelTypeId,
+      parentSalesChannelID: value == 14 ? 0 : value,
       countryID: 1,
     };
+    setIsReportingLoading(true);
     try {
       let res = await GetReportingHierarchyList(body);
       if (res.statusCode == 200) {
@@ -258,6 +385,8 @@ const AddSalesChannel = () => {
       }
     } catch (error) {
       console.error("Error in fetchReportingHierarchyNameDrop:", error);
+    } finally {
+      setIsReportingLoading(false);
     }
   };
 
@@ -266,6 +395,13 @@ const AddSalesChannel = () => {
       case "salesChannelTypeId":
         return !value ? "Sales Channel Type is required" : "";
       case "parentSalesChannelID":
+        // Skip validation for parent sales channel if type is Warehouse
+        const selectedType = salesChannelTypeDrop.find(
+          (type) => type.salesChannelTypeID === formData.salesChannelTypeId
+        );
+        if (selectedType?.salesChannelTypeName === "Warehouse") {
+          return "";
+        }
         return !value ? "Parent Sales Channel is required" : "";
       case "reportingHierarchyID":
         return !value ? "Reporting Hierarchy is required" : "";
@@ -290,11 +426,16 @@ const AddSalesChannel = () => {
       case "userName":
         return !value ? "Username is required" : "";
       case "password":
-        return !value
-          ? "Password is required"
-          : value.length < 6
-          ? "Password must be at least 6 characters"
-          : "";
+        if (!value) return "Password is required";
+        if (value.length < 8) return "Password must be at least 8 characters";
+        if (value.length > 16) return "Password must not exceed 16 characters";
+        if (!/[A-Za-z]/.test(value))
+          return "Password must contain at least one letter";
+        if (!/[0-9]/.test(value))
+          return "Password must contain at least one number";
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
+          return "Password must contain at least one special character";
+        return "";
       case "countryID":
         return !value ? "Country is required" : "";
       case "stateID":
@@ -310,37 +451,15 @@ const AddSalesChannel = () => {
       case "address1":
         return !value ? "Address Line 1 is required" : "";
       case "bankName":
-        return !value ? "Bank Name is required" : "";
       case "accountHolderName":
-        return !value ? "Account Holder Name is required" : "";
       case "bankAccountNumber":
-        return !value
-          ? "Bank Account Number is required"
-          : !/^[0-9]{9,18}$/.test(value)
-          ? "Invalid Bank Account Number"
-          : "";
       case "branchLocation":
-        return !value ? "Branch Location is required" : "";
       case "ifscCode":
-        return !value
-          ? "IFSC Code is required"
-          : // : !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)
-            // ? "Invalid IFSC Code"
-            "";
+        return ""; // No validation for bank details as they are optional
       case "panNumber":
-        return !value
-          ? "PAN Number is required"
-          : !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
-          ? "Invalid PAN Number (Format: ISOPK2565H)"
-          : "";
+        return ""; // No validation for PAN number as it's optional
       case "gstNumber":
-        return !value
-          ? "GST Number is required"
-          : !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][1-9A-Z][0-9A-Z]$/.test(
-              value
-            )
-          ? "Invalid GST Number (Format: 29ABCDE1234F1Z5)"
-          : "";
+        return ""; // No validation for GST number as it's optional
       default:
         return "";
     }
@@ -356,33 +475,85 @@ const AddSalesChannel = () => {
 
     // Handle special cases for dependent dropdowns
     if (field === "salesChannelTypeId") {
-      if (value) {
-        fetchParentSalesChannelDrop(value);
-      } else {
+      // Find the selected type object to check its name
+      const selectedType = salesChannelTypeDrop.find(
+        (type) => type.salesChannelTypeID === value
+      );
+      const isWarehouse = selectedType?.salesChannelTypeName === "Warehouse";
+
+      // Reset dependent fields and errors if type is Warehouse or cleared
+      if (isWarehouse || !value) {
+        setFormData((prev) => ({
+          ...prev,
+          parentSalesChannelID: 0,
+          reportingHierarchyID: 0,
+        }));
         setParentSalesChannelDrop([]);
         setReportingHierarchyNameDrop([]);
+        setErrors((prev) => ({
+          ...prev,
+          parentSalesChannelID: "",
+          reportingHierarchyID: "",
+        }));
+      } else {
+        // Reset parent sales channel and reporting hierarchy when type changes
+        setFormData((prev) => ({
+          ...prev,
+          parentSalesChannelID: 0,
+          reportingHierarchyID: 0,
+        }));
+        setParentSalesChannelDrop([]);
+        setReportingHierarchyNameDrop([]);
+        setErrors((prev) => ({
+          ...prev,
+          parentSalesChannelID: "",
+          reportingHierarchyID: "",
+        }));
+      }
+
+      if (isWarehouse) {
+        if (value) {
+          fetchReportingHierarchyNameDrop(value);
+        }
+      }
+
+      // Fetch parent channels only if it's NOT Warehouse and a value is selected
+      if (!isWarehouse && value) {
+        fetchParentSalesChannelDrop(value);
       }
     }
+
     if (field === "parentSalesChannelID") {
       if (value) {
         fetchReportingHierarchyNameDrop(value);
       } else {
+        // Clear reporting hierarchy if parent is cleared
+        setFormData((prev) => ({ ...prev, reportingHierarchyID: 0 }));
         setReportingHierarchyNameDrop([]);
+        setErrors((prev) => ({ ...prev, reportingHierarchyID: "" }));
       }
     }
     if (field === "countryID") {
       if (value) {
+        setIsStateLoading(true);
         fetchStateDrop(value);
       } else {
+        // Clear state and city if country is cleared
+        setFormData((prev) => ({ ...prev, stateID: 0, cityID: 0 }));
         setStateDrop([]);
         setCityDrop([]);
+        setErrors((prev) => ({ ...prev, stateID: "", cityID: "" }));
       }
     }
     if (field === "stateID") {
       if (value) {
+        setIsCityLoading(true);
         fetchCityDrop(value);
       } else {
+        // Clear city if state is cleared
+        setFormData((prev) => ({ ...prev, cityID: 0 }));
         setCityDrop([]);
+        setErrors((prev) => ({ ...prev, cityID: "" }));
       }
     }
 
@@ -428,6 +599,8 @@ const AddSalesChannel = () => {
 
     // Update form data with processed value
     setFormData((prev) => ({ ...prev, [field]: processedValue }));
+
+    // Debug logging
   };
 
   const handleClearStatus = () => {
@@ -436,19 +609,11 @@ const AddSalesChannel = () => {
     setTitle("");
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    Object.keys(formData).forEach((field) => {
-      const error = validateField(field, formData[field]);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handlePost = async () => {
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
+    setIsLoading(true);
     // Validate form first
     const newErrors = {};
     Object.keys(formData).forEach((field) => {
@@ -461,6 +626,10 @@ const AddSalesChannel = () => {
 
     // If there are errors, return early
     if (Object.keys(newErrors).length > 0) {
+      setShowStatus(true);
+      setStatus(400);
+      setTitle("Please fill all mandatory fields correctly");
+      setIsLoading(false);
       return;
     }
 
@@ -482,38 +651,38 @@ const AddSalesChannel = () => {
       }
     });
 
-    setIsLoading(true);
     try {
       let res = await ManageSalesChannelMoto(formDataToSend);
       if (res.statusCode == 200) {
         setShowStatus(true);
-
         setStatus(res.statusCode);
-        setTitle(res.statusMessage);
+        setTitle(res.statusMessage || "Sales Channel created successfully");
+
+        // Clear all fields after successful save
+        handleCancel();
+
+        // Auto-hide the status model after 5 seconds
         setTimeout(() => {
           setShowStatus(false);
-          setStatus(false);
+          setStatus(0);
           setTitle("");
-        }, 3000);
-      } else if (res.statusCode == 500) {
-        setShowStatus(true);
-        setStatus(res.statusCode);
-        setTitle("Internal Server Error");
+        }, 5000);
       } else {
         setShowStatus(true);
-        setStatus(res.statusCode);
-        setTitle(res.statusMessage);
+        setStatus(res.statusCode || 400);
+        setTitle(res.statusMessage || "Error creating Sales Channel");
       }
     } catch (error) {
       setShowStatus(true);
-      setStatus(res.statusCode);
-      setTitle(error.response?.data?.message || "Error Creating Sales Channel");
+      setStatus(error.status || 500);
+      setTitle(error.response?.data?.message || "Internal Server Error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
+    setIsLoading(true);
     // Reset form data to initial state
     setFormData({
       parentSalesChannelID: 0,
@@ -533,11 +702,15 @@ const AddSalesChannel = () => {
       pinCode: "",
       address1: "",
       address2: "",
-      openingStockDate: "",
+      openingStockDate: new Date(
+        new Date().setFullYear(new Date().getFullYear() - 1)
+      )
+        .toISOString()
+        .split("T")[0],
       saveBankingDetails: 1,
       bankName: "",
       accountHolderName: "",
-      bankAccountNumber: "",
+      bankAccountNumber: 0,
       branchLocation: "",
       ifscCode: "",
       gstNumber: "",
@@ -549,38 +722,217 @@ const AddSalesChannel = () => {
     // Clear all errors
     setErrors({});
 
-    // Reset only state and city dropdowns since they are dependent on country/state selection
+    // Reset dropdowns
     setStateDrop([]);
     setCityDrop([]);
+    setParentSalesChannelDrop([]);
+    setReportingHierarchyNameDrop([]);
 
-    // Reset format selection
-    setSelectedFormat("interface");
+    // Reset accordion states
+    setOrganizationDetailsExpanded(true);
+    setSalesChannelDetailsExpanded(true);
+    setBusinessDetailsExpanded(true);
+    setBankingDetailsExpanded(true);
+    setKycDetailsExpanded(true);
 
-    // Reset all text field values
-    const textFields = document.querySelectorAll(
-      'input[type="text"], input[type="password"]'
-    );
-    textFields.forEach((field) => {
-      field.value = "";
-    });
+    // Clear edit data from store
+    dispatch(setSalesChannelID(0));
+    setIsLoading(false);
 
-    // Reset all autocomplete fields
-    const autocompleteFields = document.querySelectorAll(
-      ".MuiAutocomplete-root"
-    );
-    autocompleteFields.forEach((field) => {
-      field.querySelector("input").value = "";
-    });
+    // Reset file input key to clear file inputs
+    setFileInputKey(prev => prev + 1);
+  };
 
-    // Reset calendar field
-    const calendarField = document.querySelector('input[type="date"]');
-    if (calendarField) {
-      calendarField.value = "";
+  // Add function to handle last field filled
+  const handleLastFieldFilled = (accordionName) => {
+    switch (accordionName) {
+      case "organizationDetails":
+        setOrganizationDetailsExpanded(false);
+        setSalesChannelDetailsExpanded(true);
+        break;
+      case "salesChannelDetails":
+        setSalesChannelDetailsExpanded(false);
+        setBusinessDetailsExpanded(true);
+        break;
+      case "businessDetails":
+        setBusinessDetailsExpanded(false);
+        setBankingDetailsExpanded(true);
+        break;
+      case "bankingDetails":
+        setBankingDetailsExpanded(false);
+        setKycDetailsExpanded(true);
+        break;
+      default:
+        break;
     }
   };
 
-  if (isLoading) {
-    return <AddSalesChannelSkeleton />;
+  useEffect(() => {
+    const fetchData = async () => {
+      if (salesChannelID) {
+        setIsEditLoading(true);
+        let body = {
+          salesChannelID: salesChannelID,
+          salesChannelTypeID: 0,
+          salesChannelName: "",
+          salesChannelCode: "",
+          billToRetailer: 0,
+          showDetail: 0 /*1=SHOW DETAIL*/,
+          searchType: 0,
+          brandId: 0,
+          status: 2 /*1=Active, 0=InActive, 2=ALL*/,
+          bindChild: 0,
+          pageIndex: 1,
+          pageSize: 10,
+          countryID: 1,
+        };
+        setIsLoading(true);
+        try {
+          let res = await GetSalesChannelMasterList(body);
+          if (res.statusCode == 200) {
+            console.log("res", res);
+            let editData = res.salesChannelMasterDataList[0];
+            setFormData({
+              parentSalesChannelID: editData.parentID || 0,
+              salesChannelTypeId: editData.salesChannelTypeID || 0,
+              reportingHierarchyID: editData.orgnhierarchyID || 0,
+              contactPerson: editData.contactPerson || "",
+              salesChannelID: editData.salesChannelID || 0,
+              salesChannelCode: editData.salesChannelCode || "",
+              salesChannelName: editData.salesChannelName || "",
+              mobile: editData.mobileNumber || "",
+              email: editData.email || "",
+              userName: editData.loginName || "",
+              password: editData.password || "",
+              countryID: editData.countryID || 0,
+              stateID: editData.stateID || 0,
+              cityID: editData.cityID || 0,
+              pinCode: editData.pinCode || "",
+              address1: editData.address1 || "",
+              address2: editData.address2 || "",
+              openingStockDate:
+                editData.openingStockDate ||
+                new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+                  .toISOString()
+                  .split("T")[0],
+              saveBankingDetails: 1,
+              bankName: editData.bankName || "",
+              accountHolderName: editData.accountHolderName || "",
+              bankAccountNumber: editData.bankAccountNumber || 0,
+              branchLocation: editData.branchLocation || "",
+              ifscCode: editData.ifscCode || "",
+              gstNumber: editData.gstNumber || "",
+              panNumber: editData.panNO || "",
+              PanFilePath: null,
+              GstFilePath: null,
+            });
+
+            // Fetch state dropdown when country is available
+            if (editData.countryID) {
+              let stateBody = {
+                countryID: editData.countryID,
+                regionID: 0,
+                stateID: 0,
+              };
+              setIsStateLoading(true);
+              try {
+                let stateRes = await GetStateListForDropdown(stateBody);
+                if (stateRes.statusCode == 200) {
+                  setStateDrop(stateRes.stateDropdownList);
+                }
+              } catch (error) {
+                console.error("Error fetching states:", error);
+              } finally {
+                setIsStateLoading(false);
+              }
+
+              // Fetch city dropdown when state is available
+              if (editData.stateID) {
+                let cityBody = {
+                  searchConditions: 1,
+                  stateID: editData.stateID,
+                  cityID: 0,
+                };
+                setIsCityLoading(true);
+                try {
+                  let cityRes = await GetCityListForDropdown(cityBody);
+                  if (cityRes.statusCode == 200) {
+                    setCityDrop(cityRes.cityDropdownList);
+                  }
+                } catch (error) {
+                  console.error("Error fetching cities:", error);
+                } finally {
+                  setIsCityLoading(false);
+                }
+              }
+            }
+
+            // Fetch parent sales channel when sales channel type is available
+            if (editData.salesChannelTypeID) {
+              let parentBody = {
+                salesChannelID: 0,
+                salesChannelTypeID: editData.salesChannelTypeID,
+                countryID: 0, // no filter
+              };
+              setIsParentLoading(true);
+              try {
+                let parentRes = await GetParentSalesChannel(parentBody);
+                if (parentRes.statusCode == 200) {
+                  setParentSalesChannelDrop(parentRes.parentSalesChannelList);
+                }
+              } catch (error) {
+                console.error("Error fetching parent sales channels:", error);
+              } finally {
+                setIsParentLoading(false);
+              }
+            }
+
+            // Fetch reporting hierarchy when parent sales channel is available
+            if (editData.parentID) {
+              let reportingBody = {
+                salesChannelTypeID: editData.salesChannelTypeID,
+                parentSalesChannelID: editData.parentID,
+                countryID: editData.countryID || 1,
+              };
+              setIsReportingLoading(true);
+              try {
+                let reportingRes = await GetReportingHierarchyList(
+                  reportingBody
+                );
+                if (reportingRes.statusCode == 200) {
+                  setReportingHierarchyNameDrop(
+                    reportingRes.reportingHierarchyList
+                  );
+                }
+              } catch (error) {
+                console.error("Error fetching reporting hierarchy:", error);
+              } finally {
+                setIsReportingLoading(false);
+              }
+            }
+          }
+        } catch (error) {
+          console.log("error", error);
+        } finally {
+          setIsLoading(false);
+          setIsEditLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [salesChannelID]);
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clear edit data when component unmounts or page refreshes
+      dispatch(setSalesChannelID(0));
+    };
+  }, [dispatch]);
+
+  if (isLoading || isEditLoading) {
+    return <AddSalesChannelSkeleton title="Sales Channel Details" />;
   }
 
   return (
@@ -602,7 +954,7 @@ const AddSalesChannel = () => {
             xs={12}
             md={6}
             lg={12}
-            mt={3}
+            mt={2}
             sx={{
               ml: 1,
             }}
@@ -627,6 +979,14 @@ const AddSalesChannel = () => {
               <NuralAccordion2
                 title="Organization Details"
                 backgroundColor={LIGHT_GRAY2}
+                expanded={organizationDetailsExpanded}
+                onChange={(event, expanded) =>
+                  setOrganizationDetailsExpanded(expanded)
+                }
+                controlled={true}
+                onLastFieldFilled={() =>
+                  handleLastFieldFilled("organizationDetails")
+                }
               >
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6} lg={6}>
@@ -642,7 +1002,33 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      SALES CHANNEL TYPE
+                      SELECT MODE
+                    </Typography>
+                    <NuralRadioButton
+                      onChange={handleFormatChange}
+                      options={[
+                        { value: "interface", label: "Interface" },
+                        { value: "batch", label: "Batch" },
+                      ]}
+                      value={selectedFormat}
+                      width="100%"
+                      gap="5px"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: PRIMARY_BLUE2,
+                        fontFamily: "Manrope",
+                        fontWeight: 400,
+                        fontSize: "10px",
+                        lineHeight: "13.66px",
+                        letterSpacing: "4%",
+                        mb: 1,
+                      }}
+                    >
+                      SALES CHANNEL TYPE <Required />
                     </Typography>
                     <NuralAutocomplete
                       label="Sale Type"
@@ -671,9 +1057,14 @@ const AddSalesChannel = () => {
                       error={!!errors.salesChannelTypeId}
                       errorMessage={errors.salesChannelTypeId}
                     />
+                    {errors.salesChannelTypeId && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.salesChannelTypeId}
+                      </FormHelperText>
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -686,34 +1077,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      SELECT MODE
-                    </Typography>
-                    <NuralRadioButton
-                      onChange={handleFormatChange}
-                      options={[
-                        { value: "interface", label: "Interface" },
-                        { value: "batch", label: "Batch" },
-                      ]}
-                      value={selectedFormat}
-                      width="100%"
-                      gap="5px"
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6} lg={6}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: PRIMARY_BLUE2,
-                        fontFamily: "Manrope",
-                        fontWeight: 400,
-                        fontSize: "10px",
-                        lineHeight: "13.66px",
-                        letterSpacing: "4%",
-                        mb: 1,
-                      }}
-                    >
-                      PARENT SALES CHANNEL
+                      PARENT SALES CHANNEL <Required />
                     </Typography>
                     <NuralAutocomplete
                       label="Parent Sales Channel"
@@ -739,10 +1103,23 @@ const AddSalesChannel = () => {
                       }
                       error={!!errors.parentSalesChannelID}
                       errorMessage={errors.parentSalesChannelID}
+                      loading={isParentLoading}
+                      disabled={
+                        salesChannelTypeDrop.find(
+                          (type) =>
+                            type.salesChannelTypeID ===
+                            formData.salesChannelTypeId
+                        )?.salesChannelTypeName === "Warehouse"
+                      }
                     />
+                    {errors.parentSalesChannelID && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.parentSalesChannelID}
+                      </FormHelperText>
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -755,7 +1132,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      REPORTING HIERARCHY NAME
+                      REPORTING HIERARCHY NAME <Required />
                     </Typography>
                     <NuralAutocomplete
                       label="Reporting Hierarchy Name"
@@ -781,10 +1158,16 @@ const AddSalesChannel = () => {
                       }
                       error={!!errors.reportingHierarchyID}
                       errorMessage={errors.reportingHierarchyID}
+                      loading={isReportingLoading}
                     />
+                    {errors.reportingHierarchyID && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.reportingHierarchyID}
+                      </FormHelperText>
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={12} lg={12}>
+                  <Grid item xs={12} sm={6} md={12} lg={12}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -797,14 +1180,15 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      CONTACT PERSON
+                      CONTACT PERSON <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.contactPerson}
                       onChange={(e) => {
                         handleChange("contactPerson", e.target.value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER CONTACT PERSON NAME"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.contactPerson}
                       errorMessage={errors.contactPerson}
@@ -823,9 +1207,17 @@ const AddSalesChannel = () => {
               <NuralAccordion2
                 title="Sales Channel Details"
                 backgroundColor={LIGHT_GRAY2}
+                expanded={salesChannelDetailsExpanded}
+                onChange={(event, expanded) =>
+                  setSalesChannelDetailsExpanded(expanded)
+                }
+                controlled={true}
+                onLastFieldFilled={() =>
+                  handleLastFieldFilled("salesChannelDetails")
+                }
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -838,14 +1230,22 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      SALES CHANNEL NAME
+                      SALES CHANNEL NAME <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.salesChannelName}
                       onChange={(e) => {
                         handleChange("salesChannelName", e.target.value);
+                        // If sales channel code is empty, auto-fill it with the name without spaces
+                        if (!formData.salesChannelName) {
+                          handleChange(
+                            "salesChannelName",
+                            e.target.value.replace(/\s/g, "")
+                          );
+                        }
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER SALES CHANNEL NAME"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.salesChannelName}
                       errorMessage={errors.salesChannelName}
@@ -855,10 +1255,21 @@ const AddSalesChannel = () => {
                           e.preventDefault();
                         }
                       }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        handleChange("salesChannelName", pastedText);
+                        if (!formData.salesChannelName) {
+                          handleChange(
+                            "salesChannelName",
+                            pastedText.replace(/\s/g, "")
+                          );
+                        }
+                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -871,30 +1282,39 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      SALES CHANNEL CODE
+                      SALES CHANNEL CODE <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
-                      onChange={(e) => {
-                        handleChange("salesChannelCode", e.target.value);
-                      }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER SALES CHANNEL CODE"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.salesChannelCode}
                       errorMessage={errors.salesChannelCode}
                       maxLength={50}
+                      value={formData.salesChannelCode}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\s/g, "");
+                        handleChange("salesChannelCode", value);
+                      }}
                       onKeyPress={(e) => {
                         if (e.key === " ") {
                           e.preventDefault();
                         }
-                        if (e.target.value.length >= 50) {
-                          e.preventDefault();
-                        }
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const valueWithoutSpaces = pastedText.replace(
+                          /\s/g,
+                          ""
+                        );
+                        e.target.value = valueWithoutSpaces;
+                        handleChange("salesChannelCode", valueWithoutSpaces);
                       }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -907,19 +1327,26 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      MOBILE NO.
+                      MOBILE NO. <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.mobile}
                       onChange={(e) => {
-                        handleChange("mobile", e.target.value);
+                        // Remove any non-numeric characters
+                        const numericValue = e.target.value.replace(/\D/g, "");
+                        handleChange("mobile", numericValue);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER MOBILE NUMBER"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.mobile}
                       errorMessage={errors.mobile}
                       maxLength={10}
                       onKeyPress={(e) => {
+                        // Prevent non-numeric input
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
                         if (e.target.value.length >= 10) {
                           e.preventDefault();
                         }
@@ -927,7 +1354,7 @@ const AddSalesChannel = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -940,20 +1367,21 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      EMAIL ID
+                      EMAIL ID <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.email}
                       onChange={(e) => {
                         handleChange("email", e.target.value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER EMAIL ID"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.email}
                       errorMessage={errors.email}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -966,25 +1394,42 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      USER NAME
+                      USER NAME <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
                       onChange={(e) => {
-                        handleChange("userName", e.target.value);
+                        const valueWithoutSpaces = e.target.value.replace(
+                          /\s/g,
+                          ""
+                        );
+                        handleChange("userName", valueWithoutSpaces);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER USERNAME"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.userName}
                       errorMessage={errors.userName}
+                      value={formData.userName}
+                      autoComplete="off"
+                      disabled={!!salesChannelID}
                       onKeyPress={(e) => {
                         if (e.key === " ") {
                           e.preventDefault();
                         }
                       }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const valueWithoutSpaces = pastedText.replace(
+                          /\s/g,
+                          ""
+                        );
+                        e.target.value = valueWithoutSpaces;
+                        handleChange("userName", valueWithoutSpaces);
+                      }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -997,26 +1442,59 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      PASSWORD
+                      PASSWORD <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.password}
                       onChange={(e) => {
-                        handleChange("password", e.target.value);
+                        const valueWithoutSpaces = e.target.value.replace(
+                          /\s/g,
+                          ""
+                        );
+                        handleChange("password", valueWithoutSpaces);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER PASSWORD"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.password}
                       errorMessage={errors.password}
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      disabled={!!salesChannelID}
+                      helperText="Password must contain at least 8 characters, one letter, one number, and one special character"
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? (
+                              <VisibilityOff fontSize="small" />
+                            ) : (
+                              <Visibility fontSize="small" />
+                            )}
+                          </IconButton>
+                        ),
+                      }}
                       onKeyPress={(e) => {
                         if (e.key === " ") {
                           e.preventDefault();
                         }
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const valueWithoutSpaces = pastedText.replace(
+                          /\s/g,
+                          ""
+                        );
+                        e.target.value = valueWithoutSpaces;
+                        handleChange("password", valueWithoutSpaces);
                       }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1029,7 +1507,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      COUNTRY
+                      COUNTRY <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1051,9 +1529,14 @@ const AddSalesChannel = () => {
                       error={!!errors.countryID}
                       errorMessage={errors.countryID}
                     />
+                    {errors.countryID && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.countryID}
+                      </FormHelperText>
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1066,7 +1549,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      STATE
+                      STATE <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1087,10 +1570,16 @@ const AddSalesChannel = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.stateID}
                       errorMessage={errors.stateID}
+                      loading={isStateLoading}
                     />
+                    {errors.stateID && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.stateID}
+                      </FormHelperText>
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1103,7 +1592,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      CITY
+                      CITY <Required />
                     </Typography>
                     <NuralAutocomplete
                       width="100%"
@@ -1124,9 +1613,15 @@ const AddSalesChannel = () => {
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.cityID}
                       errorMessage={errors.cityID}
+                      loading={isCityLoading}
                     />
+                    {errors.cityID && (
+                      <FormHelperText error sx={{ ml: 1, fontSize: "0.75rem" }}>
+                        {errors.cityID}
+                      </FormHelperText>
+                    )}
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1139,26 +1634,38 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      PIN CODE
+                      PIN CODE <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
+                      value={formData.pinCode}
                       onChange={(e) => {
-                        handleChange("pinCode", e.target.value);
+                        const numericValue = e.target.value.replace(/\D/g, "");
+                        handleChange("pinCode", numericValue);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER PIN CODE"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.pinCode}
                       errorMessage={errors.pinCode}
                       maxLength={6}
                       onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
                         if (e.target.value.length >= 6) {
                           e.preventDefault();
                         }
                       }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const numericValue = pastedText.replace(/\D/g, "");
+                        handleChange("pinCode", numericValue);
+                      }}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1171,7 +1678,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      ADDRESS LINE 1
+                      ADDRESS LINE 1 <Required />
                     </Typography>
                     <NuralTextField
                       width="100%"
@@ -1179,14 +1686,14 @@ const AddSalesChannel = () => {
                         handleChange("address1", e.target.value);
                       }}
                       value={formData.address1}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER ADDRESS LINE 1"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.address1}
                       errorMessage={errors.address1}
                     />
                   </Grid>
 
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1207,7 +1714,7 @@ const AddSalesChannel = () => {
                         handleChange("address2", e.target.value);
                       }}
                       value={formData.address2}
-                      placeholder="XXXXXXXXXXXXX"
+                      placeholder="ENTER ADDRESS LINE 2"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.address2}
                       errorMessage={errors.address2}
@@ -1225,9 +1732,17 @@ const AddSalesChannel = () => {
               <NuralAccordion2
                 title="Business Details"
                 backgroundColor={LIGHT_GRAY2}
+                expanded={businessDetailsExpanded}
+                onChange={(event, expanded) =>
+                  setBusinessDetailsExpanded(expanded)
+                }
+                controlled={true}
+                onLastFieldFilled={() =>
+                  handleLastFieldFilled("businessDetails")
+                }
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={12} lg={12}>
+                  <Grid item xs={12} sm={6} md={12} lg={12}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1240,7 +1755,7 @@ const AddSalesChannel = () => {
                         mb: 1,
                       }}
                     >
-                      OPENING STOCK DATE
+                      OPENING STOCK DATE <Required />
                     </Typography>
                     <NuralCalendar
                       width="87%"
@@ -1264,9 +1779,17 @@ const AddSalesChannel = () => {
               <NuralAccordion2
                 title="Banking Details"
                 backgroundColor={LIGHT_GRAY2}
+                expanded={bankingDetailsExpanded}
+                onChange={(event, expanded) =>
+                  setBankingDetailsExpanded(expanded)
+                }
+                controlled={true}
+                onLastFieldFilled={() =>
+                  handleLastFieldFilled("bankingDetails")
+                }
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1286,7 +1809,8 @@ const AddSalesChannel = () => {
                       onChange={(e) => {
                         handleChange("bankName", e.target.value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      value={formData.bankName}
+                      placeholder="ENTER BANK NAME"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.bankName}
                       errorMessage={errors.bankName}
@@ -1299,7 +1823,7 @@ const AddSalesChannel = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1317,16 +1841,31 @@ const AddSalesChannel = () => {
                     <NuralTextField
                       width="100%"
                       onChange={(e) => {
-                        handleChange("accountHolderName", e.target.value);
+                        // Only allow alphabets and spaces
+                        const value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                        handleChange("accountHolderName", value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      value={formData.accountHolderName}
+                      placeholder="ENTER ACCOUNT HOLDER NAME"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.accountHolderName}
                       errorMessage={errors.accountHolderName}
+                      onKeyPress={(e) => {
+                        // Prevent non-alphabet keys (except space)
+                        if (!/^[A-Za-z\s]$/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const sanitizedText = pastedText.replace(/[^A-Za-z\s]/g, '');
+                        handleChange("accountHolderName", sanitizedText);
+                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1344,25 +1883,37 @@ const AddSalesChannel = () => {
                     <NuralTextField
                       width="100%"
                       onChange={(e) => {
-                        handleChange("bankAccountNumber", e.target.value);
+                        const numericValue = e.target.value.replace(/\D/g, "");
+                        handleChange("bankAccountNumber", numericValue);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      value={
+                        formData.bankAccountNumber
+                          ? formData.bankAccountNumber
+                          : ""
+                      }
+                      placeholder="ENTER BANK ACCOUNT NUMBER"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.bankAccountNumber}
                       errorMessage={errors.bankAccountNumber}
                       maxLength={50}
                       onKeyPress={(e) => {
-                        if (e.key === " ") {
+                        if (!/[0-9]/.test(e.key)) {
                           e.preventDefault();
                         }
                         if (e.target.value.length >= 50) {
                           e.preventDefault();
                         }
                       }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const numericValue = pastedText.replace(/\D/g, "");
+                        handleChange("bankAccountNumber", numericValue);
+                      }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <Typography
                       variant="h6"
                       sx={{
@@ -1382,7 +1933,8 @@ const AddSalesChannel = () => {
                       onChange={(e) => {
                         handleChange("branchLocation", e.target.value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      value={formData.branchLocation}
+                      placeholder="ENTER BRANCH LOCATION"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.branchLocation}
                       errorMessage={errors.branchLocation}
@@ -1415,7 +1967,8 @@ const AddSalesChannel = () => {
                       onChange={(e) => {
                         handleChange("ifscCode", e.target.value);
                       }}
-                      placeholder="XXXXXXXXXXXXX"
+                      value={formData.ifscCode}
+                      placeholder="ENTER IFSC CODE"
                       backgroundColor={LIGHT_BLUE}
                       error={!!errors.ifscCode}
                       errorMessage={errors.ifscCode}
@@ -1431,7 +1984,12 @@ const AddSalesChannel = () => {
             </Grid>
 
             <Grid item>
-              <NuralKYCAccordion fields={fields} />
+              <NuralKYCAccordion
+                fields={fields}
+                expanded={kycDetailsExpanded}
+                onChange={(event, expanded) => setKycDetailsExpanded(expanded)}
+                controlled={true}
+              />
             </Grid>
             <Grid item md={6} lg={6} pr={2}>
               {showStatus && (
@@ -1444,7 +2002,7 @@ const AddSalesChannel = () => {
               )}
             </Grid>
             <Grid item>
-              <Grid container spacing={1}>
+              <Grid container spacing={1} mt={-2}>
                 <Grid item xs={12} md={6} lg={6}>
                   <NuralButton
                     text="CANCEL"
@@ -1459,11 +2017,12 @@ const AddSalesChannel = () => {
                 </Grid>
                 <Grid item xs={12} md={6} lg={6}>
                   <NuralButton
-                    text="CREATE"
+                    text={salesChannelID ? "UPDATE" : "SAVE"}
                     backgroundColor={AQUA}
                     variant="contained"
                     onClick={handlePost}
                     width="100%"
+                   
                   />
                 </Grid>
               </Grid>

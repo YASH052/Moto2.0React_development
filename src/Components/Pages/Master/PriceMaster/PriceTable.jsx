@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -17,7 +17,11 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import { LIGHT_GRAY2, PRIMARY_BLUE2 } from "../../../Common/colors";
-import { rowstyle, tableHeaderStyle } from "../../../Common/commonstyles";
+import {
+  rowstyle,
+  tableHeaderStyle,
+  tablePaginationStyle,
+} from "../../../Common/commonstyles";
 import { TableRowSkeleton } from "../../../Common/Skeletons";
 
 const SKELETON_ROWS = 10;
@@ -52,7 +56,8 @@ const PriceTable = ({
         },
       }}
     >
-      <Table sx={{ minWidth: 650 }} size="small" stickyHeader>
+      <Table 
+      sx={{ minWidth: 650 }} size="small" stickyHeader>
         <TableHead>
           <TableRow>
             <TableCell
@@ -122,7 +127,9 @@ const PriceTable = ({
             ].map((column) => (
               <TableCell
                 key={column.key}
-                onClick={column.noSort ? undefined : () => handleSort(column.key)}
+                onClick={
+                  column.noSort ? undefined : () => handleSort(column.key)
+                }
                 sx={{
                   ...tableHeaderStyle,
                   cursor: column.noSort ? "default" : "pointer",
@@ -141,8 +148,8 @@ const PriceTable = ({
                       alignItems: "center",
                     }}
                   >
-                    {!column.noSort && (
-                      sortConfig.key === column.key ? (
+                    {!column.noSort &&
+                      (sortConfig.key === column.key ? (
                         sortConfig.direction === "asc" ? (
                           <ArrowUpwardIcon
                             sx={{
@@ -178,8 +185,7 @@ const PriceTable = ({
                             }}
                           />
                         </Grid>
-                      )
-                    )}
+                      ))}
                   </Grid>
                 </Grid>
               </TableCell>
@@ -207,7 +213,9 @@ const PriceTable = ({
                   <TableCell sx={{ ...rowstyle }}>{row.skuCode}</TableCell>
                   <TableCell sx={{ ...rowstyle }}>{row.skuName}</TableCell>
                   <TableCell sx={{ ...rowstyle }}>{row.model}</TableCell>
-                  <TableCell sx={{ ...rowstyle }}>{row.priceListName}</TableCell>
+                  <TableCell sx={{ ...rowstyle }}>
+                    {row.priceListName}
+                  </TableCell>
                   <TableCell sx={{ ...rowstyle }}>
                     {row.whPrice?.toLocaleString()}
                   </TableCell>
@@ -226,27 +234,19 @@ const PriceTable = ({
                   <TableCell sx={{ ...rowstyle }}>
                     {row.mrp?.toLocaleString()}
                   </TableCell>
-                  <TableCell sx={{ ...rowstyle }}>{row.effectiveDate}</TableCell>
-                  <TableCell sx={{ ...rowstyle }}>{row.validTill || "-"}</TableCell>
-                  
+                  <TableCell sx={{ ...rowstyle }}>
+                    {row.effectiveDate}
+                  </TableCell>
+                  <TableCell sx={{ ...rowstyle }}>
+                    {row.validTill || "-"}
+                  </TableCell>
                 </TableRow>
               ))}
         </TableBody>
       </Table>
 
       {/* Pagination */}
-      <Grid
-        container
-        sx={{
-          p: 1,
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          bottom: 0,
-          backgroundColor: LIGHT_GRAY2,
-          zIndex: 1000,
-        }}
-      >
+      <Grid container sx={tablePaginationStyle}>
         <Grid item>
           <Typography
             sx={{
@@ -350,8 +350,8 @@ const PriceTable = ({
           >
             JUMP TO FIRST
           </Typography>
-          <IconButton 
-            onClick={handlePreviousPage} 
+          <IconButton
+            onClick={handlePreviousPage}
             disabled={page <= 1}
             sx={{
               outline: "none",
@@ -437,4 +437,4 @@ const PriceTable = ({
   );
 };
 
-export default PriceTable; 
+export default PriceTable;

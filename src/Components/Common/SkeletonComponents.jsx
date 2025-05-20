@@ -178,7 +178,7 @@ export const StatusModelSkeleton = () => (
 
 // Content Only Skeleton
 export const UploadContentSkeleton = () => (
-  <Grid container spacing={0} lg={12}>
+  <Grid container spacing={0} lg={12} mt={1}>
     {/* Left Column */}
     <Grid item xs={12} md={6} lg={6} sx={{ pr: 2 }}>
       <Grid container spacing={2} direction="column">

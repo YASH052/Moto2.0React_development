@@ -44,6 +44,8 @@ const LeaveType = () => {
 
     { label: "Leave Type", value: "leave-type" },
     { label: "Leave Allocation", value: "leave-allocation" },
+    { label: "Manage", value: "manage" },
+    { label: "IMEI Binding", value: "imei-binding" },
   ];
   const navigate = useNavigate();
   const labelStyle = {

@@ -39,12 +39,16 @@ const log = JSON.parse(localStorage.getItem("log")) || {};
 const SalesExcel = () => {
   const [activeTab, setActiveTab] = React.useState("add-retailer");
   const navigate = useNavigate();
+  const [showStatus, setShowStatus] = React.useState(false);
   const [status, setStatus] = React.useState(null);
   const [title, setTitle] = React.useState(null);
   const [selectedFormat, setSelectedFormat] = React.useState("batch");
   const fileInputRef = React.useRef(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isTemplateDownloading, setIsTemplateDownloading] =
+    React.useState(false);
+  const [resetFile, setResetFile] = React.useState(false);
   const tabs = [
     { label: "Add Retailer", value: "add-retailer" },
     { label: "Search", value: "view-retailer" },
@@ -53,13 +57,20 @@ const SalesExcel = () => {
 
   const templates = [
     {
-      name: "Template 1",
+      name: "Download Retailer Template",
       onView: () => console.log("View Template 1"),
       onDownload: () => {
-        setIsLoading(true);
+        setIsTemplateDownloading(true);
+        setShowStatus(true);
+        setStatus("200");
+        setTitle("Downloading template...");
+
         setTimeout(() => {
-          window.location.href = `${templateUrl}RetailerTemplate.xlsx`;
-          setIsLoading(false);
+          window.location.href = `${templateUrl}Retailer Template.xlsx`;
+          setIsTemplateDownloading(false);
+          setStatus("200");
+          setTitle("Template downloaded successfully");
+          setTimeout(handleClearStatus, 3000);
         }, 1000);
       },
     },
@@ -86,13 +97,17 @@ const SalesExcel = () => {
       let res = await GetStockBinTypeInfo();
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(handleClearStatus, 3000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.statusCode);
       setTitle(error.statusMessage);
       console.log(error);
@@ -115,13 +130,17 @@ const SalesExcel = () => {
       let res = await GetAllTemplateDataV2(body);
       if (res.statusCode == 200) {
         window.location.href = res.referenceDataLink;
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
+        setTimeout(handleClearStatus, 3000);
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
+      setShowStatus(true);
       setStatus(error.status || 500);
       setTitle(error.statusMessage || "Something went wrong");
       console.log(error);
@@ -130,10 +149,25 @@ const SalesExcel = () => {
     }
   };
 
+  const handleClearStatus = () => {
+    
+    setShowStatus(false);
+    setStatus(null);
+    setTitle(null);
+    setResetFile(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setTimeout(() => {
+      setResetFile(false);
+    }, 100);
+  };
+
   const handleUploadClick = async () => {
     const fileInput = fileInputRef.current;
 
     if (!fileInput?.files?.[0]) {
+      setShowStatus(true);
       setStatus(String(400));
       setTitle("Please select a file to upload");
       return;
@@ -147,31 +181,31 @@ const SalesExcel = () => {
     try {
       let res = await UploadRetailerMaster(formData);
       if (res.statusCode == 200) {
-        fileInput.value = "";
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle("File uploaded successfully");
-        setTimeout(handleClearStatus, 3000);
+        setTimeout(() => {
+          handleClearStatus();
+        }, 3000);
       } else if (res.statusCode == 400 && res.invalidDataLink) {
+        setShowStatus(true);
         setStatus(String(res.statusCode));
         setTitle(res.statusMessage);
         window.location.href = res.invalidDataLink;
       } else {
+        setShowStatus(true);
         setStatus(res.statusCode);
         setTitle(res.statusMessage);
       }
     } catch (error) {
-      setStatus(String(error.status));
-      setTitle(MenuConstants.somethingWentWrong);
+      setShowStatus(true);
+      setStatus(String(error.status || 500));
+      setTitle(error.statusMessage || "Internal Server Error");
       console.log(error);
     } finally {
       setIsLoading(false);
       setIsUploading(false);
     }
-  };
-
-  const handleClearStatus = () => {
-    setStatus(null);
-    setTitle(null);
   };
 
   React.useEffect(() => {
@@ -193,7 +227,7 @@ const SalesExcel = () => {
         xs={12}
         md={6}
         lg={12}
-        mt={1}
+        mt={2}
         mb={0}
         sx={{
           position: "sticky",
@@ -204,7 +238,7 @@ const SalesExcel = () => {
         <BreadcrumbsHeader pageTitle="Retailer" />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={12}>
+      <Grid item xs={12} md={6} ml={1} lg={12}>
         <TabsBar
           tabs={tabs}
           activeTab={activeTab}
@@ -256,10 +290,11 @@ const SalesExcel = () => {
                   backgroundColor={LIGHT_GRAY2}
                   fileRef={fileInputRef}
                   accept=".xlsx,.xls,.csv"
+                  resetFile={resetFile}
                 />
               </Grid>
               <Grid item md={6} lg={6} pr={2}>
-                {status && title && (
+                {showStatus && (
                   <StatusModel
                     width="100%"
                     status={status}
@@ -270,7 +305,7 @@ const SalesExcel = () => {
               </Grid>
               <Grid item>
                 <Grid container spacing={1}>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
                       text="CANCEL"
                       variant="outlined"
@@ -280,7 +315,7 @@ const SalesExcel = () => {
                       disabled={isUploading}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} sm={6} md={6} lg={6}>
                     <NuralButton
                       text={isUploading ? "UPLOADING..." : "PROCEED"}
                       backgroundColor={AQUA}

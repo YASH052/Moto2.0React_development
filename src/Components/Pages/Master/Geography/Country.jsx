@@ -50,9 +50,9 @@ import NuralTextField from "../../NuralCustomComponents/NuralTextField";
 const Country = () => {
   const [activeTab, setActiveTab] = React.useState("country");
 
-  const tabbs = [
+  const tabs = [
     { label: "Upload", value: "geography-bulk-upload" },
-    { label: "Country", value: "country" },
+    { label: "Country", value: "#" },
     { label: "State", value: "state" },
     { label: "City", value: "city" },
     { label: "Area", value: "area" },
